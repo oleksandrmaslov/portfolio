@@ -1,0 +1,487 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Project page · hero variations — M.O. System</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap" />
+
+  <link rel="stylesheet" href="system/tokens.css" />
+  <link rel="stylesheet" href="system/extras.css" />
+  <link rel="stylesheet" href="project/page.css" />
+
+  <style>
+    body { background: #07090f; overflow: hidden; }
+
+    /* artboard internal scaffolding — each variation is a self-contained block */
+    .v {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      background: var(--void);
+      color: var(--bone);
+      overflow: hidden;
+    }
+
+    /* fake 3D model — just a placeholder slab with corner reticles */
+    .v-model {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background:
+        radial-gradient(ellipse at 50% 60%, rgba(0,240,200,0.10) 0%, transparent 55%),
+        repeating-linear-gradient(135deg, transparent 0 18px, rgba(255,255,255,0.012) 18px 19px),
+        #0a0d14;
+      display: grid;
+      place-items: center;
+    }
+    .v-model__slab {
+      width: min(60%, 380px);
+      aspect-ratio: 14 / 3;
+      background: linear-gradient(160deg, #181c28 0%, #0c0f17 100%);
+      border: 1px solid rgba(0, 240, 200, 0.35);
+      transform: rotate(-6deg) skewX(-6deg);
+      box-shadow:
+        0 0 0 1px rgba(0, 240, 200, 0.12),
+        0 32px 80px -24px rgba(0, 0, 0, 0.8),
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
+    }
+    .v-model__corner {
+      position: absolute;
+      width: 22px; height: 22px;
+      border: 1px solid var(--signal);
+      opacity: 0.6;
+    }
+    .v-model__corner--tl { top: 18px; left: 18px;  border-right: 0; border-bottom: 0; }
+    .v-model__corner--tr { top: 18px; right: 18px; border-left: 0;  border-bottom: 0; }
+    .v-model__corner--bl { bottom: 18px; left: 18px; border-right: 0; border-top: 0; }
+    .v-model__corner--br { bottom: 18px; right: 18px; border-left: 0;  border-top: 0; }
+    .v-model__hint {
+      position: absolute;
+      top: 50%; left: 50%; transform: translate(-50%, -50%);
+      font-family: var(--ff-mono);
+      font-size: 11px;
+      letter-spacing: var(--tr-caps);
+      text-transform: uppercase;
+      color: var(--ghost);
+      pointer-events: none;
+    }
+    .v-model__start {
+      position: absolute;
+      bottom: 28px; left: 50%; transform: translateX(-50%);
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 22px;
+      background: linear-gradient(180deg, #0a3a32 0%, #062420 100%);
+      border: 1px solid var(--signal-dim);
+      color: var(--signal);
+      font-family: var(--ff-mono);
+      font-size: 11px;
+      letter-spacing: var(--tr-caps);
+      text-transform: uppercase;
+      box-shadow: 0 0 24px -8px var(--signal);
+    }
+    .v-model__startKey {
+      width: 18px; height: 18px;
+      border: 1px solid var(--signal);
+      display: grid;
+      place-items: center;
+      font-size: 10px;
+    }
+
+    /* shared title bits */
+    .v-overline {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--ff-mono);
+      font-size: 11px;
+      letter-spacing: var(--tr-caps);
+      text-transform: uppercase;
+      color: var(--signal);
+    }
+    .v-overlinePulse {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--signal);
+      box-shadow: 0 0 10px var(--signal);
+    }
+    .v-title {
+      font-family: var(--ff-display);
+      font-weight: 400;
+      letter-spacing: -0.045em;
+      line-height: 0.86;
+      color: var(--bone);
+      margin: 0;
+    }
+    .v-title em {
+      font-family: var(--ff-serif);
+      font-style: italic;
+      color: var(--signal);
+    }
+    .v-sub {
+      font-family: var(--ff-display);
+      color: var(--ash);
+      line-height: 1.25;
+      letter-spacing: -0.01em;
+    }
+    .v-metric {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      padding-left: 12px;
+      border-left: 2px solid var(--signal);
+    }
+    .v-metricVal {
+      font-family: var(--ff-serif);
+      font-style: italic;
+      font-size: 56px;
+      line-height: 1;
+      color: var(--bone);
+    }
+    .v-metricKey {
+      font-family: var(--ff-mono);
+      font-size: 10px;
+      letter-spacing: var(--tr-caps);
+      text-transform: uppercase;
+      color: var(--ghost);
+    }
+    .v-metaRow {
+      display: flex;
+      align-items: baseline;
+      gap: 13px;
+      font-family: var(--ff-mono);
+      font-size: 11px;
+      letter-spacing: var(--tr-mono);
+    }
+    .v-metaK {
+      text-transform: uppercase;
+      letter-spacing: var(--tr-caps);
+      font-size: 10px;
+      color: var(--ghost);
+    }
+    .v-metaV { color: var(--bone); }
+
+    /* corner edge labels */
+    .v-edge {
+      position: absolute;
+      font-family: var(--ff-mono);
+      font-size: 10px;
+      letter-spacing: var(--tr-caps);
+      text-transform: uppercase;
+      color: var(--ghost);
+    }
+    .v-edge--tl { top: 18px; left: 22px; }
+    .v-edge--tr { top: 18px; right: 22px; }
+    .v-edge--bl { bottom: 18px; left: 22px; }
+    .v-edge--br { bottom: 18px; right: 22px; color: var(--signal); }
+    .v-edge .dot {
+      display: inline-block;
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--signal);
+      box-shadow: 0 0 8px var(--signal);
+      margin-right: 8px;
+      vertical-align: 1px;
+    }
+
+    /* ============================================================
+       VARIATION A — Stacked editorial (matches current commit)
+       Title on top, metric strip, model below.
+       ============================================================ */
+    .vA {
+      display: grid;
+      grid-template-rows: 1fr 1fr;
+    }
+    .vA__top {
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+      padding: 80px 60px 40px;
+      border-bottom: 1px solid var(--hairline);
+    }
+    .vA__title { font-size: 180px; }
+    .vA__sub { font-size: 32px; max-width: 36ch; }
+    .vA__metrics {
+      display: grid;
+      grid-template-columns: repeat(3, max-content);
+      gap: 55px;
+      padding-top: 13px;
+    }
+    .vA__bottom {
+      position: relative;
+      padding: 40px 60px 55px;
+    }
+    .vA__bottomGrid {
+      display: grid;
+      grid-template-columns: 1fr 1.4fr;
+      gap: 55px;
+      height: 100%;
+    }
+    .vA__meta {
+      display: flex;
+      flex-direction: column;
+      gap: 21px;
+      padding-top: 13px;
+    }
+
+    /* ============================================================
+       VARIATION B — Split: title left, demo right
+       Editorial typographic block stacked vs. live model.
+       ============================================================ */
+    .vB {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap: 0;
+    }
+    .vB__left {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 34px;
+      padding: 80px 60px;
+      border-right: 1px solid var(--hairline);
+    }
+    .vB__title { font-size: clamp(72px, 9vw, 144px); }
+    .vB__sub { font-size: 28px; max-width: 22ch; }
+    .vB__metric { padding-top: 13px; }
+    .vB__metric .v-metricVal { font-size: 96px; }
+    .vB__meta {
+      display: flex;
+      flex-direction: column;
+      gap: 13px;
+      padding-top: 21px;
+      border-top: 1px solid var(--hairline);
+    }
+    .vB__right {
+      position: relative;
+      background: #07090f;
+    }
+
+    /* ============================================================
+       VARIATION C — Big number first
+       Brutalist metric-first hero. The number IS the hero.
+       Title sits underneath, model is a small framed inset.
+       ============================================================ */
+    .vC {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      padding: 60px 60px 40px;
+      gap: 28px;
+    }
+    .vC__big {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: baseline;
+      gap: 34px;
+      padding-bottom: 28px;
+      border-bottom: 1px solid var(--hairline);
+    }
+    .vC__metricVal {
+      font-family: var(--ff-serif);
+      font-style: italic;
+      font-size: 280px;
+      line-height: 0.84;
+      letter-spacing: -0.04em;
+      color: var(--bone);
+    }
+    .vC__metricKey {
+      font-family: var(--ff-mono);
+      font-size: 11px;
+      letter-spacing: var(--tr-caps);
+      text-transform: uppercase;
+      color: var(--signal);
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      margin-bottom: 21px;
+    }
+    .vC__bottom {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 55px;
+      align-items: end;
+    }
+    .vC__txt { display: flex; flex-direction: column; gap: 21px; }
+    .vC__title { font-size: 96px; }
+    .vC__sub { font-size: 21px; max-width: 32ch; }
+    .vC__meta {
+      display: flex;
+      gap: 34px;
+      margin-top: 13px;
+      padding-top: 13px;
+      border-top: 1px solid var(--hairline);
+    }
+    .vC__modelFrame {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      border: 1px solid var(--hairline);
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <script type="text/babel" data-presets="env,react" src="project/design-canvas.jsx"></script>
+
+  <script type="text/babel" data-presets="env,react">
+    function ModelStage({ note = "WAFER · placeholder · 200 × 110 × 8 mm", showStart = true }) {
+      return (
+        <div className="v-model">
+          <div className="v-model__corner v-model__corner--tl" />
+          <div className="v-model__corner v-model__corner--tr" />
+          <div className="v-model__corner v-model__corner--bl" />
+          <div className="v-model__corner v-model__corner--br" />
+          <div className="v-model__slab" />
+          <div className="v-model__hint">{note}</div>
+          {showStart && (
+            <div className="v-model__start">
+              <span className="v-model__startKey">↵</span>
+              <span>START DEMO</span>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    /* ============= VARIATION A — Stacked editorial ============= */
+    function VariationA() {
+      return (
+        <div className="v vA">
+          <div className="vA__top">
+            <div className="v-overline">
+              <span className="v-overlinePulse" />
+              <span>EMBEDDED · HARDWARE · FIRMWARE</span>
+            </div>
+            <h1 className="v-title vA__title">Wafer<em>.</em></h1>
+            <div className="v-sub vA__sub">36-key ultrathin split keyboard</div>
+            <div className="vA__metrics">
+              <div className="v-metric">
+                <span className="v-metricVal">4–8</span>
+                <span className="v-metricKey">mm height</span>
+              </div>
+              <div className="v-metric">
+                <span className="v-metricVal">36</span>
+                <span className="v-metricKey">keys total</span>
+              </div>
+              <div className="v-metric">
+                <span className="v-metricVal">R3</span>
+                <span className="v-metricKey">revision</span>
+              </div>
+            </div>
+          </div>
+          <div className="vA__bottom">
+            <div className="vA__bottomGrid">
+              <div className="vA__meta">
+                <div className="v-metaRow"><span className="v-metaK">ROLE</span><span className="v-metaV">Designer · firmware · hardware</span></div>
+                <div className="v-metaRow"><span className="v-metaK">YEAR</span><span className="v-metaV">2025</span></div>
+                <div className="v-metaRow"><span className="v-metaK">PLACE</span><span className="v-metaV">Munich, DE</span></div>
+                <div className="v-metaRow"><span className="v-metaK">STACK</span><span className="v-metaV">ZMK · Zephyr · KiCad · nRF52840</span></div>
+              </div>
+              <div style={{ position: "relative", border: "1px solid var(--hairline)" }}>
+                <ModelStage />
+              </div>
+            </div>
+          </div>
+          <div className="v-edge v-edge--tl">node 0x01</div>
+          <div className="v-edge v-edge--tr">A · stacked editorial</div>
+          <div className="v-edge v-edge--br"><span className="dot" />LIVE</div>
+        </div>
+      );
+    }
+
+    /* ============= VARIATION B — Split: title left, demo right ============= */
+    function VariationB() {
+      return (
+        <div className="v vB">
+          <div className="vB__left">
+            <div className="v-overline">
+              <span className="v-overlinePulse" />
+              <span>EMBEDDED · HARDWARE · FIRMWARE · NODE 0x01</span>
+            </div>
+            <h1 className="v-title vB__title">Wafer<em>.</em></h1>
+            <div className="v-sub vB__sub">36-key ultrathin split keyboard — magnetic, 4–8 mm build height.</div>
+            <div className="v-metric vB__metric">
+              <span className="v-metricVal">4–8</span>
+              <span className="v-metricKey">mm build height</span>
+            </div>
+            <div className="vB__meta">
+              <div className="v-metaRow"><span className="v-metaK">ROLE</span><span className="v-metaV">Designer · firmware · hardware</span></div>
+              <div className="v-metaRow"><span className="v-metaK">YEAR</span><span className="v-metaV">2025 · Munich</span></div>
+              <div className="v-metaRow"><span className="v-metaK">STACK</span><span className="v-metaV">ZMK · Zephyr · KiCad · nRF52840 · NPM1300</span></div>
+            </div>
+          </div>
+          <div className="vB__right">
+            <ModelStage />
+          </div>
+          <div className="v-edge v-edge--tl">node 0x01</div>
+          <div className="v-edge v-edge--tr">B · split · demo right</div>
+          <div className="v-edge v-edge--br"><span className="dot" />LIVE</div>
+        </div>
+      );
+    }
+
+    /* ============= VARIATION C — Big number first ============= */
+    function VariationC() {
+      return (
+        <div className="v vC">
+          <div className="vC__big">
+            <div className="vC__metricVal">4–8</div>
+            <div className="vC__metricKey">mm · build height</div>
+          </div>
+          <div className="vC__bottom">
+            <div className="vC__txt">
+              <div className="v-overline">
+                <span className="v-overlinePulse" />
+                <span>EMBEDDED · HARDWARE · FIRMWARE</span>
+              </div>
+              <h1 className="v-title vC__title">Wafer<em>.</em></h1>
+              <div className="v-sub vC__sub">36-key ultrathin split keyboard. Aluminium case, magnetic mating, custom PCB on nRF52840.</div>
+              <div className="vC__meta">
+                <div className="v-metaRow"><span className="v-metaK">YEAR</span><span className="v-metaV">2025</span></div>
+                <div className="v-metaRow"><span className="v-metaK">REV</span><span className="v-metaV">R3</span></div>
+                <div className="v-metaRow"><span className="v-metaK">KEYS</span><span className="v-metaV">36</span></div>
+              </div>
+            </div>
+            <div className="vC__modelFrame">
+              <ModelStage note="WAFER · slab placeholder" showStart={true} />
+            </div>
+          </div>
+          <div className="v-edge v-edge--tl">node 0x01</div>
+          <div className="v-edge v-edge--tr">C · big number first</div>
+          <div className="v-edge v-edge--br"><span className="dot" />LIVE</div>
+        </div>
+      );
+    }
+
+    function App() {
+      return (
+        <DesignCanvas>
+          <DCSection id="wafer-heroes" title="Wafer · project page · hero variations">
+            <DCArtboard id="vA" label="A — stacked editorial · current commit" width={1440} height={900}>
+              <VariationA />
+            </DCArtboard>
+            <DCArtboard id="vB" label="B — split · title left · demo right" width={1440} height={900}>
+              <VariationB />
+            </DCArtboard>
+            <DCArtboard id="vC" label="C — big number first" width={1440} height={900}>
+              <VariationC />
+            </DCArtboard>
+          </DCSection>
+        </DesignCanvas>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(<App />);
+  </script>
+</body>
+</html>
