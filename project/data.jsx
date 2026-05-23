@@ -161,6 +161,7 @@ const PROJECT_DATA = {
     role: "Volunteer · firmware · schematic",
     stack: ["C", "ARM Cortex-M0", "PY32F002A", "KiCad"],
     primitive: "cone",
+    model: "models/tactical_flashlight.glb",
     demoSize: { d: 120, w: 28, h: 28 },
     metrics: [
       { value: "PY32", unit: "F002A · ARM-M0" },

@@ -14,6 +14,163 @@
   const HAIRLINE = 0x232a3a;
   const BONE = 0xe6e8ee;
 
+  /* ============================================================
+     GLB model loader · shared cache · cloned per consumer
+     ============================================================
+     Both the universe tiles and this project-page viewer pull
+     models through here. The first request kicks off a fetch +
+     parse; every subsequent caller awaits the same promise and
+     gets a fresh THREE.Group clone — so we never re-download or
+     re-parse the same .glb. */
+  const _gltfCache = new Map();   // url -> Promise<THREE.Group>
+  window.loadProjectModel = function (url, THREE) {
+    if (!url) return Promise.reject(new Error("no model url"));
+    if (_gltfCache.has(url)) {
+      return _gltfCache.get(url).then((root) => root.clone(true));
+    }
+    const LoaderCtor = THREE.GLTFLoader || (window.THREE && window.THREE.GLTFLoader);
+    if (!LoaderCtor) {
+      return Promise.reject(new Error("GLTFLoader not loaded — add it after three.min.js"));
+    }
+    const p = new Promise((resolve, reject) => {
+      new LoaderCtor().load(
+        url,
+        (gltf) => resolve(gltf.scene),
+        undefined,
+        (err) => reject(err),
+      );
+    });
+    _gltfCache.set(url, p);
+    return p.then((root) => root.clone(true));
+  };
+
+  /* Fit-and-centre helper — recentres a loaded model on its bounding-box
+     centre and scales it so its longest edge equals `targetSize` world units.
+     Returns the bounding box for any further measurement work. */
+  window.fitModelToSize = function (root, THREE, targetSize) {
+    const box = new THREE.Box3().setFromObject(root);
+    const size = new THREE.Vector3();
+    box.getSize(size);
+    const centre = new THREE.Vector3();
+    box.getCenter(centre);
+    const longest = Math.max(size.x, size.y, size.z) || 1;
+    const s = targetSize / longest;
+    root.position.sub(centre.multiplyScalar(s));
+    root.scale.multiplyScalar(s);
+    return box;
+  };
+
+  /* ============================================================
+     Procedural matcap — dark-chrome with a subtle signal-teal rim
+     ============================================================
+     Generated as a canvas texture so we don't have to ship a PNG.
+     Returns the same THREE.CanvasTexture on every call (cached).
+     Swap for a real .png later by replacing the canvas data. */
+  let _matcapTexture = null;
+  window.makeMatcapTexture = function (THREE) {
+    if (_matcapTexture) return _matcapTexture;
+    const SZ = 256;
+    const c = document.createElement("canvas");
+    c.width = c.height = SZ;
+    const x = c.getContext("2d");
+
+    // Base sphere lighting — bright top-left, dark bottom-right
+    const grad = x.createRadialGradient(
+      SZ * 0.34, SZ * 0.30, SZ * 0.04,
+      SZ * 0.50, SZ * 0.50, SZ * 0.62,
+    );
+    grad.addColorStop(0.00, "#f4f6fa");
+    grad.addColorStop(0.18, "#9aa3b3");
+    grad.addColorStop(0.45, "#3a4250");
+    grad.addColorStop(0.78, "#161a22");
+    grad.addColorStop(1.00, "#05070b");
+    x.fillStyle = grad;
+    x.beginPath(); x.arc(SZ / 2, SZ / 2, SZ / 2, 0, Math.PI * 2); x.fill();
+
+    // Signal-teal rim — picks up the silhouette edge
+    const rim = x.createRadialGradient(
+      SZ / 2, SZ / 2, SZ * 0.42,
+      SZ / 2, SZ / 2, SZ / 2,
+    );
+    rim.addColorStop(0.00, "rgba(0, 240, 200, 0)");
+    rim.addColorStop(0.82, "rgba(0, 240, 200, 0)");
+    rim.addColorStop(0.97, "rgba(0, 240, 200, 0.55)");
+    rim.addColorStop(1.00, "rgba(0, 240, 200, 0)");
+    x.fillStyle = rim;
+    x.beginPath(); x.arc(SZ / 2, SZ / 2, SZ / 2, 0, Math.PI * 2); x.fill();
+
+    // Specular hot-spot
+    const spec = x.createRadialGradient(
+      SZ * 0.32, SZ * 0.26, 0,
+      SZ * 0.32, SZ * 0.26, SZ * 0.18,
+    );
+    spec.addColorStop(0.0, "rgba(255,255,255,0.85)");
+    spec.addColorStop(1.0, "rgba(255,255,255,0)");
+    x.fillStyle = spec;
+    x.beginPath(); x.arc(SZ / 2, SZ / 2, SZ / 2, 0, Math.PI * 2); x.fill();
+
+    const tex = new THREE.CanvasTexture(c);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.needsUpdate = true;
+    _matcapTexture = tex;
+    return tex;
+  };
+
+  /* Walk a loaded GLB scene and replace every mesh with LineSegments built
+     from its EdgesGeometry. Preserves the local transforms (position /
+     rotation / scale) so the line-converted model occupies the exact same
+     space as the original mesh. Used by the page-entry FlyInOverlay to keep
+     the existing line-style intro while showing the real model shape. */
+  window.applyWireframeToModel = function (root, THREE, opts = {}) {
+    const color     = opts.color     ?? SIGNAL;
+    const opacity   = opts.opacity   ?? 0.9;
+    const threshold = opts.threshold ?? 25;       // hard-edge angle threshold
+
+    // Collect first, mutate after — modifying a tree while traversing it is bad.
+    const meshes = [];
+    root.traverse((obj) => { if (obj.isMesh) meshes.push(obj); });
+
+    for (const m of meshes) {
+      if (!m.geometry) continue;
+      const edges = new THREE.EdgesGeometry(m.geometry, threshold);
+      const mat = new THREE.LineBasicMaterial({
+        color, transparent: true, opacity, depthWrite: false,
+      });
+      const line = new THREE.LineSegments(edges, mat);
+      line.position.copy(m.position);
+      line.quaternion.copy(m.quaternion);
+      line.scale.copy(m.scale);
+      const parent = m.parent;
+      if (parent) {
+        parent.add(line);
+        parent.remove(m);
+      }
+      // dispose the original mesh's GPU resources — we're replacing them
+      m.geometry.dispose();
+      if (m.material && m.material.dispose) m.material.dispose();
+    }
+  };
+
+  /* Walk a loaded GLB scene and replace every mesh's material with a
+     shared MeshMatcapMaterial. Used for the small universe-card overlays
+     where we want a consistent, performance-friendly look across all 12
+     cards regardless of how the model was textured in Spline. */
+  window.applyMatcapToModel = function (root, THREE) {
+    const matcap = window.makeMatcapTexture(THREE);
+    root.traverse((obj) => {
+      if (!obj.isMesh) return;
+      // dispose previous material (Spline export) to avoid GPU leaks
+      const prev = obj.material;
+      obj.material = new THREE.MeshMatcapMaterial({
+        matcap,
+        transparent: true,
+        opacity: 1,
+        depthWrite: true,
+      });
+      if (prev && prev.dispose) prev.dispose();
+    });
+  };
+
   /* ---------- geometry per primitive kind ---------- */
   function makePrimitiveGeometry(kind, THREE) {
     switch (kind) {
@@ -85,7 +242,7 @@
   /* ============================================================
      React component — <ProjectViewer3D primitive=... dims=... />
      ============================================================ */
-  function ProjectViewer3D({ primitive, dims, scheme = "demo" }) {
+  function ProjectViewer3D({ primitive, dims, model, scheme = "demo" }) {
     const mountRef   = React.useRef(null);
     const stageRef   = React.useRef({});
     const [active, setActive] = React.useState(false);
@@ -129,11 +286,40 @@
       grid.material.opacity = 0.35;
       scene.add(grid);
 
-      // primitive
+      // Primitive (or placeholder until the real GLB resolves).
+      // When `model` is provided, we still create the procedural mesh as an
+      // invisible stand-in so the orbit / animation loop has a stable object,
+      // then swap-in the loaded GLB once available — keeping its Spline PBR
+      // materials and letting this scene's lighting do the rest.
       const mesh = window.makePrimitiveMesh(primitive, THREE, { wireframe: false });
       orientForKind(primitive, mesh);
+      if (model) {
+        mesh.visible = false;     // hide placeholder; GLB takes over
+      }
       scene.add(mesh);
       stageRef.current.mesh = mesh;
+
+      let loadedModel = null;
+      if (model && window.loadProjectModel) {
+        window.loadProjectModel(model, THREE).then((root) => {
+          window.fitModelToSize(root, THREE, 2.4);     // ~size of the placeholder
+          // No orientForKind for GLBs — the model already has the pose it was
+          // exported with from Spline. Re-rotating it (a) tilts it off the
+          // intended orientation, and (b) pivots around root.position which is
+          // the centring offset, throwing the visible centre off-axis.
+          scene.add(root);
+          loadedModel = root;
+          stageRef.current.mesh = root;
+          // dispose the placeholder we never showed
+          mesh.geometry?.dispose();
+          mesh.material?.dispose();
+          scene.remove(mesh);
+        }).catch((err) => {
+          // Loader failed — fall back to the placeholder so the page still works.
+          console.warn("[viewer3d] model load failed", err);
+          mesh.visible = true;
+        });
+      }
 
       /* ---------- orbit state ---------- */
       const orbit = { yaw: mesh.rotation.y, pitch: mesh.rotation.x, dist: 5.2 };
@@ -230,7 +416,7 @@
         try { mount.removeChild(dom); } catch (_) {}
         renderer.dispose();
       };
-    }, [primitive]);
+    }, [primitive, model]);
 
     React.useEffect(() => { stageRef.current.active = active; }, [active]);
 
@@ -273,11 +459,13 @@
             <span className="pv__measureTick" />
           </div>
 
-          {/* placeholder hint */}
-          <div className="pv__hint">
-            <span className="pv__hintDot" />
-            <span>placeholder · drop real model later</span>
-          </div>
+          {/* placeholder hint — only while no real model is wired up */}
+          {!model && (
+            <div className="pv__hint">
+              <span className="pv__hintDot" />
+              <span>placeholder · drop real model later</span>
+            </div>
+          )}
 
           {/* start demo overlay (covers when idle, hidden when active) */}
           {!active && (
@@ -305,7 +493,7 @@
 
         <div className="pv__foot">
           <span className="pv__footK">FILE</span>
-          <span className="pv__footV">{primitive}.placeholder.glb</span>
+          <span className="pv__footV">{model ? model.split("/").pop() : primitive + ".placeholder.glb"}</span>
           <span className="pv__footSep" />
           <span className="pv__footK">SCALE</span>
           <span className="pv__footV">1 : 1</span>

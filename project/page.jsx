@@ -161,7 +161,7 @@ function ProjectDemo({ project }) {
           <div>SWAP FOR REAL MODEL ↗</div>
         </div>
       </header>
-      <ProjectViewer3D primitive={project.primitive} dims={project.demoSize} />
+      <ProjectViewer3D primitive={project.primitive} dims={project.demoSize} model={project.model} />
     </section>
   );
 }
@@ -295,13 +295,45 @@ function FlyInOverlay({ project }) {
     k.position.set(2, 3, 2);
     scene.add(k);
 
-    const wire = window.makePrimitiveMesh(project.primitive, THREE, { wireframe: true });
-    window.orientPrimitive(project.primitive, wire);
+    // Start with the procedural-primitive wireframe so the intro plays
+    // instantly even on a cold cache. If the project has a real GLB, load it
+    // in the background and swap it in once it's parsed — converted to the
+    // same line-style via EdgesGeometry so the look matches.
+    let wire = window.makePrimitiveMesh(project.primitive, THREE, { wireframe: true });
+    // Only apply the cone-on-its-side primitive pose when there's no GLB —
+    // otherwise the wire briefly inherits a rotation we don't want propagated
+    // when the GLB takes over (the model has its own pose from Spline).
+    if (!project.model) {
+      window.orientPrimitive(project.primitive, wire);
+    }
     scene.add(wire);
 
     // start: far + center-top of viewport · end: small + over demo viewport area
     wire.position.set(0, 6, -8);
     wire.scale.setScalar(0.6);
+
+    if (project.model && window.loadProjectModel) {
+      window.loadProjectModel(project.model, THREE).then((root) => {
+        // Match the primitive's scale envelope so the lerp targets still work.
+        window.fitModelToSize(root, THREE, 2);
+        window.applyWireframeToModel(root, THREE);
+        // Wrap in a Group so the entry animation (position / rotation / scale
+        // lerps) drives the WRAPPER while the inner `root` keeps the centring
+        // offset that fitModelToSize put on its local position. Rotating the
+        // wrapper now pivots around the model's true bbox centre.
+        const wrapper = new THREE.Group();
+        wrapper.add(root);
+        wrapper.position.copy(wire.position);
+        wrapper.rotation.copy(wire.rotation);
+        wrapper.scale.copy(wire.scale);
+        scene.add(wrapper);
+        scene.remove(wire);
+        // Dispose the procedural placeholder
+        wire.geometry?.dispose();
+        wire.material?.dispose();
+        wire = wrapper;
+      }).catch(() => { /* keep primitive fallback */ });
+    }
 
     const start = performance.now();
     const dur = 1100;

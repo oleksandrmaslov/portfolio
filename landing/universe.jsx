@@ -15,7 +15,7 @@ const PROJECTS = [
   { addr: "0x01", kind: "wafer",  prim: "slab",   file: "Wafer.html",               name: "Wafer",                  sub: "36-key ultrathin split keyboard", year: "2025",   stack: "ZMK · KICAD · NRF52840", color: "#0d1018" },
   { addr: "0x02", kind: "kerfur", prim: "sphere", file: "Kerfur.html",              name: "Kerfur",                 sub: "Embedded pet · event bus",        year: "2025 —", stack: "C · ZEPHYR · LVGL · BLE", color: "#0e1118" },
   { addr: "0x03", kind: "accel",  prim: "torus",  file: "ZMK-PointAccel.html",      name: "ZMK PointAccel",         sub: "Open-source input processor",     year: "2025",   stack: "C · DEVICETREE · ZMK",   color: "#0d1119" },
-  { addr: "0x04", kind: "torch",  prim: "cone",   file: "Tactical-Flashlight.html", name: "Tactical Flashlight",    sub: "For Energy for Ukraine",          year: "12/25",  stack: "C · ARM-M0 · KICAD",     color: "#0e1018" },
+  { addr: "0x04", kind: "torch",  prim: "cone",   file: "Tactical-Flashlight.html", name: "Tactical Flashlight",    sub: "For Energy for Ukraine",          year: "12/25",  stack: "C · ARM-M0 · KICAD",     color: "#0e1018", model: "models/tactical_flashlight.glb" },
   { addr: "0x05", kind: "node",   name: "ZMK upstream",           sub: "Voltage IIO merge · PMIC driver", year: "2025",   stack: "ZEPHYR · DT · I2C",      color: "#0d1018" },
   { addr: "0x06", kind: "node",   name: "Matterium",              sub: "Matter / Thread experiments",     year: "2024",   stack: "MATTER · OPENTHREAD",    color: "#0e1119" },
   { addr: "0x07", kind: "node",   name: "Catloading",             sub: "Loading screen · meow OS",        year: "2024",   stack: "JS · WEBGL · GLSL",      color: "#0d1018" },
@@ -77,13 +77,17 @@ function makeTileTexture(p, THREE) {
     }
   }
 
-  x.save();
-  x.translate(270, 320);
-  x.strokeStyle = "#00f0c8";
-  x.fillStyle = "#00f0c8";
-  x.lineWidth = 1.4;
-  drawGraphic(x, p);
-  x.restore();
+  // Skip the canvas wireframe graphic when a real 3D model overlays the card —
+  // otherwise the green primitive shows through behind the GLB.
+  if (!p.model) {
+    x.save();
+    x.translate(270, 320);
+    x.strokeStyle = "#00f0c8";
+    x.fillStyle = "#00f0c8";
+    x.lineWidth = 1.4;
+    drawGraphic(x, p);
+    x.restore();
+  }
 
   x.fillStyle = "#e6e8ee";
   x.font = "400 56px 'Geist', sans-serif";
@@ -417,8 +421,41 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       tilesGroup.add(mesh);
       tiles.push(mesh);
 
-      // ---- small wireframe primitive overlay: only on cards that map to a real project page
-      if (p.prim && window.makePrimitiveMesh) {
+      // ---- per-tile 3D overlay
+      // Two paths:
+      //   (a) project has a `model` URL → load the GLB, apply matcap, drop it in
+      //   (b) otherwise → procedural wireframe primitive as before
+      // Both paths register a single "wire" entry in tileWires so the existing
+      // follow/rotate/visibility logic in the frame loop works unchanged.
+      if (p.model && window.loadProjectModel) {
+        // Reserve a placeholder Group right away so frame ordering doesn't blink.
+        const holder = new THREE.Group();
+        holder.userData = {
+          parentTile: mesh,
+          prim: p.prim || "model",
+          addr: p.addr,
+          isModel: true,
+          loaded: false,
+        };
+        holder.visible = false;
+        tilesGroup.add(holder);
+        tileWires.push(holder);
+
+        window.loadProjectModel(p.model, THREE).then((root) => {
+          // Centre + scale so longest edge ~2 world units; outer scale.setScalar
+          // then matches what the wireframe used to do (0.28 of that).
+          // Fit so longest edge = 2 world units; the frame loop then sets the
+          // outer holder scale (≈0.85 idle, 1.10 on focus) so the model reads
+          // as the card's hero, not a small inset.
+          window.fitModelToSize(root, THREE, 2);
+          window.applyMatcapToModel(root, THREE);
+          holder.add(root);
+          holder.visible = true;
+          holder.userData.loaded = true;
+        }).catch((err) => {
+          console.warn("[universe] model load failed for " + p.addr, err);
+        });
+      } else if (p.prim && window.makePrimitiveMesh) {
         const wire = window.makePrimitiveMesh(p.prim, THREE, {
           wireframe: true,
           color: 0x00f0c8,
@@ -753,17 +790,20 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       if (mode === "drift") {
         for (const m of tiles) {
           // If a fresh drift target was queued on mode-change, ease toward it
-          // (this is what makes grid/ambient → drift transitions glide rather
-          // than snap). Clear once we're close so normal wrapping resumes.
+          // and DO NOT wrap — grid/ambient positions sit outside the wrap box
+          // (z = ±16 vs box half-depth 13), so wrapping here would teleport the
+          // tile across the camera before the lerp could play. Skip the wrap
+          // until we've landed inside the box, then resume normal wrapping.
           const dt2 = m.userData.driftTarget;
           if (dt2) {
-            const rate = 0.04;
+            const rate = 0.025;          // matches forward grid → ambient feel
             m.position.lerp(dt2, 1 - Math.pow(1 - rate, dt / 16));
             if (m.position.distanceToSquared(dt2) < 0.09) {
               m.userData.driftTarget = null;
             }
+          } else {
+            wrapAroundCamera(m, BOX);
           }
-          wrapAroundCamera(m, BOX);
         }
       }
       for (const sp of ambient) wrapAroundCamera(sp, BOX);
@@ -773,17 +813,24 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       wrapPointsAroundCamera(stars,    SBOX);
       wrapPointsAroundCamera(sigStars, SgBOX);
 
-      /* small wireframe primitives — follow their parent tile + rotate */
+      /* small per-tile overlays — wireframe primitives OR loaded GLBs.
+         Both branches follow their parent tile, rotate, and fade with it.
+         Models are centred on the card face and pushed further toward camera
+         so they read as the hero element; wireframes sit small above the art. */
       for (const wire of tileWires) {
         const parent = wire.userData.parentTile;
         if (!parent) continue;
-        // Offset toward viewer slightly so they read above the card art
+        const isModel = !!wire.userData.isModel;
+        // Offset toward viewer — bigger for full models so they clear the card.
         const camDir = new THREE.Vector3();
         camera.getWorldDirection(camDir);
-        const off = camDir.clone().multiplyScalar(-0.6);  // toward camera
+        const forwardDist = isModel ? 1.4 : 0.6;
+        const off = camDir.clone().multiplyScalar(-forwardDist);
+        // Y: centre on card for models, just above the card for wireframes.
+        const yOffset = isModel ? 0 : parent.scale.y * 1.05;
         wire.position.set(
           parent.position.x + off.x,
-          parent.position.y + parent.scale.y * 1.05 + off.y,   // a touch above
+          parent.position.y + yOffset + off.y,
           parent.position.z + off.z,
         );
         // Continuous slow rotation
@@ -795,10 +842,25 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         }
         // Match parent visibility
         const tileOp = parent.material.opacity;
-        wire.material.opacity = Math.min(0.95, tileOp * 1.15);
-        // Pop with focus
+        const overlayOp = Math.min(0.95, tileOp * 1.15);
+        if (isModel) {
+          // Loaded GLB — fade every matcap material in the subtree, and hide
+          // the whole group below a threshold so we don't pay for invisible draws.
+          if (wire.userData.loaded) {
+            wire.visible = overlayOp > 0.02;
+            wire.traverse((obj) => {
+              if (obj.isMesh && obj.material) obj.material.opacity = overlayOp;
+            });
+          }
+        } else {
+          // Procedural wireframe primitive — single material
+          wire.material.opacity = overlayOp;
+        }
+        // Pop with focus — models start much larger than wireframes.
         const isFocused = focusAddrNow && wire.userData.addr === focusAddrNow;
-        const targetScale = isFocused ? 0.42 : 0.28;
+        const baseScale  = isModel ? 0.85 : 0.28;
+        const focusScale = isModel ? 1.10 : 0.42;
+        const targetScale = isFocused ? focusScale : baseScale;
         wire.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.10);
       }
 
@@ -933,7 +995,19 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       try { mount.removeChild(renderer.domElement); } catch (_) {}
       renderer.dispose();
       tiles.forEach(m => { m.geometry.dispose(); m.material.map?.dispose(); m.material.dispose(); });
-      tileWires.forEach(w => { w.geometry.dispose(); w.material.dispose(); });
+      tileWires.forEach(w => {
+        if (w.userData && w.userData.isModel) {
+          w.traverse((obj) => {
+            if (obj.isMesh) {
+              obj.geometry?.dispose();
+              obj.material?.dispose();
+            }
+          });
+        } else {
+          w.geometry?.dispose();
+          w.material?.dispose();
+        }
+      });
       ambient.forEach(s => { s.material.map?.dispose(); s.material.dispose(); });
       starGeo.dispose(); sigStarGeo.dispose();
     };
