@@ -161,7 +161,7 @@ function ProjectDemo({ project }) {
           <div>SWAP FOR REAL MODEL ↗</div>
         </div>
       </header>
-      <ProjectViewer3D primitive={project.primitive} dims={project.demoSize} model={project.model} />
+      <ProjectViewer3D primitive={project.primitive} dims={project.demoSize} model={project.model} modelFit={project.modelFit} modelPose={project.modelPose} />
     </section>
   );
 }
@@ -295,44 +295,65 @@ function FlyInOverlay({ project }) {
     k.position.set(2, 3, 2);
     scene.add(k);
 
-    // Start with the procedural-primitive wireframe so the intro plays
-    // instantly even on a cold cache. If the project has a real GLB, load it
-    // in the background and swap it in once it's parsed — converted to the
-    // same line-style via EdgesGeometry so the look matches.
-    let wire = window.makePrimitiveMesh(project.primitive, THREE, { wireframe: true });
-    // Only apply the cone-on-its-side primitive pose when there's no GLB —
-    // otherwise the wire briefly inherits a rotation we don't want propagated
-    // when the GLB takes over (the model has its own pose from Spline).
-    if (!project.model) {
-      window.orientPrimitive(project.primitive, wire);
+    // If the project has a real GLB, we want to use it directly during the
+    // fly-in (Boot has already preloaded it, so this resolves from cache
+    // synchronously-ish). The procedural wireframe is only created as a
+    // last-resort fallback if the model takes longer than a frame to arrive.
+    let wire;
+    let wireIsPlaceholder = false;
+
+    function addPlaceholder() {
+      wire = window.makePrimitiveMesh(project.primitive, THREE, { wireframe: true });
+      if (!project.model) window.orientPrimitive(project.primitive, wire);
+      wire.position.set(0, 6, -8);
+      wire.scale.setScalar(0.6);
+      scene.add(wire);
+      wireIsPlaceholder = true;
     }
-    scene.add(wire);
 
-    // start: far + center-top of viewport · end: small + over demo viewport area
-    wire.position.set(0, 6, -8);
-    wire.scale.setScalar(0.6);
-
-    if (project.model && window.loadProjectModel) {
-      window.loadProjectModel(project.model, THREE).then((root) => {
-        // Match the primitive's scale envelope so the lerp targets still work.
-        window.fitModelToSize(root, THREE, 2);
-        window.applyWireframeToModel(root, THREE);
-        // Wrap in a Group so the entry animation (position / rotation / scale
-        // lerps) drives the WRAPPER while the inner `root` keeps the centring
-        // offset that fitModelToSize put on its local position. Rotating the
-        // wrapper now pivots around the model's true bbox centre.
-        const wrapper = new THREE.Group();
-        wrapper.add(root);
+    function adoptModel(root) {
+      window.fitModelToSize(root, THREE, project.modelFit || 2);
+      window.applyWireframeToModel(root, THREE);
+      const wrapper = new THREE.Group();
+      wrapper.add(root);
+      if (project.modelPose) {
+        wrapper.rotation.set(
+          project.modelPose.x || 0,
+          project.modelPose.y || 0,
+          project.modelPose.z || 0,
+        );
+      }
+      // Pick up the wire's animated transform if we already started, otherwise
+      // start from the fly-in initial pose.
+      if (wire) {
         wrapper.position.copy(wire.position);
-        wrapper.rotation.copy(wire.rotation);
         wrapper.scale.copy(wire.scale);
-        scene.add(wrapper);
         scene.remove(wire);
-        // Dispose the procedural placeholder
         wire.geometry?.dispose();
         wire.material?.dispose();
-        wire = wrapper;
-      }).catch(() => { /* keep primitive fallback */ });
+      } else {
+        wrapper.position.set(0, 6, -8);
+        wrapper.scale.setScalar(0.6);
+      }
+      scene.add(wrapper);
+      wire = wrapper;
+      wireIsPlaceholder = false;
+    }
+
+    if (project.model && window.loadProjectModel) {
+      let resolvedFast = false;
+      window.loadProjectModel(project.model, THREE).then((root) => {
+        resolvedFast = !wire;     // resolved before any frame ran → no placeholder needed
+        adoptModel(root);
+      }).catch(() => { if (!wire) addPlaceholder(); });
+      // If the cache miss takes longer than one frame, fall back to wireframe
+      // so the fly-in still has something to animate.
+      // Only show the wireframe placeholder if the model genuinely stalls.
+      // Typical meshopt parse for the wafer GLB is ~50-100ms; the FlyIn lasts
+      // 1100ms, so a blank scene for the first frame or two is invisible.
+      setTimeout(() => { if (!wire && !resolvedFast) addPlaceholder(); }, 600);
+    } else {
+      addPlaceholder();
     }
 
     const start = performance.now();
@@ -342,10 +363,18 @@ function FlyInOverlay({ project }) {
     function frame(now) {
       const t = Math.min(1, (now - start) / dur);
       const e = 1 - Math.pow(1 - t, 3);   // ease-out cubic
-      wire.position.lerp(new THREE.Vector3(0, 0, 0), e);
-      wire.scale.setScalar(0.6 + e * 0.9);
-      wire.rotation.y += 0.022;
-      wire.rotation.x += 0.006;
+      if (wire) {
+        wire.position.lerp(new THREE.Vector3(0, 0, 0), e);
+        wire.scale.setScalar(0.6 + e * 0.9);
+        // Real models: just a gentle yaw drift so the form reads as a hero,
+        // not a tumbling wireframe. Wireframe placeholders keep the old spin.
+        if (wireIsPlaceholder) {
+          wire.rotation.y += 0.022;
+          wire.rotation.x += 0.006;
+        } else {
+          wire.rotation.y += 0.0035;
+        }
+      }
       renderer.render(scene, cam);
       if (t >= 1) {
         // fade overlay then unmount

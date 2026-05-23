@@ -35,9 +35,10 @@
   <script type="module">
     import * as THREE from "three";
     import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+    import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
     // The module namespace is frozen — can't attach GLTFLoader to it directly.
     // Spread into a plain object so non-module code can read both.
-    window.THREE = Object.assign({}, THREE, { GLTFLoader });
+    window.THREE = Object.assign({}, THREE, { GLTFLoader, MeshoptDecoder });
   </script>
 
   <!-- React + Babel -->

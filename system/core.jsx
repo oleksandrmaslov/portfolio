@@ -17,8 +17,22 @@ function Boot({ onDone }) {
     { t: "ok",   text: "fibonacci scaffold initialised — φ=1.6180339887",  time: "0.013s" },
     { t: "ok",   text: "event bus connected — 7 channels",     time: "0.021s" },
     { t: "ok",   text: "three.js renderer attached",           time: "0.034s" },
+    { t: "ok",   text: "3d assets prefetched — models warm",   time: "0.048s" },
     { t: "ok",   text: "all systems nominal",                  time: "0.055s" },
   ], []);
+
+  // Kick off the GLB preload as soon as Boot mounts. Pulls model URLs from
+  // every known source on the page (universe tile list + per-project data),
+  // so this single hook warms the cache for both Landing and project pages.
+  // Fire-and-forget — Boot's own timing is independent.
+  useEffect(() => {
+    if (typeof window.preloadModels !== "function") return;
+    const urls = new Set();
+    (window.UNIVERSE_PROJECTS || []).forEach(p => p.model && urls.add(p.model));
+    const PD = window.PROJECT_DATA || {};
+    Object.values(PD).forEach(p => p && p.model && urls.add(p.model));
+    if (urls.size) window.preloadModels(Array.from(urls));
+  }, []);
 
   const [shown, setShown] = useState(0);
   const [done, setDone]   = useState(false);

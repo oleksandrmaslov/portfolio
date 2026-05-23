@@ -33,7 +33,12 @@
       return Promise.reject(new Error("GLTFLoader not loaded — add it after three.min.js"));
     }
     const p = new Promise((resolve, reject) => {
-      new LoaderCtor().load(
+      const loader = new LoaderCtor();
+      // Meshopt-compressed GLBs (e.g. wafer.glb, optimized from 16 MB → 2 MB)
+      // need the decoder wired in before .load(); uncompressed GLBs ignore it.
+      const Meshopt = THREE.MeshoptDecoder || window.MeshoptDecoder;
+      if (Meshopt && loader.setMeshoptDecoder) loader.setMeshoptDecoder(Meshopt);
+      loader.load(
         url,
         (gltf) => resolve(gltf.scene),
         undefined,
@@ -42,6 +47,24 @@
     });
     _gltfCache.set(url, p);
     return p.then((root) => root.clone(true));
+  };
+
+  /* Preload a list of GLB URLs — kicks off the same cached fetch+parse used
+     by loadProjectModel, so by the time any tile/viewer asks for a model the
+     promise is already resolved (or at least in-flight). Safe to call from
+     the Boot preloader: it waits until THREE.GLTFLoader is available, and
+     swallows individual failures so one bad URL doesn't block the rest. */
+  window.preloadModels = function (urls) {
+    if (!urls || !urls.length) return Promise.resolve();
+    const ready = () => (window.THREE && window.THREE.GLTFLoader);
+    const wait = ready()
+      ? Promise.resolve()
+      : new Promise((res) => {
+          const id = setInterval(() => { if (ready()) { clearInterval(id); res(); } }, 30);
+        });
+    return wait.then(() => Promise.all(
+      urls.map((u) => window.loadProjectModel(u, window.THREE).catch(() => null))
+    ));
   };
 
   /* Fit-and-centre helper — recentres a loaded model on its bounding-box
@@ -242,7 +265,7 @@
   /* ============================================================
      React component — <ProjectViewer3D primitive=... dims=... />
      ============================================================ */
-  function ProjectViewer3D({ primitive, dims, model, scheme = "demo" }) {
+  function ProjectViewer3D({ primitive, dims, model, modelFit, modelPose, scheme = "demo" }) {
     const mountRef   = React.useRef(null);
     const stageRef   = React.useRef({});
     const [active, setActive] = React.useState(false);
@@ -302,11 +325,14 @@
       let loadedModel = null;
       if (model && window.loadProjectModel) {
         window.loadProjectModel(model, THREE).then((root) => {
-          window.fitModelToSize(root, THREE, 2.4);     // ~size of the placeholder
-          // No orientForKind for GLBs — the model already has the pose it was
-          // exported with from Spline. Re-rotating it (a) tilts it off the
-          // intended orientation, and (b) pivots around root.position which is
-          // the centring offset, throwing the visible centre off-axis.
+          window.fitModelToSize(root, THREE, (modelFit || 2) * 1.2);
+          // Optional per-project rest pose — applied as a delta, so the model
+          // keeps the centring offset from fitModelToSize on root.position.
+          if (modelPose) {
+            root.rotation.x += modelPose.x || 0;
+            root.rotation.y += modelPose.y || 0;
+            root.rotation.z += modelPose.z || 0;
+          }
           scene.add(root);
           loadedModel = root;
           stageRef.current.mesh = root;

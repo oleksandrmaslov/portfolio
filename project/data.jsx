@@ -19,6 +19,9 @@ const PROJECT_DATA = {
     role: "Designer · firmware · hardware",
     stack: ["ZMK", "Zephyr", "KiCad", "nRF52840", "NPM1300", "Sharp memory"],
     primitive: "slab",                // small 3D object kind
+    model: "models/wafer.glb",        // optimized GLB (~2 MB, meshopt)
+    modelFit: 3.4,                    // longest-edge size in world units (bigger = bigger on card)
+    modelPose: { x: -1.05, y: 0, z: 0 }, // rest pose — keyboard face toward the camera
     demoSize: { d: 200, w: 110, h: 14 }, // demo model dimensions (label values)
     metrics: [
       { value: "4–8", unit: "mm height" },
@@ -195,3 +198,12 @@ const PROJECT_DATA = {
 };
 
 window.PROJECT_DATA = PROJECT_DATA;
+
+// Start the GLB preload as soon as data is registered, so by the time the
+// page-entry FlyIn mounts, the model is (or is about to be) in cache.
+// Deferred a tick so viewer3d.jsx's window.preloadModels is defined first.
+setTimeout(() => {
+  if (typeof window.preloadModels !== "function") return;
+  const urls = Object.values(PROJECT_DATA).map(p => p && p.model).filter(Boolean);
+  if (urls.length) window.preloadModels(urls);
+}, 0);

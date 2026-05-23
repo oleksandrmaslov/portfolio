@@ -12,7 +12,7 @@
    ============================================================ */
 
 const PROJECTS = [
-  { addr: "0x01", kind: "wafer",  prim: "slab",   file: "Wafer.html",               name: "Wafer",                  sub: "36-key ultrathin split keyboard", year: "2025",   stack: "ZMK · KICAD · NRF52840", color: "#0d1018" },
+  { addr: "0x01", kind: "wafer",  prim: "slab",   file: "Wafer.html",               name: "Wafer",                  sub: "36-key ultrathin split keyboard", year: "2025",   stack: "ZMK · KICAD · NRF52840", color: "#0d1018", model: "models/wafer.glb", modelFit: 5.0, modelPose: { x: 1.05, y: 0, z: 0 } },
   { addr: "0x02", kind: "kerfur", prim: "sphere", file: "Kerfur.html",              name: "Kerfur",                 sub: "Embedded pet · event bus",        year: "2025 —", stack: "C · ZEPHYR · LVGL · BLE", color: "#0e1118" },
   { addr: "0x03", kind: "accel",  prim: "torus",  file: "ZMK-PointAccel.html",      name: "ZMK PointAccel",         sub: "Open-source input processor",     year: "2025",   stack: "C · DEVICETREE · ZMK",   color: "#0d1119" },
   { addr: "0x04", kind: "torch",  prim: "cone",   file: "Tactical-Flashlight.html", name: "Tactical Flashlight",    sub: "For Energy for Ukraine",          year: "12/25",  stack: "C · ARM-M0 · KICAD",     color: "#0e1018", model: "models/tactical_flashlight.glb" },
@@ -27,6 +27,15 @@ const PROJECTS = [
 ];
 
 window.UNIVERSE_PROJECTS = PROJECTS;
+
+// Kick the GLB preload as soon as we know the URLs — independent of Boot,
+// which can be skipped via sessionStorage. We defer until the next tick so
+// viewer3d.jsx has had a chance to define window.preloadModels.
+setTimeout(() => {
+  if (typeof window.preloadModels !== "function") return;
+  const urls = PROJECTS.map(p => p.model).filter(Boolean);
+  if (urls.length) window.preloadModels(urls);
+}, 0);
 
 /* ============================================================
    Per-tile canvas texture
@@ -447,8 +456,16 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
           // Fit so longest edge = 2 world units; the frame loop then sets the
           // outer holder scale (≈0.85 idle, 1.10 on focus) so the model reads
           // as the card's hero, not a small inset.
-          window.fitModelToSize(root, THREE, 2);
+          window.fitModelToSize(root, THREE, p.modelFit || 2);
           window.applyMatcapToModel(root, THREE);
+          // Per-project rest pose for the GLB (Spline exports keep their own
+          // orientation; this lets us point the keyboard face at the camera
+          // for wafer, etc., instead of relying on the source pose).
+          if (p.modelPose) {
+            root.rotation.x += p.modelPose.x || 0;
+            root.rotation.y += p.modelPose.y || 0;
+            root.rotation.z += p.modelPose.z || 0;
+          }
           holder.add(root);
           holder.visible = true;
           holder.userData.loaded = true;
@@ -833,8 +850,13 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
           parent.position.y + yOffset + off.y,
           parent.position.z + off.z,
         );
-        // Continuous slow rotation
-        if (wire.userData.prim === "cone") {
+        // Continuous slow rotation. Loaded GLBs are the "hero" presentation —
+        // they get a gentle yaw-only drift so the form stays readable and
+        // mostly faces the camera. Wireframe primitives still tumble as
+        // before (cheap, abstract, more decorative).
+        if (isModel) {
+          wire.rotation.y += 0.0025;
+        } else if (wire.userData.prim === "cone") {
           wire.rotation.y += 0.012;
         } else {
           wire.rotation.y += 0.010;
