@@ -21,7 +21,7 @@ const PROJECT_DATA = {
     primitive: "slab",                // small 3D object kind
     model: "models/wafer.glb",        // optimized GLB (~2 MB, meshopt)
     modelFit: 3.4,                    // longest-edge size in world units (bigger = bigger on card)
-    modelPose: { x: -1.05, y: 0, z: 0 }, // rest pose — keyboard face toward the camera
+    modelPose: { x: 1.05, y: 0, z: 0 }, // rest pose — keyboard face toward the camera
     demoSize: { d: 200, w: 110, h: 14 }, // demo model dimensions (label values)
     metrics: [
       { value: "4–8", unit: "mm height" },
