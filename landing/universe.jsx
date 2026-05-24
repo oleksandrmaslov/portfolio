@@ -12,7 +12,7 @@
    ============================================================ */
 
 const PROJECTS = [
-  { addr: "0x01", kind: "wafer",  prim: "slab",   file: "Wafer.html",               name: "Wafer",                  sub: "36-key ultrathin split keyboard", year: "2025",   stack: "ZMK · KICAD · NRF52840", color: "#0d1018", model: "models/wafer.glb", modelFit: 5.0, modelPose: { x: 1.05, y: 0, z: 0 } },
+  { addr: "0x01", kind: "wafer",  prim: "slab",   file: "Wafer.html",               name: "Wafer",                  sub: "36-key ultrathin split keyboard", year: "2025",   stack: "ZMK · KICAD · NRF52840", color: "#0d1018", model: "models/wafer.glb", modelFit: 5.0, modelPose: { x: 1.05, y: 0, z: 0 }, modelOffset: { x: 0, y: 0.85, z: 0 } },
   { addr: "0x02", kind: "kerfur", prim: "sphere", file: "Kerfur.html",              name: "Kerfur",                 sub: "Embedded pet · event bus",        year: "2025 —", stack: "C · ZEPHYR · LVGL · BLE", color: "#0e1118" },
   { addr: "0x03", kind: "accel",  prim: "torus",  file: "ZMK-PointAccel.html",      name: "ZMK PointAccel",         sub: "Open-source input processor",     year: "2025",   stack: "C · DEVICETREE · ZMK",   color: "#0d1119" },
   { addr: "0x04", kind: "torch",  prim: "cone",   file: "Tactical-Flashlight.html", name: "Tactical Flashlight",    sub: "For Energy for Ukraine",          year: "12/25",  stack: "C · ARM-M0 · KICAD",     color: "#0e1018", model: "models/tactical_flashlight.glb" },
@@ -843,12 +843,18 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         camera.getWorldDirection(camDir);
         const forwardDist = isModel ? 1.4 : 0.6;
         const off = camDir.clone().multiplyScalar(-forwardDist);
-        // Y: centre on card for models, just above the card for wireframes.
-        const yOffset = isModel ? 0 : parent.scale.y * 1.05;
+        // Card-local offset: models can be nudged to their visual centre;
+        // wireframes stay just above the card art.
+        const modelOffset = isModel ? (parent.userData.project.modelOffset || {}) : {};
+        const localOffset = new THREE.Vector3(
+          modelOffset.x || 0,
+          isModel ? (modelOffset.y || 0) : parent.scale.y * 1.05,
+          modelOffset.z || 0,
+        ).applyQuaternion(parent.quaternion);
         wire.position.set(
-          parent.position.x + off.x,
-          parent.position.y + yOffset + off.y,
-          parent.position.z + off.z,
+          parent.position.x + off.x + localOffset.x,
+          parent.position.y + off.y + localOffset.y,
+          parent.position.z + off.z + localOffset.z,
         );
         // Continuous slow rotation. Loaded GLBs are the "hero" presentation —
         // they get a gentle yaw-only drift so the form stays readable and
