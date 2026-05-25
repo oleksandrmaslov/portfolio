@@ -66,6 +66,9 @@ function ShellLanding({ section, activeProject }) {
   }, []);
   return (
     <header className="shell lp-shell">
+      <div className="lp-shell__blur" aria-hidden="true">
+        <div /><div /><div /><div /><div /><div /><div />
+      </div>
       <div className="shell__brand">M.O.</div>
       <nav className="shell__nav">
         <a href="#work"  className={section === "work"    ? "is-active" : ""}>WORK</a>
