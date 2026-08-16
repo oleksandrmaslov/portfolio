@@ -8,26 +8,28 @@ const { useState: useMA, useEffect: useME, useMemo: useMM } = React;
    this page is standalone (no dependency on landing/all-projects.jsx). */
 const M_FAMILY_DEFS = [
   { id: "ZMK",      label: "ZMK",         color: "var(--signal)" },
-  { id: "KERFUR",   label: "KERFUR",      color: "#ff9d6b"       },
+  { id: "ZEPHYR",   label: "ZEPHYR",      color: "#ff9d6b"       },
   { id: "KEYBOARD", label: "KEYBOARDS",   color: "#7ec7ff"       },
   { id: "HARDWARE", label: "HARDWARE",    color: "var(--copper)" },
   { id: "OSS",      label: "OPEN SOURCE", color: "#b39dff"       },
   { id: "VOLUNTEER",label: "VOLUNTEER",   color: "var(--pulse)"  },
   { id: "WEB",      label: "WEB · GFX",   color: "#6ee0c0"       },
+  { id: "DESIGN",   label: "DESIGN",      color: "#e0b070"       },
 ];
+/* Addresses follow landing_final3/projects-data.js */
 const M_FAMILY_BY_ADDR = {
-  "0x01": ["ZMK", "HARDWARE", "KEYBOARD"],
-  "0x02": ["KERFUR"],
-  "0x03": ["ZMK", "OSS"],
+  "0x01": ["KEYBOARD", "HARDWARE", "ZMK", "ZEPHYR"],
+  "0x02": ["HARDWARE", "ZEPHYR", "OSS"],
+  "0x03": ["VOLUNTEER", "OSS"],
   "0x04": ["HARDWARE", "VOLUNTEER"],
-  "0x05": ["ZMK", "OSS"],
-  "0x06": ["HARDWARE", "OSS"],
-  "0x07": ["WEB"],
-  "0x08": ["KEYBOARD", "OSS"],
-  "0x09": ["KEYBOARD", "HARDWARE"],
-  "0x0A": ["KERFUR", "OSS"],
-  "0x0B": ["ZMK", "HARDWARE"],
-  "0x0C": ["ZMK", "OSS", "WEB"],
+  "0x05": ["VOLUNTEER", "HARDWARE"],
+  "0x06": ["ZMK", "WEB", "OSS"],
+  "0x07": ["ZMK", "ZEPHYR", "KEYBOARD", "OSS"],
+  "0x08": ["ZMK", "ZEPHYR", "OSS"],
+  "0x09": ["ZMK", "ZEPHYR", "OSS"],
+  "0x0A": ["DESIGN"],
+  "0x0B": ["DESIGN"],
+  "0x0C": ["DESIGN"],
 };
 const mFamColor = (f) => (M_FAMILY_DEFS.find(d => d.id === f) || {}).color || "var(--signal)";
 const mFams     = (p) => M_FAMILY_BY_ADDR[p.addr] || [];
@@ -35,9 +37,9 @@ const mFams     = (p) => M_FAMILY_BY_ADDR[p.addr] || [];
 /* Sort defs */
 const MSORTS = [
   { id: "addr",   label: "ADDR ↑",   cmp: (a, b) => a.addr.localeCompare(b.addr) },
-  { id: "year",   label: "YEAR ↓",   cmp: (a, b) => (b.year || "").localeCompare(a.year || "") },
+  { id: "year",   label: "STATE",    cmp: (a, b) => (a.year || "").localeCompare(b.year || "") },
   { id: "name",   label: "NAME A–Z", cmp: (a, b) => a.name.localeCompare(b.name) },
-  { id: "status", label: "STATUS",   cmp: (a, b) => (b.file ? 1 : 0) - (a.file ? 1 : 0) || a.addr.localeCompare(b.addr) },
+  { id: "status", label: "PAGE",     cmp: (a, b) => (b.file ? 1 : 0) - (a.file ? 1 : 0) || a.addr.localeCompare(b.addr) },
 ];
 
 /* ============================================================
@@ -124,8 +126,8 @@ function ManifestApp() {
       <header className="shell m-shell">
         <div className="shell__brand">M.O.</div>
         <nav className="shell__nav">
-          <a href="Landing v11.html">LANDING ↗</a>
-          <a href="Landing v11.html#work">WORK</a>
+          <a href="Landing Final 3.html">LANDING ↗</a>
+          <a href="Landing Final 3.html#work">WORK</a>
           <a href="Design System.html">SYSTEM ↗</a>
         </nav>
         <div className="shell__status">
@@ -154,7 +156,7 @@ function ManifestApp() {
               ls <span className="m-hero__titleSep">/</span>projects<em>.</em>
             </h1>
             <p className="m-hero__sub">
-              Every node in the universe — including the eight whose case files
+              Every node in the universe — including those whose case files
               are still being written. Sort. Filter. Search. <kbd>j</kbd>/<kbd>k</kbd> to step,
               <kbd>↵</kbd> to open, <kbd>/</kbd> to search.
             </p>
@@ -177,7 +179,7 @@ function ManifestApp() {
             <input
               id="m-search-input"
               className="m-search__input"
-              placeholder='grep — name, stack, year (try "zmk" or "2025")'
+              placeholder='grep — name, stack, state (try "zmk" or "active")'
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               spellCheck="false"
@@ -186,7 +188,6 @@ function ManifestApp() {
             {query && (
               <button className="m-search__clear" onClick={() => setQuery("")}>clear</button>
             )}
-            <div className="m-search__cursor" aria-hidden="true" />
           </div>
 
           <div className="m-controls__row">
@@ -233,10 +234,10 @@ function ManifestApp() {
         <section className="m-manifest">
           <div className="m-manifest__head">
             <span className="m-col-addr">ADDR</span>
-            <span className="m-col-state">STATE</span>
+            <span className="m-col-state">PAGE</span>
             <span className="m-col-name">NAME</span>
             <span className="m-col-sub">DESCRIPTOR</span>
-            <span className="m-col-year">YEAR</span>
+            <span className="m-col-year">STATE</span>
             <span className="m-col-stack">STACK</span>
             <span className="m-col-open">JUMP</span>
           </div>
@@ -277,7 +278,7 @@ function ManifestApp() {
                     <span className="m-row__fams">
                       {fams.map(f => (
                         <span key={f} className="m-row__fam" style={{ "--famColor": mFamColor(f) }}>
-                          {(M_FAMILY_DEFS.find(d => d.id === f) || {}).label || f}
+                          {f}
                         </span>
                       ))}
                     </span>
@@ -317,7 +318,7 @@ function ManifestApp() {
             <span className="m-manifest__footSep" />
             <span>updated 2026 · munich · static html</span>
             <span className="m-manifest__footSep" />
-            <a className="m-manifest__footLink" href="Landing v11.html">return to universe ↗</a>
+            <a className="m-manifest__footLink" href="Landing Final 3.html">return to universe ↗</a>
           </footer>
         </section>
 
@@ -338,7 +339,7 @@ function ManifestApp() {
               <KeyButton
                 legend="U"
                 primary
-                onPress={() => { window.location.href = "Landing v11.html#work"; }}
+                onPress={() => { window.location.href = "Landing Final 3.html#work"; }}
               >
                 UNIVERSE
               </KeyButton>

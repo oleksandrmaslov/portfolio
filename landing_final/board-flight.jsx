@@ -326,9 +326,9 @@ function BoardFlight({ onEnter, onContact }) {
 
           {/* name block — bottom-left, like the tile cards */}
           <div className="uNode__foot">
-            <h3 className="uNode__name">About<em>.</em></h3>
-            <div className="uNode__sub">Every signal resolves to one address — node 0x00.</div>
-            <div className="uNode__cue"><span className="uNode__cueLine" />KEEP SCROLLING — OPEN THE BOARD ↓</div>
+            <h3 className="uNode__name">Source node<em>.</em></h3>
+            <div className="uNode__sub">0x00 has no fixed coordinate. This board is one readable projection of how the source node was formed.</div>
+            <div className="uNode__cue"><span className="uNode__cueLine" />KEEP SCROLLING — INSPECT THE SOURCE ↓</div>
           </div>
         </div>
       </div>
@@ -341,7 +341,7 @@ function BoardFlight({ onEnter, onContact }) {
         {/* section marker */}
         <div className="bf-mark" style={{ opacity: chromeFade }}>
           <span className="bf-mark__dot" />
-          ABOUT · TRACE THE NET
+          0x00 · INTERNAL ARCHITECTURE
         </div>
 
         {/* chapter overlays (fade out as the footer beat takes over) */}
@@ -405,7 +405,7 @@ function BoardFlight({ onEnter, onContact }) {
 
         {/* entry cue */}
         <div className="bf-cue" style={{ opacity: (openGate > 0.99 && prog < 0.05 && foot < 0.02 ? 1 : 0) }}>
-          <span className="bf-cue__line" />KEEP SCROLLING — TRACE THE NET ↓
+          <span className="bf-cue__line" />KEEP SCROLLING — FOLLOW THE TRACE ↓
         </div>
 
         {/* ── FOOTER beat — resolves in-scene over the hero board shot ── */}
@@ -418,6 +418,7 @@ function BoardFlight({ onEnter, onContact }) {
           <div className="bf-foot__scrim" aria-hidden="true" />
           <div className="bf-foot__inner" style={{ transform: `translateY(${((1 - footE) * 40).toFixed(1)}px)` }}>
             <div className="bf-foot__kicker"><span className="bf-foot__live" />SW1 · OUTPUT — OPEN CHANNEL</div>
+            <div className="bf-foot__line">For products that cross hardware, software and interaction.</div>
             <a className="bf-foot__big t-link" href="mailto:oleksandrmaslov08@gmail.com">
               oleksandrmaslov08<wbr />@gmail.com
             </a>
@@ -426,9 +427,9 @@ function BoardFlight({ onEnter, onContact }) {
                 <span className="bf-foot__linkKey">GITHUB</span>
                 <span className="bf-foot__linkVal">@oleksandrmaslov</span><span className="bf-foot__arr">↗</span>
               </a>
-              <a className="bf-foot__link" href="tel:+491723416265">
-                <span className="bf-foot__linkKey">PHONE</span>
-                <span className="bf-foot__linkVal">+49 172 3416265</span><span className="bf-foot__arr">↗</span>
+              <a className="bf-foot__link" href="https://t.me/maslov_oleksandr08">
+                <span className="bf-foot__linkKey">TELEGRAM</span>
+                <span className="bf-foot__linkVal">@maslov_oleksandr08</span><span className="bf-foot__arr">↗</span>
               </a>
               <a className="bf-foot__link" href="#">
                 <span className="bf-foot__linkKey">CV · PDF</span>

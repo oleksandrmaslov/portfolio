@@ -16,6 +16,8 @@
   <link rel="stylesheet" href="system/layout.css" />
   <link rel="stylesheet" href="system/extras.css" />
   <link rel="stylesheet" href="landing/manifest.css" />
+  <!-- Landing Final 2 cursor language: corner-bracket reticle + ASCII RAMP scrollbar -->
+  <link rel="stylesheet" href="landing_final/cursor-ascii.css" />
 </head>
 <body>
   <div id="root"></div>
@@ -57,10 +59,28 @@
     window.KeyButton = KeyButton;
   </script>
 
-  <!-- The 12-project dataset (same source-of-truth as the landing) -->
-  <script type="text/babel" data-presets="env,react" src="landing/universe.jsx"></script>
+  <!-- The node dataset — SINGLE SOURCE OF TRUTH, shared with the landing -->
+  <script src="landing_final3/projects-data.js"></script>
+  <script>
+    /* Adapt MO_PROJECTS into the manifest row shape. The manifest is a table,
+       so it only needs the text columns — no models, no poses. */
+    window.UNIVERSE_PROJECTS = (window.MO_PROJECTS || []).map(function (p) {
+      return {
+        addr: p.addr, kind: p.slug, file: p.file, name: p.name,
+        sub: p.short || p.statement,
+        year: p.state || "",
+        nodeClass: p.nodeClass || "",
+        stack: (p.tags || []).join(" · ").toUpperCase(),
+        mo: p,
+      };
+    });
+    if (!window.UNIVERSE_PROJECTS.length) console.warn("[manifest] MO_PROJECTS missing");
+  </script>
 
   <!-- Manifest page -->
   <script type="text/babel" data-presets="env,react" src="landing/manifest.jsx"></script>
+
+  <!-- ASCII RAMP scrollbar -->
+  <script src="landing_final/landing-scrollbar.js"></script>
 </body>
 </html>

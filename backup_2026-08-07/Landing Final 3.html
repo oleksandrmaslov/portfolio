@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Maslov Oleksandr — Embedded · Firmware · Hardware</title>
+  <meta name="description" content="Maslov Oleksandr — embedded developer, firmware engineer, hardware designer. Munich. Wafer keyboard. Kerfur. ZMK ecosystem. Open source." />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap" />
+
+  <!-- Tokens + shared system -->
+  <link rel="stylesheet" href="system/tokens.css" />
+  <link rel="stylesheet" href="system/layout.css" />
+  <link rel="stylesheet" href="system/extras.css" />
+  <link rel="stylesheet" href="landing_final/landing.css" />
+  <link rel="stylesheet" href="landing_final/origin.css" />
+  <link rel="stylesheet" href="landing_final/board-flight.css" />
+  <link rel="stylesheet" href="landing_final/landing-scroll.css" />
+  <link rel="stylesheet" href="landing_final/cinematic.css" />
+  <link rel="stylesheet" href="landing_final/cursor-ascii.css" />
+  <link rel="stylesheet" href="landing_final/v10.css" />
+  <!-- FINAL 3 — presentation layer: sticky stages fade on the compositor -->
+  <link rel="stylesheet" href="landing_final3/flight.css" />
+  <link rel="stylesheet" href="landing_final/wide.css" />
+  <link rel="stylesheet" href="landing_final3/title.css" />
+
+  <!-- Warm the Wafer v3 handoff target so the cross-page seam has no boot gap. -->
+  <link rel="prefetch" href="Wafer v3.html" as="document" />
+  <link rel="prefetch" href="project_v3/page2.jsx" as="fetch" crossorigin="anonymous" />
+  <link rel="prefetch" href="project_v3/hero-rig.jsx" as="fetch" crossorigin="anonymous" />
+  <link rel="prefetch" href="project_v2/page2.css" as="style" />
+  <link rel="prefetch" href="models/wafer_demo.glb" as="fetch" crossorigin="anonymous" />
+</head>
+<body>
+  <!-- Board-flight entry transition (the chosen concept) -->
+  <script>
+    window.__mo_bf_transition = "takeover";
+    // Temper the camera bank on the origin → work transit (it twisted the
+    // "Selected work." arrival too hard). 1 = old strength.
+    window.__mo_fx = Object.assign({ legRoll: 0.4, wheelYield: 420 }, window.__mo_fx || {});
+  </script>
+  <div id="root"></div>
+
+  <!-- Three.js (ESM) + GLTFLoader, exposed on window.THREE for the
+       non-module Babel-standalone scripts below. -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+  <script type="module">
+    import * as THREE from "three";
+    import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+    import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
+    import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
+    import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+    import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+    import { BokehPass } from "three/addons/postprocessing/BokehPass.js";
+    import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
+    import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
+    import { KTX2Loader } from "three/addons/loaders/KTX2Loader.js";
+    window.THREE = Object.assign({}, THREE, {
+      GLTFLoader, MeshoptDecoder, KTX2Loader,
+      RoomEnvironment, EffectComposer, RenderPass, BokehPass, ShaderPass, OutputPass,
+    });
+  </script>
+
+  <!-- React + Babel -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <!-- Shared core (boot, fib grid, cursor) + key button -->
+  <script type="text/babel" data-presets="env,react" src="system/core.jsx"></script>
+  <script type="text/babel" data-presets="env,react">
+    function KeyButton({ children, legend = "↵", primary, onPress }) {
+      const { useState } = React;
+      const [pressed, setPressed] = useState(false);
+      const [lit, setLit] = useState(false);
+      const fire = (e) => {
+        setPressed(true);
+        setLit(true);
+        if (window.MOSound) { window.MOSound.unlock(); window.MOSound.thock({ vel: 0.85 }); }
+        if (window.__mo_disturb && e && e.currentTarget && e.currentTarget.getBoundingClientRect) {
+          const r = e.currentTarget.getBoundingClientRect();
+          window.__mo_disturb(r.left + r.width / 2, r.top + r.height / 2, 0.8);
+        }
+        onPress && onPress();
+        setTimeout(() => { setPressed(false); if (window.MOSound) window.MOSound.thockUp(); }, 140);
+        setTimeout(() => setLit(false), 520);
+      };
+      const onKey = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fire(); } };
+      return (
+        <button
+          className={"key " + (pressed ? "key--down " : "") + (lit ? "key--lit " : "") + (primary ? "key--primary" : "")}
+          onClick={fire}
+          onKeyDown={onKey}
+        >
+          <span className="key__cap">
+            <span className="key__legendTop">{legend}</span>
+            <span className="key__label">{children}</span>
+          </span>
+          <span className="key__shadow" aria-hidden="true" />
+        </button>
+      );
+    }
+    window.KeyButton = KeyButton;
+  </script>
+
+  <!-- Sound engine + MOSound shell adapter -->
+  <script src="landing_final/carrier-field-v10.js"></script>
+  <script src="carrier-field/mo-sound.js"></script>
+  <!-- Solid materials (plain JS, defined before the rig/cards run) -->
+  <script src="project_v3/solid-materials.js"></script>
+  <script type="text/babel" data-presets="env,react" src="landing_final/ascii.jsx"></script>
+  <script type="text/babel" data-presets="env,react" src="project/viewer3d.jsx"></script>
+  <script type="text/babel" data-presets="env,react" src="project_v3/hero-rig.jsx"></script>
+  <script type="text/babel" data-presets="env,react" src="landing_final/hover-card.jsx"></script>
+  <script type="text/babel" data-presets="env,react" src="landing_final/universe.jsx"></script>
+  <script type="text/babel" data-presets="env,react" src="landing_final/wafer-flight.jsx"></script>
+  <script type="text/babel" data-presets="env,react" src="about_v2/board-scene3.jsx"></script>
+  <script type="text/babel" data-presets="env,react" src="landing_final/board-flight.jsx"></script>
+  <!-- FINAL 3 — page sections: one title, one origin, one work reel -->
+  <script type="text/babel" data-presets="env,react" src="landing_final3/title.jsx"></script>
+  <script type="text/babel" data-presets="env,react" src="landing_final3/origin.jsx"></script>
+  <script type="text/babel" data-presets="env,react" src="landing_final3/work.jsx"></script>
+  <script type="text/babel" data-presets="env,react" src="landing_final3/app.jsx"></script>
+
+  <!-- Cinematic layer -->
+  <script src="landing_final/cinematic.js"></script>
+
+  <!-- Continuous flight — master scroll timeline · unified HUD · doppler wind -->
+  <script src="landing_final3/flight.js"></script>
+
+  <!-- ASCII RAMP scrollbar -->
+  <script src="landing_final/landing-scrollbar.js"></script>
+
+  <!-- Sound score -->
+  <script src="landing_final/score.js"></script>
+</body>
+</html>

@@ -62,12 +62,16 @@ function PCKeyButton({ children, legend = "↵", primary, onPress }) {
 }
 if (!window.KeyButton) window.KeyButton = PCKeyButton;
 
-/* layout → rig offset (same breakpoints as page2.jsx) */
+/* layout → rig offset (same breakpoints as page2.jsx).
+   A page may override any breakpoint with PAGE_CONFIG.heroLayout —
+   { mobile, tablet, desktop } — when its model needs to sit clear of the
+   title column. Omitted keys keep the shared defaults. */
 function pcHeroLayoutParams() {
   const w = window.innerWidth;
-  if (w <= 700)  return { fracX: 0,    scale: 0.58, offY: 0.95 };
-  if (w <= 1000) return { fracX: 0.18, scale: 0.74, offY: 0.18 };
-  return { fracX: 0.34, scale: 0.88, offY: 0 };
+  const o = (window.PAGE_CONFIG && window.PAGE_CONFIG.heroLayout) || {};
+  if (w <= 700)  return Object.assign({ fracX: 0,    scale: 0.58, offY: 0.95 }, o.mobile);
+  if (w <= 1000) return Object.assign({ fracX: 0.18, scale: 0.74, offY: 0.18 }, o.tablet);
+  return Object.assign({ fracX: 0.34, scale: 0.88, offY: 0 }, o.desktop);
 }
 function pcApplyHeroLayout(rig) {
   if (!rig) return;

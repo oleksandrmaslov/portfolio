@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Oleksandr Maslov — Product Systems · Embedded · Interaction</title>
+  <meta name="description" content="Oleksandr Maslov is a product-minded designer and embedded developer based in Munich, building problem-driven systems across hardware, firmware, interfaces and production tooling." />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap" />
+
+  <!-- Tokens + shared system -->
+  <link rel="stylesheet" href="system/tokens.css" />
+  <link rel="stylesheet" href="system/layout.css" />
+  <link rel="stylesheet" href="system/extras.css" />
+  <link rel="stylesheet" href="landing_final/landing.css" />
+  <link rel="stylesheet" href="landing_final/origin.css" />
+  <link rel="stylesheet" href="landing_final/board-flight.css" />
+  <link rel="stylesheet" href="landing_final/landing-scroll.css" />
+  <link rel="stylesheet" href="landing_final/cinematic.css" />
+  <link rel="stylesheet" href="landing_final/cursor-ascii.css" />
+  <link rel="stylesheet" href="landing_final/v10.css" />
+  <!-- FINAL 4 — presentation layer: sticky stages fade on the compositor -->
+  <link rel="stylesheet" href="landing_final4/flight.css" />
+  <link rel="stylesheet" href="landing_final/wide.css" />
+  <link rel="stylesheet" href="landing_final4/title.css" />
+  <link rel="stylesheet" href="landing_final4/nodes.css" />
+
+  <!-- Warm the Wafer v3 handoff target so the cross-page seam has no boot gap. -->
+  <link rel="prefetch" href="Wafer v3.html" as="document" />
+  <link rel="prefetch" href="project_v3/page2.jsx" as="fetch" crossorigin="anonymous" />
+  <link rel="prefetch" href="project_v3/hero-rig.jsx" as="fetch" crossorigin="anonymous" />
+  <link rel="prefetch" href="project_v2/page2.css" as="style" />
+  <link rel="prefetch" href="models/wafer_demo.glb" as="fetch" crossorigin="anonymous" />
+
+  <!-- ENTRY · resolution preloader. Inlined on purpose: this must paint
+       before any stylesheet, script, font or WebGL context exists. -->
+  <style>
+html.mo-pl-on{overflow:hidden}
+#mo-pl{position:fixed;inset:0;z-index:120;background:#05060a;transition:opacity 300ms linear;font-family:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,monospace}
+#mo-pl.is-out{opacity:0}
+#mo-pl.is-hand{background:transparent}
+#mo-pl .mo-pl__seed{position:absolute;inset:0;opacity:.55;transition:opacity 700ms linear;filter:blur(1.4px);background:radial-gradient(1.6px 1.6px at 18% 26%,rgba(226,232,240,.5),transparent 60%),radial-gradient(1.8px 1.8px at 71% 14%,rgba(226,232,240,.42),transparent 60%),radial-gradient(1.4px 1.4px at 44% 63%,rgba(226,232,240,.46),transparent 60%),radial-gradient(2px 2px at 86% 71%,rgba(226,232,240,.34),transparent 60%),radial-gradient(1.5px 1.5px at 29% 84%,rgba(226,232,240,.4),transparent 60%),radial-gradient(1.7px 1.7px at 61% 41%,rgba(226,232,240,.3),transparent 60%)}
+#mo-pl.is-live .mo-pl__seed{opacity:0}
+#mo-pl .mo-pl__cv{position:absolute;inset:0;display:block;transition:opacity 560ms linear}
+#mo-pl.is-hand .mo-pl__cv{opacity:0}
+#mo-pl .mo-pl__ret{position:absolute;inset:34px;pointer-events:none}
+#mo-pl .mo-pl__c{position:absolute;width:15px;height:15px}
+#mo-pl .mo-pl__c::before,#mo-pl .mo-pl__c::after{content:"";position:absolute;background:#00f0c8;opacity:.85}
+#mo-pl .mo-pl__c::before{width:15px;height:1px}
+#mo-pl .mo-pl__c::after{width:1px;height:15px}
+#mo-pl .mo-pl__c--tl{top:0;left:0}#mo-pl .mo-pl__c--tl::before,#mo-pl .mo-pl__c--tl::after{top:0;left:0}
+#mo-pl .mo-pl__c--tr{top:0;right:0}#mo-pl .mo-pl__c--tr::before,#mo-pl .mo-pl__c--tr::after{top:0;right:0}
+#mo-pl .mo-pl__c--bl{bottom:0;left:0}#mo-pl .mo-pl__c--bl::before,#mo-pl .mo-pl__c--bl::after{bottom:0;left:0}
+#mo-pl .mo-pl__c--br{bottom:0;right:0}#mo-pl .mo-pl__c--br::before,#mo-pl .mo-pl__c--br::after{bottom:0;right:0}
+#mo-pl .mo-pl__read{position:absolute;left:34px;bottom:24px;display:flex;flex-direction:column;gap:10px;align-items:flex-start}
+#mo-pl .mo-pl__hex{display:flex;align-items:baseline;font-weight:600;line-height:.82;letter-spacing:-.025em;font-variant-numeric:tabular-nums;font-size:clamp(66px,10vw,158px);color:#e2e8f0}
+#mo-pl .mo-pl__pre{font-size:.34em;letter-spacing:.1em;color:#00f0c8;opacity:.8;margin-right:.24em;transform:translateY(-.9em)}
+#mo-pl .mo-pl__bar{position:relative;width:min(46vw,420px);height:1px;background:rgba(226,232,240,.12);overflow:hidden}
+#mo-pl .mo-pl__bar i{position:absolute;inset:0;background:#00f0c8;transform-origin:0 50%;transform:scaleX(0)}
+#mo-pl .mo-pl__pct{font-size:10px;letter-spacing:.16em;color:rgba(226,232,240,.4)}
+@media (max-width:700px){#mo-pl .mo-pl__ret{inset:18px}#mo-pl .mo-pl__read{left:18px;bottom:18px}#mo-pl .mo-pl__bar{width:64vw}}
+  </style>
+</head>
+<body>
+  <div id="mo-pl" aria-hidden="true">
+    <div class="mo-pl__seed"></div>
+    <canvas class="mo-pl__cv"></canvas>
+    <div class="mo-pl__ret">
+      <span class="mo-pl__c mo-pl__c--tl"></span><span class="mo-pl__c mo-pl__c--tr"></span>
+      <span class="mo-pl__c mo-pl__c--bl"></span><span class="mo-pl__c mo-pl__c--br"></span>
+    </div>
+    <div class="mo-pl__read">
+      <div class="mo-pl__hex"><span class="mo-pl__pre">0x</span><span class="mo-pl__val">00</span></div>
+      <div class="mo-pl__bar"><i></i></div>
+      <div class="mo-pl__pct">0%</div>
+    </div>
+  </div>
+  <script>document.documentElement.classList.add("mo-pl-on");window.__mo_pl_cfg={pct:false};</script>
+  <script src="landing_final4/preloader.js"></script>
+  <!-- Board-flight entry transition (the chosen concept) -->
+  <script>
+    window.__mo_bf_transition = "takeover";
+    // Temper the camera bank on the origin → work transit (it twisted the
+    // "Selected work." arrival too hard). 1 = old strength.
+    window.__mo_fx = Object.assign({ legRoll: 0.4, wheelYield: 420 }, window.__mo_fx || {});
+  </script>
+  <div id="root"></div>
+
+  <!-- Three.js (ESM) + GLTFLoader, exposed on window.THREE for the
+       non-module Babel-standalone scripts below. -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+  <script type="module">
+    import * as THREE from "three";
+    import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+    import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
+    import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
+    import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+    import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+    import { BokehPass } from "three/addons/postprocessing/BokehPass.js";
+    import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
+    import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
+    import { KTX2Loader } from "three/addons/loaders/KTX2Loader.js";
+    window.THREE = Object.assign({}, THREE, {
+      GLTFLoader, MeshoptDecoder, KTX2Loader,
+      RoomEnvironment, EffectComposer, RenderPass, BokehPass, ShaderPass, OutputPass,
+    });
+  </script>
+
+  <!-- React + Babel -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <!-- Shared core (boot, fib grid, cursor) + key button -->
+  <script src="landing_final4/projects-data.js"></script>
+  <script type="text/babel" data-presets="env,react" src="system/core.jsx"></script>
+  <script type="text/babel" data-presets="env,react">
+    function KeyButton({ children, legend = "↵", primary, onPress }) {
+      const { useState } = React;
+      const [pressed, setPressed] = useState(false);
+      const [lit, setLit] = useState(false);
+      const fire = (e) => {
+        setPressed(true);
+        setLit(true);
+        if (window.MOSound) { window.MOSound.unlock(); window.MOSound.thock({ vel: 0.85 }); }
+        if (window.__mo_disturb && e && e.currentTarget && e.currentTarget.getBoundingClientRect) {
+          const r = e.currentTarget.getBoundingClientRect();
+          window.__mo_disturb(r.left + r.width / 2, r.top + r.height / 2, 0.8);
+        }
+        onPress && onPress();
+        setTimeout(() => { setPressed(false); if (window.MOSound) window.MOSound.thockUp(); }, 140);
+        setTimeout(() => setLit(false), 520);
+      };
+      const onKey = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fire(); } };
+      return (
+        <button
+          className={"key " + (pressed ? "key--down " : "") + (lit ? "key--lit " : "") + (primary ? "key--primary" : "")}
+          onClick={fire}
+          onKeyDown={onKey}
+        >
+          <span className="key__cap">
+            <span className="key__legendTop">{legend}</span>
+            <span className="key__label">{children}</span>
+          </span>
+          <span className="key__shadow" aria-hidden="true" />
+        </button>
+      );
+    }
+    window.KeyButton = KeyButton;
+  </script>
+
+  <!-- Sound engine + MOSound shell adapter -->
+  <script src="landing_final/carrier-field-v10.js"></script>
+  <script src="carrier-field/mo-sound.js"></script>
+  <!-- Solid materials (plain JS, defined before the rig/cards run) -->
+  <script src="project_v3/solid-materials.js"></script>
+  <script type="text/babel" data-presets="env,react" src="landing_final/ascii.jsx"></script>
+  <script type="text/babel" data-presets="env,react" src="project/viewer3d.jsx"></script>
+  <script type="text/babel" data-presets="env,react" src="project_v3/hero-rig.jsx"></script>
+  <script type="text/babel" data-presets="env,react" src="project_v3/node-rig.jsx"></script>
+  <script type="text/babel" data-presets="env,react" src="landing_final4/node-stage.jsx"></script>
+  <script type="text/babel" data-presets="env,react" src="landing_final/hover-card.jsx"></script>
+  <script type="text/babel" data-presets="env,react" src="landing_final4/universe.jsx"></script>
+  <script type="text/babel" data-presets="env,react" src="landing_final4/node-handoff.jsx"></script>
+  <script type="text/babel" data-presets="env,react" src="about_v2/board-scene3.jsx"></script>
+  <script type="text/babel" data-presets="env,react" src="landing_final/board-flight.jsx"></script>
+  <!-- FINAL 4 — page sections: one title, one origin, one work reel -->
+  <script type="text/babel" data-presets="env,react" src="landing_final4/title.jsx"></script>
+  <script type="text/babel" data-presets="env,react" src="landing_final4/origin.jsx"></script>
+  <script type="text/babel" data-presets="env,react" src="landing_final4/work.jsx"></script>
+  <script type="text/babel" data-presets="env,react" src="landing_final4/app.jsx"></script>
+
+  <!-- Cinematic layer -->
+  <script src="landing_final/cinematic.js"></script>
+
+  <!-- Continuous flight — master scroll timeline · unified HUD · doppler wind -->
+  <script src="landing_final4/flight.js"></script>
+
+  <!-- ASCII RAMP scrollbar -->
+  <script src="landing_final/landing-scrollbar.js"></script>
+
+  <!-- Sound score -->
+  <script src="landing_final/score.js"></script>
+</body>
+</html>

@@ -160,3 +160,7 @@
   .bf-foot__big { word-break: break-all; }
   .bf-hud { display: none; }
 }
+
+/* footer intro line (2026-08 concept pass) */
+.bf-foot__line{font-family:var(--ff-display,'Geist',sans-serif);font-size:14px;letter-spacing:0.01em;color:var(--ghost,#9aa3b3);margin:12px 0 4px}
+@media (max-width:700px){.bf-foot__line{font-size:13px}}

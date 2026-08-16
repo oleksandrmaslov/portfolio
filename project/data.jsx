@@ -198,7 +198,7 @@ const PROJECT_DATA = {
     links: [
       { kind: "GITHUB",  label: "oleksandrmaslov/tac-light", href: "https://github.com/oleksandrmaslov" },
       { kind: "CASE PDF", label: "case-file · 6 pages · pending", href: "#" },
-      { kind: "PROJECT", label: "Energy for Ukraine", href: "#" },
+      { kind: "PROJECT", label: "Energy for Ukraine", href: "https://energyforukraine.de/" },
     ],
     prev: "0x03",
     next: "0x07",
@@ -253,8 +253,8 @@ PROJECT_DATA["0x09"] = {
   ],
   links: [
     { kind: "GITHUB",  label: "oleksandrmaslov/iskra", href: "https://github.com/oleksandrmaslov/iskra" },
-    { kind: "INSTALLER", label: "Iskra setup · Windows · pending", href: "#" },
-    { kind: "PROJECT", label: "Energy for Ukraine", href: "#" },
+    { kind: "INSTALLER", label: "Iskra setup · Windows", href: "https://github.com/oleksandrmaslov/iskra/releases" },
+    { kind: "PROJECT", label: "Energy for Ukraine", href: "https://energyforukraine.de/" },
   ],
   prev: "0x08",
   next: "0x01",
