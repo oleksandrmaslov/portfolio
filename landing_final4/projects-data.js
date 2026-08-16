@@ -102,7 +102,11 @@
       statement: "Host information synchronized across both halves of a wireless split keyboard.",
       short: "Split-synchronized host display",
       tags: ["ZMK", "Zephyr", "Displays"],
-      model: mdl({}),
+      model: mdl({
+        ready: true, src: "models/keyboard-display.opt.glb", proxy: null,
+        rigPose: { x: -0.08, y: -0.24, z: 0 },
+        cardPose: { scale: 1, yaw: 0, pitch: 0, offsetY: 0, fit: 1.60, pose: { x: -0.08, y: -0.24, z: 0 } },
+      }),
     },
     {
       addr: "0x08", slug: "zmk-pointaccel", name: "ZMK Pointing Acceleration",
@@ -124,7 +128,11 @@
       statement: "Reliable shutdown and wake behaviour for wireless split keyboards.",
       short: "Shutdown + wake firmware module",
       tags: ["ZMK", "Zephyr", "Power"],
-      model: mdl({}),
+      model: mdl({
+        ready: true, src: "models/soft-off-keycap.opt.glb", proxy: null,
+        rigPose: { x: -0.18, y: 0.38, z: 0 },
+        cardPose: { scale: 1, yaw: 0, pitch: 0, offsetY: 0, fit: 1.35, pose: { x: -0.18, y: 0.38, z: 0 } },
+      }),
     },
     {
       addr: "0x0A", slug: "sightseeing-inc", name: "Sightseeing.inc",
@@ -173,7 +181,7 @@
   window.MO_PROJECT_BY_ADDR = {};
   for (const p of window.MO_PROJECTS) window.MO_PROJECT_BY_ADDR[p.addr] = p;
 
-  /* TODO(models): Venovisor, Kerfur, ZMK Split HID Display and
-     ZMK Soft Off Plus have no GLB yet — they render the "node-shell" proxy.
+  /* TODO(models): Venovisor and Kerfur have no GLB yet, so they render
+     the "node-shell" proxy.
      To wire a future model: set ready: true + src: "models/<file>.glb". */
 })();

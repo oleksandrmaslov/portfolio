@@ -64,90 +64,12 @@
       addr: "0x08",
       docTitle: "Split HID Display — Maslov Oleksandr",
       hero: {
-        /* the module made physical: two nice!view display boards — the central
-           (status) and the peripheral (media) half — threaded by the split BLE
-           link, with a pulse sweeping central → peripheral (a forwarded Raw HID
-           report) that flashes each screen as it arrives — both halves in sync. */
+        /* The production Raw HID display frame. The GLB keeps the front/back
+           faces and lit-pixel material authored in the source model. */
+        model: "models/keyboard-display.opt.glb",
         matcap: false,
-        modelFit: 3.4,
-        pose: { x: 0.12, y: 0.42, z: 0 },
-        buildModel: (THREE) => {
-          const SIGNAL = 0x00f0c8;
-          const g = new THREE.Group();
-          const Rounded = THREE.RoundedBoxGeometry;
-          const boardGeo = () => Rounded
-            ? new Rounded(1.05, 1.5, 0.07, 4, 0.05)
-            : new THREE.BoxGeometry(1.05, 1.5, 0.07);
-
-          const HALVES = [
-            { x: -0.78, rows: [0.46, 0.20, -0.08, -0.34, -0.56] }, // central · status
-            { x:  0.78, rows: [0.36, 0.04, -0.30] },               // peripheral · media
-          ];
-          const screens = [];
-          HALVES.forEach((H, i) => {
-            const board = new THREE.Mesh(boardGeo(), new THREE.MeshStandardMaterial({
-              color: 0x232c3a, metalness: 0.45, roughness: 0.5,
-            }));
-            board.position.x = H.x;
-            const edges = new THREE.LineSegments(
-              new THREE.EdgesGeometry(board.geometry),
-              new THREE.LineBasicMaterial({ color: SIGNAL, transparent: true, opacity: 0.28 })
-            );
-            edges.position.copy(board.position);
-            /* dark inset screen face */
-            const screen = new THREE.Mesh(
-              new THREE.PlaneGeometry(0.8, 1.2),
-              new THREE.MeshBasicMaterial({ color: 0x06222a })
-            );
-            screen.position.set(H.x, 0, 0.038);
-            /* UI text-line bars on the screen */
-            const bars = new THREE.Group();
-            H.rows.forEach((y, r) => {
-              const w = 0.18 + ((r * 7 + i * 3) % 5) * 0.1;
-              const bar = new THREE.Mesh(
-                new THREE.PlaneGeometry(w, 0.055),
-                new THREE.MeshBasicMaterial({ color: SIGNAL, transparent: true, opacity: 0.8 })
-              );
-              bar.position.set(H.x - 0.32 + w / 2, y, 0.041);
-              bars.add(bar);
-            });
-            g.add(board, edges, screen, bars);
-            screens.push({ board, edges, screen, bars, homeX: H.x });
-          });
-
-          /* the split BLE link threading the two halves */
-          const link = new THREE.Mesh(
-            new THREE.CylinderGeometry(0.012, 0.012, 1.56, 8),
-            new THREE.MeshBasicMaterial({ color: SIGNAL, transparent: true, opacity: 0.3 })
-          );
-          link.rotation.z = Math.PI / 2;
-          g.add(link);
-
-          /* a forwarded report sweeping central → peripheral */
-          const pulse = new THREE.PointLight(SIGNAL, 1.0, 2.6);
-          const pulseDot = new THREE.Mesh(
-            new THREE.SphereGeometry(0.045, 12, 10),
-            new THREE.MeshBasicMaterial({ color: SIGNAL })
-          );
-          g.add(pulse, pulseDot);
-
-          const t0 = performance.now();
-          const tick = (now) => {
-            const t = (now - t0) / 1000;
-            const u = (t % 1.7) / 1.7;
-            const px = -0.78 + u * 1.56;
-            pulse.position.set(px, 0, 0.22);
-            pulseDot.position.set(px, 0, 0.07);
-            screens.forEach((s) => {
-              const near = 1 - Math.min(1, Math.abs(px - s.homeX) / 0.42);
-              s.edges.material.opacity = 0.28 + near * 0.62;
-              s.bars.children.forEach((b) => { b.material.opacity = 0.5 + near * 0.45; });
-            });
-            if (!window.__hv_leaving) requestAnimationFrame(tick);
-          };
-          requestAnimationFrame(tick);
-          return g;
-        },
+        modelFit: 2.8,
+        pose: { x: -0.08, y: -0.24, z: 0 },
       },
       link: { label: "VIEW ON GITHUB", href: "https://github.com/oleksandrmaslov/zmk-split-hid-display", hint: "ZMK MODULE · SOURCE" },
       tweakDefaults: /*EDITMODE-BEGIN*/{}/*EDITMODE-END*/,
