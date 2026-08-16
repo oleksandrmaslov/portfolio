@@ -2,7 +2,7 @@
    M.O. SYSTEM — Wafer v2 · project page
    ------------------------------------------------------------
    The wafer model (shared rig) is the hero. On arrival from the
-   Landing v6 flight it SNAPS to the canonical pose (seam), then
+   Final 5 node flight it snaps to the canonical pose (seam), then
    eases to the hero rest layout while the title resolves around it.
 
    · bottom-right INSPECT keycap → dim the page, raise the model
@@ -10,25 +10,23 @@
    · leaving (ESC / wordmark / footer home) → the model flies back
      out and we return to wherever the user came from (universe title
      screen or the work reel).
-   · hero layout is fixed to classic (model right · title left);
-     explore other layouts in project_v2/lab/Hero Lab.html.
+   · hero layout is fixed to classic (model right · title left).
    ============================================================ */
 const { useState: useP2, useEffect: useEP2, useRef: useRP2 } = React;
 
-/* Wafer hero config — the production page is fixed to the classic layout
-   (model right, title left). Use "Hero Lab.html" to explore other layouts. */
+/* Wafer hero config — model right, title left. */
 const HERO_LAYOUT = "right";   // "right" | "center" | "left"
 const IDLE_DRIFT = true;
 
-/* PLAY DEMO · tweakable defaults (Tweaks panel) */
-const WAFER_TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+/* PLAY DEMO · production defaults */
+const WAFER_TWEAK_DEFAULTS = {
   "direction": "cinematic",
   "hud": "full",
   "explodeDist": 1,
   "stagger": 0.65,
   "thockPitch": 1,
   "soundLevel": 0.8
-}/*EDITMODE-END*/;
+};
 
 /* layout → rig offset (fraction of half-width), scale, vertical offset.
    Width-aware: on phones the board floats up-top and shrinks so the title
@@ -43,38 +41,6 @@ function applyHeroLayout(rig) {
   if (!rig) return;
   const p = heroLayoutParams();
   rig.setLayout(p.fracX, p.scale, p.offY);
-}
-
-/* ============================================================
-   Reused long-form sections (markup mirrors project/page.jsx,
-   so project/page.css styles them unchanged)
-   ============================================================ */
-function PhotoHolder({ caption, label = "PHOTO · PLACEHOLDER", id }) {
-  return (
-    <figure className="ph">
-      <div className="ph__chrome">
-        <span className="ph__chromeDot" />
-        <span>{label}</span>
-        <span className="ph__chromeSep" />
-        <span>{id || "—"}</span>
-      </div>
-      <div className="ph__photo">
-        <div className="ph__phStripes" />
-        <div className="ph__phCorner ph__phCorner--tl" />
-        <div className="ph__phCorner ph__phCorner--tr" />
-        <div className="ph__phCorner ph__phCorner--bl" />
-        <div className="ph__phCorner ph__phCorner--br" />
-        <div className="ph__phCross" />
-        <div className="ph__phNote">[ drop image · 4:5 · jpg ]</div>
-      </div>
-      {caption && (
-        <figcaption className="ph__cap">
-          <span className="ph__capK">CAP</span>
-          <span className="ph__capV">{caption}</span>
-        </figcaption>
-      )}
-    </figure>
-  );
 }
 
 function SectionBlock({ block, i }) {
@@ -150,11 +116,17 @@ function leaveToUniverse() {
   document.body.classList.add("hv-exit");            // page content fades; the model stage stays
   // return to wherever the user opened the project FROM: universe title screen
   // (clicked a floating node) or the work reel (clicked a work card).
-  const returnTo = sessionStorage.getItem("mo_wafer_return_to") || "work";
-  sessionStorage.removeItem("mo_wafer_return_to");
-  sessionStorage.setItem("mo_wafer_return", "1");    // landing picks up the spinning model + dissolves
-  sessionStorage.setItem("mo_wafer_return_target", returnTo);
-  const dest = returnTo === "universe" ? "Landing v12.html" : "Landing v12.html#work";
+  try {
+    const seam = window.__waferRig && window.__waferRig.captureFrame ? window.__waferRig.captureFrame() : null;
+    if (seam) sessionStorage.setItem("mo_node_seam", seam);
+    if (window.__waferRig && window.__waferRig.yaw != null) sessionStorage.setItem("mo_node_yaw", String(window.__waferRig.yaw));
+  } catch (_) {}
+  const returnTo = sessionStorage.getItem("mo_node_return_origin") || "work";
+  sessionStorage.removeItem("mo_node_return_origin");
+  sessionStorage.setItem("mo_node_return", "1");
+  sessionStorage.setItem("mo_node_return_addr", "0x01");
+  sessionStorage.setItem("mo_node_return_target", returnTo);
+  const dest = returnTo === "universe" ? "Landing Final 5.html" : "Landing Final 5.html#work";
   setTimeout(() => { window.location.href = dest; }, 720);
 }
 
@@ -164,7 +136,7 @@ function ProjectFooterNav({ project }) {
   const goTo = (p) => {
     if (!p) return;
     document.body.classList.add("hv-exit");
-    setTimeout(() => { window.location.href = p.file; }, 420);
+    setTimeout(() => { window.location.href = p.file2 || p.file; }, 420);
   };
   return (
     <footer className="pp-foot" data-screen-label="05 Foot">
@@ -191,7 +163,7 @@ function ProjectFooterNav({ project }) {
       <div className="pp-foot__rule" />
       <div className="pp-foot__legal">
         <span>© 2026 · MASLOV OLEKSANDR</span>
-        <span>BUILT IN MUNICH · v0.1.0</span>
+        <span>BUILT IN MUNICH</span>
         <span>[ESC] · back to universe</span>
       </div>
     </footer>
@@ -207,17 +179,16 @@ function WaferShell({ project }) {
       <div className="pp-shell__blur" aria-hidden="true">
         <div /><div /><div /><div /><div /><div /><div />
       </div>
-      <a href="Landing v12.html" className="shell__brand pp-shell__brand"
+      <a href="Landing Final 5.html" className="shell__brand pp-shell__brand"
          onClick={(e) => { e.preventDefault(); leaveToUniverse(); }}>
         <span className="pp-shell__brandM">M.O.</span>
         <span className="pp-shell__brandSep" />
         <span className="pp-shell__brandBack">← UNIVERSE</span>
       </a>
       <nav className="shell__nav pp-shell__nav">
-        <a href="Landing v12.html#work" onClick={(e) => { e.preventDefault(); leaveToUniverse(); }}>WORK</a>
-        <a href="Landing v12.html#about" onClick={(e) => { e.preventDefault(); leaveToUniverse(); }}>ABOUT</a>
-        <a href="Landing v12.html#contact" onClick={(e) => { e.preventDefault(); leaveToUniverse(); }}>CONTACT</a>
-        <a href="Design System.html">SYSTEM ↗</a>
+        <a href="Landing Final 5.html#work" onClick={(e) => { e.preventDefault(); leaveToUniverse(); }}>WORK</a>
+        <a href="Landing Final 5.html#about" onClick={(e) => { e.preventDefault(); leaveToUniverse(); }}>ABOUT</a>
+        <a href="Landing Final 5.html#contact" onClick={(e) => { e.preventDefault(); leaveToUniverse(); }}>CONTACT</a>
       </nav>
       <div className="shell__status pp-shell__status">
         <span className="shell__dot" />
@@ -281,7 +252,7 @@ function WaferV2App() {
   const project = window.PROJECT_DATA["0x01"];
   const [ready, setReady] = useP2(false);
   const [demo, setDemo] = useP2(false);
-  const [tweaks, setTweak] = useTweaks(WAFER_TWEAK_DEFAULTS);
+  const tweaks = WAFER_TWEAK_DEFAULTS;
 
   const stageRef = useRP2(null);
   const rigRef   = useRP2(null);
@@ -297,8 +268,9 @@ function WaferV2App() {
     window.__waferRig = rig;
     if (!rig) { setReady(true); return; }
 
-    const arrived = sessionStorage.getItem("mo_wafer_arrive") === "1";
-    sessionStorage.removeItem("mo_wafer_arrive");
+    const arrived = sessionStorage.getItem("mo_node_arrive") === "1"
+                 && sessionStorage.getItem("mo_node_addr") === "0x01";
+    sessionStorage.removeItem("mo_node_arrive");
 
     const settleToRest = (yawTarget) => {
       if (yawTarget != null) rig.setYawTarget(yawTarget);
@@ -315,8 +287,8 @@ function WaferV2App() {
       // hero-rest-equivalent angle — completing one smooth ~360° across the
       // page swap (the Cartier move), never spinning backward.
       const RG = window.WAFER_RIG;
-      const seamYaw = parseFloat(sessionStorage.getItem("mo_wafer_yaw"));
-      sessionStorage.removeItem("mo_wafer_yaw");
+      const seamYaw = parseFloat(sessionStorage.getItem("mo_node_yaw"));
+      sessionStorage.removeItem("mo_node_yaw");
       let bootYaw, restYaw;
       if (isFinite(seamYaw)) {
         bootYaw = seamYaw;
@@ -336,7 +308,7 @@ function WaferV2App() {
       const dropSeam = () => {
         const s = document.getElementById("mo-seam");
         if (s) { s.style.opacity = "0"; setTimeout(() => s.remove(), 600); }
-        sessionStorage.removeItem("mo_wafer_seam");
+        sessionStorage.removeItem("mo_node_seam");
       };
       const waitReady = () => {
         if (rig.ready) { requestAnimationFrame(() => requestAnimationFrame(dropSeam)); }
@@ -344,8 +316,8 @@ function WaferV2App() {
       };
       waitReady();
     } else {
-      sessionStorage.removeItem("mo_wafer_seam");
-      sessionStorage.removeItem("mo_wafer_yaw");
+      sessionStorage.removeItem("mo_node_seam");
+      sessionStorage.removeItem("mo_node_yaw");
       const s0 = document.getElementById("mo-seam"); if (s0) s0.remove();
       rig.beginHandoff();                     // direct load: appear centered, then settle
       setTimeout(settleToRest, 460);
@@ -415,16 +387,14 @@ function WaferV2App() {
 
   return (
     <>
-      <FibGrid />
-      <Cursor />
-
+      <a className="pp-skip" href="#project-content">Skip to project story</a>
       {/* persistent model stage (behind content; raised during inspect) */}
       <div className="hv-stage"><div className="hv-stage__mount" ref={stageRef} /></div>
       <div className="hv-scrim" aria-hidden="true" />
 
       <div className={"hv-page " + (ready ? "hv-page--ready" : "")}>
         <WaferShell project={project} />
-        <main className="pp">
+        <main className="pp" id="project-content" tabIndex="-1">
           <WaferHero project={project} layout={HERO_LAYOUT} onInspect={enterDemo} />
           <ProjectStory project={project} />
           <ProjectLinks project={project} />
@@ -441,25 +411,6 @@ function WaferV2App() {
       {/* fullscreen demo stage + HUD (always mounted; controls its own fade) */}
       <WaferDemoLayer active={demo} onClose={exitDemo} tweaks={tweaks} />
 
-      <TweaksPanel>
-        <TweakSection label="Demo" />
-        <TweakRadio label="Direction" value={tweaks.direction}
-                    options={["cinematic", "sandbox"]}
-                    onChange={(v) => setTweak("direction", v)} />
-        <TweakRadio label="HUD density" value={tweaks.hud}
-                    options={["full", "minimal"]}
-                    onChange={(v) => setTweak("hud", v)} />
-        <TweakSection label="Explode" />
-        <TweakSlider label="Distance" value={tweaks.explodeDist} min={0.6} max={1.8} step={0.05}
-                     onChange={(v) => setTweak("explodeDist", v)} />
-        <TweakSlider label="Stagger" value={tweaks.stagger} min={0} max={1} step={0.05}
-                     onChange={(v) => setTweak("stagger", v)} />
-        <TweakSection label="Sound" />
-        <TweakSlider label="Thock pitch" value={tweaks.thockPitch} min={0.7} max={1.3} step={0.05}
-                     onChange={(v) => setTweak("thockPitch", v)} />
-        <TweakSlider label="Field level" value={tweaks.soundLevel} min={0} max={1} step={0.05}
-                     onChange={(v) => setTweak("soundLevel", v)} />
-      </TweaksPanel>
     </>
   );
 }

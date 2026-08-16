@@ -1,7 +1,7 @@
 /* ============================================================
    M.O. SYSTEM — FINAL 5 · TITLE SCREEN
    The only title screen now (the v1 one lived in landing.jsx and was
-   overwritten at load time; FINAL 3 deleted it). Its unused in-view
+   overwritten at load time). Its unused in-view
    observer is gone too — app.jsx owns section tracking.
    Layout:
    · frame corners align with the content column (header 34px gutter)
@@ -52,59 +52,82 @@ function FieldGuideT2({ dismissed, touch }) {
   );
 }
 
-function ExploreOverlayT2({ onClose }) {
-  const [gyro, setGyro] = useT2(false);
+function ExploreOverlayT2({ onClose, returnFocusRef }) {
+  const closeRef = useT2R(null);
+  const [engaged, setEngaged] = useT2(false);
+
   useT2E(() => {
     document.body.classList.add("mo-explore");
     if (window.__mo_universe) window.__mo_universe.setExplore(true);
     const prevOv = document.documentElement.style.overflow;
+    const prevOverscroll = document.documentElement.style.overscrollBehavior;
     document.documentElement.style.overflow = "hidden";
-    return () => {
-      document.body.classList.remove("mo-explore");
-      if (window.__mo_universe) {
-        window.__mo_universe.setExplore(false);
-        window.__mo_universe.setGyro(false);
+    document.documentElement.style.overscrollBehavior = "none";
+
+    const focusFrame = requestAnimationFrame(() => closeRef.current && closeRef.current.focus());
+    const onKeyDown = (e) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        onClose();
+        return;
       }
+      // EXIT is deliberately the only focusable control in this modal field.
+      // Keep keyboard focus there while pointer input continues through to WebGL.
+      if (e.key === "Tab") {
+        e.preventDefault();
+        if (closeRef.current) closeRef.current.focus();
+      }
+    };
+    const onOrbit = () => setEngaged(true);
+    document.addEventListener("keydown", onKeyDown);
+    window.addEventListener("mo:exploreOrbit", onOrbit, { once: true });
+
+    return () => {
+      cancelAnimationFrame(focusFrame);
+      document.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("mo:exploreOrbit", onOrbit);
+      document.body.classList.remove("mo-explore");
+      if (window.__mo_universe) window.__mo_universe.setExplore(false);
       document.documentElement.style.overflow = prevOv;
+      document.documentElement.style.overscrollBehavior = prevOverscroll;
+      requestAnimationFrame(() => {
+        const trigger = returnFocusRef && returnFocusRef.current;
+        const button = trigger && trigger.querySelector("button");
+        if (button) button.focus();
+      });
     };
   }, []);
-  useT2E(() => {
-    const onGranted = () => setGyro(true);
-    window.addEventListener("mo:gyroOn", onGranted);
-    return () => window.removeEventListener("mo:gyroOn", onGranted);
-  }, []);
+
   return (
-    <div className="xpl" data-screen-label="01b Explore mode">
+    <div
+      className={"xpl " + (engaged ? "is-engaged" : "")}
+      data-screen-label="01b Explore mode"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="xpl-title"
+      aria-describedby="xpl-instructions"
+    >
       <div className="xpl__top">
-        <span className="xpl__tag"><span className="xpl__dot" />FIELD · LIVE</span>
-        <button type="button" className="xpl__close" onClick={onClose}>EXIT ✕</button>
+        <span className="xpl__tag" id="xpl-title"><span className="xpl__dot" />FIELD · FREE ORBIT</span>
+        <button ref={closeRef} type="button" className="xpl__close" onClick={onClose} aria-label="Exit explore mode">EXIT <span aria-hidden="true">✕</span></button>
       </div>
-      <div className="xpl__hint">
-        {gyro ? "move your phone — look · pinch — fly · tap a node" : "drag — look · pinch — fly · tap a node"}
+      <div className="xpl__orbitCue" aria-hidden="true">
+        <span className="xpl__orbitTrack"><span className="xpl__orbitMark" /></span>
+        <span className="xpl__orbitLabel">DRAG TO ORBIT</span>
+      </div>
+      <div className="xpl__hint" id="xpl-instructions">
+        <span>ONE FINGER · ORBIT</span>
+        <span>PINCH · DEPTH</span>
+        <span>TAP · OPEN</span>
       </div>
     </div>
   );
 }
 
-function requestGyroInGestureT2() {
-  try {
-    const enable = () => {
-      if (window.__mo_universe) window.__mo_universe.setGyro(true);
-      try { window.dispatchEvent(new CustomEvent("mo:gyroOn")); } catch (_) {}
-    };
-    if (window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === "function") {
-      DeviceOrientationEvent.requestPermission()
-        .then((res) => { if (res === "granted") enable(); })
-        .catch(() => {});
-    } else if (window.DeviceOrientationEvent) {
-      enable();
-    }
-  } catch (_) {}
-}
-
 function TitleScreenV2() {
   const compact = useCompactT2(700);
   const showExplore = compact || IS_TOUCH_T2;
+  const exploreTriggerRef = useT2R(null);
   const [explore, setExplore] = useT2(false);
   const [touched, setTouched] = useT2(() => sessionStorage.getItem("mo_field_touched") === "1");
   useT2E(() => {
@@ -149,7 +172,7 @@ function TitleScreenV2() {
       </div>
 
       <FieldGuideT2 dismissed={touched} touch={showExplore} />
-      {explore && <ExploreOverlayT2 onClose={() => setExplore(false)} />}
+      {explore && <ExploreOverlayT2 onClose={() => setExplore(false)} returnFocusRef={exploreTriggerRef} />}
 
       {/* M.O. wordmark — bare ASCII, no sub-line, no hairline */}
       <div className="title__wordmark">
@@ -160,7 +183,9 @@ function TitleScreenV2() {
       <div className="title__ctl">
         <div className="title__proceedRow">
           {showExplore && (
-            <KeyButton legend="✛" onPress={() => { requestGyroInGestureT2(); setExplore(true); }}>EXPLORE</KeyButton>
+            <span className="title__exploreTrigger" ref={exploreTriggerRef}>
+              <KeyButton legend="✛" onPress={() => setExplore(true)}>EXPLORE</KeyButton>
+            </span>
           )}
           <span className="scrollcue scrollcue--stack">
             <span className="scrollcue__txt">Continue</span>

@@ -1,88 +1,6 @@
 /* ============================================================
-   M.O. SYSTEM — Extras (FibGrid, Bus3D, KeyButton, PhotoTile, Cursor v2)
+   M.O. SYSTEM — Extras (Bus3D, KeyButton, PhotoTile)
    ============================================================ */
-
-/* ============================================================
-   FIB GRID — Fibonacci column overlay
-   ============================================================ */
-.fibGrid {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 2;
-  opacity: 0;
-  transition: opacity var(--d-base) var(--e-out);
-}
-.fibGrid--on { opacity: 1; }
-
-.fibGrid__rails {
-  position: absolute;
-  inset: 0;
-  margin: 0 auto;
-  max-width: var(--w-canvas);
-  padding: 0 var(--s-7);
-}
-.fibGrid__v {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 2px;
-  background: var(--signal);
-  opacity: 0.65;
-  box-shadow: 0 0 10px var(--signal-glow);
-}
-.fibGrid__v::after {
-  content: "";
-  position: absolute;
-  top: 0; bottom: 0; left: 50%;
-  width: 1px;
-  background: var(--signal);
-  box-shadow: 0 0 14px var(--signal);
-  opacity: 0.8;
-  transform: translateX(-50%);
-}
-.fibGrid__h {
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: var(--signal);
-  opacity: 0.45;
-  box-shadow: 0 0 8px var(--signal-glow);
-}
-.fibGrid__tick {
-  position: absolute;
-  top: 78px;
-  left: 8px;
-  font-family: var(--ff-mono);
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.06em;
-  color: var(--signal);
-  opacity: 0.95;
-  text-shadow: 0 0 10px var(--signal-glow);
-}
-.fibGrid__legend {
-  position: fixed;
-  bottom: var(--s-6);
-  left: var(--s-7);
-  display: flex;
-  align-items: center;
-  gap: var(--s-4);
-  font-family: var(--ff-mono);
-  font-size: var(--fs-micro);
-  letter-spacing: var(--tr-caps);
-  text-transform: uppercase;
-  color: var(--signal);
-  opacity: 0;
-  transition: opacity var(--d-base);
-}
-.fibGrid--on .fibGrid__legend { opacity: 1; }
-.fibGrid__legendDot {
-  width: 6px; height: 6px; border-radius: 50%;
-  background: var(--signal);
-  box-shadow: 0 0 10px var(--signal);
-}
 
 /* keyboard hint in the shell */
 .shell__hint {
@@ -310,7 +228,6 @@
   border: 1px solid var(--hairline);
   background: var(--carbon);
   overflow: hidden;
-  cursor: none;
   margin: 0;
   transition: border-color var(--d-fast);
 }
@@ -402,73 +319,6 @@
 .photoTile__year  { color: var(--ghost); }
 
 /* ============================================================
-   CURSOR — adaptive variants (override of base cursor styles)
-   ============================================================ */
-.cursor {
-  position: fixed;
-  top: 0; left: 0;
-  width: var(--cursor-size);
-  height: var(--cursor-size);
-  z-index: 9000;
-  pointer-events: none;
-  mix-blend-mode: difference;
-  transition: width var(--d-fast) var(--e-out), height var(--d-fast) var(--e-out);
-}
-.cursor__ring {
-  position: absolute;
-  inset: 0;
-  border: 1px solid var(--bone);
-  border-radius: 50%;
-  transition: transform var(--d-fast) var(--e-out), border-color var(--d-fast), border-radius var(--d-fast);
-}
-.cursor__center {
-  position: absolute;
-  top: 50%; left: 50%;
-  width: 3px; height: 3px;
-  background: var(--bone);
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  transition: background var(--d-fast);
-}
-.cursor__hLine, .cursor__vLine {
-  position: absolute;
-  background: var(--bone);
-  opacity: 0;
-  transition: opacity var(--d-fast);
-}
-.cursor__hLine { left: 50%; top: 50%; width: 60px; height: 1px; transform: translate(-50%, -50%); }
-.cursor__vLine { left: 50%; top: 50%; height: 60px; width: 1px; transform: translate(-50%, -50%); }
-
-.cursor__coords {
-  position: absolute;
-  top: 130%;
-  left: 50%;
-  transform: translateX(-50%);
-  font-family: var(--ff-mono);
-  font-size: 9px;
-  color: var(--bone);
-  white-space: nowrap;
-  letter-spacing: 0.04em;
-}
-
-/* idle — small dot */
-.cursor--idle .cursor__ring   { transform: scale(0.85); opacity: 0.7; }
-
-/* hot — open / link */
-.cursor--hot .cursor__ring    { transform: scale(1.8); border-color: var(--signal); }
-.cursor--hot .cursor__center  { background: var(--signal); }
-
-/* grab — over 3D bus */
-.cursor--grab .cursor__ring   { transform: scale(1.4); border-radius: 0; border-color: var(--signal); }
-.cursor--grab .cursor__center { background: var(--signal); width: 2px; height: 2px; }
-
-/* probe — over a photo tile (crosshair reticle) */
-.cursor--probe .cursor__ring   { transform: scale(2.4); border-radius: 0; border-color: var(--signal); opacity: 0.7; }
-.cursor--probe .cursor__center { width: 2px; height: 2px; background: var(--signal); }
-.cursor--probe .cursor__hLine  { opacity: 0.9; background: var(--signal); }
-.cursor--probe .cursor__vLine  { opacity: 0.9; background: var(--signal); }
-
-/* ============================================================
    ALIGN TO FIB GRID — section-head matches column 1+2 of grid
    ============================================================ */
 /* Existing section__head columns are 144px / 1fr / 144px which
@@ -486,5 +336,4 @@
   .photoGrid { grid-template-columns: 1fr; }
   .hero__stage { grid-template-columns: 1fr; }
   .hero__stageBus { aspect-ratio: 4 / 3; }
-  .fibGrid { display: none; }
 }

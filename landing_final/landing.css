@@ -601,10 +601,9 @@ body.landing-exit .universeBg {
 }
 
 /* ============================================================
-   v11 — EXPLORE MODE · mobile universe window
-   The overlay is pointer-transparent (touches fall through to the
-   universe mount); only its buttons take events. Page scroll is locked
-   by the component while it's open.
+   FINAL 5 — EXPLORE MODE · stable free-orbit window
+   The overlay is pointer-transparent (touches reach the universe);
+   EXIT remains the one protected focus target.
    ============================================================ */
 .xpl {
   position: fixed;
@@ -613,12 +612,13 @@ body.landing-exit .universeBg {
   pointer-events: none;
   display: flex;
   flex-direction: column;
+  isolation: isolate;
 }
 .xpl__top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: calc(env(safe-area-inset-top, 0px) + 16px) 16px 0;
+  padding: calc(env(safe-area-inset-top, 0px) + 18px) max(18px, env(safe-area-inset-right, 0px)) 0 max(18px, env(safe-area-inset-left, 0px));
 }
 .xpl__tag {
   display: inline-flex; align-items: center; gap: 8px;
@@ -638,26 +638,89 @@ body.landing-exit .universeBg {
   font-family: var(--ff-mono); font-size: 11px; letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--bone);
-  background: rgba(7, 10, 18, 0.72);
+  background: rgba(7, 10, 18, 0.88);
   border: 1px solid var(--hairline);
-  padding: 12px 18px;
+  padding: 12px 15px;
+  min-width: 74px;
   min-height: 44px;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
   cursor: pointer;
 }
 .xpl__close:active { background: var(--signal-ghost); color: var(--signal); }
+.xpl__close:focus-visible {
+  outline: 1px solid var(--signal);
+  outline-offset: 4px;
+}
+.xpl__orbitCue {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  display: grid;
+  justify-items: center;
+  gap: 16px;
+  opacity: 1;
+  transform: translate(-50%, -50%);
+  transition: opacity 360ms var(--e-out), transform 360ms var(--e-out);
+}
+.xpl__orbitTrack {
+  position: relative;
+  display: block;
+  width: clamp(142px, 42vw, 210px);
+  height: clamp(52px, 15vw, 72px);
+  border: 1px solid rgba(226, 230, 238, 0.32);
+  border-radius: 50%;
+  transform: rotate(-7deg);
+}
+.xpl__orbitTrack::before,
+.xpl__orbitTrack::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 9px;
+  height: 1px;
+  background: rgba(226, 230, 238, 0.62);
+}
+.xpl__orbitTrack::before { left: -5px; }
+.xpl__orbitTrack::after { right: -5px; }
+.xpl__orbitMark {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  background: var(--signal);
+  box-shadow: 0 0 12px var(--signal-glow);
+  transform: translate(-50%, -50%);
+  animation: xplOrbitGuide 2.2s var(--e-in-out) infinite;
+}
+@keyframes xplOrbitGuide {
+  0%, 100% { transform: translate(calc(-50% - 42px), calc(-50% + 5px)); }
+  50% { transform: translate(calc(-50% + 42px), calc(-50% - 5px)); }
+}
+.xpl__orbitLabel {
+  font-family: var(--ff-mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: var(--bone);
+}
+.xpl.is-engaged .xpl__orbitCue {
+  opacity: 0;
+  transform: translate(-50%, calc(-50% - 8px));
+}
 .xpl__hint {
   margin-top: auto;
   align-self: center;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 7px 16px;
   font-family: var(--ff-mono); font-size: 10px; letter-spacing: 0.14em;
   text-transform: uppercase; color: var(--ghost);
-  padding: 8px 14px;
-  border: 1px solid var(--hairline);
-  background: rgba(7, 10, 18, 0.55);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  margin-bottom: calc(env(safe-area-inset-bottom, 0px) + 20px);
+  width: min(calc(100vw - 36px), 430px);
+  padding: 10px 14px;
+  border-top: 1px solid var(--hairline);
+  border-bottom: 1px solid var(--hairline);
+  background: rgba(7, 10, 18, 0.76);
+  margin-bottom: calc(env(safe-area-inset-bottom, 0px) + 18px);
   text-align: center;
 }
 /* explore mode strips the title chrome — the field owns the screen */
@@ -670,6 +733,18 @@ body.mo-explore .lp-shell {
   opacity: 0;
   pointer-events: none;
   transition: opacity 300ms var(--e-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xpl__orbitMark { animation: none; }
+  .xpl__orbitCue,
+  .xpl.is-engaged .xpl__orbitCue { transition: none; transform: translate(-50%, -50%); }
+}
+
+@media (max-height: 470px) and (orientation: landscape) {
+  .xpl__orbitCue { top: 48%; gap: 10px; }
+  .xpl__orbitTrack { width: 128px; height: 42px; }
+  .xpl__hint { margin-bottom: max(8px, env(safe-area-inset-bottom, 0px)); }
 }
 
 /* ============================================================

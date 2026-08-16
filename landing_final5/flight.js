@@ -1,14 +1,14 @@
 /* ============================================================
-   M.O. — FINAL 3 · CONTINUOUS FLIGHT · master scroll timeline
+   M.O. — FINAL 5 · CONTINUOUS FLIGHT · master scroll timeline
    ------------------------------------------------------------
-   Fork of landing_final2/flight.js. FINAL 3 changes nothing in the
+   Canonical Final 5 scroll-flight driver. The current version keeps the
    timeline; the stage-presence vars this file writes are now only the
    FALLBACK path — landing_final5/flight.css drives the same fades from
    the scroll offset itself (compositor, paint-synced) wherever the
    browser supports scroll-driven animations, so a dropped frame can no
    longer paint a sticky stage while it slides away.
 
-   Carried over from FINAL 2:
+   Core timeline guarantees:
 
    TRANSIT AUTO-DOCK — stopping mid-transition used to strand the
    visitor on a nearly-empty stage with no cue that scrolling
@@ -124,7 +124,7 @@
      as the container's top edge arrives, and is fully gone before the
      container un-pins and physically slides. The slide still happens — on
      an empty, transparent stage.
-     FINAL 3: flight.css reproduces this curve as a scroll-driven animation
+     flight.css reproduces this curve as a scroll-driven animation
      and wins wherever it is supported; keep the two in sync. */
   function stagePresence(r, vh) {
     var inP = r.top >= vh * 0.5 ? 0 : r.top <= 0 ? 1 : 1 - r.top / (vh * 0.5);

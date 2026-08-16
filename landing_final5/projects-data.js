@@ -131,7 +131,7 @@
       model: mdl({
         ready: true, src: "models/soft-off-keycap.opt.glb", proxy: null,
         rigPose: { x: -0.18, y: 0.38, z: 0 },
-        cardPose: { scale: 1, yaw: 0, pitch: 0, offsetY: 0, fit: 1.0, pose: { x: -0.18, y: 0.38, z: 0 } },
+        cardPose: { scale: 1, yaw: 0, pitch: 0, offsetY: 0, fit: 0.88, pose: { x: -0.18, y: 0.38, z: 0 } },
       }),
     },
     {

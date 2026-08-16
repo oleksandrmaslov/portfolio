@@ -18,7 +18,7 @@
    ============================================================ */
 const { useState: useO, useEffect: useOE, useRef: useOR } = React;
 
-/* FINAL 2 retiming — the statement finishes resolving by p≈0.60, then HOLDS
+/* The statement finishes resolving by p≈0.60, then holds
    fully sharp for a third of the section (0.60 → 0.90) before the lift-off.
    Previously the last line completed at 0.86 and the exit began at 0.87 —
    the text started dying the moment it finished being born. */
@@ -27,7 +27,7 @@ const ORIGIN_LINES = [
   { t: "complete products —", at: 0.34, em: true },
   { t: "starting with", at: 0.34, ghost: true },
   { t: "a real problem,", at: 0.48 },
-  { t: "not a discipline", at: 0.60, em: true },
+  { t: "not a category", at: 0.60, em: true },
 ];
 
 const _oEase  = (t) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
@@ -73,7 +73,7 @@ function OriginBeat() {
   }, []);
 
   const handoff = _oClamp((p - 0.76) / 0.14, 0, 1);
-  // FINAL 2 — the lift-off now begins at 0.90, exactly where the toWork
+  // Lift-off begins at 0.90, exactly where the toWork
   // transit engages (flight.js: pO ≥ 0.9), so the statement holds sharp
   // through the whole dwell and leaves only when the camera does.
   const exitK = _oClamp((p - 0.90) / 0.10, 0, 1);

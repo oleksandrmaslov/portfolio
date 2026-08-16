@@ -1,7 +1,7 @@
 /* ============================================================
    M.O. SYSTEM — Wafer HERO RIG  (v3 — REAL GLB, no matcap)
    ------------------------------------------------------------
-   Fork of project_v2/hero-rig.jsx for Landing v12 + Wafer v3.
+   Node-handoff rig used by Final 5 and the current GLB case pages.
    Same renderer/scene/camera + the canonical arrival pose so the
    landing→page seam stays one continuous shot — but:
 
@@ -14,13 +14,12 @@
      · lighting is pushed a little harder so the near-black
        anodized metal is defined by the key + signal rim.
 
-   v11 / Wafer v2 keep project_v2/hero-rig.jsx untouched.
    ============================================================ */
 (function () {
   const SIGNAL = 0x00f0c8;
 
   /* ---- CANONICAL ARRIVAL POSE — the cross-page contract ----
-     Identical on Landing v12 (wafer-flight) and Wafer v3 (page2),
+     Identical on Final 5 (node handoff) and Wafer v3 (page2),
      so the seam lines up. Tuned for the NEW Z-up model. */
   const RIG = {
     fov: 38,

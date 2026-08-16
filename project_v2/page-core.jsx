@@ -1,8 +1,7 @@
 /* ============================================================
    M.O. SYSTEM — PROJECT PAGE CORE (v2 template, generalized)
    ------------------------------------------------------------
-   Derived from project_v2/page2.jsx (Wafer v2 = the canonical
-   reference, untouched). Every OTHER project page loads THIS
+   Shared case-file page core. Each non-Wafer project loads this
    file plus a small window.PAGE_CONFIG defined inline:
 
      window.PAGE_CONFIG = {
@@ -21,15 +20,12 @@
          label: "PLAY DEMO",
        },
        link: { label, href },       // … or (wave 2) a link keycap instead
-       tweakDefaults: { … },
-       renderTweaks: (t, set) => <></>,
+       tweakDefaults: { … },          // immutable production demo values
      };
 
-   Differences from page2.jsx by design:
-     · no landing seam-bridge (the flight arrives on Wafer only)
-     · footer prev/next prefers data.file2 (v2 pages) over file
-     · leave → straight fade back to Landing v11 (no return-flight
-       protocol — that contract is wafer-specific)
+   The core consumes the shared node seam, prefers the canonical
+   file2 route when present, and returns through Final 5's generic
+   node handoff.
    ============================================================ */
 const { useState: usePC, useEffect: useEPC, useRef: useRPC } = React;
 
@@ -145,15 +141,27 @@ function PCProjectLinks({ project }) {
   );
 }
 
-/* leave — fade the page, keep the model spinning, go home */
+/* leave — preserve the model seam and return to the canonical universe */
 function pcLeaveToUniverse() {
   if (document.body.classList.contains("hv-exit")) return;
   window.__hv_leaving = true;
   document.documentElement.style.setProperty("--hv-stage-op", "1");
-  if (window.__pageRig) { window.__pageRig.setIdle(false); window.__pageRig.setExplode(0); window.__pageRig.toHandoff(); window.__hv_exitSpin = true; }
+  const rig = window.__pageRig;
+  if (rig) { rig.setIdle(false); rig.setExplode(0); rig.toHandoff(); window.__hv_exitSpin = true; }
   document.body.classList.remove("hv-inspecting");
   document.body.classList.add("hv-exit");
-  setTimeout(() => { window.location.href = "Landing v11.html#work"; }, 720);
+  try {
+    const seam = rig && rig.captureFrame ? rig.captureFrame() : null;
+    if (seam) sessionStorage.setItem("mo_node_seam", seam);
+    if (rig && rig.yaw != null) sessionStorage.setItem("mo_node_yaw", String(rig.yaw));
+  } catch (_) {}
+  const returnTo = sessionStorage.getItem("mo_node_return_origin") || "work";
+  sessionStorage.removeItem("mo_node_return_origin");
+  sessionStorage.setItem("mo_node_return", "1");
+  sessionStorage.setItem("mo_node_return_addr", PC.addr);
+  sessionStorage.setItem("mo_node_return_target", returnTo);
+  const dest = returnTo === "universe" ? "Landing Final 5.html" : "Landing Final 5.html#work";
+  setTimeout(() => { window.location.href = dest; }, 720);
 }
 
 function PCProjectFooterNav({ project }) {
@@ -189,7 +197,7 @@ function PCProjectFooterNav({ project }) {
       <div className="pp-foot__rule" />
       <div className="pp-foot__legal">
         <span>© 2026 · MASLOV OLEKSANDR</span>
-        <span>BUILT IN MUNICH · v0.1.0</span>
+        <span>BUILT IN MUNICH</span>
         <span>[ESC] · back to universe</span>
       </div>
     </footer>
@@ -205,17 +213,16 @@ function PCShell({ project }) {
       <div className="pp-shell__blur" aria-hidden="true">
         <div></div><div></div><div></div><div></div><div></div><div></div><div></div>
       </div>
-      <a href="Landing v11.html" className="shell__brand pp-shell__brand"
+      <a href="Landing Final 5.html" className="shell__brand pp-shell__brand"
          onClick={(e) => { e.preventDefault(); pcLeaveToUniverse(); }}>
         <span className="pp-shell__brandM">M.O.</span>
         <span className="pp-shell__brandSep" />
         <span className="pp-shell__brandBack">← UNIVERSE</span>
       </a>
       <nav className="shell__nav pp-shell__nav">
-        <a href="Landing v11.html#work" onClick={(e) => { e.preventDefault(); pcLeaveToUniverse(); }}>WORK</a>
-        <a href="Landing v11.html#about" onClick={(e) => { e.preventDefault(); pcLeaveToUniverse(); }}>ABOUT</a>
-        <a href="Landing v11.html#contact" onClick={(e) => { e.preventDefault(); pcLeaveToUniverse(); }}>CONTACT</a>
-        <a href="Design System.html">SYSTEM ↗</a>
+        <a href="Landing Final 5.html#work" onClick={(e) => { e.preventDefault(); pcLeaveToUniverse(); }}>WORK</a>
+        <a href="Landing Final 5.html#about" onClick={(e) => { e.preventDefault(); pcLeaveToUniverse(); }}>ABOUT</a>
+        <a href="Landing Final 5.html#contact" onClick={(e) => { e.preventDefault(); pcLeaveToUniverse(); }}>CONTACT</a>
       </nav>
       <div className="shell__status pp-shell__status">
         <span className="shell__dot" />
@@ -273,7 +280,7 @@ function ProjectPageApp() {
   const project = window.PROJECT_DATA[PC.addr];
   const [ready, setReady] = usePC(false);
   const [demo, setDemo] = usePC(false);
-  const [tweaks, setTweak] = useTweaks(PC.tweakDefaults || {});
+  const tweaks = PC.tweakDefaults || {};
 
   const stageRef = useRPC(null);
   const rigRef   = useRPC(null);
@@ -296,13 +303,61 @@ function ProjectPageApp() {
     window.__pageRig = rig;
     if (!rig) { setReady(true); return; }
 
-    rig.beginHandoff();                       // appear centered, then settle
-    setTimeout(() => {
-      rig.resetOrbit();
+    const arrived = sessionStorage.getItem("mo_node_arrive") === "1"
+                 && sessionStorage.getItem("mo_node_addr") === PC.addr;
+    sessionStorage.removeItem("mo_node_arrive");
+
+    const settleToRest = (yawTarget) => {
+      if (yawTarget != null && rig.setYawTarget) rig.setYawTarget(yawTarget);
+      else rig.resetOrbit();
       pcApplyHeroLayout(rig);
       if (PC_IDLE_DRIFT) rig.setIdle(true);
       setReady(true);
-    }, 460);
+    };
+
+    if (arrived) {
+      const RG = window.WAFER_RIG || {};
+      const seamYaw = parseFloat(sessionStorage.getItem("mo_node_yaw"));
+      sessionStorage.removeItem("mo_node_yaw");
+      let bootYaw;
+      let restYaw;
+      const baseYaw = Number.isFinite(RG.arriveYaw) ? RG.arriveYaw : 0;
+      if (Number.isFinite(seamYaw)) {
+        bootYaw = seamYaw;
+        restYaw = baseYaw;
+        while (restYaw < bootYaw + 0.25) restYaw += Math.PI * 2;
+      } else {
+        bootYaw = baseYaw - 0.6;
+        restYaw = baseYaw;
+      }
+      const P = pcHeroLayoutParams();
+      rig.snapToLayout(P.fracX, P.scale, P.offY, bootYaw);
+      if (rig.setYawRate) rig.setYawRate(0.045);
+      setReady(true);
+      requestAnimationFrame(() => requestAnimationFrame(() => settleToRest(restYaw)));
+      setTimeout(() => { if (rig.setYawRate) rig.setYawRate(0.22); }, 1100);
+
+      const dropSeam = () => {
+        const seam = document.getElementById("mo-seam");
+        if (seam) {
+          seam.style.opacity = "0";
+          setTimeout(() => seam.remove(), 600);
+        }
+        sessionStorage.removeItem("mo_node_seam");
+      };
+      const waitReady = () => {
+        if (rig.ready !== false) requestAnimationFrame(() => requestAnimationFrame(dropSeam));
+        else setTimeout(waitReady, 50);
+      };
+      waitReady();
+    } else {
+      sessionStorage.removeItem("mo_node_seam");
+      sessionStorage.removeItem("mo_node_yaw");
+      const seam = document.getElementById("mo-seam");
+      if (seam) seam.remove();
+      rig.beginHandoff();
+      setTimeout(settleToRest, 460);
+    }
 
     let raf, last = performance.now();
     const loop = (now) => {
@@ -370,15 +425,13 @@ function ProjectPageApp() {
 
   return (
     <>
-      <FibGrid />
-      <Cursor />
-
+      <a className="pp-skip" href="#project-content">Skip to project story</a>
       <div className="hv-stage"><div className="hv-stage__mount" ref={stageRef} /></div>
       <div className="hv-scrim" aria-hidden="true" />
 
       <div className={"hv-page " + (ready ? "hv-page--ready" : "")}>
         <PCShell project={project} />
-        <main className="pp">
+        <main className="pp" id="project-content" tabIndex="-1">
           <PCHero project={project} />
           <PCProjectStory project={project} />
           <PCProjectLinks project={project} />
@@ -409,12 +462,11 @@ function ProjectPageApp() {
 
       {DemoLayer && <DemoLayer active={demo} onClose={exitDemo} tweaks={tweaks} />}
 
-      <TweaksPanel>
-        {PC.renderTweaks ? PC.renderTweaks(tweaks, setTweak) : null}
-      </TweaksPanel>
     </>
   );
 }
+
+window.__pcLeave = pcLeaveToUniverse;
 
 const pcRoot = ReactDOM.createRoot(document.getElementById("root"));
 pcRoot.render(<ProjectPageApp />);

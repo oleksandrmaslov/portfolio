@@ -80,6 +80,13 @@ body:not(.fl-titleGone) .bf-ch__card,
    everything else inside the frame stays discoverable. */
 .lp-title--v2 .title__stage .title__wordmark { pointer-events: auto; }
 .lp-title--v2 .title__idTop { pointer-events: none; }
+.lp-title--v2 .title__exploreTrigger { display: inline-flex; }
+
+/* Outside the modal Explore state, a coarse pointer owns vertical page
+   navigation. Explore switches this back to `none` inline while it is open. */
+@media (pointer: coarse) {
+  body:not(.mo-explore) .universe__mount { touch-action: pan-y; }
+}
 
 /* wheel handed back to the page mid-gesture — the Continue cue acknowledges it */
 body.mo-yield .lp-title--v2 .scrollcue { animation: moYieldPulse 700ms var(--e-out) 2; }
@@ -112,6 +119,20 @@ body.mo-yield .lp-title--v2 .scrollcue { animation: moYieldPulse 700ms var(--e-o
 body.mo-explore .lp-title--v2 .title__baseline {
   opacity: 0; pointer-events: none;
   transition: opacity 300ms var(--e-out);
+}
+
+/* Flight/title layers write their own opacity later in the cascade. Explore is
+   a modal camera state, so none of that retired chrome may leak through it. */
+body.mo-explore .lp-title--v2 .title__shield,
+body.mo-explore .lp-title--v2 .title__frame,
+body.mo-explore .lp-title--v2 .fieldHint,
+body.mo-explore .lp-title--v2 .title__wordmark,
+body.mo-explore .lp-title--v2 .title__ctl,
+body.mo-explore .lp-title--v2 .title__idTop,
+body.mo-explore .lp-title--v2 .title__baseline {
+  opacity: 0 !important;
+  visibility: hidden;
+  pointer-events: none !important;
 }
 @media (prefers-reduced-motion: reduce) {
   .lp-title--v2 .title__stage .title__baseline { transform: none; }

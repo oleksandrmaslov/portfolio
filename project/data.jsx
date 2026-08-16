@@ -1,6 +1,6 @@
 /* ============================================================
    M.O. SYSTEM — Project data
-   Keyed by addr. Each entry feeds project/page.jsx.
+   Keyed by address. Entries feed the shared project page core.
    ============================================================ */
 
 const PROJECT_DATA = {
@@ -10,8 +10,8 @@ const PROJECT_DATA = {
   "0x01": {
     addr: "0x01",
     slug: "wafer",
-    file: "Wafer.html",
-    file2: "Wafer v2.html",
+    file: "Wafer v3.html",
+    file2: "Wafer v3.html",
     name: "Wafer",
     tagline: "36-key ultrathin split keyboard",
     overline: "EMBEDDED · HARDWARE · FIRMWARE",
@@ -37,23 +37,19 @@ const PROJECT_DATA = {
       "for the PMIC and direct battery-voltage readout, which I merged upstream into ZMK.",
     sections: [
       { kind: "stub", h: "Brief",
-        body: "[ writing pending · 22-05 · the constraint set: thin, split, no compromise on key feel — and why R1 and R2 didn't get there yet ]" },
+        body: "Wafer began with one hard constraint: make a split keyboard disappear into the desk without flattening the key feel. The first two revisions exposed where thinness became fragility; R3 turns those lessons into a 4–8 mm system with a rigid aluminium shell and a repeatable magnetic join." },
       { kind: "stub", h: "Hardware",
-        body: "[ writing pending · 22-05 · schematic, stackup, key wells, magnetic mating, case milling, what broke twice before R3 settled ]" },
-      { kind: "photo", caption: "case + boards — R3 prototype, top view" },
+        body: "The schematic, PCB stack, key wells and enclosure were designed together rather than handed off between disciplines. An ISP1807 module supplies the nRF52840 radio, NPM1300 manages power, and the Sharp memory display keeps status visible at low power. The cases were milled as working prototypes so mechanical failures could feed directly into the next board revision." },
+      { kind: "photo", src: "lab/ascii-photo/wafer-sample.jpg", caption: "boards + keys — working split prototype, top view" },
       { kind: "stub", h: "Firmware",
-        body: "[ writing pending · 22-05 · the ZMK fork, the NPM1300 driver, the memory display path, sleep / wake states ]" },
-      { kind: "photo", caption: "Sharp memory display · live status surface" },
+        body: "The keyboard runs a ZMK fork with a purpose-built NPM1300 path, direct battery-voltage reporting and display-aware sleep and wake states. The power work was not kept as a private workaround: the battery-voltage support was shaped for ZMK and merged upstream." },
       { kind: "stub", h: "What I'd do next",
-        body: "[ writing pending · 22-05 · R4: per-key RGB? thinner stack? wireless dongle vs direct?" +
-              " — open questions I haven't answered yet ]" },
+        body: "R4 is less about adding features than deciding which ones earn their physical and power budget. Per-key light, a thinner stack and a dedicated wireless dongle are useful only if they preserve the quiet, flush object that made the project worth building." },
     ],
     links: [
-      { kind: "GITHUB",  label: "oleksandrmaslov/wafer",          href: "https://github.com/oleksandrmaslov" },
-      { kind: "CASE PDF", label: "case-file · 8 pages · pending", href: "#" },
-      { kind: "ZMK PR",  label: "battery-voltage · merged",       href: "#" },
+      { kind: "GITHUB",  label: "Oleksandr Maslov · GitHub", href: "https://github.com/oleksandrmaslov" },
     ],
-    prev: "0x09",
+    prev: "0x08",
     next: "0x02",
   },
 
@@ -63,7 +59,7 @@ const PROJECT_DATA = {
   "0x02": {
     addr: "0x02",
     slug: "kerfur",
-    file: "Kerfur.html",
+    file: "Kerfur v2.html",
     file2: "Kerfur v2.html",
     name: "Kerfur",
     tagline: "Embedded pet on nRF52840",
@@ -91,31 +87,29 @@ const PROJECT_DATA = {
       "because the rule is: first Kerfur meet each other, then people meet each other.",
     sections: [
       { kind: "stub", h: "Brief",
-        body: "[ writing pending · 22-05 · what 'pet' means in software terms — a contextual emotional companion, not a notification screen · why the architecture matters more than the cuteness · 'first Kerfur meet each other, then people meet each other' ]" },
+        body: "A digital pet is convincing only when its reactions feel situated rather than scheduled. Kerfur treats touch, movement, notifications, battery state and nearby peers as context for a changing internal state. The face is the output; the architecture underneath is the character." },
       { kind: "stub", h: "The event bus",
-        body: "[ writing pending · 22-05 · the nervous system · publish / subscribe with priority lanes, timestamps + optional payloads · every touch, motion, notification, battery and peer event becomes a message · why this beats a giant switch ]" },
-      { kind: "photo", caption: "Kerfur v0 · face render · LVGL canvas" },
+        body: "A central publish-and-subscribe bus is the nervous system. Events carry priority, time and an optional payload, so producers do not need to know which behaviours will respond. That keeps touch, motion, BLE, power and rendering independent, and prevents the firmware from collapsing into one giant switch statement." },
       { kind: "stub", h: "Emotion + behaviour",
-        body: "[ writing pending · 22-05 · decaying emotional variables (mood / energy / curiosity / affection / social interest / stress) · a behaviour layer mapping state + event + context → reaction · cooldowns so it never repeats itself · context over raw event ]" },
-      { kind: "photo", caption: "biological reference unit · subject KERFUR_v0" },
+        body: "Mood, energy, curiosity, affection, social interest and stress decay at different rates. The behaviour layer combines those values with the current event and context, then applies cooldowns before choosing a reaction. The same input can therefore land differently without becoming random or repetitive." },
+      { kind: "photo", src: "landing/kerfur-cat.jpg", caption: "biological reference unit · expression study" },
       { kind: "stub", h: "Nearby Kerfur",
-        body: "[ writing pending · 22-05 · BLE scan + advertise with rotating ephemeral IDs · RSSI proximity · peer state machine NONE → SEEN → NEAR → KNOWN → FRIEND → COOLDOWN · curiosity toward strangers, a warm greeting for friends · privacy: never a tracker ]" },
+        body: "Kerfur scans and advertises rotating ephemeral BLE identities, estimates proximity from RSSI, and moves each peer through NONE, SEEN, NEAR, KNOWN, FRIEND and COOLDOWN states. Strangers provoke curiosity; familiar peers get a warmer response. The rotating identity is deliberate: a social toy should not become a tracker." },
     ],
     links: [
       { kind: "GITHUB",  label: "oleksandrmaslov/kerfur-zephyr-config", href: "https://github.com/oleksandrmaslov/kerfur-zephyr-config" },
-      { kind: "CASE PDF", label: "case-file · 12 pages · pending", href: "#" },
     ],
     prev: "0x01",
     next: "0x03",
   },
 
   /* =========================================================
-     0x03 · ZMK POINTING ACCELERATION
+     0x08 · ZMK POINTING ACCELERATION
      ========================================================= */
-  "0x03": {
-    addr: "0x03",
+  "0x08": {
+    addr: "0x08",
     slug: "zmk-pointaccel",
-    file: "ZMK-PointAccel.html",
+    file: "ZMK-PointAccel v2.html",
     file2: "ZMK-PointAccel v2.html",
     name: "ZMK PointAccel",
     tagline: "Open-source input processor",
@@ -138,22 +132,19 @@ const PROJECT_DATA = {
       "ready-to-paste Devicetree snippets so users don't have to read the C to use it.",
     sections: [
       { kind: "stub", h: "Brief",
-        body: "[ writing pending · 22-05 · why ZMK didn't have this · what makes 'good' acceleration · referring to macOS / X11 / libinput ]" },
+        body: "ZMK pointing devices could scale movement, but they lacked a tunable velocity curve for separating precise motion from fast travel. PointAccel adds that missing processor as a reusable module, with behaviour informed by the acceleration systems people already know from desktop operating systems." },
       { kind: "stub", h: "The curve",
-        body: "[ writing pending · 22-05 · linear vs exponential, velocity scaling, sub-pixel accumulator ]" },
-      { kind: "photo", caption: "Streamlit configurator · curve preview · DT emit" },
+        body: "Linear and exponential modes map measured velocity to gain, while a sub-pixel accumulator preserves movement that would otherwise disappear during integer rounding. Slow gestures stay deliberate; a fast gesture can cross the display without forcing one aggressive multiplier onto every speed." },
       { kind: "stub", h: "Configurator",
-        body: "[ writing pending · 22-05 · Streamlit form → devicetree string, copy-paste flow, presets ]" },
+        body: "The configurator turns curve choice, thresholds and gain into a live plot and emits a ready-to-paste Devicetree fragment. Presets provide a useful starting point, but the important part is making the firmware's parameters visible before a user rebuilds and flashes a keyboard." },
       { kind: "stub", h: "Upstreaming",
-        body: "[ writing pending · 22-05 · how it lives outside the tree, what would need to change to merge ]" },
+        body: "The processor is packaged outside the ZMK tree so it can evolve without blocking on a firmware release. Moving it upstream would mean aligning its bindings, naming and test surface with ZMK's input-processor conventions while keeping existing configurations stable." },
     ],
     links: [
-      { kind: "GITHUB",     label: "oleksandrmaslov/zmk-pointing-accel", href: "https://github.com/oleksandrmaslov" },
-      { kind: "STREAMLIT",  label: "configurator · live",                 href: "#" },
-      { kind: "DOCS",       label: "usage · presets",                     href: "#" },
+      { kind: "GITHUB", label: "Oleksandr Maslov · GitHub", href: "https://github.com/oleksandrmaslov" },
     ],
-    prev: "0x02",
-    next: "0x04",
+    prev: "0x07",
+    next: "0x01",
   },
 
   /* =========================================================
@@ -162,7 +153,7 @@ const PROJECT_DATA = {
   "0x04": {
     addr: "0x04",
     slug: "tactical-flashlight",
-    file: "Tactical-Flashlight.html",
+    file: "Tactical Flashlight v2.html",
     file2: "Tactical Flashlight v2.html",
     name: "Tactical Flashlight",
     tagline: "Volunteer firmware · For Energy for Ukraine",
@@ -187,35 +178,29 @@ const PROJECT_DATA = {
       "the soldiers in the field actually need it to do, in the dark, with cold hands.",
     sections: [
       { kind: "stub", h: "Brief",
-        body: "[ writing pending · 22-05 · why PY32F002A · why volunteer firmware can't be 'fine' · cost / sourcing ]" },
+        body: "This was a production constraint, not a laboratory exercise: a low-cost, sourceable PY32F002A had to deliver predictable controls for torches assembled by volunteers and used in the field. A cheap part only saves money when the firmware around it remains legible, testable and hard to misuse." },
       { kind: "stub", h: "Modes",
-        body: "[ writing pending · 22-05 · brightness memory, SOS, low-batt indication, no-state-loss across power cycles ]" },
-      { kind: "photo", caption: "PCB · rev 1 · ready for production" },
+        body: "The tail switch moves through two light modes and SOS, retains the chosen brightness across power cycles, and reports low battery through addressable LEDs. State changes are intentionally sparse so the torch remains operable in darkness, with cold hands and no manual." },
       { kind: "stub", h: "Production",
-        body: "[ writing pending · 22-05 · BOM, gerbers, panelisation notes, what changed for manufacturing ]" },
-      { kind: "photo", caption: "torches · post-assembly · in the field" },
+        body: "The work extended beyond application code into the schematic and manufacturing package. BOM, Gerbers and panelisation decisions were prepared around the same cost and sourcing limits, then revised from prototype findings before the board was handed to production." },
     ],
     links: [
-      { kind: "GITHUB",  label: "oleksandrmaslov/tac-light", href: "https://github.com/oleksandrmaslov" },
-      { kind: "CASE PDF", label: "case-file · 6 pages · pending", href: "#" },
+      { kind: "GITHUB",  label: "Oleksandr Maslov · GitHub", href: "https://github.com/oleksandrmaslov" },
       { kind: "PROJECT", label: "Energy for Ukraine", href: "https://energyforukraine.de/" },
     ],
     prev: "0x03",
-    next: "0x07",
+    next: "0x06",
   },
 };
 
 /* =========================================================
-   0x09 · ISKRA  (full-weight page · replaces the Wafer R1–R3
-   card slot). Nav chained into the existing v2 ring so the
-   footer works standalone before the universe cards are
-   swapped over.
+   0x03 · ISKRA
    ========================================================= */
-PROJECT_DATA["0x09"] = {
-  addr: "0x09",
+PROJECT_DATA["0x03"] = {
+  addr: "0x03",
   slug: "iskra",
-  file: "Iskra v2.html",
-  file2: "Iskra v2.html",
+  file: "Iskra v3.html",
+  file2: "Iskra v3.html",
   name: "Iskra",
   tagline: "Volunteer flashing station · zero firmware knowledge needed",
   overline: "FLASHING STATION · FACTORY-SAFE · WPF",
@@ -241,87 +226,83 @@ PROJECT_DATA["0x09"] = {
     "hundred times a night without ever being able to brick a board.",
   sections: [
     { kind: "stub", h: "Why",
-      body: "[ writing pending · the volunteer reality: no toolchain, no terminal, no room for a bricked board · why a GUI beats a wiki page ]" },
+      body: "The operators are volunteers, not firmware engineers. A written flashing guide would still expose toolchains, target selection and destructive commands at the exact moment repetition makes mistakes likely. Iskra turns that ritual into a constrained operator flow with one obvious action." },
     { kind: "stub", h: "Two-phase safety",
-      body: "[ writing pending · scan-only phase 1 (swdp_scan, no attach/load) · E_TARGET_MISMATCH bails before any write · phase 2 flash + compare-sections ]" },
-    { kind: "photo", caption: "station · operator view · one FLASH key" },
+      body: "Phase one performs a scan without attaching, loading or writing. If the detected target does not match the selected product, E_TARGET_MISMATCH stops the run before flash can be touched. Only a validated board reaches phase two, where the image is written and verified section by section." },
+    { kind: "photo", src: "assets/iskra/iskra-lockup-hex.png", caption: "Iskra · operator-station identity" },
     { kind: "stub", h: "Trust chain",
-      body: "[ writing pending · Ed25519-signed catalog · SHA-256 preflight · batch lock pins product+version for a lot · SQLite history + CSV ]" },
+      body: "An Ed25519-signed catalog defines the allowed products and releases, and a SHA-256 preflight verifies the selected image. Batch lock pins product and version for a production lot. Every result enters a local SQLite history that can be exported as CSV for handoff and traceability." },
     { kind: "stub", h: "Packaging",
-      body: "[ writing pending · GitHub device-flow firmware fetch · DPAPI token storage · toolchain-bundling installer · CLI parity ]" },
-    { kind: "photo", caption: "flashing line · Black Magic Probe · field assembly" },
+      body: "Firmware retrieval uses GitHub's device flow, with the token protected by Windows DPAPI. The installer bundles the flashing toolchain so a station does not depend on a volunteer's machine setup, while CLI parity keeps the same state machine available for diagnosis and automation." },
   ],
   links: [
     { kind: "GITHUB",  label: "oleksandrmaslov/iskra", href: "https://github.com/oleksandrmaslov/iskra" },
     { kind: "INSTALLER", label: "Iskra setup · Windows", href: "https://github.com/oleksandrmaslov/iskra/releases" },
     { kind: "PROJECT", label: "Energy for Ukraine", href: "https://energyforukraine.de/" },
   ],
-  prev: "0x08",
-  next: "0x01",
+  prev: "0x02",
+  next: "0x04",
 };
 
 /* =========================================================
-   0x07 · M.O. SYSTEM  (full-weight meta page · replaces the
-   Catloading card slot). The portfolio profiled as one of its
-   own nodes — how it's built. Its PLAY DEMO is a link keycap:
-   the portfolio itself.
+   0x06 · WAFER STUDIO
+   ========================================================= */
+PROJECT_DATA["0x06"] = {
+  addr: "0x06",
+  slug: "wafer-studio",
+  file: "Wafer Studio.html",
+  file2: "Wafer Studio.html",
+  name: "Wafer Studio",
+  tagline: "A keyboard configurator for ZMK Studio-enabled keyboards",
+  overline: "PRODUCT SOFTWARE · ZMK · INTERACTION",
+  year: "2026",
+  place: "Munich, DE",
+  role: "Design · front-end · desktop build",
+  stack: ["TypeScript", "React", "Tauri", "ZMK Studio protocol", "Vite", "Rust"],
+  primitive: "slab",
+  model: "models/wafer-mark.glb",
+  modelFit: 3.2,
+  demoSize: { d: 0, w: 0, h: 0 },
+  metrics: [
+    { value: "168", unit: "bindings on a 42-key split" },
+    { value: "1",   unit: "keypress per binding" },
+    { value: "3",   unit: "desktop targets" },
+  ],
+  intro:
+    "Setting up a 42-key split with four layers is 168 bindings. Through a conventional " +
+    "configurator — click a key, read a list, find the action, click it — that is over two hours, " +
+    "which is why people give up and hand-edit a .keymap file instead. Wafer Studio is built around " +
+    "getting that number down. It speaks the standard ZMK Studio protocol and changes nothing on the " +
+    "wire; what it changes is the number of decisions between you and a finished keyboard.",
+  sections: [
+    { kind: "stub", h: "Type through the board",
+      body: "Select a key, then press the key you want it to become. It binds, advances to the next key in reading order, and waits — you set your base layer by typing your base layer. The application is running on a keyboard; hunting for A in a searchable list while your finger rests on A is the central absurdity of every configurator, and it is free to fix." },
+    { kind: "photo", src: "public/zmk-mac.png", caption: "the editor · the canvas is the product, chrome only frames it" },
+    { kind: "stub", h: "Fewer decisions, not fewer features",
+      body: "Alphas are read off the current layer and matched against QWERTY, Colemak, Colemak-DH, Dvorak and Workman — recognised, they permute to any of the others in one step, letters only. A layer copies as a single undo entry rather than forty-two. Painting a hold-tap across the home row wraps each key instead of replacing it, so every key keeps its own letter: home-row mods in eight clicks. Mirror is offered per key, and only when the board actually has an opposite one." },
+    { kind: "stub", h: "One light, one law",
+      body: "Surfaces carry no colour of their own. Colour appears only where an edge turns away from the light and splits it: distance decides brightness, bearing decides hue, steepness decides whether any colour appears at all. The whole application shares one light source and every dispersive edge paints its gradient in viewport space, so moving the light re-disperses the entire interface coherently. The accent is achromatic — what marks an element as primary is its position on the dispersion scale, not a brand hue." },
+    { kind: "photo", src: "public/og-card.png", caption: "the mark · dispersion at rest" },
+    { kind: "stub", h: "The protocol boundary",
+      body: "A ZMK Studio binding is one behavior id and two integers, with no field that can reference another binding — behaviour composition is impossible through the protocol, not merely unbuilt. Combos, macros, tap-dance, conditional layers, encoders, lighting and hold-tap timing are not exposed at all. Those need firmware work upstream in ZMK; any UI here would be a UI over nothing. Wafer Studio shows only what the connected keyboard reports it can do." },
+    { kind: "stub", h: "Browser and desktop",
+      body: "Over USB the web version does everything the desktop one does. Browsers expose Web Bluetooth on Linux only, which is the entire reason the Tauri desktop build exists — it ships .dmg, .deb and .msi from a tagged release. With no keyboard nearby, Explore demo keyboard opens the full editor against a deterministic fixture." },
+  ],
+  links: [
+    { kind: "GITHUB", label: "oleksandrmaslov/wafer-studio", href: "https://github.com/oleksandrmaslov/wafer-studio" },
+    { kind: "LIVE", label: "open in your browser", href: "https://oleksandrmaslov.github.io/wafer-studio/" },
+    { kind: "DESKTOP", label: "download · macOS · Linux · Windows", href: "https://oleksandrmaslov.github.io/wafer-studio/download.html" },
+    { kind: "UPSTREAM", label: "zmkfirmware/zmk-studio · protocol", href: "https://github.com/zmkfirmware/zmk-studio" },
+  ],
+  prev: "0x04",
+  next: "0x07",
+};
+
+/* =========================================================
+   0x07 · SPLIT HID DISPLAY
    ========================================================= */
 PROJECT_DATA["0x07"] = {
   addr: "0x07",
-  slug: "mo-system",
-  file: "M.O. System v2.html",
-  file2: "M.O. System v2.html",
-  name: "M.O. System",
-  tagline: "The portfolio, profiled as one of its own devices",
-  overline: "META · DESIGN SYSTEM · BUILD",
-  year: "2026",
-  place: "Munich",
-  role: "Design · engineering · the whole rig",
-  stack: ["HTML", "React", "three.js", "Web Audio", "Canvas", "CSS"],
-  primitive: "slab",
-  model: "models/wafer.glb",
-  demoSize: { d: 120, w: 28, h: 28 },
-  metrics: [
-    { value: "12", unit: "nodes · one addressed grid" },
-    { value: "4", unit: "bespoke live demos" },
-    { value: "1", unit: "carrier field · shared sound" },
-  ],
-  intro:
-    "This portfolio is itself a built thing — so here it is, profiled like any other node. " +
-    "M.O. is a small operating system for case files: one addressed grid of projects, one design " +
-    "language (void / bone / signal-cyan, mono micro-labels, hairline plates), one page template that " +
-    "every project fills in, and one sound field that all the demos ride. Nothing here is a stock " +
-    "component; every screen is the same handful of parts, recombined.",
-  sections: [
-    { kind: "stub", h: "One grid",
-      body: "Every project is a node with a hex address (0x01–0x0C) on a single map. The landing universe, the card flight, the case-file pages and the footer ring all read from one data file keyed by that address — add an entry and a project simply exists everywhere at once." },
-    { kind: "stub", h: "One template",
-      body: "Each project page is the same core — hero rig on the right, story, ASCII photos, links, footer — driven entirely by a small per-project config. Wafer was the reference; everything after is that core plus a few dozen lines: which model, which demo, which tweaks." },
-    { kind: "photo", caption: "the page template · one core, many configs" },
-    { kind: "stub", h: "Bespoke demos, shared spine",
-      body: "Each flagship gets its own playable demo — a firmware switch sim, a living face engine, a pointer-acceleration toy, a flashing-line game — but they all mount in the same demo shell and boot the same way. Real device logic is ported, not faked: the curves, state machines and error codes are the firmware's own." },
-    { kind: "stub", h: "The Carrier Field",
-      body: "All sound is one ambient field — a low just-intonation drone — with a per-node sideband, so every demo hums its own address while staying in tune with the rest. Each palette adds its character on top: hard clicks, soft chirps, glide grains, a spark." },
-    { kind: "photo", caption: "the 0x00 carrier field · twelve sidebands" },
-  ],
-  links: [
-    { kind: "LIVE",   label: "Open the portfolio", href: "Landing v11.html" },
-    { kind: "SYSTEM", label: "Design System", href: "Design System.html" },
-    { kind: "INDEX",  label: "All nodes", href: "Landing v11.html#work" },
-  ],
-  link: { label: "OPEN THE PORTFOLIO", href: "Landing v11.html", hint: "THIS PAGE · IS · A NODE", self: true },
-  prev: "0x04",
-  next: "0x08",
-};
-
-/* =========================================================
-   0x08 · SPLIT HID DISPLAY  (full-weight page · link keycap,
-   no bespoke demo). Renamed from the old "nice-view-elemental"
-   working name to the shipped module name. Threaded into the
-   by-address nav ring: 0x07 → 0x08 → 0x09.
-   ========================================================= */
-PROJECT_DATA["0x08"] = {
-  addr: "0x08",
   slug: "zmk-split-hid-display",
   file: "Split HID Display v2.html",
   file2: "Split HID Display v2.html",
@@ -349,15 +330,13 @@ PROJECT_DATA["0x08"] = {
     "too large for one BLE attribute.",
   sections: [
     { kind: "stub", h: "Brief",
-      body: "[ writing pending · the split keyboard's second half was a dead display · what nice-view-elemental started and what this fork needed beyond it · why both halves should show the same truth ]" },
+      body: "A split keyboard has two displays but only the central half can talk to the host. Community modules proved pieces of the path; this integration closes the loop so the peripheral is no longer a decorative battery screen and both halves can present one coherent host state." },
     { kind: "stub", h: "The relay, extended",
-      body: "[ writing pending · the split output relay used to carry one motor-style value · now relay_channel + value + payload[] · long Raw HID reports chunked with sequence / offset / total, reassembled on the peripheral · zmk_split_bt_invoke_output_channel without a physical output device ]" },
-    { kind: "photo", caption: "central half · status · nice!view" },
+      body: "The original split output relay carried one motor-style value. The fork adds a channel, value and payload, then chunks long Raw HID reports with sequence, offset and total fields for reassembly on the peripheral. The relay can now invoke a logical output channel without pretending a physical output device exists." },
     { kind: "stub", h: "What both halves show",
-      body: "[ writing pending · central: battery + charge, profile dots, host time, layout label, volume, active layer · peripheral: play / offline, artist, track title · same local Raw HID event path raised on both ]" },
+      body: "The central half carries battery and charge state, Bluetooth profile, host time, layout, volume and active layer. The peripheral becomes the media surface for playback state, connectivity, artist and track title. Both renders are driven through the same local Raw HID event path rather than parallel special cases." },
     { kind: "stub", h: "The marquee",
-      body: "[ writing pending · a fixed font line-height copied into the rotated portrait canvas for a stable baseline · character-window scroll with start + end pauses · scrolling pauses below a battery threshold unless charging ]" },
-    { kind: "photo", caption: "peripheral half · media · scrolling title" },
+      body: "The portrait canvas uses a fixed font line-height to keep its rotated baseline stable. Long text moves through a character window with deliberate pauses at both ends, and scrolling stops below the battery threshold unless the keyboard is charging." },
   ],
   links: [
     { kind: "GITHUB",   label: "oleksandrmaslov/zmk-split-hid-display", href: "https://github.com/oleksandrmaslov/zmk-split-hid-display" },
@@ -365,17 +344,8 @@ PROJECT_DATA["0x08"] = {
     { kind: "CREDITS",  label: "nice-view-hid · forked & extended",     href: "https://github.com/zzeneg/zmk-nice-view-hid" },
   ],
   link: { label: "VIEW ON GITHUB", href: "https://github.com/oleksandrmaslov/zmk-split-hid-display", hint: "ZMK MODULE · SOURCE" },
-  prev: "0x07",
-  next: "0x09",
+  prev: "0x06",
+  next: "0x08",
 };
 
 window.PROJECT_DATA = PROJECT_DATA;
-
-// Start the GLB preload as soon as data is registered, so by the time the
-// page-entry FlyIn mounts, the model is (or is about to be) in cache.
-// Deferred a tick so viewer3d.jsx's window.preloadModels is defined first.
-setTimeout(() => {
-  if (typeof window.preloadModels !== "function") return;
-  const urls = Object.values(PROJECT_DATA).map(p => p && p.model).filter(Boolean);
-  if (urls.length) window.preloadModels(urls);
-}, 0);

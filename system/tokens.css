@@ -17,7 +17,7 @@
   /* ---------- COLOR / TEXT ---------- */
   --bone:       #e6e8ee;   /* primary text */
   --ash:        #9aa3b3;   /* secondary text */
-  --ghost:      #5b6478;   /* tertiary / meta */
+  --ghost:      #747e93;   /* tertiary / meta · AA on void/carbon */
   --shadow:     #3a4256;   /* disabled / faint */
 
   /* ---------- COLOR / SIGNAL ----------
@@ -119,8 +119,6 @@
      Use --col-{1..13} for column-spans in custom grids. */
   --col-1:  calc(100% / 13);
 
-  /* Custom cursor offset */
-  --cursor-size: 24px;
 }
 
 /* ============================================================
@@ -159,9 +157,10 @@ body {
 a { color: inherit; text-decoration: none; }
 button { font: inherit; background: none; border: 0; color: inherit; cursor: pointer; }
 img { display: block; max-width: 100%; }
-
-/* hide native cursor when custom cursor is active */
-html.custom-cursor, html.custom-cursor * { cursor: none !important; }
+:where(a, button, input, textarea, select, summary, [tabindex]):focus-visible {
+  outline: 1px solid var(--signal);
+  outline-offset: 3px;
+}
 
 /* ============================================================
    TYPOGRAPHIC PRIMITIVES

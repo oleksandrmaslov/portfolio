@@ -277,6 +277,7 @@ function BoardFlight({ onEnter, onContact }) {
   // the board is still windowed inside the card — gate it on the window opening.
   const openGate = _bfClamp(((leadUi.o || 0) - 0.55) / 0.4, 0, 1);
   const chromeFade = ((1 - _bfClamp(foot * 1.4, 0, 1)) * openGate).toFixed(3);
+  const railActive = openGate > 0.5 && foot <= 0.4;
 
   return (
     <section
@@ -390,9 +391,14 @@ function BoardFlight({ onEnter, onContact }) {
         </div>
 
         {/* waypoint rail */}
-        <div className="bf-rail" style={{ opacity: chromeFade, pointerEvents: foot > 0.4 ? "none" : "auto" }}>
+        <div
+          className="bf-rail"
+          style={{ opacity: chromeFade, pointerEvents: railActive ? "auto" : "none" }}
+          aria-hidden={!railActive}
+          inert={!railActive ? "" : undefined}
+        >
           {STOPS.map((st, i) => (
-            <button key={i} className={"bf-rail__stop " + (active === i ? "is-active" : "")} onClick={() => jump(i)}>
+            <button type="button" key={i} className={"bf-rail__stop " + (active === i ? "is-active" : "")} onClick={() => jump(i)}>
               <span className="bf-rail__dot" /><span>{st.chapter.n} · {st.ref.split(" · ")[0]}</span>
             </button>
           ))}
@@ -413,6 +419,7 @@ function BoardFlight({ onEnter, onContact }) {
           className="bf-foot"
           style={{ opacity: footE.toFixed(3), pointerEvents: foot > 0.35 ? "auto" : "none" }}
           aria-hidden={foot < 0.1}
+          inert={foot < 0.1 ? "" : undefined}
           data-screen-label="05 Contact"
         >
           <div className="bf-foot__scrim" aria-hidden="true" />
@@ -431,18 +438,10 @@ function BoardFlight({ onEnter, onContact }) {
                 <span className="bf-foot__linkKey">TELEGRAM</span>
                 <span className="bf-foot__linkVal">@maslov_oleksandr08</span><span className="bf-foot__arr">↗</span>
               </a>
-              <a className="bf-foot__link" href="#">
-                <span className="bf-foot__linkKey">CV · PDF</span>
-                <span className="bf-foot__linkVal">download · 2 pages</span><span className="bf-foot__arr">↓</span>
-              </a>
-              <a className="bf-foot__link" href="Design System.html">
-                <span className="bf-foot__linkKey">SYSTEM</span>
-                <span className="bf-foot__linkVal">design foundation · v0.1</span><span className="bf-foot__arr">→</span>
-              </a>
             </div>
             <div className="bf-foot__meta">
               <span>© 2026 · MASLOV OLEKSANDR</span>
-              <span>BUILT IN MUNICH · v0.1.0</span>
+              <span>BUILT IN MUNICH</span>
               <span>NO COOKIES · NO TRACKERS · STATIC HTML</span>
             </div>
           </div>

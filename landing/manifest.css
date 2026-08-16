@@ -12,6 +12,33 @@
   margin: 0 auto;
   padding: 120px var(--s-7) var(--s-9);
 }
+.m-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.m-skip {
+  position: fixed;
+  left: 16px;
+  top: 12px;
+  z-index: 1000;
+  padding: 10px 14px;
+  border: 1px solid var(--signal);
+  background: var(--void);
+  color: var(--bone);
+  font: 500 11px/1 var(--ff-mono);
+  letter-spacing: var(--tr-mono);
+  text-transform: uppercase;
+  transform: translateY(-160%);
+  transition: transform var(--d-fast) var(--e-out);
+}
+.m-skip:focus-visible { transform: translateY(0); }
 
 /* ============================================================
    HERO BLOCK
@@ -204,6 +231,9 @@
   outline: none;
   caret-color: var(--signal);
 }
+.m-search:focus-within {
+  border-bottom-color: var(--signal);
+}
 .m-search__input::placeholder {
   color: var(--ghost);
   font-weight: 400;
@@ -247,6 +277,7 @@
     border-color var(--d-fast),
     background var(--d-fast);
   cursor: pointer;
+  min-height: 32px;
 }
 .m-pill:hover { color: var(--ash); border-color: var(--trace); }
 .m-pill.is-active {
@@ -329,6 +360,22 @@
   transition: background var(--d-fast), color var(--d-fast);
   opacity: 0;
   animation: m-row-in 380ms var(--e-out) forwards;
+  min-height: 48px;
+}
+.m-row__hit {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: inherit;
+}
+.m-row__hit:focus-visible {
+  outline: 1px solid var(--signal);
+  outline-offset: -3px;
+}
+.m-row > span {
+  position: relative;
+  z-index: 1;
+  pointer-events: none;
 }
 @keyframes m-row-in {
   from { opacity: 0; transform: translateX(-8px); }
@@ -336,14 +383,17 @@
 }
 .m-row:last-child { border-bottom: 0; }
 .m-row:hover,
-.m-row--focus {
+.m-row--focus,
+.m-row:focus-within {
   background: rgba(255, 255, 255, 0.025);
   color: var(--bone);
 }
-.m-row--focus {
+.m-row--focus,
+.m-row:focus-within {
   background: rgba(0, 240, 200, 0.05);
 }
-.m-row--focus::before {
+.m-row--focus::before,
+.m-row:focus-within::before {
   content: "";
   position: absolute;
   left: 0;
@@ -472,6 +522,7 @@
   color: var(--signal);
   text-decoration: underline;
   font: inherit;
+  min-height: 44px;
 }
 
 /* footer */
@@ -609,4 +660,18 @@
   .m-hero { grid-template-columns: 1fr; }
   .m-hero__rail { flex-direction: row; }
   .m-hero__bar { flex-wrap: wrap; }
+}
+@media (hover: none), (pointer: coarse) {
+  .m-pill,
+  .m-search__clear { min-height: 44px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .m-row {
+    animation: none;
+    opacity: 1;
+  }
+  .m-search:has(.m-search__input:placeholder-shown) .m-search__caret::after {
+    animation: none;
+    opacity: 0.7;
+  }
 }

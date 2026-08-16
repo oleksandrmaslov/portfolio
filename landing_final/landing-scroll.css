@@ -140,6 +140,8 @@
   gap: 18px;
   padding: 14px 20px 15px 16px;
   cursor: pointer;
+  color: inherit;
+  text-decoration: none;
   text-align: left;
   background: linear-gradient(180deg, rgba(10, 13, 20, 0.82) 0%, rgba(6, 8, 14, 0.82) 100%);
   backdrop-filter: blur(10px) saturate(1.1);
@@ -151,6 +153,7 @@
               background var(--d-fast), border-color var(--d-fast), box-shadow var(--d-fast);
   will-change: transform, opacity;
 }
+.rcard--forming { cursor: default; }
 /* locked = the centered card. Opaque backing + spine glow = readable + clearly active. */
 .rcard--locked {
   background: linear-gradient(180deg, rgba(11, 15, 23, 0.94) 0%, rgba(7, 9, 16, 0.94) 100%);

@@ -1,5 +1,5 @@
 /* ============================================================
-   M.O. SYSTEM — FINAL 3 · WORK REEL — "SELECTED NODES"
+   M.O. SYSTEM — FINAL 5 · WORK REEL — "SELECTED NODES"
    ------------------------------------------------------------
    2026-08 node-system pass:
    · data comes from window.MO_PROJECTS via MO_FEATURED_ADDRS —
@@ -90,7 +90,7 @@ function Work({ onHoverWork }) {
     } catch (_) {}
   }, [activeStop]);
 
-  /* ── geometry (see FINAL 3 notes — JSX is the single truth) ── */
+  /* ── geometry — JSX is the single source of truth ── */
   const compactReel = useCompact(700);
   const midReel     = useCompact(1100);
   const TITLE_SLOT_VW   = compactReel ? 100 : midReel ? 80 : 56;
@@ -265,30 +265,38 @@ function NodeCard({ work, i, total, absD, locked, focused, onFocus }) {
     const originRect = rect ? { x: rect.left, y: rect.top, w: rect.width, h: rect.height } : null;
     window.dispatchEvent(new CustomEvent("mo:nodeFlight", { detail: { project, originRect, origin: "work" } }));
   };
-  const onKey = (e) => {
-    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openNode(); }
+  const onCardClick = (e) => {
+    // Keep the native link contract for open-in-new-tab, copy-link and JS-off.
+    // Only the unmodified primary click is handed to the cinematic transition.
+    if (
+      e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey ||
+      e.shiftKey || e.altKey
+    ) return;
+    e.preventDefault();
+    openNode();
   };
+  const CardTag = hasPage ? "a" : "article";
 
   const popScale = locked ? 1.025 : (1 - absD * 0.06);
   const popOp    = 1 - absD * 0.4;
 
   return (
-    <article
+    <CardTag
       ref={cardRef}
       className={
         "rcard " +
+        (!hasPage ? "rcard--forming " : "") +
         (locked ? "rcard--locked " : "") +
         (focused ? "rcard--focused" : "")
       }
+      href={hasPage ? work.file : undefined}
       data-addr={work.addr}
       data-screen-label={(i + 2).toString().padStart(2, "0") + " " + work.name}
       onMouseEnter={() => onFocus && onFocus(work.addr)}
       onMouseLeave={() => onFocus && onFocus(null)}
       onFocus={() => onFocus && onFocus(work.addr)}
       onBlur={() => onFocus && onFocus(null)}
-      onClick={openNode}
-      onKeyDown={onKey}
-      tabIndex={0}
+      onClick={hasPage ? onCardClick : undefined}
       style={{
         transform: `scale(${popScale.toFixed(3)})`,
         opacity: popOp.toFixed(3),
@@ -311,7 +319,7 @@ function NodeCard({ work, i, total, absD, locked, focused, onFocus }) {
         <span>{hasPage ? "OPEN" : "RECORD FORMING"}</span>
         {hasPage && <span className="rcard__arr">→</span>}
       </div>
-    </article>
+    </CardTag>
   );
 }
 

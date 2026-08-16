@@ -2,7 +2,7 @@
    M.O. SYSTEM — FINAL 5 · Landing app
    Single source of truth for the active section (resolved every scroll
    frame). Children take no enter callback — their own in-view
-   observers were removed in FINAL 3.
+   observers are intentionally centralized here.
    ============================================================ */
 const { useState: useLA, useEffect: useEA } = React;
 
@@ -71,7 +71,6 @@ function LandingApp() {
   return (
     <>
       <a className="mo-skip-link" href="#work">Skip to selected work</a>
-      <Cursor />
 
       {/* Universe — single, persistent, fixed-position background */}
       <div className={"universeBg universeBg--" + mode}>
@@ -105,7 +104,14 @@ function LandingApp() {
 function ShellLanding({ section }) {
   const [time, setTime] = useLA("--:--");
   useEA(() => {
-    const tick = () => setTime(new Date().toTimeString().slice(0, 5));
+    const clock = new Intl.DateTimeFormat("en-GB", {
+      timeZone: "Europe/Berlin",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+      timeZoneName: "short",
+    });
+    const tick = () => setTime(clock.format(new Date()).replace(",", ""));
     tick();
     const id = setInterval(tick, 30000);
     return () => clearInterval(id);
@@ -124,7 +130,7 @@ function ShellLanding({ section }) {
       </nav>
       <div className="shell__status">
         <span className="shell__dot" />
-        <span>MUC · {time} GMT+1</span>
+        <span>MUC · {time}</span>
         <VolumeToggle />
       </div>
     </header>

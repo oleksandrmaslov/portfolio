@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" href="public/favicon.svg" type="image/svg+xml" />
   <title>Iskra — Maslov Oleksandr</title>
   <meta name="description" content="Iskra · project case file · Maslov Oleksandr · volunteer flashing station for Energy for Ukraine · two-phase factory-safe firmware flashing, now with a 3D operator bench: inspect the board, match the firmware, flash it, watch it assemble." />
 
@@ -13,13 +14,15 @@
   <link rel="stylesheet" href="system/tokens.css" />
   <link rel="stylesheet" href="system/layout.css" />
   <link rel="stylesheet" href="system/extras.css" />
+  <link rel="stylesheet" href="system/cursor-field.css" />
+  <script src="system/cursor-field.js"></script>
   <link rel="stylesheet" href="project/page.css" />
   <link rel="stylesheet" href="project_v2/page2.css" />
   <link rel="stylesheet" href="demo/demo.css" />
   <link rel="stylesheet" href="lab/ascii-photo/ascii-figure.css" />
-  <link rel="stylesheet" href="landing_v11/cursor-ascii.css" />
 </head>
 <body>
+  <script src="system/node-seam.js" data-node-addr="0x03" data-node-name="Iskra"></script>
   <div id="root"></div>
 
   <!-- Three.js (ESM) exposed on window.THREE for the Babel scripts below -->
@@ -42,12 +45,9 @@
   </script>
 
   <!-- React + Babel -->
-  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
-  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" integrity="sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" integrity="sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
-
-  <!-- Shared system (FibGrid, Boot, Cursor) -->
-  <script type="text/babel" data-presets="env,react" src="system/core.jsx"></script>
 
 
 
@@ -59,14 +59,13 @@
   <script type="text/babel" data-presets="env,react" src="project/viewer3d.jsx"></script>
   <script src="project_v3/solid-materials.js"></script>
   <script type="text/babel" data-presets="env,react" src="project_v3/hero-rig.jsx"></script>
-  <script type="text/babel" data-presets="env,react" src="project_v2/tweaks-panel.jsx"></script>
   <script type="text/babel" data-presets="env,react" src="lab/ascii-photo/ascii-figure.jsx"></script>
 
 
   <!-- Page config — everything project-specific lives here -->
   <script type="text/babel" data-presets="env,react">
     window.PAGE_CONFIG = {
-      addr: "0x09",
+      addr: "0x03",
       docTitle: "Iskra — Maslov Oleksandr",
       hero: {
         model: "models/iskra-mark.glb",
@@ -85,23 +84,11 @@
         href: "https://github.com/oleksandrmaslov/iskra",
         hint: "FLASHING STATION · SOURCE",
       },
-      tweakDefaults: /*EDITMODE-BEGIN*/{
-        "idleSpin": true
-      }/*EDITMODE-END*/,
-      renderTweaks: (t, set) => (
-        <>
-          <TweakSection label="Model" />
-          <TweakToggle label="Idle auto-rotate" value={t.idleSpin}
-                       onChange={(v) => set("idleSpin", v)} />
-        </>
-      ),
     };
   </script>
 
   <!-- Page core (generalized v2 template) -->
   <script type="text/babel" data-presets="env,react" src="project_v2/page-core.jsx"></script>
 
-  <!-- ASCII RAMP scrollbar (shared w/ Landing v11) -->
-  <script src="landing_v11/landing-scrollbar.js"></script>
 </body>
 </html>
