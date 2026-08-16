@@ -96,6 +96,30 @@
   margin-left: var(--s-3);
 }
 
+/* volume toggle — equalizer bars (replaces the grid hint) */
+.volBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  padding: 0 0 0 var(--s-4);
+  border-left: 1px solid var(--hairline);
+  margin-left: var(--s-3);
+  font-family: var(--ff-mono);
+  font-size: var(--fs-micro);
+  letter-spacing: var(--tr-caps);
+  text-transform: uppercase;
+  color: var(--ghost);
+  transition: color var(--d-fast);
+}
+.volBtn:hover { color: var(--signal); }
+.volBtn.is-on { color: var(--signal); }
+.volBtn__wave { display: block; overflow: visible; opacity: 0.85; transition: opacity var(--d-fast); }
+.volBtn.is-off .volBtn__wave { opacity: 0.5; }
+.volBtn:hover .volBtn__wave { opacity: 1; }
+
 /* ============================================================
    HERO — updated stage with 3D bus
    ============================================================ */

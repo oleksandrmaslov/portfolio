@@ -125,35 +125,70 @@ function FibGrid() {
    ============================================================ */
 function Cursor() {
   const ref = useRef(null);
-  const [coords, setCoords] = useState({ x: 0, y: 0 });
+  const coordRef = useRef(null);
   const [mode, setMode] = useState("idle"); // idle | hot | probe | grab
 
   useEffect(() => {
     document.documentElement.classList.add("custom-cursor");
-    const onMove = e => {
-      setCoords({ x: e.clientX, y: e.clientY });
-      const el = document.elementFromPoint(e.clientX, e.clientY);
-      if (!el) { setMode("idle"); return; }
-      if (el.closest(".bus3d"))     { setMode("grab");  return; }
-      if (el.closest(".photoTile")) { setMode("probe"); return; }
-      if (el.closest("button, a, .node, .swatch, .curve, .family, .compBlock, .t-link, [data-hot]")) { setMode("hot"); return; }
-      setMode("idle");
+    const node = ref.current;
+
+    // Two decoupled jobs on mousemove:
+    //   1. position + live pixel readout  → written DIRECTLY to the DOM every
+    //      move (cheap: one transform + one textContent), so the crosshair and
+    //      coordinate counter feel instant and never trigger a React render.
+    //   2. hover-target detection (elementFromPoint + .closest tree-walks) →
+    //      this is the genuinely expensive part, so it's time-throttled and the
+    //      mode state only updates when it actually changes.
+    let px = 0, py = 0, lastMode = "idle", lastProbe = 0;
+    const HOT = "button, a, .node, .swatch, .curve, .family, .compBlock, .t-link, [data-hot]";
+
+    const writeCoords = () => {
+      const c = coordRef.current;
+      if (c) c.textContent =
+        String(px).padStart(4, "0") + " / " + String(py).padStart(4, "0");
     };
-    window.addEventListener("mousemove", onMove);
-    return () => { window.removeEventListener("mousemove", onMove); document.documentElement.classList.remove("custom-cursor"); };
+
+    const probe = (now) => {
+      if (now - lastProbe < 60) return;   // ~16 hit-tests/sec is plenty for mode
+      lastProbe = now;
+      const el = document.elementFromPoint(px, py);
+      let next = "idle";
+      if (el) {
+        if (el.closest(".bus3d") || el.closest(".universeBg")) next = "grab";
+        else if (el.closest(".photoTile"))  next = "probe";
+        else if (el.closest(HOT))           next = "hot";
+      }
+      if (next !== lastMode) { lastMode = next; setMode(next); }
+    };
+
+    const onMove = e => {
+      px = e.clientX; py = e.clientY;
+      if (node) node.style.transform =
+        `translate(${px}px, ${py}px) translate(-50%, -50%)`;
+      writeCoords();                 // live pixel readout — every move
+      probe(e.timeStamp || performance.now());
+    };
+
+    window.addEventListener("mousemove", onMove, { passive: true });
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      document.documentElement.classList.remove("custom-cursor");
+    };
   }, []);
 
+  // The coord span is ALWAYS mounted (just hidden when not idle) so its ref
+  // stays stable and the per-move textContent writes never hit a detached node.
   return (
-    <div ref={ref} className={"cursor cursor--" + mode} style={{ transform: `translate(${coords.x}px, ${coords.y}px) translate(-50%, -50%)` }}>
+    <div ref={ref} className={"cursor cursor--" + mode}>
       <div className="cursor__ring" />
       <div className="cursor__center" />
       <div className="cursor__hLine" />
       <div className="cursor__vLine" />
       <div className="cursor__coords">
+        <span ref={coordRef} style={{ display: mode === "idle" ? "" : "none" }}>0000 / 0000</span>
         {mode === "grab"  && <span>drag to rotate</span>}
         {mode === "probe" && <span>inspect ⌖</span>}
         {mode === "hot"   && <span>open →</span>}
-        {mode === "idle"  && <span>{String(coords.x).padStart(4, "0")} / {String(coords.y).padStart(4, "0")}</span>}
       </div>
     </div>
   );

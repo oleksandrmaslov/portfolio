@@ -23,6 +23,27 @@
      gets a fresh THREE.Group clone — so we never re-download or
      re-parse the same .glb. */
   const _gltfCache = new Map();   // url -> Promise<THREE.Group>
+
+  /* KTX2 / Basis transcoder — the v3 wafer exports carry KTX2-compressed
+     textures (gltfpack -tc). GLTFLoader needs a KTX2Loader wired before it
+     will parse them, and the KTX2Loader needs detectSupport(renderer) once so
+     it knows which GPU formats to transcode to. Build a single shared instance
+     lazily (throwaway renderer just for capability detection). */
+  let _ktx2 = null;
+  function getKTX2Loader(THREE) {
+    if (_ktx2 !== null) return _ktx2 || null;
+    if (!THREE.KTX2Loader) { _ktx2 = false; return null; }
+    const k = new THREE.KTX2Loader()
+      .setTranscoderPath("https://unpkg.com/three@0.160.0/examples/jsm/libs/basis/");
+    try {
+      const r = new THREE.WebGLRenderer();
+      k.detectSupport(r);
+      r.dispose();
+    } catch (e) { console.warn("[viewer3d] KTX2 detectSupport failed", e); }
+    _ktx2 = k;
+    return k;
+  }
+
   window.loadProjectModel = function (url, THREE) {
     if (!url) return Promise.reject(new Error("no model url"));
     if (_gltfCache.has(url)) {
@@ -38,6 +59,9 @@
       // need the decoder wired in before .load(); uncompressed GLBs ignore it.
       const Meshopt = THREE.MeshoptDecoder || window.MeshoptDecoder;
       if (Meshopt && loader.setMeshoptDecoder) loader.setMeshoptDecoder(Meshopt);
+      // KTX2/Basis textures (v3 wafer exports) — wire the transcoding loader.
+      const ktx2 = getKTX2Loader(THREE);
+      if (ktx2 && loader.setKTX2Loader) loader.setKTX2Loader(ktx2);
       loader.load(
         url,
         (gltf) => resolve(gltf.scene),

@@ -2,7 +2,7 @@
    M.O. SYSTEM — Landing page sections
    ============================================================ */
 
-const { useState: useL, useEffect: useE, useRef: useR } = React;
+const { useState: useL, useEffect: useE, useRef: useR, useCallback: useCB } = React;
 
 /* ============================================================
    useInView — fire onEnter when the section is significantly on-screen
@@ -260,7 +260,8 @@ function Work({ onEnter, onHoverWork }) {
   const [focused,  setFocused]  = useL(null);          // hovered card addr
 
   const N      = WORKS.length;
-  const STOPS  = N + 1;                                // title + N cards
+  // Stops: 0 = title; 1..N = featured cards; N+1 = "SHOW ALL" passage.
+  const STOPS  = N + 2;
   const PADS   = 0.6;                                  // dwell viewports at start/end
   const TOTAL_V = STOPS + PADS;                        // total scroll in vh
 
@@ -322,11 +323,10 @@ function Work({ onEnter, onHoverWork }) {
 
   /* ── geometry ─────────────────────────────────────────
      Each card slot is 52vw, title slot is 56vw, lens is centered at 50vw.
-     At progress=0 the title is centered; at progress=1 the last card is centered.
-     We compute, in vw, the position of each slot's CENTER along the rail,
-     then shift the rail so the active slot's center sits at 50vw. */
+     Show-all passage slot is 48vw. */
   const TITLE_SLOT_VW = 56;
   const CARD_SLOT_VW  = 52;
+  const SHOWALL_SLOT_VW = 48;
   const slotCentersVW = (() => {
     const out = [TITLE_SLOT_VW / 2];                           // title center
     let cursor = TITLE_SLOT_VW;
@@ -334,6 +334,8 @@ function Work({ onEnter, onHoverWork }) {
       out.push(cursor + CARD_SLOT_VW / 2);
       cursor += CARD_SLOT_VW;
     }
+    // SHOW-ALL passage stop
+    out.push(cursor + SHOWALL_SLOT_VW / 2);
     return out;
   })();
   // active progress maps 0..1 over STOPS-1 stops; lerp between adjacent centers
@@ -403,6 +405,81 @@ function Work({ onEnter, onHoverWork }) {
               </div>
             );
           })}
+
+          {/* SLOT N+1 — SHOW ALL passage. A wide gateway plate instead of a card,
+              hosting the primary KeyButton. Scrolling lands on this stop after
+              the last featured card; clicking the key opens the universe overlay. */}
+          {(() => {
+            const stopIdx = N + 1;
+            const slotCenter = stopIdx / (STOPS - 1);
+            const delta = progress - slotCenter;
+            const absD  = Math.min(1, Math.abs(delta) * (STOPS - 1));
+            const isLocked = activeStop === stopIdx && Math.abs(delta) < 0.5 / (STOPS - 1);
+            const popScale = isLocked ? 1.02 : (1 - absD * 0.06);
+            const popOp    = 1 - absD * 0.4;
+            return (
+              <div className="lp-workReel__slot lp-workReel__slot--showAll">
+                <div
+                  className={"showAllGate " + (isLocked ? "showAllGate--locked" : "")}
+                  data-screen-label="06 All projects gate"
+                  style={{
+                    transform: `scale(${popScale.toFixed(3)})`,
+                    opacity: popOp.toFixed(3),
+                  }}
+                >
+                  <div className="showAllGate__rail" aria-hidden="true">
+                    <span className="showAllGate__railTick" />
+                    <span className="showAllGate__railTick" />
+                    <span className="showAllGate__railTick" />
+                  </div>
+                  <div className="showAllGate__chrome">
+                    <span className="showAllGate__chromeDot" />
+                    <span>PASSAGE · ALL NODES</span>
+                    <span className="showAllGate__chromeSep" />
+                    <span>12 / 12</span>
+                  </div>
+                  <div className="showAllGate__art" aria-hidden="true">
+                    {Array.from({ length: 12 }).map((_, k) => (
+                      <span key={k} className="showAllGate__node" style={{
+                        animationDelay: (k * 80) + "ms",
+                      }}>
+                        <span className="showAllGate__nodeDot" />
+                        <span className="showAllGate__nodeLabel">
+                          0x{(k + 1).toString(16).toUpperCase().padStart(2, "0")}
+                        </span>
+                      </span>
+                    ))}
+                    <span className="showAllGate__artLine showAllGate__artLine--h" />
+                    <span className="showAllGate__artLine showAllGate__artLine--v" />
+                  </div>
+                  <div className="showAllGate__foot">
+                    <div className="showAllGate__footL">
+                      <div className="showAllGate__overline">04 / END · PASSAGE</div>
+                      <h3 className="showAllGate__name">
+                        Open the universe<em>.</em>
+                      </h3>
+                      <div className="showAllGate__sub">
+                        12 nodes — including the 8 still in progress.
+                        Drift, hover, fly through. ESC returns here.
+                      </div>
+                    </div>
+                    <div className="showAllGate__footR">
+                      <KeyButton legend="A" primary onPress={() => {
+                        // Reuse the project-card exit transition. `landing-exit`
+                        // fades the universe + page shell out over ~380ms before
+                        // navigation, matching what cards do when opening a
+                        // project page. Zero extra load cost — pure CSS reuse.
+                        document.body.classList.add("landing-exit");
+                        setTimeout(() => { window.location.href = "All Projects.html"; }, 380);
+                      }}>
+                        SHOW ALL
+                      </KeyButton>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
         </div>
 
         {/* STATIC LENS — pinned center-bottom */}
@@ -453,6 +530,14 @@ function Work({ onEnter, onHoverWork }) {
               <span>{(i + 1).toString().padStart(2, "0")} · {w.name.toUpperCase()}</span>
             </button>
           ))}
+          <button
+            type="button"
+            className={"lp-workReel__stopBtn lp-workReel__stopBtn--showAll " + (activeStop === N + 1 ? "is-active" : "")}
+            onClick={() => jumpToStop(N + 1)}
+          >
+            <span className="lp-workReel__stopDot" />
+            <span>{(N + 1).toString().padStart(2, "0")} · ALL ↗</span>
+          </button>
         </div>
 
         {/* PROGRESS RAIL — bottom edge */}
@@ -463,6 +548,7 @@ function Work({ onEnter, onHoverWork }) {
           />
         </div>
       </div>
+
     </section>
   );
 }
@@ -681,183 +767,99 @@ function PortraitHolder() {
    Content preserved from the horizontal panorama version.
    ============================================================ */
 function About({ onEnter }) {
-  const ref = useInView(onEnter);
+  const ref = useR(null);
+  const [p, setP] = useL(0);
+  const [armed, setArmed] = useL(false);
+
+  // in-view → section "about" (universe enters DIVE mode, node 0x00 centred)
+  useE(() => {
+    const el = ref.current; if (!el || !onEnter) return;
+    const io = new IntersectionObserver((es) => {
+      for (const e of es) if (e.isIntersecting) onEnter();
+    }, { rootMargin: "-40% 0px -40% 0px" });
+    io.observe(el); return () => io.disconnect();
+  }, [onEnter]);
+
+  // scroll progress across the gateway → drives node formation (window.__mo_dive.p)
+  useE(() => {
+    const el = ref.current; if (!el) return;
+    window.__mo_dive = window.__mo_dive || { p: 0, igniting: false };
+    let raf;
+    const update = () => {
+      const total = el.offsetHeight - window.innerHeight;
+      const top = -el.getBoundingClientRect().top;
+      const np = total > 0 ? Math.max(0, Math.min(1, top / total)) : 0;
+      window.__mo_dive.p = np;
+      setP(np);
+      setArmed(np > 0.62);
+    };
+    const onScroll = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(update); };
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => { window.removeEventListener("scroll", onScroll); window.removeEventListener("resize", onScroll); cancelAnimationFrame(raf); };
+  }, []);
+
+  const dive = useCB(() => {
+    if (document.body.classList.contains("landing-dive")) return;
+    window.__mo_dive = window.__mo_dive || {};
+    window.__mo_dive.igniting = true;            // WebGL: node 0x00 rushes the camera
+    sessionStorage.setItem("mo_dive_origin", "1"); // Board reads this to clear the same flash
+    document.body.classList.add("landing-dive");
+    setTimeout(() => { window.location.href = "About - Board.html"; }, 700);
+  }, []);
+
+  const pct = Math.round(p * 100);
+
   return (
-    <section ref={ref} className="lp-section lp-aboutStack" id="about" data-screen-label="06 About">
-      <header className="lp-aboutStack__head">
-        <div className="lp-aboutStack__num">03</div>
-        <h2 className="lp-aboutStack__title">About<em>.</em></h2>
-        <div className="lp-aboutStack__meta">
-          <div>18 · MUNICH · 2026</div>
-          <div>05 CHAPTERS · VERTICAL</div>
-        </div>
-      </header>
+    <section ref={ref} className="lp-section lp-aboutDive" id="about" data-screen-label="06 About — dive 0x00" style={{ height: "260vh" }}>
+      <div className="lp-aboutDive__sticky">
+        {/* legibility scrim — node 0x00 lives in the WebGL layer behind this */}
+        <div className="lp-aboutDive__scrim" aria-hidden="true" />
 
-      {/* CHAPTER 01 · WHO — lede */}
-      <article className="aboutCh aboutCh--lede">
-        <div className="aboutCh__rail">
-          <div className="aboutCh__idx">01 / 05</div>
-          <div className="aboutCh__sign">
-            <span className="aboutCh__signK">CHAPTER</span>
-            <span className="aboutCh__signV">who</span>
-          </div>
+        {/* top-left chrome */}
+        <div className="lp-aboutDive__chrome">
+          <div className="lp-aboutDive__chromeRow"><span>SECTION</span><span className="v">03 / ABOUT</span></div>
+          <div className="lp-aboutDive__chromeRow"><span>TARGET</span><span className="v">NODE 0x00</span></div>
+          <div className="lp-aboutDive__chromeRow"><span>LOCK</span><span className="v">{pct.toString().padStart(3,"0")}%</span></div>
         </div>
-        <div className="aboutCh__body aboutCh__body--lede">
-          <p className="aboutLede">
-            I'm <span className="aboutLede__name">Oleksandr Maslov<em>.</em></span>
+
+        {/* centred dive headline + reticle around node 0x00 */}
+        <div className="lp-aboutDive__center">
+          <div className="lp-aboutDive__kicker">
+            <span className="lp-aboutDive__kickerDot" />
+            THE ORIGIN NODE
+          </div>
+          <h2 className="lp-aboutDive__title">
+            Dive into<br /><span className="lp-aboutDive__addr">node 0x00<em>.</em></span>
+          </h2>
+          <p className="lp-aboutDive__lede">
+            Every project here branches from one address — me. Trace the whole
+            net on an exposed-copper board: Kyiv power-in, the crossing, the
+            method, the cat, what's next.
           </p>
-          <p className="aboutLede__body">
-            Eighteen years old. Born in Kyiv, 21·07·2007. Now living and working
-            in Munich. I design small electronic things from the schematic up.
-          </p>
-          <div className="aboutLede__sig">
-            <span className="aboutLede__sigK">SIGNED</span>
-            <span className="aboutLede__sigV t-serif">M.O.</span>
-          </div>
-        </div>
-      </article>
 
-      {/* CHAPTER 02 · WHERE — portrait + munich */}
-      <article className="aboutCh aboutCh--portrait">
-        <div className="aboutCh__rail">
-          <div className="aboutCh__idx">02 / 05</div>
-          <div className="aboutCh__sign">
-            <span className="aboutCh__signK">CHAPTER</span>
-            <span className="aboutCh__signV">where</span>
+          {/* reticle that tightens as you scroll-lock onto the node */}
+          <div className={"lp-aboutDive__reticle " + (armed ? "is-armed" : "")} aria-hidden="true">
+            <span className="lp-aboutDive__retCorner lp-aboutDive__retCorner--tl" />
+            <span className="lp-aboutDive__retCorner lp-aboutDive__retCorner--tr" />
+            <span className="lp-aboutDive__retCorner lp-aboutDive__retCorner--bl" />
+            <span className="lp-aboutDive__retCorner lp-aboutDive__retCorner--br" />
           </div>
-        </div>
-        <div className="aboutCh__body aboutCh__body--portrait">
-          <PortraitHolder />
-          <div className="aboutMunich">
-            <div className="aboutMunich__row">
-              <span className="aboutMunich__k">CITY</span>
-              <span className="aboutMunich__v t-serif">München.</span>
-            </div>
-            <div className="aboutMunich__row">
-              <span className="aboutMunich__k">COORD</span>
-              <span className="aboutMunich__v">48.137° N · 11.575° E</span>
-            </div>
-            <div className="aboutMunich__row">
-              <span className="aboutMunich__k">SINCE</span>
-              <span className="aboutMunich__v">2022 · arrived from Kyiv</span>
-            </div>
-            <div className="aboutMunich__row">
-              <span className="aboutMunich__k">VISA</span>
-              <span className="aboutMunich__v">Aufenthaltsgestattung · valid</span>
-            </div>
-            <div className="aboutMunich__row">
-              <span className="aboutMunich__k">LANG</span>
-              <span className="aboutMunich__v">EN native · DE B2 · UA · RU</span>
-            </div>
-            <div className="aboutMunich__rule" />
-            <p className="aboutMunich__body">
-              I left Kyiv with a backpack and a half-finished keyboard in February
-              2022. Munich gave me time, internet, and a desk. I learned German
-              evenings, soldered nights, and shipped the rest.
-            </p>
-          </div>
-        </div>
-      </article>
 
-      {/* CHAPTER 03 · HOW — manifesto */}
-      <article className="aboutCh aboutCh--manifesto">
-        <div className="aboutCh__rail">
-          <div className="aboutCh__idx">03 / 05</div>
-          <div className="aboutCh__sign">
-            <span className="aboutCh__signK">CHAPTER</span>
-            <span className="aboutCh__signV">how</span>
+          <div className="lp-aboutDive__action">
+            <KeyButton legend="↵" primary onPress={dive}>
+              {armed ? "DIVE → 0x00" : "ALIGN TO DIVE"}
+            </KeyButton>
+            <div className="lp-aboutDive__hint">{armed ? "Locked. Punch in." : "Keep scrolling to lock the node"}</div>
           </div>
         </div>
-        <div className="aboutCh__body aboutCh__body--manifesto">
-          <p className="aboutMan__k">
-            I make <em>small electronic things</em> from scratch — schematic, board,
-            firmware, case — and I write the documentation that goes with them.
-          </p>
-          <ul className="aboutMan__list">
-            <li><span className="aboutMan__n">·</span> open over closed</li>
-            <li><span className="aboutMan__n">·</span> primitives over frameworks</li>
-            <li><span className="aboutMan__n">·</span> documentation as a first-class deliverable</li>
-            <li><span className="aboutMan__n">·</span> ship the boring core; iterate the rest</li>
-            <li><span className="aboutMan__n">·</span> if it can't be field-repaired, it isn't done</li>
-          </ul>
-          <p className="aboutMan__body">
-            I started with keyboards because I wanted one that fit my hands.
-            I stayed because building one teaches you everything: PCB layout,
-            power, BLE, real-time firmware, tooling, code review, and patience.
-          </p>
-        </div>
-      </article>
 
-      {/* CHAPTER 04 · WHY — kerfur */}
-      <article className="aboutCh aboutCh--kerfur">
-        <div className="aboutCh__rail">
-          <div className="aboutCh__idx">04 / 05</div>
-          <div className="aboutCh__sign">
-            <span className="aboutCh__signK">CHAPTER</span>
-            <span className="aboutCh__signV">why</span>
-          </div>
+        {/* bottom caption */}
+        <div className="lp-aboutDive__foot">
+          03 · ABOUT — the field resolves to a single node, then you fly its trace
         </div>
-        <div className="aboutCh__body aboutCh__body--kerfur">
-          <div className="aboutKerfur__text">
-            <div className="aboutKerfur__h">
-              The biological reference unit<em>.</em>
-            </div>
-            <p>
-              Kerfur (the embedded pet) is named after a tongue-out tabby who lives
-              rent-free in my apartment. I wanted to make something that felt
-              <em> alive</em> — not in a startup-deck sense, but in a small,
-              particular, twitching-tail sense.
-            </p>
-            <p>
-              The cat does not care about events, queues, or BLE. The cat cares
-              about sunbeams and whether I close the fridge gently. The cat is
-              the design brief.
-            </p>
-          </div>
-          <CatCard />
-        </div>
-      </article>
-
-      {/* CHAPTER 05 · NOW */}
-      <article className="aboutCh aboutCh--now">
-        <div className="aboutCh__rail">
-          <div className="aboutCh__idx">05 / 05</div>
-          <div className="aboutCh__sign">
-            <span className="aboutCh__signK">CHAPTER</span>
-            <span className="aboutCh__signV">now</span>
-          </div>
-        </div>
-        <div className="aboutCh__body aboutCh__body--now">
-          <div className="aboutNow__h">
-            <span className="aboutNow__dot" />
-            Currently building<em>.</em>
-          </div>
-          <div className="aboutNow__grid">
-            <div className="aboutNow__row">
-              <span className="aboutNow__k">MAY</span>
-              <span className="aboutNow__v">Kerfur firmware · v0.4 · IMU calibration</span>
-            </div>
-            <div className="aboutNow__row">
-              <span className="aboutNow__k">JUN</span>
-              <span className="aboutNow__v">Wafer R3 · finishing aluminium case</span>
-            </div>
-            <div className="aboutNow__row">
-              <span className="aboutNow__k">Q3</span>
-              <span className="aboutNow__v">ZMK PointAccel · v0.4 release</span>
-            </div>
-            <div className="aboutNow__row">
-              <span className="aboutNow__k">PARALLEL</span>
-              <span className="aboutNow__v">Ausbildung applications · embedded / hardware</span>
-            </div>
-          </div>
-          <div className="aboutNow__foot">
-            <div className="aboutNow__footK">SEEKING</div>
-            <div className="aboutNow__footV">
-              Apprenticeship · embedded · firmware · Munich + 200 km
-            </div>
-          </div>
-        </div>
-      </article>
+      </div>
     </section>
   );
 }

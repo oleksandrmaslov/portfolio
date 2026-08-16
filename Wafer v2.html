@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Wafer — Maslov Oleksandr</title>
+  <meta name="description" content="Wafer · project case file · Maslov Oleksandr · embedded · firmware · hardware · Munich." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap" />
+
+  <link rel="stylesheet" href="system/tokens.css" />
+  <link rel="stylesheet" href="system/layout.css" />
+  <link rel="stylesheet" href="system/extras.css" />
+  <link rel="stylesheet" href="project/page.css" />
+  <link rel="stylesheet" href="project_v2/page2.css" />
+  <link rel="stylesheet" href="demo/demo.css" />
+  <link rel="stylesheet" href="lab/ascii-photo/ascii-figure.css" />
+  <!-- Shared with Landing v9: ASCII bracket cursor + RAMP scrollbar styles -->
+  <link rel="stylesheet" href="landing_v11/cursor-ascii.css" />
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- SEAM BRIDGE: if we arrived from the landing flight, paint the captured
+       final frame instantly so the model never disappears during boot. The
+       app fades + removes #mo-seam once the live rig is ready. -->
+  <script>
+    (function () {
+      try {
+        if (sessionStorage.getItem("mo_wafer_arrive") !== "1") return;
+        var img = sessionStorage.getItem("mo_wafer_seam");
+        if (!img) return;
+        var d = document.createElement("div");
+        d.id = "mo-seam";
+        d.style.cssText = "position:fixed;inset:0;z-index:60;background:#04060d center center / cover no-repeat;transition:opacity .55s cubic-bezier(0.16,1,0.3,1);pointer-events:none;";
+        d.style.backgroundImage = "url(" + img + ")";
+        d.appendChild(Object.assign(document.createElement("div"), {
+          className: "mo-seam__tag",
+          textContent: "WAFER"
+        }));
+        document.body.appendChild(d);
+      } catch (e) {}
+    })();
+  </script>
+
+  <!-- Three.js (ESM) + GLTFLoader + MeshoptDecoder + RoomEnvironment, exposed
+       on window.THREE for the non-module Babel-standalone scripts below. -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+  <script type="module">
+    import * as THREE from "three";
+    import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+    import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
+    import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
+    import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
+    window.THREE = Object.assign({}, THREE, { GLTFLoader, MeshoptDecoder, RoomEnvironment, RoundedBoxGeometry });
+  </script>
+
+  <!-- React + Babel -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <!-- Shared system (FibGrid, Boot, Cursor) -->
+  <script type="text/babel" data-presets="env,react" src="system/core.jsx"></script>
+
+  <!-- KeyButton (inline; shared with Landing) -->
+  <script type="text/babel" data-presets="env,react">
+    function KeyButton({ children, legend = "↵", primary, onPress }) {
+      const { useState } = React;
+      const [pressed, setPressed] = useState(false);
+      const [lit, setLit] = useState(false);
+      const fire = (el) => {
+        setPressed(true); setLit(true);
+        onPress && onPress();
+        if (el && el.blur) el.blur();          // never leave a stuck focus/lit ring
+        setTimeout(() => setPressed(false), 140);
+        setTimeout(() => setLit(false), 520);
+      };
+      const onKey = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fire(e.currentTarget); } };
+      return (
+        <button
+          className={"key " + (pressed ? "key--down " : "") + (lit ? "key--lit " : "") + (primary ? "key--primary" : "")}
+          onClick={(e) => fire(e.currentTarget)} onKeyDown={onKey}>
+          <span className="key__cap">
+            <span className="key__legendTop">{legend}</span>
+            <span className="key__label">{children}</span>
+          </span>
+          <span className="key__shadow" aria-hidden="true" />
+        </button>
+      );
+    }
+    window.KeyButton = KeyButton;
+  </script>
+
+  <!-- PLAY DEMO · procedural board + field sound + controller (plain JS) -->
+  <script src="demo/demo-sound.js"></script>
+  <script src="demo/wafer-board.js"></script>
+  <script src="demo/wafer-demo.js"></script>
+
+  <!-- ASCII photo reveal-lens (lab engine + React figure wrapper) -->
+  <script src="lab/ascii-photo/ascii-photo.js"></script>
+
+  <!-- Project pieces -->
+  <script type="text/babel" data-presets="env,react" src="project/data.jsx"></script>
+  <script type="text/babel" data-presets="env,react" src="project/viewer3d.jsx"></script>
+  <script type="text/babel" data-presets="env,react" src="project_v2/hero-rig.jsx"></script>
+  <script type="text/babel" data-presets="env,react" src="project_v2/tweaks-panel.jsx"></script>
+  <script type="text/babel" data-presets="env,react" src="lab/ascii-photo/ascii-figure.jsx"></script>
+  <script type="text/babel" data-presets="env,react" src="demo/demo-hud.jsx"></script>
+  <script type="text/babel" data-presets="env,react" src="project_v2/page2.jsx"></script>
+
+  <!-- ASCII RAMP scrollbar: fixed right-edge rail tracking window scroll,
+       with a stacked percentage / hex node-code readout (shared w/ Landing v9). -->
+  <script src="landing_v11/landing-scrollbar.js"></script>
+</body>
+</html>

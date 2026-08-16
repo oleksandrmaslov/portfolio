@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Iskra — Maslov Oleksandr</title>
+  <meta name="description" content="Iskra · project case file · Maslov Oleksandr · volunteer flashing station for Energy for Ukraine · two-phase factory-safe firmware flashing, now with a 3D operator bench: inspect the board, match the firmware, flash it, watch it assemble." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap" />
+
+  <link rel="stylesheet" href="system/tokens.css" />
+  <link rel="stylesheet" href="system/layout.css" />
+  <link rel="stylesheet" href="system/extras.css" />
+  <link rel="stylesheet" href="project/page.css" />
+  <link rel="stylesheet" href="project_v2/page2.css" />
+  <link rel="stylesheet" href="demo/demo.css" />
+  <link rel="stylesheet" href="demo/demo2.css" />
+  <link rel="stylesheet" href="demo/iskra.css" />
+  <link rel="stylesheet" href="demo3d/iskra3d.css" />
+  <link rel="stylesheet" href="lab/ascii-photo/ascii-figure.css" />
+  <link rel="stylesheet" href="landing_v11/cursor-ascii.css" />
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- Three.js (ESM) exposed on window.THREE for the Babel scripts below -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+  <script type="module">
+    import * as THREE from "three";
+    import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+    import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
+    import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
+    import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
+    window.THREE = Object.assign({}, THREE, { GLTFLoader, MeshoptDecoder, RoomEnvironment, RoundedBoxGeometry });
+    window.dispatchEvent(new Event("three-ready"));
+  </script>
+
+  <!-- React + Babel -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <!-- Shared system (FibGrid, Boot, Cursor) -->
+  <script type="text/babel" data-presets="env,react" src="system/core.jsx"></script>
+
+  <!-- PLAY DEMO · field-core sound scaffold + iskra spark/relay palette -->
+  <script src="demo/field-core.js"></script>
+  <script src="demo/iskra-sound.js"></script>
+
+  <!-- 3D PCB engine: parts → factory → board build → enclosures → station -->
+  <script src="demo3d/pcb-parts.js"></script>
+  <script src="demo3d/pcb-factory.js"></script>
+  <script src="demo3d/pcb-build.js"></script>
+  <script src="demo3d/enclosures.js"></script>
+  <script src="demo3d/iskra3d-station.js"></script>
+
+  <!-- ASCII photo reveal-lens (lab engine + React figure wrapper) -->
+  <script src="lab/ascii-photo/ascii-photo.js"></script>
+
+  <!-- Project pieces -->
+  <script type="text/babel" data-presets="env,react" src="project/data.jsx"></script>
+  <script type="text/babel" data-presets="env,react" src="project/viewer3d.jsx"></script>
+  <script type="text/babel" data-presets="env,react" src="project_v2/hero-rig.jsx"></script>
+  <script type="text/babel" data-presets="env,react" src="project_v2/tweaks-panel.jsx"></script>
+  <script type="text/babel" data-presets="env,react" src="lab/ascii-photo/ascii-figure.jsx"></script>
+
+  <!-- 3D demo React: inspect stage + HUD (defines window.Iskra3DDemoLayer) -->
+  <script type="text/babel" data-presets="env,react" src="demo3d/pcb-stage.jsx"></script>
+  <script type="text/babel" data-presets="env,react" src="demo3d/iskra3d-hud.jsx"></script>
+
+  <!-- Page config — everything project-specific lives here -->
+  <script type="text/babel" data-presets="env,react">
+    window.PAGE_CONFIG = {
+      addr: "0x09",
+      docTitle: "Iskra — Maslov Oleksandr",
+      hero: {
+        /* the flashing rig made physical: Black Magic Probe → ribbon cable
+           → target board, with a data pulse running the cable and the spark
+           mark glowing between them. Brand blue/yellow. Real GLB later. */
+        matcap: false,
+        modelFit: 3.7,
+        pose: { x: 0.32, y: -0.5, z: 0 },
+        buildModel: (THREE) => {
+          const g = new THREE.Group();
+          const Rounded = THREE.RoundedBoxGeometry;
+          const pcb = (w, h, col) => new THREE.Mesh(
+            Rounded ? new Rounded(w, 0.05, h, 4, 0.04) : new THREE.BoxGeometry(w, 0.05, h),
+            new THREE.MeshStandardMaterial({ color: col, metalness: 0.5, roughness: 0.5 })
+          );
+
+          /* probe (left) + target (right) */
+          const probe = pcb(0.9, 0.6, 0x123a2a);
+          probe.position.set(-1.15, 0, 0);
+          const target = pcb(0.7, 0.7, 0x2a2410);
+          target.position.set(1.15, 0, 0.05);
+          g.add(probe, target);
+
+          /* tiny components */
+          const chip = (parent, x, z, s, col) => {
+            const c = new THREE.Mesh(new THREE.BoxGeometry(s, 0.04, s * 0.7),
+              new THREE.MeshStandardMaterial({ color: col, metalness: 0.6, roughness: 0.4 }));
+            c.position.set(x, 0.04, z); parent.add(c);
+          };
+          chip(probe, -1.15, 0, 0.2, 0x0a0d12);
+          chip(target, 1.15, 0.05, 0.26, 0x0a0d12);   // the MCU
+          chip(target, 0.95, -0.18, 0.1, 0x1a1a1a);
+
+          /* SWD ribbon cable — arcs between the two boards */
+          const curve = new THREE.CatmullRomCurve3([
+            new THREE.Vector3(-0.78, 0.06, 0),
+            new THREE.Vector3(-0.3, 0.55, 0.1),
+            new THREE.Vector3(0.3, 0.55, 0.0),
+            new THREE.Vector3(0.82, 0.06, 0.05),
+          ]);
+          const ribbon = new THREE.Mesh(
+            new THREE.TubeGeometry(curve, 60, 0.05, 8, false),
+            new THREE.MeshStandardMaterial({ color: 0x202632, metalness: 0.3, roughness: 0.7 })
+          );
+          g.add(ribbon);
+
+          /* the spark: blue + yellow petals + white star, hovering above */
+          const petal = (col, sign) => {
+            const m = new THREE.Mesh(
+              new THREE.SphereGeometry(0.17, 20, 16),
+              new THREE.MeshStandardMaterial({ color: col, emissive: col, emissiveIntensity: 0.6, metalness: 0.2, roughness: 0.4 })
+            );
+            m.scale.set(0.6, 1, 0.4);
+            m.position.set(sign * 0.12, 0.92, 0);
+            return m;
+          };
+          g.add(petal(0x2a8fff, -1), petal(0xffe500, 1));
+          const star = new THREE.Mesh(
+            new THREE.OctahedronGeometry(0.1, 0),
+            new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 0.9 })
+          );
+          star.position.set(0, 0.92, 0.06);
+          star.scale.set(1, 1.6, 1);
+          g.add(star);
+          const spark = new THREE.PointLight(0xbfeaff, 1.1, 3);
+          spark.position.set(0, 0.92, 0.3);
+          g.add(spark);
+
+          /* a data pulse travelling the cable */
+          const pulse = new THREE.Mesh(
+            new THREE.SphereGeometry(0.05, 12, 10),
+            new THREE.MeshBasicMaterial({ color: 0x2a8fff })
+          );
+          g.add(pulse);
+          const pulseLight = new THREE.PointLight(0x2a8fff, 0.8, 1.2);
+          g.add(pulseLight);
+
+          let u = 0, last = performance.now(), dir = 1;
+          const tick = (now) => {
+            const dt = Math.min(50, now - last); last = now;
+            u += dt * 0.0007 * dir;
+            if (u > 1) { u = 1; dir = -1; } else if (u < 0) { u = 0; dir = 1; }
+            const p = curve.getPointAt(u);
+            pulse.position.copy(p); pulseLight.position.copy(p);
+            const f = 0.6 + Math.sin(now * 0.006) * 0.4;
+            star.rotation.y += dt * 0.004;
+            spark.intensity = 0.7 + f * 0.8;
+            if (!window.__hv_leaving) requestAnimationFrame(tick);
+          };
+          requestAnimationFrame(tick);
+          return g;
+        },
+      },
+      demo: {
+        layerName: "Iskra3DDemoLayer",
+        hint: "INSPECT · MATCH · FLASH",
+        label: "PLAY DEMO",
+      },
+      tweakDefaults: /*EDITMODE-BEGIN*/{
+        "wear": 1.5,
+        "idleSpin": false,
+        "grid": true,
+        "soundLevel": 0.8
+      }/*EDITMODE-END*/,
+      renderTweaks: (t, set) => (
+        <>
+          <TweakSection label="Difficulty" />
+          <TweakSlider label="Silkscreen wear" value={t.wear} min={0.4} max={1.5} step={0.05}
+                       onChange={(v) => set("wear", v)} />
+          <TweakSection label="Bench" />
+          <TweakToggle label="Idle auto-rotate" value={t.idleSpin}
+                       onChange={(v) => set("idleSpin", v)} />
+          <TweakToggle label="Lab grid" value={t.grid}
+                       onChange={(v) => set("grid", v)} />
+          <TweakSection label="Sound" />
+          <TweakSlider label="Field level" value={t.soundLevel} min={0} max={1} step={0.05}
+                       onChange={(v) => set("soundLevel", v)} />
+        </>
+      ),
+    };
+  </script>
+
+  <!-- Page core (generalized v2 template) -->
+  <script type="text/babel" data-presets="env,react" src="project_v2/page-core.jsx"></script>
+
+  <!-- ASCII RAMP scrollbar (shared w/ Landing v11) -->
+  <script src="landing_v11/landing-scrollbar.js"></script>
+</body>
+</html>

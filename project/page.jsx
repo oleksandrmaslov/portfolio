@@ -66,16 +66,16 @@ function ProjectShell({ project }) {
   const back = () => goBackToLanding(project);
   return (
     <header className="shell pp-shell">
-      <a href="Landing.html" className="shell__brand pp-shell__brand"
+      <a href="Landing v11.html" className="shell__brand pp-shell__brand"
          onClick={(e) => { e.preventDefault(); back(); }}>
         <span className="pp-shell__brandM">M.O.</span>
         <span className="pp-shell__brandSep" />
         <span className="pp-shell__brandBack">← UNIVERSE</span>
       </a>
       <nav className="shell__nav pp-shell__nav">
-        <a href="Landing.html#work" onClick={(e) => { e.preventDefault(); back(); }}>WORK</a>
-        <a href="Landing.html#about" onClick={(e) => { e.preventDefault(); back(); }}>ABOUT</a>
-        <a href="Landing.html#contact" onClick={(e) => { e.preventDefault(); back(); }}>CONTACT</a>
+        <a href="Landing v11.html#work" onClick={(e) => { e.preventDefault(); back(); }}>WORK</a>
+        <a href="Landing v11.html#about" onClick={(e) => { e.preventDefault(); back(); }}>ABOUT</a>
+        <a href="Landing v11.html#contact" onClick={(e) => { e.preventDefault(); back(); }}>CONTACT</a>
         <a href="Design System.html">SYSTEM ↗</a>
       </nav>
       <div className="shell__status pp-shell__status">
@@ -92,7 +92,7 @@ function goBackToLanding(project) {
   // request the reverse fly-out and then nav
   sessionStorage.setItem("mo_return_addr", project.addr);
   document.body.classList.add("pp-exit");
-  setTimeout(() => { window.location.href = "Landing.html#work"; }, 380);
+  setTimeout(() => { window.location.href = "Landing v11.html#work"; }, 380);
 }
 
 /* ============================================================

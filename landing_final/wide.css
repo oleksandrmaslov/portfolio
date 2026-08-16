@@ -1,0 +1,63 @@
+/* ============================================================
+   M.O. SYSTEM — Landing · widescreen fluid pass
+   Loaded LAST. Above 1720px CSS wide the composition scales
+   proportionally (vw-locked to the ~1600-1720px baseline) instead
+   of drowning in empty margin. Below 1720px nothing here applies.
+   ============================================================ */
+
+@media (min-width: 1720px) {
+  :root {
+    /* px tokens go fluid — each value equals its px size at 1720w */
+    --fs-micro: 0.64vw;
+    --fs-meta:  0.76vw;
+    --fs-body:  0.93vw;
+    --fs-lead:  1.22vw;
+    --title-inset: 3.2vw;
+  }
+
+  /* ── title screen ── */
+  .title__wordmark { max-width: 62vw; right: calc(var(--title-inset) + 14vw); }
+  .fieldHint__lede { font-size: 0.64vw; }
+  .title__idTop { top: 5.3vw; }
+
+  /* ── work reel ── */
+  .lp-workReel__title { font-size: 9.8vw; }
+  .lp-workReel__titleNum { font-size: 0.64vw; }
+  .lp-workReel__titleSub { font-size: 0.7vw; }
+  .rcard { width: 27vw; gap: 1.05vw; padding: 0.82vw 1.16vw 0.87vw 0.93vw; }
+  .rcard__top { font-size: 0.58vw; margin-bottom: 0.24vw; }
+  .rcard__name { font-size: 1.75vw; }
+  .rcard__sub { font-size: 0.7vw; margin-top: 0.18vw; }
+  .rcard__open { font-size: 0.58vw; }
+  .showAllGate { width: 32vw; gap: 1.28vw; padding: 1.05vw 1.16vw 1.1vw 0.93vw; }
+  .showAllGate__overline { font-size: 0.58vw; margin-bottom: 0.3vw; }
+  .showAllGate__name { font-size: 1.98vw; }
+  .showAllGate__sub { font-size: 0.7vw; margin-top: 0.35vw; }
+
+  /* ── origin ── */
+  .origin__head2 { font-size: 4.9vw; }
+  .origin__type { max-width: 46vw; left: 6vw; }
+
+  /* ── about node card (0x00) ── */
+  .uNode { width: 22.4vw; }
+  .uNode__head { font-size: 0.64vw; padding: 1.28vw 1.5vw 0; }
+  .uNode__field { margin: 0.93vw 1.5vw; background-size: 1.1vw 1.1vw; }
+  .uNode__foot { padding: 0 1.5vw 1.5vw; gap: 0.52vw; }
+  .uNode__name { font-size: 3vw; }
+  .uNode__sub { font-size: 0.67vw; }
+  .uNode__cue { font-size: 0.55vw; }
+
+  /* ── board flight chapters + footer beat ── */
+  .bf-ch { width: 27vw; }
+  .bf-ch__num { font-size: 8.7vw; }
+  .bf-ch__title { font-size: 3.1vw; }
+  .bf-ch__body { font-size: 0.99vw; }
+  .bf-ch__refV { font-size: 0.7vw; }
+  .bf-foot__inner { width: 64vw; }
+  .bf-foot__big { font-size: 5.1vw; }
+  .bf-foot__linkKey { font-size: 0.52vw; }
+  .bf-foot__meta { font-size: 0.52vw; }
+
+  /* ── console keys ── */
+  .tkey { font-size: 0.76vw; padding: 0.7vw 1.16vw; }
+}

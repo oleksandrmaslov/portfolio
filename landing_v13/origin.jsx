@@ -1,0 +1,169 @@
+/* ============================================================
+   M.O. SYSTEM — Landing · 0x00 ORIGIN beat (universe-native)
+   ------------------------------------------------------------
+   No copper trace — that belongs to the Board. This beat speaks
+   the landing's own language: NODES in infinite space.
+
+   The section is a tall scroll track; its progress is published
+   to `window.__mo_origin = { p, active, concept }` and READ by
+   landing/universe.jsx inside its render loop, which drives one
+   of two concepts behind this DOM type:
+
+     01 ASSEMBLY — the particle field swarms to FORM "0x00"
+     02 HUB      — node 0x00 as a hub, project nodes ringing it
+
+   Over either, the identity statement resolves FROSTED → SHARP
+   (same progressive-blur language as the header). This is the
+   literal setup for the later "dive into node 0x00" → Board.
+   ============================================================ */
+const { useState: useO, useEffect: useOE, useRef: useOR } = React;
+
+const ORIGIN_LINES = [
+  { t: "I build",          at: 0.20 },
+  { t: "small, careful",   at: 0.40, em: true },
+  { t: "objects —",        at: 0.40 },
+  { t: "and the firmware", at: 0.66, ghost: true },
+  { t: "that runs them",   at: 0.86, em: true, dot: true },
+];
+
+const _oEase  = (t) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
+const _oClamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+/* shared bridge object the universe render loop reads every frame */
+window.__mo_origin = window.__mo_origin || { p: 0, active: false, concept: "assembly" };
+
+function OriginBeat({ onEnter }) {
+  const secRef = useOR(null);
+  const [p, setP] = useO(0);
+  // Landing ships ONE concept: assembly. The HUB concept lives in its own
+  // exploration file, which sets window.__mo_origin_lock = "hub" before boot.
+  const concept = (typeof window !== "undefined" && window.__mo_origin_lock) || "assembly";
+
+  /* publish concept to the bridge */
+  useOE(() => { window.__mo_origin.concept = concept; }, [concept]);
+
+  /* in-view → set section (drives universe mode = "origin") */
+  useOE(() => {
+    const el = secRef.current;
+    if (!el || !onEnter) return;
+    const io = new IntersectionObserver((es) => {
+      for (const e of es) if (e.isIntersecting) onEnter();
+    }, { rootMargin: "-35% 0px -35% 0px", threshold: 0 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [onEnter]);
+
+  /* scroll → progress p, published to the bridge */
+  useOE(() => {
+    const el = secRef.current;
+    if (!el) return;
+    let raf;
+    const update = () => {
+      const total = el.offsetHeight - window.innerHeight;
+      const top = -el.getBoundingClientRect().top;
+      const np = total > 0 ? _oClamp(top / total, 0, 1) : 0;
+      const active = el.getBoundingClientRect().top < window.innerHeight * 0.6 &&
+                     el.getBoundingClientRect().bottom > window.innerHeight * 0.4;
+      window.__mo_origin.p = np;
+      window.__mo_origin.active = active;
+      setP(np);
+    };
+    const onScroll = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(update); };
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      cancelAnimationFrame(raf);
+    };
+  }, []);
+
+  const pct = Math.round(_oEase(p) * 100);
+  const handoff = _oClamp((p - 0.82) / 0.16, 0, 1);
+  // v13 — the identity statement LIFTS OFF into the transit to the reel.
+  const exitK = _oClamp((p - 0.87) / 0.13, 0, 1);
+
+  return (
+    <section
+      ref={secRef}
+      className="origin"
+      id="intro"
+      data-screen-label="02 Origin"
+      style={{ height: "300vh" }}
+    >
+      <div className="origin__stage">
+        {/* faint legibility scrim over the live universe */}
+        <div className="origin__scrim" aria-hidden="true" />
+
+        {/* ── top-left chrome / live readout (v12 language) ── */}
+        <div className="origin__chrome">
+          <div className="origin__chromeRow"><span>ENTRY</span><span className="v">02 / ORIGIN</span></div>
+          <div className="origin__chromeRow"><span>NODE</span><span className="v">0x00 · SELF</span></div>
+          <div className="origin__chromeRow"><span>{concept === "assembly" ? "FORM" : "LINKS"}</span><span className="v">{pct.toString().padStart(3, "0")}%</span></div>
+        </div>
+
+        {/* ── identity statement — resolves frosted → sharp, then lifts
+              away as the camera leaves for the reel (exitK). NOTE: the
+              inline transform must carry the -50% centering — it replaces
+              the stylesheet transform, it doesn't compose with it. ── */}
+        <div className="origin__type" style={{
+          opacity: (1 - exitK).toFixed(3),
+          transform: `translateY(calc(-50% - ${(exitK * 46).toFixed(1)}px))`,
+          filter: exitK > 0.004 ? `blur(${(exitK * 7).toFixed(2)}px)` : "none",
+        }}>
+          <div className="origin__kicker">
+            <span className="origin__kickerDot" />
+            MASLOV / OLEKSANDR — EIGHTEEN · KYIV → MÜNCHEN
+          </div>
+          <h2 className="origin__head2">
+            {ORIGIN_LINES.map((ln, i) => {
+              const local = _oClamp((p - (ln.at - 0.24)) / 0.24, 0, 1);
+              const e = _oEase(local);
+              const style = {
+                filter: `blur(${((1 - e) * 16).toFixed(2)}px)`,
+                opacity: (0.08 + e * 0.92).toFixed(3),
+                transform: `translateY(${((1 - e) * 18).toFixed(1)}px)`,
+              };
+              const cls = "origin__line" +
+                (ln.em ? " origin__line--em" : "") +
+                (ln.ghost ? " origin__line--ghost" : "");
+              return (
+                <span key={i} className={cls} style={style}>
+                  {ln.t}{ln.dot ? <em className="origin__period">.</em> : null}
+                </span>
+              );
+            })}
+          </h2>
+
+          <div className="origin__sig" style={{ opacity: _oClamp((p - 0.72) / 0.2, 0, 1).toFixed(3) }}>
+            <div className="origin__sigCol">
+              <span className="origin__sigK">▙ NOW</span>
+              <span className="origin__sigV">Wafer R3 · Kerfur v0.4 · ZMK upstream</span>
+            </div>
+            <div className="origin__sigCol">
+              <span className="origin__sigK">▙ OPEN TO</span>
+              <span className="origin__sigV">Ausbildung · junior embedded · DE / EN</span>
+            </div>
+          </div>
+        </div>
+
+        {/* ── caption: what the field is doing ── */}
+        <div className="origin__caption">
+          {concept === "assembly"
+            ? "01 · THE FIELD CONVERGES — every signal in the universe resolves to one address"
+            : "02 · ORIGIN HUB — everything I've built branches from node 0x00"}
+        </div>
+
+        {/* ── handoff cue → Selected Work ── */}
+        <div className="origin__handoff" style={{ opacity: handoff.toFixed(3), transform: `translate(-50%, ${(1 - handoff) * 10}px)` }}>
+          <span className="origin__handoffLine" />
+          <span>03 · SELECTED WORK</span>
+          <span className="origin__handoffArr">↓</span>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+window.OriginBeat = OriginBeat;

@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ASCII Scrollbar Lab — M.O. System</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap" />
+<link rel="stylesheet" href="../../system/tokens.css" />
+
+<style>
+  html, body { height: 100%; overflow: hidden; background: var(--void); color: var(--bone); }
+  body { font-family: var(--ff-mono); }
+
+  .lab { position: fixed; inset: 0; display: grid; grid-template-rows: auto 1fr; }
+
+  /* ---- top bar ---- */
+  .bar {
+    display: flex; align-items: baseline; gap: 18px;
+    padding: 16px 28px; border-bottom: 1px solid var(--hairline);
+    font-family: var(--ff-mono);
+  }
+  .bar__title { font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--bone); font-weight: 600; }
+  .bar__sub { font-size: 10.5px; letter-spacing: 0.06em; color: var(--ghost); }
+  .bar__sub .sig { color: var(--signal); }
+  .bar__spacer { flex: 1; }
+  .bar__hint { font-size: 10px; letter-spacing: 0.08em; color: var(--shadow); text-transform: uppercase; }
+  .bar__hint kbd { color: var(--bone); border: 1px solid var(--hairline); border-radius: 3px; padding: 1px 5px; background: var(--carbon); }
+
+  /* ---- stage: doc + gutter of rails ---- */
+  .stage { position: relative; display: grid; grid-template-columns: 1fr auto; min-height: 0; }
+
+  .doc {
+    position: relative; overflow-y: scroll; overflow-x: hidden;
+    padding: 80px clamp(28px, 8vw, 140px) 140px;
+    scrollbar-width: none;            /* hide native — our rails do the talking */
+  }
+  .doc::-webkit-scrollbar { width: 0; height: 0; display: none; }
+
+  .doc__inner { max-width: 720px; margin: 0 auto; }
+
+  /* terminal document content */
+  .eyebrow { font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--signal); margin-bottom: 22px; }
+  .doc h1 {
+    font-family: var(--ff-display); font-weight: 600; font-size: clamp(40px, 6vw, 72px);
+    line-height: 0.98; letter-spacing: -0.02em; color: var(--bone); margin: 0 0 28px;
+  }
+  .doc h1 em { font-family: var(--ff-serif); font-style: italic; font-weight: 400; color: var(--ash); }
+  .doc h2 {
+    font-family: var(--ff-mono); font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--ghost); margin: 64px 0 20px; display: flex; align-items: center; gap: 12px;
+  }
+  .doc h2::before { content: ""; width: 7px; height: 7px; background: var(--signal); }
+  .doc h2::after { content: ""; flex: 1; height: 1px; background: var(--hairline); }
+  .doc p { font-family: var(--ff-mono); font-size: 13.5px; line-height: 1.75; color: var(--ash); margin: 0 0 18px; max-width: 60ch; }
+  .doc p .sig { color: var(--signal); }
+  .doc p b { color: var(--bone); font-weight: 500; }
+
+  .row-item {
+    display: grid; grid-template-columns: 64px 1fr auto; gap: 18px; align-items: baseline;
+    padding: 16px 0; border-bottom: 1px solid var(--hairline);
+    font-family: var(--ff-mono); font-size: 13px;
+  }
+  .row-item .idx { color: var(--shadow); font-size: 11px; }
+  .row-item .name { color: var(--bone); }
+  .row-item .meta { color: var(--ghost); font-size: 11px; letter-spacing: 0.04em; }
+
+  /* ---- the gutter of ASCII rails ---- */
+  .gutter {
+    display: flex; gap: 0; padding: 24px 0;
+    border-left: 1px solid var(--hairline); background: var(--space);
+  }
+  .railwrap {
+    display: flex; flex-direction: column; align-items: center; gap: 12px;
+    padding: 0 14px; border-right: 1px dashed var(--hairline);
+  }
+  .railwrap:last-child { border-right: none; }
+  .railwrap__label {
+    font-family: var(--ff-mono); font-size: 9px; letter-spacing: 0.14em; color: var(--shadow);
+    text-transform: uppercase; writing-mode: horizontal-tb;
+  }
+  .railwrap.active .railwrap__label { color: var(--signal); }
+  .railwrap__num { font-size: 8px; color: var(--shadow); }
+
+  /* ---------- ASCII SCROLLBAR (engine target) ---------- */
+  .asb {
+    position: relative; width: 26px; flex: 1; min-height: 0;
+    cursor: none; user-select: none; touch-action: none;
+  }
+  .asb__col {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: flex-start;
+  }
+  .asb__cell {
+    font-family: var(--ff-mono); font-size: 12px; line-height: 13px; height: 13px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--shadow); transition: color 90ms linear; width: 100%; text-align: center;
+  }
+  /* states */
+  .asb__cell[data-state="track"] { color: var(--trace); }
+  .asb__cell[data-state="faint"] { color: var(--shadow); opacity: 0.5; }
+  .asb__cell[data-state="major"] { color: var(--ghost); }
+  .asb__cell[data-state="thumb"] { color: var(--signal); }
+  .asb__cell[data-state="thumb-dim"] { color: var(--signal-dim); }
+  .asb__cell[data-state="edge"] { color: var(--signal); }
+  .asb.is-hot .asb__cell[data-state="thumb"],
+  .asb.is-drag .asb__cell[data-state="thumb"] { text-shadow: 0 0 8px var(--signal-glow); }
+  .asb.is-hot .asb__cell[data-state="track"] { color: var(--hairline); }
+
+  /* RAMP glow boost on hover */
+  .asb--ramp.is-hot .asb__cell[data-state="thumb"] { color: var(--signal); text-shadow: 0 0 10px var(--signal-glow); }
+
+  /* travelling readout tag (reticle / gauge / segments) */
+  .asb__tag {
+    position: absolute; right: 30px; transform: translateY(-50%);
+    font-family: var(--ff-mono); font-size: 9px; letter-spacing: 0.08em; color: var(--ghost);
+    white-space: nowrap; pointer-events: none; text-align: right;
+    transition: color 120ms;
+  }
+  .asb__tag b { color: var(--signal); font-weight: 500; }
+  .asb__tag span { color: var(--shadow); margin-left: 6px; }
+  /* readouts are noise when every rail shows one — only the focused/hovered
+     rail floats its coordinate. */
+  .asb__tag { opacity: 0; transition: opacity 140ms, color 120ms; }
+  .railwrap.active .asb__tag, .asb.is-hot .asb__tag, .asb.is-drag .asb__tag { opacity: 1; }
+  .asb.is-hot .asb__tag, .asb.is-drag .asb__tag { color: var(--bone); }
+  /* segments marker sits on the LEFT of the rail */
+  .asb--segments .asb__tag { right: auto; left: 30px; color: var(--signal); }
+
+  /* gauge readout is bigger / data-style */
+  .asb--gauge .asb__tag { right: 32px; }
+  .asb--gauge .asb__tag b { font-size: 11px; }
+
+  /* hover affordance: faint guide line on the rail */
+  .asb::after {
+    content: ""; position: absolute; top: 0; bottom: 0; left: 50%; width: 1px;
+    background: var(--hairline); opacity: 0; transition: opacity 150ms; transform: translateX(-50%);
+  }
+  .asb.is-hot::after { opacity: 0.4; }
+
+  /* mini cursor for the lab */
+  html.custom-cursor, html.custom-cursor * { cursor: none !important; }
+  .labcur { position: fixed; top: 0; left: 0; z-index: 9999; pointer-events: none;
+    width: 22px; height: 22px; transform: translate(-50%,-50%); will-change: transform;
+    filter: drop-shadow(0 0 2px rgba(2,4,9,0.65)); }
+  .labcur i {
+    position: absolute; inset: 0; color: var(--ash); --bw: 1.5px; --bl: 6px;
+    background:
+      linear-gradient(currentColor,currentColor) 0 0 / var(--bl) var(--bw) no-repeat,
+      linear-gradient(currentColor,currentColor) 0 0 / var(--bw) var(--bl) no-repeat,
+      linear-gradient(currentColor,currentColor) 100% 0 / var(--bl) var(--bw) no-repeat,
+      linear-gradient(currentColor,currentColor) 100% 0 / var(--bw) var(--bl) no-repeat,
+      linear-gradient(currentColor,currentColor) 0 100% / var(--bl) var(--bw) no-repeat,
+      linear-gradient(currentColor,currentColor) 0 100% / var(--bw) var(--bl) no-repeat,
+      linear-gradient(currentColor,currentColor) 100% 100% / var(--bl) var(--bw) no-repeat,
+      linear-gradient(currentColor,currentColor) 100% 100% / var(--bw) var(--bl) no-repeat;
+    transition: transform 120ms var(--e-snap), color 120ms;
+  }
+  .labcur.hot i { transform: scale(0.66); color: var(--signal); }
+
+  @media (max-width: 720px) {
+    .gutter { display: none; }
+    .doc { scrollbar-width: thin; scrollbar-color: var(--signal-dim) transparent; }
+  }
+</style>
+</head>
+<body>
+<div class="lab">
+  <div class="bar">
+    <span class="bar__title">ASCII Scrollbar</span>
+    <span class="bar__sub">5 versions <span class="sig">·</span> same scroll <span class="sig">·</span> drag any rail</span>
+    <span class="bar__spacer"></span>
+    <span class="bar__hint">scroll the doc · <kbd>1</kbd>–<kbd>5</kbd> focus a style</span>
+  </div>
+
+  <div class="stage">
+    <div class="doc" id="doc">
+      <div class="doc__inner" id="docInner"></div>
+    </div>
+    <div class="gutter" id="gutter"></div>
+  </div>
+</div>
+
+<div class="labcur" id="cur"><i></i></div>
+
+<script src="ascii-scrollbar.js"></script>
+<script src="scrollbar-lab.js"></script>
+</body>
+</html>

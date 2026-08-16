@@ -1,0 +1,97 @@
+/* ============================================================
+   M.O. SYSTEM — Landing · 0x00 ORIGIN beat styles (final)
+   The universe (WebGL) renders the node concept BEHIND this DOM.
+   These styles are just the type that sits over it. The identity
+   statement anchors LEFT-BOTTOM so the formed 0x00 glyph owns the
+   centre of the frame.
+   ============================================================ */
+
+.origin { position: relative; width: 100%; }
+
+.origin__stage {
+  position: sticky; top: 0;
+  height: 100vh; width: 100%;
+  overflow: hidden;
+}
+
+/* legibility scrim — weight lives along the BOTTOM (under the type),
+   the centre stays near-clear so the glyph is vivid. */
+.origin__scrim {
+  position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background:
+    linear-gradient(0deg, rgba(4,6,13,0.84) 0%, rgba(4,6,13,0.38) 26%, transparent 52%),
+    linear-gradient(90deg, rgba(4,6,13,0.50) 0%, rgba(4,6,13,0.16) 30%, transparent 55%),
+    linear-gradient(rgba(4,6,13,0.28), transparent 30%);
+}
+
+/* ---- identity statement block — LEFT-BOTTOM anchor ---- */
+.origin__type {
+  position: absolute; z-index: 3;
+  left: clamp(24px, 6vw, 120px);
+  bottom: clamp(44px, 9vh, 112px);
+  top: auto;
+  max-width: min(640px, 46vw);
+  display: flex; flex-direction: column;
+}
+
+/* ---- kicker — the node address + name, one quiet instrument line ---- */
+.origin__kicker {
+  display: inline-flex; align-items: center; gap: var(--s-4);
+  font-family: var(--ff-mono); font-size: var(--fs-meta); font-weight: 500;
+  letter-spacing: var(--tr-caps); text-transform: uppercase;
+  margin-bottom: var(--s-6);
+  white-space: nowrap;
+}
+.origin__kickerDot {
+  width: 6px; height: 6px; border-radius: 50%; flex: none;
+  background: var(--signal); box-shadow: 0 0 8px var(--signal);
+}
+.origin__kickerAddr { color: var(--signal); font-variant-numeric: tabular-nums; }
+.origin__kickerSep { width: 14px; height: 1px; background: var(--hairline); flex: none; }
+.origin__kickerName { color: var(--bone); }
+.origin__kickerRoute { color: var(--ghost); }
+
+.origin__head2 {
+  display: flex; flex-direction: column;
+  font-family: var(--ff-display); font-weight: 400;
+  font-size: clamp(36px, 4.9vw, 118px);
+  line-height: 0.95; letter-spacing: -0.035em;
+  color: var(--bone); margin: 0;
+}
+.origin__line { display: block; will-change: filter, opacity, transform; text-wrap: balance; }
+.origin__line--em { font-family: var(--ff-serif); font-style: italic; color: var(--signal); letter-spacing: -0.01em; }
+.origin__line--ghost { color: var(--ash); }
+.origin__period { font-family: var(--ff-serif); font-style: italic; color: var(--copper); }
+
+/* ---- signature strip ---- */
+.origin__sig {
+  display: flex; gap: var(--s-8); flex-wrap: wrap;
+  margin-top: var(--s-6); padding-top: var(--s-5);
+  border-top: 1px dashed var(--hairline);
+  will-change: opacity;
+}
+.origin__sigCol { display: flex; flex-direction: column; gap: 3px; }
+.origin__sigK { font-family: var(--ff-mono); font-size: var(--fs-micro); letter-spacing: var(--tr-caps); text-transform: uppercase; color: var(--signal-dim); }
+.origin__sigV { font-family: var(--ff-display); font-size: var(--fs-meta); color: var(--ash); }
+
+/* ---- handoff cue → Selected Work ---- */
+.origin__handoff {
+  position: absolute; z-index: 4;
+  left: 50%; bottom: 5vh; transform: translateX(-50%);
+  display: inline-flex; align-items: center; gap: var(--s-4);
+  font-family: var(--ff-mono); font-size: var(--fs-micro);
+  letter-spacing: var(--tr-caps); text-transform: uppercase; color: var(--signal);
+  white-space: nowrap;
+}
+.origin__handoffLine { width: 40px; height: 1px; background: var(--signal); opacity: 0.6; }
+.origin__handoffArr { font-family: var(--ff-display); font-size: 14px; animation: originBob 1.6s var(--e-in-out) infinite; }
+@keyframes originBob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(3px); } }
+@media (prefers-reduced-motion: reduce) { .origin__handoffArr { animation: none; } }
+
+/* ---- responsive ---- */
+@media (max-width: 820px) {
+  .origin__type { left: var(--s-5); right: var(--s-5); max-width: none; bottom: 12vh; }
+  .origin__head2 { font-size: clamp(34px, 11vw, 60px); }
+  .origin__kicker { flex-wrap: wrap; white-space: normal; row-gap: 4px; }
+  .origin__sig { gap: var(--s-6); }
+}

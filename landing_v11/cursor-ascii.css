@@ -1,0 +1,163 @@
+/* ============================================================
+   M.O. — ASCII CURSOR + TERMINAL SCROLLBAR  (Landing v9 scoped)
+   ------------------------------------------------------------
+   Loaded AFTER system/extras.css so it overrides the circular
+   crosshair cursor — ONLY on the landing page. The Design System
+   page (which loads extras.css but NOT this file) keeps its cursor.
+
+   Cursor concept: a monospace CORNER-BRACKET targeting reticle —
+   four L-shaped ticks framing the point, like a terminal marquee /
+   crop selection. Reuses the existing .cursor DOM (ring · center ·
+   hLine · vLine · coords) — no JSX change. Modes (idle/hot/grab/
+   probe) recolor + resize the bracket via `currentColor`.
+   ============================================================ */
+
+:root { --cursor-size: 26px; }
+
+/* The circular ring's border/mix-blend looked "designy", not terminal.
+   Switch to explicit colors + a faint dark halo for legibility on both
+   the dark field and lighter card surfaces. */
+.custom-cursor .cursor {
+  mix-blend-mode: normal;
+  filter: drop-shadow(0 0 2px rgba(2, 4, 9, 0.65));
+}
+
+/* ---- corner-bracket frame -------------------------------------------------
+   Drawn as 8 thin bars (2 per corner) via layered gradients on .cursor__ring.
+   currentColor lets each mode recolor the whole frame in one line. The frame
+   scales with the ring's transform, giving a satisfying "lock-on" snap. */
+.custom-cursor .cursor__ring {
+  border: none !important;
+  border-radius: 0 !important;
+  color: var(--ash);
+  --bw: 1.5px;     /* bracket stroke */
+  --bl: 7px;       /* bracket leg length */
+  background:
+    linear-gradient(currentColor, currentColor) 0 0    / var(--bl) var(--bw) no-repeat,
+    linear-gradient(currentColor, currentColor) 0 0    / var(--bw) var(--bl) no-repeat,
+    linear-gradient(currentColor, currentColor) 100% 0 / var(--bl) var(--bw) no-repeat,
+    linear-gradient(currentColor, currentColor) 100% 0 / var(--bw) var(--bl) no-repeat,
+    linear-gradient(currentColor, currentColor) 0 100% / var(--bl) var(--bw) no-repeat,
+    linear-gradient(currentColor, currentColor) 0 100% / var(--bw) var(--bl) no-repeat,
+    linear-gradient(currentColor, currentColor) 100% 100% / var(--bl) var(--bw) no-repeat,
+    linear-gradient(currentColor, currentColor) 100% 100% / var(--bw) var(--bl) no-repeat;
+  transition: transform var(--d-fast) var(--e-snap), color var(--d-fast);
+}
+
+/* center: a tiny SQUARE pip (not a round dot) — reads as a mono caret. */
+.custom-cursor .cursor__center {
+  border-radius: 0 !important;
+  width: 2px; height: 2px;
+  background: var(--ash);
+  transition: background var(--d-fast), width var(--d-fast), height var(--d-fast);
+}
+
+/* crosshair ticks — short, hidden until probe/grab. */
+.custom-cursor .cursor__hLine,
+.custom-cursor .cursor__vLine { background: var(--signal); }
+.custom-cursor .cursor__hLine { width: 14px; }
+.custom-cursor .cursor__vLine { height: 14px; }
+
+/* coord readout — terminal output, anchored bottom-right of the reticle,
+   prefixed with a node marker. */
+.custom-cursor .cursor__coords {
+  top: auto; right: auto;
+  bottom: -16px; left: 0;
+  transform: none;
+  text-align: left;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: var(--ghost);
+  text-transform: uppercase;
+}
+/* node marker — an asterism (⁂) reads as a tiny cluster of nodes, a
+   fragment of the particle field sitting at these coordinates. */
+.custom-cursor .cursor__coords::before { content: "⁂ "; color: var(--signal); }
+
+/* ---- MODES ---------------------------------------------------------------- */
+
+/* idle — small, quiet ash brackets. */
+.custom-cursor .cursor--idle .cursor__ring { transform: scale(0.92); }
+
+/* hot — over links/buttons: brackets snap tight + go signal ("lock on"). */
+.custom-cursor .cursor--hot .cursor__ring   { transform: scale(0.66); color: var(--signal); }
+.custom-cursor .cursor--hot .cursor__center { background: var(--signal); }
+
+/* grab — over the universe / 3D bus: brackets open wide, become a frame. */
+.custom-cursor .cursor--grab .cursor__ring   { transform: scale(1.32); color: var(--signal); --bl: 9px; }
+.custom-cursor .cursor--grab .cursor__center { background: var(--signal); }
+
+/* probe — over a photo tile: full reticle (brackets + crosshair ticks). */
+.custom-cursor .cursor--probe .cursor__ring   { transform: scale(1.55); color: var(--signal); }
+.custom-cursor .cursor--probe .cursor__center { background: var(--signal); }
+.custom-cursor .cursor--probe .cursor__hLine,
+.custom-cursor .cursor--probe .cursor__vLine  { opacity: 0.85; }
+
+/* ============================================================
+   ASCII RAMP SCROLLBAR — fixed rail (landing_v9/landing-scrollbar.js)
+   The native scrollbar is hidden; a monospace rail on the right edge
+   tracks window scroll. RAMP thumb (density-glyph glow over a void
+   track) + a STACKED readout: live percentage on top of the hex node
+   code, both right-aligned.
+   ============================================================ */
+html { scrollbar-width: none; }
+::-webkit-scrollbar { width: 0; height: 0; display: none; }
+
+.asb--rail {
+  position: fixed; top: 60px; bottom: 40px; right: 4px; width: 24px;
+  z-index: 40; cursor: none; user-select: none; touch-action: none;
+}
+.asb--rail.is-void { opacity: 0; pointer-events: none; }
+.asb__col {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: flex-start;
+}
+.asb__cell {
+  font-family: var(--ff-mono); font-size: 12px; line-height: 13px; height: 13px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--shadow); width: 100%; text-align: center;
+  transition: color 120ms linear, text-shadow 120ms linear, opacity 120ms linear;
+}
+/* ---- DEFAULT: quiet grey instrument, low attention ---- */
+.asb__cell[data-state="faint"]     { color: var(--shadow); opacity: 0.5; }   /* track dots */
+.asb__cell[data-state="thumb"]     { color: var(--ash); }                    /* thumb core — cool grey */
+.asb__cell[data-state="thumb-dim"] { color: var(--ghost); }                  /* thumb edges — dimmer grey */
+/* ---- HOVER / NEAR: light the thumb up to signal green ---- */
+.asb--rail.is-hot .asb__cell[data-state="thumb"] {
+  color: var(--signal); text-shadow: 0 0 10px var(--signal-glow);
+}
+.asb--rail.is-hot .asb__cell[data-state="thumb-dim"] { color: var(--signal-dim); }
+.asb--rail.is-hot .asb__cell[data-state="faint"]     { color: var(--ghost); opacity: 0.7; }
+
+/* faint guide line down the rail when hovered */
+.asb--rail::after {
+  content: ""; position: absolute; inset: 0 auto 0 50%; width: 1px;
+  background: var(--hairline); opacity: 0; transform: translateX(-50%);
+  transition: opacity 150ms;
+}
+.asb--rail.is-hot::after { opacity: 0.4; }
+
+/* STACKED readout — percentage over node code, right-aligned, left of rail.
+   Only revealed when the cursor is near/on the rail. */
+.asb__tag {
+  position: absolute; right: 100%; margin-right: 11px; transform: translateY(-50%);
+  display: flex; flex-direction: column; align-items: flex-end; gap: 2px;
+  font-family: var(--ff-mono); white-space: nowrap; pointer-events: none;
+  text-align: right; opacity: 0; transition: opacity 160ms;
+}
+.asb--rail.is-hot .asb__tag { opacity: 1; }
+.asb__tag b {
+  color: var(--signal); font-weight: 500; font-size: 12px;
+  letter-spacing: 0.04em; line-height: 1; font-variant-numeric: tabular-nums;
+}
+.asb__tag span {
+  color: var(--ghost); font-size: 9px; letter-spacing: 0.14em; line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Touch / coarse-pointer devices: no custom cursor, native scroll feel. */
+@media (pointer: coarse) {
+  .custom-cursor .cursor { display: none; }
+  .asb--rail { display: none; }
+  html { scrollbar-width: auto; }
+}

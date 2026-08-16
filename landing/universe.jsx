@@ -378,20 +378,9 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     scene.add(stars);
     stars.userData = { wrapScale: 2.0 };  // larger box for stars
 
-    const sigStarGeo = new THREE.BufferGeometry();
-    const SS = 220;
-    const sigPos = new Float32Array(SS * 3);
-    for (let i = 0; i < SS; i++) {
-      sigPos[i*3+0] = (Math.random() - 0.5) * BOX.x * 1.6;
-      sigPos[i*3+1] = (Math.random() - 0.5) * BOX.y * 1.6;
-      sigPos[i*3+2] = (Math.random() - 0.5) * BOX.z * 1.6;
-    }
-    sigStarGeo.setAttribute("position", new THREE.BufferAttribute(sigPos, 3));
-    const sigStars = new THREE.Points(sigStarGeo, new THREE.PointsMaterial({
-      color: 0x00f0c8, size: 0.1, sizeAttenuation: true, transparent: true, opacity: 0.85,
-    }));
-    scene.add(sigStars);
-    sigStars.userData = { wrapScale: 1.6 };
+    // The teal SIGNAL field is now one and the same as the particles that
+    // assemble into "0x00" — see the assembly cloud set up below. There is no
+    // longer a separate hidden glyph layer.
 
     /* ---------- tiles (project cards) — placed via Fibonacci to start, then drift on wrap ---------- */
     const tilesGroup = new THREE.Group();
@@ -499,6 +488,36 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     const GRID_SPACING_Y = 4.3;
     const GRID_Z = -16;
     function targetForTile(mode, i, t) {
+      if (mode === "dive") {
+        // Everything clears far out — only node 0x00 (the hub) remains, centered.
+        const yN = 1 - (i / Math.max(1, projects.length - 1)) * 2;
+        const theta = i * goldenAngle;
+        return new THREE.Vector3(Math.cos(theta) * 22, yN * 13, -26 + Math.sin(theta) * 6);
+      }
+      if (mode === "origin") {
+        const concept = (window.__mo_origin && window.__mo_origin.concept) || "assembly";
+        const m = tiles[i];
+        const addr = m && m.userData.project.addr;
+        const fIdx = /^0x0[1-4]$/i.test(addr || "") ? (parseInt(addr, 16) - 1) : -1;
+        // ASSEMBLY: clear ALL nodes far out so the particle glyph reads clean.
+        if (concept === "assembly") {
+          const yN = 1 - (i / Math.max(1, projects.length - 1)) * 2;
+          const theta = i * goldenAngle;
+          return new THREE.Vector3(Math.cos(theta) * 19, yN * 11, -22 + Math.sin(theta) * 5);
+        }
+        // HUB: featured nodes ring the hub, the rest drift back.
+        if (fIdx >= 0) {
+          const ang = (fIdx / 4) * Math.PI * 2 - Math.PI / 2 + t * 0.00004;
+          return new THREE.Vector3(
+            ORIGIN_CENTER.x + Math.cos(ang) * ORIGIN_RING_R,
+            ORIGIN_CENTER.y + Math.sin(ang) * ORIGIN_RING_R * 0.62,
+            ORIGIN_CENTER.z + Math.sin(ang * 1.3) * 1.4,
+          );
+        }
+        const yN = 1 - (i / Math.max(1, projects.length - 1)) * 2;
+        const theta = i * goldenAngle;
+        return new THREE.Vector3(Math.cos(theta) * 16, yN * 9, -18 + Math.sin(theta) * 4);
+      }
       if (mode === "grid") {
         const col = i % GRID_COLS;
         const row = Math.floor(i / GRID_COLS);
@@ -544,6 +563,135 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       ambientGroup.add(sp);
       ambient.push(sp);
     }
+
+    /* ---------- ORIGIN hub — node 0x00 (the self) ----------
+       A special, larger node that only matters in `origin` mode. Every
+       project node radiates from it. This is the literal target of the
+       later "dive into node 0x00" → About · Board transition. */
+    const ORIGIN_CENTER = new THREE.Vector3(0, 0, -9);   // in front of a levelled camera
+    const ORIGIN_RING_R = 6.2;                            // project nodes ring radius
+
+    function makeOriginTexture() {
+      const oc = document.createElement("canvas");
+      oc.width = 256; oc.height = 256;
+      const g = oc.getContext("2d");
+      g.clearRect(0, 0, 256, 256);
+      const cx = 128, cy = 128;
+      // concentric rings
+      g.strokeStyle = "#00f0c8";
+      for (let i = 0; i < 3; i++) {
+        g.globalAlpha = 0.9 - i * 0.28;
+        g.lineWidth = 2 - i * 0.4;
+        g.beginPath(); g.arc(cx, cy, 30 + i * 26, 0, Math.PI * 2); g.stroke();
+      }
+      g.globalAlpha = 1;
+      // crosshair ticks
+      g.strokeStyle = "#00f0c8"; g.lineWidth = 1.5;
+      [[0,-1],[0,1],[-1,0],[1,0]].forEach(([dx,dy]) => {
+        g.beginPath();
+        g.moveTo(cx + dx * 84, cy + dy * 84);
+        g.lineTo(cx + dx * 98, cy + dy * 98);
+        g.stroke();
+      });
+      // core
+      g.fillStyle = "#00f0c8";
+      g.beginPath(); g.arc(cx, cy, 7, 0, Math.PI * 2); g.fill();
+      g.fillStyle = "#04060d";
+      g.beginPath(); g.arc(cx, cy, 3, 0, Math.PI * 2); g.fill();
+      const t = new THREE.CanvasTexture(oc);
+      t.colorSpace = THREE.SRGBColorSpace;
+      return t;
+    }
+
+    const originGroup = new THREE.Group();
+    scene.add(originGroup);
+    originGroup.visible = false;
+
+    const originHub = new THREE.Sprite(new THREE.SpriteMaterial({
+      map: makeOriginTexture(), transparent: true, opacity: 0, depthWrite: false, depthTest: false,
+    }));
+    originHub.position.copy(ORIGIN_CENTER);
+    originHub.scale.set(4.2, 4.2, 1);
+    originGroup.add(originHub);
+
+    // radiating links hub → each featured project node (0x01–0x04)
+    const featuredTiles = tiles.filter(m => /^0x0[1-4]$/i.test(m.userData.project.addr));
+    const originLinks = featuredTiles.map((tile) => {
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(6), 3));
+      const line = new THREE.Line(geo, new THREE.LineBasicMaterial({
+        color: 0x00f0c8, transparent: true, opacity: 0, depthWrite: false, depthTest: false,
+      }));
+      line.userData = { tile };
+      originGroup.add(line);
+      return line;
+    });
+
+    /* ---------- ASSEMBLY cloud — particles that swarm to FORM "0x00" ----------
+       Concept 01. A dedicated point cloud whose rest state is scattered through
+       the box; in origin/assembly mode each point flies to a target sampled from
+       a canvas-rendered "0x00" glyph, giving a 3D constellation of the self. */
+    function sampleGlyphTargets(text, count) {
+      const cw = 640, ch = 260;
+      const gc = document.createElement("canvas");
+      gc.width = cw; gc.height = ch;
+      const gx = gc.getContext("2d");
+      gx.fillStyle = "#000"; gx.fillRect(0, 0, cw, ch);
+      gx.fillStyle = "#fff";
+      gx.textAlign = "center"; gx.textBaseline = "middle";
+      gx.font = "700 200px 'Geist Mono', monospace";
+      gx.fillText(text, cw / 2, ch / 2 + 6);
+      const data = gx.getImageData(0, 0, cw, ch).data;
+      const hits = [];
+      for (let y = 0; y < ch; y += 3) {
+        for (let x = 0; x < cw; x += 3) {
+          if (data[(y * cw + x) * 4] > 128) hits.push([x, y]);
+        }
+      }
+      // map sampled pixels into world-space targets centred on ORIGIN_CENTER
+      const SCALE = 0.026;
+      const out = new Float32Array(count * 3);
+      for (let i = 0; i < count; i++) {
+        const [px, py] = hits.length ? hits[(i * 37) % hits.length] : [cw / 2, ch / 2];
+        out[i*3+0] = ORIGIN_CENTER.x + (px - cw / 2) * SCALE;
+        out[i*3+1] = ORIGIN_CENTER.y - (py - ch / 2) * SCALE;
+        out[i*3+2] = ORIGIN_CENTER.z + (Math.sin(i * 12.9898) * 0.5) * 1.6; // gentle depth
+      }
+      return out;
+    }
+
+    const ASM_N = 560;
+    const asmTargets = sampleGlyphTargets("0x00", ASM_N);
+    // Glyph offsets relative to ORIGIN_CENTER — lets us re-anchor the formed
+    // glyph in front of the *camera* each frame instead of at a fixed world
+    // point (so it's always in view no matter how far the camera has drifted).
+    const asmLocal = new Float32Array(ASM_N * 3);
+    for (let i = 0; i < ASM_N; i++) {
+      asmLocal[i*3+0] = asmTargets[i*3+0] - ORIGIN_CENTER.x;
+      asmLocal[i*3+1] = asmTargets[i*3+1] - ORIGIN_CENTER.y;
+      asmLocal[i*3+2] = asmTargets[i*3+2] - ORIGIN_CENTER.z;
+    }
+    const asmGeo = new THREE.BufferGeometry();
+    const asmPos  = new Float32Array(ASM_N * 3);   // rendered positions (what you see)
+    const asmHome = new Float32Array(ASM_N * 3);   // live field positions (drift + wrap)
+    for (let i = 0; i < ASM_N; i++) {
+      const x = (Math.random() - 0.5) * BOX.x;
+      const y = (Math.random() - 0.5) * BOX.y;
+      const z = (Math.random() - 0.5) * BOX.z;
+      asmHome[i*3+0] = asmPos[i*3+0] = x;
+      asmHome[i*3+1] = asmPos[i*3+1] = y;
+      asmHome[i*3+2] = asmPos[i*3+2] = z;
+    }
+    asmGeo.setAttribute("position", new THREE.BufferAttribute(asmPos, 3));
+    // The teal signal field. Drifts/wraps around the camera like any star; on
+    // the ORIGIN beat it peels out of the field to FORM "0x00", then melts back.
+    const assemblyPts = new THREE.Points(asmGeo, new THREE.PointsMaterial({
+      color: 0x00f0c8, size: 0.1, sizeAttenuation: true,
+      transparent: true, opacity: 0.55, depthWrite: false,
+    }));
+    const assemblyGroup = new THREE.Group();
+    assemblyGroup.add(assemblyPts);
+    scene.add(assemblyGroup);
 
     /* ---------- wrap helper — keep object within [-half, +half] BOX around camera ---------- */
     function wrapAroundCamera(obj, box) {
@@ -733,7 +881,68 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     let frameI = 0;
     const FORWARD = new THREE.Vector3();
 
+    // Hoisted scratch — reused every frame so the hot loops allocate nothing.
+    const _camDir   = new THREE.Vector3();
+    const _off      = new THREE.Vector3();
+    const _localOff = new THREE.Vector3();
+    const _lookM    = new THREE.Matrix4();
+    const _baseQ    = new THREE.Quaternion();
+    const _offQ     = new THREE.Quaternion();
+    const _euler    = new THREE.Euler();
+    const _vScale   = new THREE.Vector3();
+    // Star wrap box never changes — compute once instead of cloning per frame.
+    const SBOX = BOX.clone().multiplyScalar(stars.userData.wrapScale);
+    // Keep absolute coordinates small over very long sessions: when the camera
+    // has flown far from the origin, shift the whole world back so floats stay
+    // precise (everything wraps around the camera, so this is invisible).
+    const REBASE_DIST2 = 600 * 600;
+    function shiftBufferAttr(attr, sx, sy, sz) {
+      const a = attr.array;
+      for (let i = 0; i < a.length; i += 3) { a[i] -= sx; a[i+1] -= sy; a[i+2] -= sz; }
+      attr.needsUpdate = true;
+    }
+    function rebaseWorld() {
+      const sx = cam.pos.x, sy = cam.pos.y, sz = cam.pos.z;
+      cam.pos.set(0, 0, 0);
+      camera.position.copy(cam.pos);
+      for (const m of tiles) {
+        m.position.x -= sx; m.position.y -= sy; m.position.z -= sz;
+        const d = m.userData.driftTarget;
+        if (d) { d.x -= sx; d.y -= sy; d.z -= sz; }
+      }
+      for (const sp of ambient) { sp.position.x -= sx; sp.position.y -= sy; sp.position.z -= sz; }
+      shiftBufferAttr(stars.geometry.attributes.position, sx, sy, sz);
+      const aArr = assemblyPts.geometry.attributes.position.array;
+      for (let i = 0; i < aArr.length; i += 3) {
+        aArr[i] -= sx; aArr[i+1] -= sy; aArr[i+2] -= sz;
+        asmHome[i] -= sx; asmHome[i+1] -= sy; asmHome[i+2] -= sz;
+      }
+      assemblyPts.geometry.attributes.position.needsUpdate = true;
+    }
+
+    // Wrap the assembly field around the camera, mirroring each ±BOX shift onto
+    // the rendered buffer so eased points never streak across the box on wrap.
+    function wrapAssemblyField(arr, home, box) {
+      for (let i = 0; i < home.length; i += 3) {
+        const dx = home[i]   - cam.pos.x;
+        const dy = home[i+1] - cam.pos.y;
+        const dz = home[i+2] - cam.pos.z;
+        if      (dx >  box.x / 2) { home[i]   -= box.x; arr[i]   -= box.x; }
+        else if (dx < -box.x / 2) { home[i]   += box.x; arr[i]   += box.x; }
+        if      (dy >  box.y / 2) { home[i+1] -= box.y; arr[i+1] -= box.y; }
+        else if (dy < -box.y / 2) { home[i+1] += box.y; arr[i+1] += box.y; }
+        if      (dz >  box.z / 2) { home[i+2] -= box.z; arr[i+2] -= box.z; }
+        else if (dz < -box.z / 2) { home[i+2] += box.z; arr[i+2] += box.z; }
+      }
+    }
+
     let prevMode = mode;
+    // Persistent assembly state — eased every frame so the "0x00" glyph forms and
+    // melts smoothly, fully decoupled from the discrete React `mode` (which flips
+    // on a coarse IntersectionObserver and can lag / stick). Formation is driven
+    // purely by the origin section's continuous scroll progress.
+    let formActual = 0;
+    const _glyphC = new THREE.Vector3();
     function scatterTiles() {
       // Pick a fresh random spot per tile (centred on camera) and store it as a
       // drift target. The tile keeps its current position; the drift-mode loop
@@ -754,15 +963,18 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     }
 
     function frame(now) {
+      // Paused while the inline board flight covers the viewport — saves the GPU
+      // from rendering two WebGL scenes at once. dt is reset so resume won't jump.
+      if (window.__mo_universe_pause) { last = now; raf = requestAnimationFrame(frame); return; }
       const dt = Math.min(50, now - last); last = now;
       const mode = modeRef.current;
       const focusAddrNow = focusRef.current;
-      const isArranged = (mode === "grid" || mode === "ambient");
+      const isArranged = (mode === "grid" || mode === "ambient" || mode === "origin" || mode === "dive");
 
       // Detect mode change. Going from an arranged mode back to drift needs
-      // a fresh scatter — otherwise the cards stay locked in 4×3 forever.
+      // a fresh scatter — otherwise the cards stay locked forever.
       if (mode !== prevMode) {
-        if (mode === "drift" && (prevMode === "grid" || prevMode === "ambient")) {
+        if (mode === "drift" && (prevMode === "grid" || prevMode === "ambient" || prevMode === "origin" || prevMode === "dive")) {
           scatterTiles();
         }
         prevMode = mode;
@@ -803,6 +1015,13 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       // Re-apply position
       camera.position.copy(cam.pos);
 
+      // Long-session safety: recentre the world when we've flown far out.
+      if (cam.pos.lengthSq() > REBASE_DIST2) rebaseWorld();
+
+      // dt-corrected easing factor — keeps motion identical at 30/60/120Hz so
+      // re-orientation and scaling feel the same (native) regardless of refresh.
+      const lerpK = (rate) => 1 - Math.pow(1 - rate, dt / 16);
+
       /* wrap drifting objects — only in free drift mode */
       if (mode === "drift") {
         for (const m of tiles) {
@@ -825,36 +1044,33 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       }
       for (const sp of ambient) wrapAroundCamera(sp, BOX);
       // stars wrap in a larger box for parallax illusion
-      const SBOX = BOX.clone().multiplyScalar(stars.userData.wrapScale);
-      const SgBOX = BOX.clone().multiplyScalar(sigStars.userData.wrapScale);
-      wrapPointsAroundCamera(stars,    SBOX);
-      wrapPointsAroundCamera(sigStars, SgBOX);
+      wrapPointsAroundCamera(stars, SBOX);
 
       /* small per-tile overlays — wireframe primitives OR loaded GLBs.
          Both branches follow their parent tile, rotate, and fade with it.
          Models are centred on the card face and pushed further toward camera
          so they read as the hero element; wireframes sit small above the art. */
+      // World-direction is constant for all overlays this frame — fetch once.
+      camera.getWorldDirection(_camDir);
       for (const wire of tileWires) {
         const parent = wire.userData.parentTile;
         if (!parent) continue;
         const isModel = !!wire.userData.isModel;
         // Offset toward viewer — bigger for full models so they clear the card.
-        const camDir = new THREE.Vector3();
-        camera.getWorldDirection(camDir);
         const forwardDist = isModel ? 1.4 : 0.6;
-        const off = camDir.clone().multiplyScalar(-forwardDist);
+        _off.copy(_camDir).multiplyScalar(-forwardDist);
         // Card-local offset: models can be nudged to their visual centre;
         // wireframes stay just above the card art.
         const modelOffset = isModel ? (parent.userData.project.modelOffset || {}) : {};
-        const localOffset = new THREE.Vector3(
+        _localOff.set(
           modelOffset.x || 0,
           isModel ? (modelOffset.y || 0) : parent.scale.y * 1.05,
           modelOffset.z || 0,
         ).applyQuaternion(parent.quaternion);
         wire.position.set(
-          parent.position.x + off.x + localOffset.x,
-          parent.position.y + off.y + localOffset.y,
-          parent.position.z + off.z + localOffset.z,
+          parent.position.x + _off.x + _localOff.x,
+          parent.position.y + _off.y + _localOff.y,
+          parent.position.z + _off.z + _localOff.z,
         );
         // Continuous slow rotation. Loaded GLBs are the "hero" presentation —
         // they get a gentle yaw-only drift so the form stays readable and
@@ -889,7 +1105,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         const baseScale  = isModel ? 0.85 : 0.28;
         const focusScale = isModel ? 1.10 : 0.42;
         const targetScale = isFocused ? focusScale : baseScale;
-        wire.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.10);
+        wire.scale.lerp(_vScale.set(targetScale, targetScale, targetScale), lerpK(0.10));
       }
 
       /* tiles: position-lerp to arranged targets, then orient */
@@ -903,22 +1119,22 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
 
         // For meshes (not cameras), Object3D.lookAt aligns local +Z to target.
         // PlaneGeometry's visible face IS the +Z face — so look AT the camera.
-        const lookM = new THREE.Matrix4().lookAt(camera.position, m.position, camera.up);
-        const baseQ = new THREE.Quaternion().setFromRotationMatrix(lookM);
+        _lookM.lookAt(camera.position, m.position, camera.up);
+        _baseQ.setFromRotationMatrix(_lookM);
 
         // Per-card constant offset so each tile floats at its own angle (suppressed in grid)
         const offFactor = mode === "grid" ? 0.15 : 1.0;
-        const offQ = new THREE.Quaternion()
-          .setFromEuler(new THREE.Euler(
-            m.userData.offsetPitch * offFactor,
-            m.userData.offsetYaw   * offFactor,
-            (m.userData.offsetRoll + Math.sin(now * 0.0006 + m.userData.wobble.p * 6) * 0.04) * offFactor,
-            "YXZ"
-          ));
-        baseQ.multiply(offQ);
+        _euler.set(
+          m.userData.offsetPitch * offFactor,
+          m.userData.offsetYaw   * offFactor,
+          (m.userData.offsetRoll + Math.sin(now * 0.0006 + m.userData.wobble.p * 6) * 0.04) * offFactor,
+          "YXZ"
+        );
+        _offQ.setFromEuler(_euler);
+        _baseQ.multiply(_offQ);
 
         // SOFT slerp — cards re-orient slowly so they feel like floating objects
-        m.quaternion.slerp(baseQ, mode === "grid" ? 0.12 : 0.06);
+        m.quaternion.slerp(_baseQ, lerpK(mode === "grid" ? 0.12 : 0.06));
 
         // Band-pass visibility per mode
         const dist = m.position.distanceTo(camera.position);
@@ -941,10 +1157,9 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         const isFocused = focusAddrNow && m.userData.project.addr === focusAddrNow;
         if (isFocused) {
           opacity = Math.min(1, opacity * 1.6 + 0.25);
-          const targetScale = 1.18;
-          m.scale.lerp(new THREE.Vector3(targetScale, targetScale, 1), 0.14);
+          m.scale.lerp(_vScale.set(1.18, 1.18, 1), lerpK(0.14));
         } else {
-          m.scale.lerp(new THREE.Vector3(1, 1, 1), 0.10);
+          m.scale.lerp(_vScale.set(1, 1, 1), lerpK(0.10));
         }
         m.material.opacity = opacity;
       }
@@ -975,6 +1190,117 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         } else {
           el.style.display = "none";
         }
+      }
+
+      /* ---------- Signal field ⇄ "0x00" glyph ----------
+         The teal particles are permanent residents of the field: they drift and
+         wrap around the camera like stars. As the ORIGIN section scrolls into
+         view they peel out of the field to FORM node 0x00 in front of the
+         camera, then melt back. One layer — the glyph IS universe particles.
+
+         Formation is driven by the section's continuous scroll progress and an
+         eased `formActual`, NOT by the discrete React mode. That means it can
+         begin assembling the instant the section enters view and always melts
+         cleanly when you scroll away — no "stuck formed" or "never appeared". */
+      {
+        const ob = window.__mo_origin || { p: 0, active: false, concept: "assembly" };
+        const concept = ob.concept || "assembly";
+        const op = Math.max(0, Math.min(1, ob.p || 0));
+        const eP = op < 0.5 ? 2*op*op : 1 - Math.pow(-2*op+2, 2)/2;  // easeInOut
+
+        // ---- HUB concept (exploration only) ----
+        const showHub = (mode === "origin") && concept === "hub";
+        originGroup.visible = showHub;
+        if (showHub) {
+          originHub.material.opacity = 0.25 + eP * 0.75;
+          const pulse = 1 + Math.sin(now * 0.0025) * 0.04;
+          originHub.scale.set(4.2 * pulse, 4.2 * pulse, 1);
+          for (const link of originLinks) {
+            const tile = link.userData.tile;
+            const la = link.geometry.attributes.position.array;
+            la[0] = ORIGIN_CENTER.x; la[1] = ORIGIN_CENTER.y; la[2] = ORIGIN_CENTER.z;
+            la[3] = tile.position.x; la[4] = tile.position.y; la[5] = tile.position.z;
+            link.geometry.attributes.position.needsUpdate = true;
+            link.material.opacity = eP * 0.45;
+          }
+        }
+
+        // ---- DIVE ignition (about gateway → board) ----
+        const inDive = (mode === "dive");
+        let igE = 0, eD = 0;
+        if (inDive) {
+          const db = window.__mo_dive || { p: 0, igniting: false };
+          const dp = Math.max(0, Math.min(1, db.p || 0));
+          eD = dp < 0.5 ? 2*dp*dp : 1 - Math.pow(-2*dp+2, 2)/2;
+          if (db.igniting && !db._t0) db._t0 = now;
+          const igT = db._t0 ? Math.max(0, Math.min(1, (now - db._t0) / 720)) : 0;
+          igE = igT * igT;  // easeIn — accelerates into the board
+        } else if (window.__mo_dive && window.__mo_dive._t0) {
+          window.__mo_dive._t0 = 0; window.__mo_dive.igniting = false;
+        }
+
+        // ---- target formedness (0 = pure field, 1 = full glyph) ----
+        // Continuous: rises with origin-section scroll whenever the section is in
+        // its active band; the dive holds a partial form. Never keyed to `mode`.
+        let formTarget = 0;
+        if (inDive)                              formTarget = 0.35 + eD * 0.65;
+        else if (ob.active && concept !== "hub") formTarget = eP;
+        // Ease toward the target so entry/exit is always gradual (no pop when the
+        // section's active flag toggles mid-scroll).
+        formActual += (formTarget - formActual) * lerpK(0.09);
+        if (formActual < 0.0015 && formTarget === 0) formActual = 0;
+        const formP = formActual;
+
+        const arr = assemblyPts.geometry.attributes.position.array;
+        if (formP < 0.0015) {
+          // PURE FIELD — wrap home positions around the camera (mirroring the
+          // shift onto the render buffer), then ease the render toward home.
+          wrapAssemblyField(arr, asmHome, BOX);
+          const kField = lerpK(0.12);
+          for (let i = 0; i < ASM_N * 3; i++) arr[i] += (asmHome[i] - arr[i]) * kField;
+        } else {
+          // ASSEMBLING — anchor the glyph in front of the CURRENT camera so it's
+          // always in view, then blend each particle from its field home toward
+          // its glyph slot (rotating + breathing) by the form amount.
+          _glyphC.copy(cam.pos).add(ORIGIN_CENTER);   // camera-relative centre
+          const ang = now * (inDive ? 0.00024 : 0.00018);
+          const ca = Math.cos(ang), sa = Math.sin(ang);
+          const breathe = 1 + Math.sin(now * 0.0012) * 0.03;
+          const kForm = lerpK(0.16);
+          for (let i = 0; i < ASM_N; i++) {
+            const j = i * 3;
+            const dx = asmLocal[j]   * breathe;
+            const dy = asmLocal[j+1] * breathe;
+            const dz = asmLocal[j+2];
+            const rx = dx * ca - dz * sa;
+            const rz = dx * sa + dz * ca;
+            const tX = _glyphC.x + rx, tY = _glyphC.y + dy, tZ = _glyphC.z + rz;
+            const desX = asmHome[j]   + (tX - asmHome[j])   * formP;
+            const desY = asmHome[j+1] + (tY - asmHome[j+1]) * formP;
+            const desZ = asmHome[j+2] + (tZ - asmHome[j+2]) * formP;
+            arr[j]   += (desX - arr[j])   * kForm;
+            arr[j+1] += (desY - arr[j+1]) * kForm;
+            arr[j+2] += (desZ - arr[j+2]) * kForm;
+          }
+        }
+        assemblyPts.geometry.attributes.position.needsUpdate = true;
+
+        // Always visible as field; brighter + larger as it forms / ignites.
+        const fieldOp = (mode === "ambient" || mode === "grid") ? 0.34 : 0.55;
+        assemblyPts.material.opacity = Math.min(1, Math.max(fieldOp, 0.2 + formP * 0.8) + igE * 0.4);
+        assemblyPts.material.size = 0.1 + formP * 0.03 + igE * 0.5;
+
+        // Dive ignition rushes the formed node toward the camera.
+        if (inDive) {
+          assemblyGroup.position.set(0, 1.5, igE * (Math.abs(ORIGIN_CENTER.z) + 6));
+          const gs = 1 + igE * 4.5;
+          assemblyGroup.scale.set(gs, gs, gs);
+        } else {
+          assemblyGroup.position.set(0, 0, 0);
+          assemblyGroup.scale.set(1, 1, 1);
+        }
+
+        window.__mo_debug = { mode, active: !!ob.active, formP: +formP.toFixed(2), camZ: +cam.pos.z.toFixed(1) };
       }
 
       /* status ~ 3hz */
@@ -1037,7 +1363,10 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         }
       });
       ambient.forEach(s => { s.material.map?.dispose(); s.material.dispose(); });
-      starGeo.dispose(); sigStarGeo.dispose();
+      starGeo.dispose();
+      asmGeo.dispose(); assemblyPts.material.dispose();
+      originHub.material.map?.dispose(); originHub.material.dispose();
+      originLinks.forEach(l => { l.geometry.dispose(); l.material.dispose(); });
     };
   }, []);
 

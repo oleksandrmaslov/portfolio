@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Split HID Display — Maslov Oleksandr</title>
+  <meta name="description" content="Split HID Display · a packaged ZMK module that mirrors live host state on both nice!view halves of a split keyboard · Maslov Oleksandr." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap" />
+
+  <link rel="stylesheet" href="system/tokens.css" />
+  <link rel="stylesheet" href="system/layout.css" />
+  <link rel="stylesheet" href="system/extras.css" />
+  <link rel="stylesheet" href="project/page.css" />
+  <link rel="stylesheet" href="project_v2/page2.css" />
+  <link rel="stylesheet" href="demo/demo.css" />
+  <link rel="stylesheet" href="lab/ascii-photo/ascii-figure.css" />
+  <link rel="stylesheet" href="landing_v11/cursor-ascii.css" />
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- Three.js (ESM) exposed on window.THREE for the Babel scripts below -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+  <script type="module">
+    import * as THREE from "three";
+    import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+    import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
+    import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
+    import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
+    window.THREE = Object.assign({}, THREE, { GLTFLoader, MeshoptDecoder, RoomEnvironment, RoundedBoxGeometry });
+  </script>
+
+  <!-- React + Babel -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <!-- Shared system (FibGrid, Boot, Cursor) -->
+  <script type="text/babel" data-presets="env,react" src="system/core.jsx"></script>
+
+  <!-- ASCII photo reveal-lens (lab engine + React figure wrapper) -->
+  <script src="lab/ascii-photo/ascii-photo.js"></script>
+
+  <!-- Project pieces (no demo scripts — this node links to its GitHub source) -->
+  <script type="text/babel" data-presets="env,react" src="project/data.jsx"></script>
+  <script type="text/babel" data-presets="env,react" src="project/viewer3d.jsx"></script>
+  <script type="text/babel" data-presets="env,react" src="project_v2/hero-rig.jsx"></script>
+  <script type="text/babel" data-presets="env,react" src="project_v2/tweaks-panel.jsx"></script>
+  <script type="text/babel" data-presets="env,react" src="lab/ascii-photo/ascii-figure.jsx"></script>
+
+  <!-- Page config -->
+  <script type="text/babel" data-presets="env,react">
+    window.PAGE_CONFIG = {
+      addr: "0x08",
+      docTitle: "Split HID Display — Maslov Oleksandr",
+      hero: {
+        /* the module made physical: two nice!view display boards — the central
+           (status) and the peripheral (media) half — threaded by the split BLE
+           link, with a pulse sweeping central → peripheral (a forwarded Raw HID
+           report) that flashes each screen as it arrives — both halves in sync. */
+        matcap: false,
+        modelFit: 3.4,
+        pose: { x: 0.12, y: 0.42, z: 0 },
+        buildModel: (THREE) => {
+          const SIGNAL = 0x00f0c8;
+          const g = new THREE.Group();
+          const Rounded = THREE.RoundedBoxGeometry;
+          const boardGeo = () => Rounded
+            ? new Rounded(1.05, 1.5, 0.07, 4, 0.05)
+            : new THREE.BoxGeometry(1.05, 1.5, 0.07);
+
+          const HALVES = [
+            { x: -0.78, rows: [0.46, 0.20, -0.08, -0.34, -0.56] }, // central · status
+            { x:  0.78, rows: [0.36, 0.04, -0.30] },               // peripheral · media
+          ];
+          const screens = [];
+          HALVES.forEach((H, i) => {
+            const board = new THREE.Mesh(boardGeo(), new THREE.MeshStandardMaterial({
+              color: 0x232c3a, metalness: 0.45, roughness: 0.5,
+            }));
+            board.position.x = H.x;
+            const edges = new THREE.LineSegments(
+              new THREE.EdgesGeometry(board.geometry),
+              new THREE.LineBasicMaterial({ color: SIGNAL, transparent: true, opacity: 0.28 })
+            );
+            edges.position.copy(board.position);
+            /* dark inset screen face */
+            const screen = new THREE.Mesh(
+              new THREE.PlaneGeometry(0.8, 1.2),
+              new THREE.MeshBasicMaterial({ color: 0x06222a })
+            );
+            screen.position.set(H.x, 0, 0.038);
+            /* UI text-line bars on the screen */
+            const bars = new THREE.Group();
+            H.rows.forEach((y, r) => {
+              const w = 0.18 + ((r * 7 + i * 3) % 5) * 0.1;
+              const bar = new THREE.Mesh(
+                new THREE.PlaneGeometry(w, 0.055),
+                new THREE.MeshBasicMaterial({ color: SIGNAL, transparent: true, opacity: 0.8 })
+              );
+              bar.position.set(H.x - 0.32 + w / 2, y, 0.041);
+              bars.add(bar);
+            });
+            g.add(board, edges, screen, bars);
+            screens.push({ board, edges, screen, bars, homeX: H.x });
+          });
+
+          /* the split BLE link threading the two halves */
+          const link = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.012, 0.012, 1.56, 8),
+            new THREE.MeshBasicMaterial({ color: SIGNAL, transparent: true, opacity: 0.3 })
+          );
+          link.rotation.z = Math.PI / 2;
+          g.add(link);
+
+          /* a forwarded report sweeping central → peripheral */
+          const pulse = new THREE.PointLight(SIGNAL, 1.0, 2.6);
+          const pulseDot = new THREE.Mesh(
+            new THREE.SphereGeometry(0.045, 12, 10),
+            new THREE.MeshBasicMaterial({ color: SIGNAL })
+          );
+          g.add(pulse, pulseDot);
+
+          const t0 = performance.now();
+          const tick = (now) => {
+            const t = (now - t0) / 1000;
+            const u = (t % 1.7) / 1.7;
+            const px = -0.78 + u * 1.56;
+            pulse.position.set(px, 0, 0.22);
+            pulseDot.position.set(px, 0, 0.07);
+            screens.forEach((s) => {
+              const near = 1 - Math.min(1, Math.abs(px - s.homeX) / 0.42);
+              s.edges.material.opacity = 0.28 + near * 0.62;
+              s.bars.children.forEach((b) => { b.material.opacity = 0.5 + near * 0.45; });
+            });
+            if (!window.__hv_leaving) requestAnimationFrame(tick);
+          };
+          requestAnimationFrame(tick);
+          return g;
+        },
+      },
+      link: { label: "VIEW ON GITHUB", href: "https://github.com/oleksandrmaslov/zmk-split-hid-display", hint: "ZMK MODULE · SOURCE" },
+      tweakDefaults: /*EDITMODE-BEGIN*/{}/*EDITMODE-END*/,
+      renderTweaks: () => null,
+    };
+  </script>
+
+  <!-- Page core (generalized v2 template) -->
+  <script type="text/babel" data-presets="env,react" src="project_v2/page-core.jsx"></script>
+
+  <!-- ASCII RAMP scrollbar (shared w/ Landing v11) -->
+  <script src="landing_v11/landing-scrollbar.js"></script>
+</body>
+</html>

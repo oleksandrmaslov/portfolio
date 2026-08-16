@@ -264,6 +264,176 @@
 .rcard:hover .rcard__arr,
 .rcard--locked .rcard__arr { transform: translateX(8px); }
 
+/* ── SHOW-ALL passage gate ──────────────────────────────────
+   The final reel stop. Built to share the exact footprint of .rcard
+   (so it lands cleanly inside the static lens), but laid out as a
+   gateway plate: top progress rail, chrome bar, a 12-node constellation,
+   and a footer hosting the primary KeyButton. */
+.lp-workReel__slot--showAll {
+  flex: 0 0 52vw;
+}
+.showAllGate {
+  position: relative;
+  width: min(480px, 48vw);
+  height: clamp(380px, 62vh, 620px);
+  background: linear-gradient(180deg, rgba(13, 16, 24, 0.92) 0%, rgba(8, 11, 18, 0.92) 100%);
+  border: 1px solid var(--hairline);
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  text-align: left;
+  overflow: hidden;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  box-shadow:
+    0 32px 80px -32px rgba(0, 0, 0, 0.7),
+    0 0 0 1px rgba(0, 240, 200, 0.02);
+  transition: opacity 380ms var(--e-out), transform 380ms var(--e-out),
+              border-color var(--d-fast), box-shadow var(--d-fast);
+  will-change: transform, opacity;
+}
+.showAllGate--locked {
+  border-color: var(--signal-dim);
+  box-shadow:
+    0 32px 80px -16px rgba(0, 0, 0, 0.85),
+    0 0 0 1px var(--signal-dim),
+    0 0 80px -20px var(--signal);
+}
+
+/* top progress rail */
+.showAllGate__rail {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 18px 0;
+}
+.showAllGate__railTick {
+  height: 2px;
+  flex: 1;
+  background: var(--hairline);
+  transition: background var(--d-base) var(--e-out);
+}
+.showAllGate__railTick:nth-child(1) { background: var(--signal); }
+.showAllGate--locked .showAllGate__railTick {
+  background: var(--signal-dim);
+}
+.showAllGate--locked .showAllGate__railTick:nth-child(-n+3) { background: var(--signal); }
+
+/* chrome bar — matches .rcard__chrome */
+.showAllGate__chrome {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--hairline);
+  background: rgba(0, 240, 200, 0.04);
+  font-family: var(--ff-mono);
+  font-size: 10px;
+  letter-spacing: var(--tr-caps);
+  text-transform: uppercase;
+  color: var(--ghost);
+}
+.showAllGate__chromeDot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--signal);
+  box-shadow: 0 0 8px var(--signal);
+}
+.showAllGate__chromeSep { flex: 1; height: 1px; background: var(--hairline); }
+
+/* node constellation — fills the middle row */
+.showAllGate__art {
+  position: relative;
+  overflow: hidden;
+  margin: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  background:
+    radial-gradient(ellipse at 50% 50%, rgba(0, 240, 200, 0.06) 0%, transparent 55%),
+    var(--space);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  place-items: center;
+  gap: 4px;
+  padding: 22px 18px;
+}
+.showAllGate__node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  opacity: 0;
+  animation: gateNodeIn 520ms var(--e-out) forwards;
+}
+@keyframes gateNodeIn {
+  from { opacity: 0; transform: scale(0.55); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.showAllGate__nodeDot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--signal);
+  box-shadow: 0 0 8px var(--signal);
+  animation: pulse 2.4s var(--e-in-out) infinite;
+}
+.showAllGate__nodeLabel {
+  font-family: var(--ff-mono);
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  color: var(--ghost);
+}
+.showAllGate__artLine {
+  position: absolute;
+  background: var(--hairline);
+  pointer-events: none;
+}
+.showAllGate__artLine--h { left: 0; right: 0; top: 50%; height: 1px; }
+.showAllGate__artLine--v { top: 0; bottom: 0; left: 50%; width: 1px; }
+
+/* footer — matches .rcard__foot */
+.showAllGate__foot {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 20px;
+  align-items: end;
+  padding: 16px 20px 22px;
+  border-top: 1px solid var(--hairline);
+}
+.showAllGate__footL { display: flex; flex-direction: column; gap: 8px; }
+.showAllGate__overline {
+  font-family: var(--ff-mono);
+  font-size: 10px;
+  letter-spacing: var(--tr-caps);
+  text-transform: uppercase;
+  color: var(--signal);
+}
+.showAllGate__name {
+  font-family: var(--ff-display);
+  font-size: clamp(24px, 3vw, 42px);
+  line-height: 0.95;
+  letter-spacing: -0.025em;
+  font-weight: 400;
+  color: var(--bone);
+  margin: 0;
+}
+.showAllGate__name em {
+  font-family: var(--ff-serif);
+  font-style: italic;
+  color: var(--signal);
+}
+.showAllGate__sub {
+  font-family: var(--ff-display);
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--ash);
+  max-width: 34ch;
+  text-wrap: pretty;
+}
+.showAllGate__footR {
+  display: inline-flex;
+  align-items: flex-end;
+  padding-bottom: 4px;
+}
+
 /* ── static lens (pinned center-bottom of viewport) ─────── */
 .lp-workReel__lens {
   position: absolute;

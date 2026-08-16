@@ -1,6 +1,8 @@
 /* ============================================================
    M.O. SYSTEM — All Projects · V2 Terminal Manifest styles
    `$ ls -laR projects/` — a console-grounded directory listing.
+   Same design tokens as the rest of the system: deep void, hairlines,
+   signal cyan as the single accent, mono labels.
    ============================================================ */
 
 .m-page {

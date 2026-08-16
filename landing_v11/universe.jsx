@@ -1,0 +1,2558 @@
+/* ============================================================
+   M.O. SYSTEM — Universe v3
+   Wrapping infinite space.
+     · Drag to rotate the view (yaw + pitch).
+     · Wheel to fly forward / backward along the look axis.
+     · Tiles live in a torus-wrapped box around the camera —
+       anything that drifts out of view wraps back in from the
+       opposite side. The space feels infinite in every axis.
+
+   v1 (sparse free-pan)   → landing/_unused/universe-v1-sparse.jsx
+   v2 (Fibonacci sphere)  → landing/_unused/universe-v2-sphere.jsx
+   ============================================================ */
+
+const PROJECTS = [
+  { addr: "0x01", kind: "wafer",  prim: "slab",   file: "Wafer.html",               name: "Wafer",                  sub: "36-key ultrathin split keyboard", year: "2025",   stack: "ZMK · KICAD · NRF52840", color: "#0d1018", model: "models/wafer.glb", modelFit: 5.0, modelPose: { x: 1.05, y: 0, z: 0 }, modelOffset: { x: 0, y: 0.85, z: 0 } },
+  { addr: "0x02", kind: "kerfur", prim: "sphere", file: "Kerfur.html",              name: "Kerfur",                 sub: "Embedded pet · event bus",        year: "2025 —", stack: "C · ZEPHYR · LVGL · BLE", color: "#0e1118" },
+  { addr: "0x03", kind: "accel",  prim: "torus",  file: "ZMK-PointAccel.html",      name: "ZMK PointAccel",         sub: "Open-source input processor",     year: "2025",   stack: "C · DEVICETREE · ZMK",   color: "#0d1119" },
+  { addr: "0x04", kind: "torch",  prim: "cone",   file: "Tactical-Flashlight.html", name: "Tactical Flashlight",    sub: "For Energy for Ukraine",          year: "12/25",  stack: "C · ARM-M0 · KICAD",     color: "#0e1018", model: "models/tactical_flashlight.glb" },
+  { addr: "0x05", kind: "node",   name: "ZMK upstream",           sub: "Voltage IIO merge · PMIC driver", year: "2025",   stack: "ZEPHYR · DT · I2C",      color: "#0d1018" },
+  { addr: "0x06", kind: "node",   name: "Matterium",              sub: "Matter / Thread experiments",     year: "2024",   stack: "MATTER · OPENTHREAD",    color: "#0e1119" },
+  { addr: "0x07", kind: "node",   name: "Catloading",             sub: "Loading screen · meow OS",        year: "2024",   stack: "JS · WEBGL · GLSL",      color: "#0d1018" },
+  { addr: "0x08", kind: "node",   name: "view-elemental",         sub: "Periodic table viewer",           year: "2023",   stack: "REACT · D3 · CHEM",      color: "#0e1118" },
+  { addr: "0x09", kind: "node",   name: "Wafer R1 → R3",          sub: "Revision history · KiCad",        year: "2024-5", stack: "KICAD · CHANGELOG",      color: "#0d1018" },
+  { addr: "0x0A", kind: "node",   name: "Kerfur Beacons",         sub: "Peer-to-peer rotating IDs",       year: "2025",   stack: "BLE · CRYPTO · BEACON",  color: "#0e1018" },
+  { addr: "0x0B", kind: "node",   name: "PMIC Driver",            sub: "NPM1300 register interface",      year: "2025",   stack: "C · I2C · ZEPHYR",       color: "#0d1119" },
+  { addr: "0x0C", kind: "node",   name: "Streamlit Configurator", sub: "PointAccel devicetree emit",      year: "2025",   stack: "PYTHON · STREAMLIT",     color: "#0e1018" },
+];
+
+window.UNIVERSE_PROJECTS = PROJECTS;
+
+// Kick the GLB preload as soon as we know the URLs — independent of Boot,
+// which can be skipped via sessionStorage. We defer until the next tick so
+// viewer3d.jsx has had a chance to define window.preloadModels.
+setTimeout(() => {
+  if (typeof window.preloadModels !== "function") return;
+  const urls = PROJECTS.map(p => p.model).filter(Boolean);
+  if (urls.length) window.preloadModels(urls);
+}, 0);
+
+/* ============================================================
+   Per-tile canvas texture
+   ============================================================ */
+function makeTileTexture(p, THREE) {
+  const c = document.createElement("canvas");
+  c.width = 540; c.height = 720;
+  const x = c.getContext("2d");
+
+  x.fillStyle = p.color || "#0d1018";
+  x.fillRect(0, 0, 540, 720);
+  x.strokeStyle = "#232a3a";
+  x.lineWidth = 1.5;
+  x.strokeRect(12, 12, 516, 696);
+
+  x.strokeStyle = "#00f0c8";
+  x.lineWidth = 1.5;
+  const drawCorner = (cx, cy, fx, fy) => {
+    const len = 16;
+    x.beginPath();
+    x.moveTo(cx, cy + fy * len);
+    x.lineTo(cx, cy);
+    x.lineTo(cx + fx * len, cy);
+    x.stroke();
+  };
+  drawCorner(24, 24, 1, 1);
+  drawCorner(516, 24, -1, 1);
+  drawCorner(24, 696, 1, -1);
+  drawCorner(516, 696, -1, -1);
+
+  x.fillStyle = "#5b6478";
+  x.font = "500 11px 'Geist Mono', monospace";
+  x.textBaseline = "top";
+  x.textAlign = "left";
+  x.fillText("■  NODE " + p.addr, 44, 30);
+  x.fillStyle = "#9aa3b3";
+  x.fillText(p.year.toUpperCase(), 44, 46);
+  x.fillStyle = "#5b6478";
+  x.textAlign = "right";
+  x.fillText("MASLOV / OLEKSANDR", 496, 30);
+  x.fillText("48.137° N  ·  11.575° E", 496, 46);
+  x.textAlign = "left";
+
+  x.fillStyle = "#1a2030";
+  for (let yy = 90; yy < 540; yy += 21) {
+    for (let xx = 44; xx < 510; xx += 21) {
+      x.fillRect(xx, yy, 1, 1);
+    }
+  }
+
+  // Skip the canvas wireframe graphic when a real 3D model (or the v3 mini-PCB)
+  // overlays the card — otherwise the green primitive shows through behind it.
+  if (!p.model && !p.pcbBoard) {
+    x.save();
+    x.translate(270, 320);
+    x.strokeStyle = "#00f0c8";
+    x.fillStyle = "#00f0c8";
+    x.lineWidth = 1.4;
+    drawGraphic(x, p);
+    x.restore();
+  }
+
+  x.fillStyle = "#e6e8ee";
+  x.font = "400 56px 'Geist', sans-serif";
+  x.textAlign = "left";
+  x.textBaseline = "top";
+  const lines = wrapText(x, p.name, 460);
+  let ty = 550 - (lines.length - 1) * 56;
+  for (const line of lines) {
+    x.fillText(line, 44, ty);
+    ty += 58;
+  }
+
+  x.fillStyle = "#9aa3b3";
+  x.font = "400 18px 'Geist', sans-serif";
+  x.fillText(p.sub, 44, 640);
+
+  x.fillStyle = "#5b6478";
+  x.font = "500 11px 'Geist Mono', monospace";
+  x.fillText(p.stack, 44, 678);
+  x.fillStyle = "#00f0c8";
+  x.textAlign = "right";
+  x.fillText("OPEN  →", 496, 678);
+
+  const tex = new THREE.CanvasTexture(c);
+  tex.anisotropy = 8;
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.needsUpdate = true;
+  return tex;
+}
+
+function wrapText(ctx, text, maxW) {
+  const words = text.split(" ");
+  const out = [];
+  let cur = "";
+  for (const w of words) {
+    const test = cur ? cur + " " + w : w;
+    if (ctx.measureText(test).width > maxW && cur) { out.push(cur); cur = w; }
+    else cur = test;
+  }
+  if (cur) out.push(cur);
+  return out;
+}
+
+function drawGraphic(x, p) {
+  switch (p.kind) {
+    case "wafer": {
+      const w = 280, h = 180, r = 22;
+      x.beginPath();
+      x.moveTo(-w/2 + r, -h/2);
+      x.lineTo(w/2 - r, -h/2);
+      x.arcTo(w/2, -h/2, w/2, -h/2 + r, r);
+      x.lineTo(w/2, h/2 - r);
+      x.arcTo(w/2, h/2, w/2 - r, h/2, r);
+      x.lineTo(-w/2 + r, h/2);
+      x.arcTo(-w/2, h/2, -w/2, h/2 - r, r);
+      x.lineTo(-w/2, -h/2 + r);
+      x.arcTo(-w/2, -h/2, -w/2 + r, -h/2, r);
+      x.stroke();
+      for (let row = 0; row < 3; row++) for (let col = 0; col < 5; col++) {
+        const dx = (col - 2) * 26 - 32;
+        const dy = (row - 1) * 26;
+        x.fillRect(dx - 2, dy - 2, 4, 4);
+        x.fillRect(-dx + 32 - 2, dy - 2, 4, 4);
+      }
+      for (let i = 0; i < 3; i++) {
+        x.fillRect(-12 + i * 26 - 2, 50, 4, 4);
+        x.fillRect(12 - i * 26 - 2 + 24, 50, 4, 4);
+      }
+      break;
+    }
+    case "kerfur": {
+      x.beginPath(); x.arc(0, 0, 100, 0, Math.PI * 2); x.stroke();
+      x.beginPath(); x.arc(-30, -8, 11, 0, Math.PI * 2); x.fill();
+      x.beginPath(); x.arc( 30, -8, 11, 0, Math.PI * 2); x.fill();
+      x.beginPath(); x.arc(0, 22, 14, 0, Math.PI, false); x.stroke();
+      for (let i = 1; i <= 3; i++) {
+        x.beginPath();
+        x.arc(0, 0, 100 + i * 14, -0.4 - i * 0.05, 0.4 + i * 0.05);
+        x.globalAlpha = 0.4 - i * 0.1;
+        x.stroke();
+      }
+      x.globalAlpha = 1;
+      break;
+    }
+    case "accel": {
+      x.beginPath();
+      for (let i = 0; i <= 80; i++) {
+        const t = i / 80;
+        const xx = (t - 0.5) * 240;
+        const yy = -Math.pow(t, 2.6) * 170 + 70;
+        if (i === 0) x.moveTo(xx, yy); else x.lineTo(xx, yy);
+      }
+      x.stroke();
+      x.strokeStyle = "#1a2030";
+      x.beginPath(); x.moveTo(-120, 70); x.lineTo(120, -80); x.stroke();
+      x.beginPath(); x.moveTo(-120, 70); x.lineTo(120, 70); x.stroke();
+      x.beginPath(); x.moveTo(-120, 70); x.lineTo(-120, -100); x.stroke();
+      x.fillStyle = "#5b6478";
+      for (let i = 1; i <= 4; i++) {
+        x.fillRect(-120 + i * 48 - 0.5, 70 - 3, 1, 6);
+        x.fillRect(-120 - 3, 70 - i * 38 - 0.5, 6, 1);
+      }
+      x.strokeStyle = "#00f0c8";
+      x.fillStyle = "#00f0c8";
+      break;
+    }
+    case "torch": {
+      x.beginPath();
+      x.moveTo(-50, 60); x.lineTo(50, 60);
+      x.lineTo(110, -90); x.lineTo(-110, -90); x.closePath();
+      x.stroke();
+      x.beginPath(); x.rect(-50, 60, 100, 70); x.stroke();
+      x.beginPath(); x.arc(0, -10, 16, 0, Math.PI * 2); x.fill();
+      for (let i = -2; i <= 2; i++) {
+        x.globalAlpha = 0.3;
+        x.beginPath();
+        x.moveTo(i * 16, -90); x.lineTo(i * 24, -150);
+        x.stroke();
+      }
+      x.globalAlpha = 1;
+      break;
+    }
+    default: {
+      for (let i = 0; i < 4; i++) {
+        const s = 30 + i * 30;
+        x.globalAlpha = 1 - i * 0.22;
+        x.strokeRect(-s, -s, s * 2, s * 2);
+      }
+      x.globalAlpha = 1;
+      x.beginPath(); x.moveTo(-80, 0); x.lineTo(80, 0); x.stroke();
+      x.beginPath(); x.moveTo(0, -80); x.lineTo(0, 80); x.stroke();
+      x.fillRect(-3, -3, 6, 6);
+    }
+  }
+}
+
+/* ============================================================
+   Ambient node — small canvas sprite
+   ============================================================ */
+function makeAmbientTexture(label, THREE) {
+  const cc = document.createElement("canvas");
+  cc.width = 128; cc.height = 128;
+  const xc = cc.getContext("2d");
+  xc.clearRect(0, 0, 128, 128);
+  xc.strokeStyle = "#00f0c8";
+  xc.lineWidth = 2;
+  xc.beginPath(); xc.arc(64, 64, 4, 0, Math.PI * 2); xc.stroke();
+  xc.fillStyle = "#5b6478";
+  xc.font = "500 16px 'Geist Mono', monospace";
+  xc.textAlign = "left";
+  xc.textBaseline = "middle";
+  xc.fillText(label, 76, 64);
+  const t = new THREE.CanvasTexture(cc);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+
+/* ============================================================
+   Hover ASCII helpers
+   ============================================================ */
+const ASCII_CHAR_W = 5.4;
+const ASCII_CHAR_H = 9.5;
+const ASCII_RAMP   = " .·:-=+*#%@";
+
+function asciiBody(project, screen) {
+  const cols = Math.max(14, Math.floor(screen.w / ASCII_CHAR_W));
+  const rows = Math.max(10, Math.floor(screen.h / ASCII_CHAR_H));
+
+  const out = [];
+  const t1 = "■ " + project.addr;
+  const t2 = project.year.toUpperCase();
+  const headerSpace = Math.max(1, cols - t1.length - t2.length);
+  out.push((t1 + " ".repeat(headerSpace) + t2).slice(0, cols));
+  out.push("─".repeat(cols));
+
+  const innerR = Math.max(2, rows - 6);
+  const seed = project.addr.charCodeAt(2) + project.addr.charCodeAt(3);
+  for (let r = 0; r < innerR; r++) {
+    let line = "";
+    for (let c = 0; c < cols; c++) {
+      const cx = (cols - 1) / 2;
+      const cy = (innerR - 1) / 2;
+      const dx = (c - cx) / (cx || 1);
+      const dy = (r - cy) / (cy || 1);
+      const d = Math.sqrt(dx * dx * 0.5 + dy * dy);
+      const n = Math.sin(c * 0.5 + r * 0.7 + seed) * 0.15;
+      const v = Math.max(0, Math.min(1, 1 - d * 1.1 + n));
+      const idx = Math.floor(v * (ASCII_RAMP.length - 1));
+      line += ASCII_RAMP[idx];
+    }
+    out.push(line);
+  }
+  out.push("─".repeat(cols));
+  out.push(project.name.toUpperCase().slice(0, cols).padEnd(cols, " "));
+  out.push(project.sub.slice(0, cols).padEnd(cols, " "));
+  out.push("OPEN →".padEnd(cols, " "));
+  return out.slice(0, rows).join("\n");
+}
+
+/* ============================================================
+   Universe v3 — wrapping infinite torus space
+   ============================================================ */
+function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = null }) {
+  const mountRef   = React.useRef(null);
+  const overlayRef = React.useRef(null);
+  const [hover, setHover] = React.useState(null);
+  const [activeAddr, setActiveAddr] = React.useState(null);
+  const [status, setStatus] = React.useState({ yaw: "0", pit: "0", vel: "0", tile: "—", trace: 0 });
+  const [idleNote, setIdleNote] = React.useState(false);
+
+  const hoverObjRef = React.useRef(null);
+  const modeRef     = React.useRef(mode);
+  const focusRef    = React.useRef(focusAddr);
+  React.useEffect(() => { modeRef.current = mode; }, [mode]);
+  React.useEffect(() => { focusRef.current = focusAddr; }, [focusAddr]);
+
+  React.useEffect(() => {
+    const THREE = window.THREE;
+    if (!THREE) { console.warn("THREE not loaded"); return; }
+    const mount = mountRef.current;
+    if (!mount) return;
+
+    const sz = () => ({ w: mount.clientWidth, h: mount.clientHeight });
+    let { w, h } = sz();
+
+    /* ---------- renderer / scene / camera ---------- */
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
+    // Cap at 1.5 — on a soft drifting field the extra retina pixels are
+    // imperceptible but cost ~1.8× the fragment work at DPR 2.
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+    renderer.setSize(w, h);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    mount.appendChild(renderer.domElement);
+
+    // Visibility gate — the universe is a full-screen hero background, so once
+    // the user scrolls past it there's no reason to keep driving the GPU. We
+    // pause the render (animation state still advances via dt on resume).
+    let uniOnScreen = true;
+    const uniIO = new IntersectionObserver(
+      (entries) => { uniOnScreen = entries[0].isIntersecting; },
+      { threshold: 0 }
+    );
+    uniIO.observe(mount);
+
+    const scene = new THREE.Scene();
+    // Constant background glow — restored from v6. In v6 the canvas rendered
+    // directly (alpha:true) so the CSS `.universeBg` navy/teal radial glow showed
+    // through the empty field. The v9 post-processing composer outputs an OPAQUE
+    // frame (grade shader writes alpha 1.0), so the CSS glow can no longer bleed
+    // through — the canvas painted pure black. We rebuild that same glow as a
+    // scene.background texture so it lives INSIDE the render and survives the
+    // composer: void navy (#04060d) + faint teal centre (rgba(0,240,200,0.06)),
+    // matching the CSS gradient. (scene.background is unaffected by fog.)
+    (function makeBackdrop() {
+      const bg = document.createElement("canvas");
+      bg.width = bg.height = 1024;
+      const bx = bg.getContext("2d");
+      bx.fillStyle = "#04060d";
+      bx.fillRect(0, 0, 1024, 1024);
+      const grad = bx.createRadialGradient(512, 512, 0, 512, 512, 512 * 0.58);
+      grad.addColorStop(0, "rgba(0,240,200,0.06)");
+      grad.addColorStop(1, "rgba(0,240,200,0)");
+      bx.fillStyle = grad;
+      bx.fillRect(0, 0, 1024, 1024);
+      const tex = new THREE.CanvasTexture(bg);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      scene.background = tex;
+    })();
+    // Fog gives the field its atmospheric depth (the "cool" haze). 22→38 is the
+    // original near fog; the drift wrap is hidden by the per-tile box-edge fade
+    // now, and the ORIGIN ring stays readable because its tiles use a spherical
+    // fade pushed out past the fog — so we can keep this near, atmospheric fog.
+    scene.fog = new THREE.Fog(0x04060d, 22, 38);
+
+    const camera = new THREE.PerspectiveCamera(58, w / h, 0.3, 200);
+    scene.add(new THREE.AmbientLight(0xffffff, 1.0));
+
+    /* ============================================================
+       MASLOV RENDERING PATH — post-processing composer
+       Chosen in the look-dev lab: matcap · subtle chromatic aberration
+       (~0.02) · gentle depth-of-field · small vignette · faint film
+       grain · NO node glow (bloom intentionally omitted).
+
+       Pipeline:  RenderPass → BokehPass(DoF) → MaslovGrade(CA+vig+grain) → OutputPass
+
+       • All values live in window.__mo_grade so they're tunable live and
+         match the lab "Maslov" preset.
+       • Guarded + tiered: on low-power devices the (expensive) Bokeh depth
+         pass is dropped while the near-free grade pass stays — so the lens
+         character survives even when DoF can't.
+       • Falls back to direct renderer.render() if anything is unavailable.
+       ============================================================ */
+    const GRADE = (window.__mo_grade = Object.assign({
+      aberration: 0.01,     // CA — radial RGB split (v11.3: halved per request)
+      vignette:   0.34,     // "small vignette"
+      grain:      0.0,      // film grain removed per request
+      dof:        true,     // gentle depth-of-field
+      focus:      10.0,     // pinned to the card plane — mids stay readable
+      aperture:   0.00025,  // v11.3: smaller — mid-distance stays crisper
+      maxblur:    0.0045,   // low ceiling — only the deep field melts
+    }, window.__mo_grade || {}));
+
+    // Device tier. We enable DoF OPTIMISTICALLY everywhere (modern phones like
+    // the iPhone 16 Pro Max render it fine) and let a runtime FPS probe drop it
+    // only on devices that actually struggle. The near-free grade pass
+    // (CA + vignette) always stays. `pointer: coarse` is deliberately NOT used
+    // as a gate — touchscreen laptops report coarse yet render DoF fine.
+    const _veryWeak = (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 2)
+      || (navigator.deviceMemory && navigator.deviceMemory <= 2);
+    const _isSmall = matchMedia("(max-width: 760px)").matches;
+    // Cap the composer's internal resolution lower on small screens so the
+    // fill-rate-heavy DoF pass stays affordable on phones.
+    const _composerDpr = Math.min(window.devicePixelRatio, _isSmall ? 1.25 : 1.5);
+
+    // Maslov grade shader — chromatic aberration + vignette + animated grain.
+    // v10: + disturbance RIPPLES (expanding refraction rings) + cursor WAKE
+    // (a soft lens that travels with the pointer). You are not a cursor —
+    // you are a wavefront moving through the field.
+    const MaslovGradeShader = {
+      uniforms: {
+        tDiffuse:   { value: null },
+        uAberr:     { value: GRADE.aberration },
+        uVignette:  { value: GRADE.vignette },
+        uGrain:     { value: GRADE.grain },
+        uTime:      { value: 0 },
+        uAspect:    { value: w / h },
+        uR0:        { value: new THREE.Vector4(0.5, 0.5, 2, 0) },
+        uR1:        { value: new THREE.Vector4(0.5, 0.5, 2, 0) },
+        uR2:        { value: new THREE.Vector4(0.5, 0.5, 2, 0) },
+        uR3:        { value: new THREE.Vector4(0.5, 0.5, 2, 0) },
+        uWake:      { value: new THREE.Vector4(0.5, 0.5, 0, 30.0) },
+        uPaint:     { value: null },
+        uPaintK:    { value: 1.0 },
+      },
+      vertexShader: `
+        varying vec2 vUv;
+        void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }
+      `,
+      fragmentShader: `
+        precision highp float;
+        varying vec2 vUv;
+        uniform sampler2D tDiffuse;
+        uniform float uAberr, uVignette, uGrain, uTime, uAspect;
+        uniform vec4 uR0, uR1, uR2, uR3;   // ripple: center.xy · progress · strength
+        uniform vec4 uWake;                // wake:   center.xy · strength · tightness
+        uniform sampler2D uPaint;          // v11.2 screen-paint: vel.xy(0.5c) · amount
+        uniform float uPaintK;
+        float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1,311.7))) * 43758.5453); }
+        vec2 rippleDisp(vec2 uv, vec4 R){
+          if (R.w <= 0.001 || R.z >= 1.0) return vec2(0.0);
+          vec2 d = (uv - R.xy) * vec2(uAspect, 1.0);
+          float r = length(d);
+          float wave = r - R.z * 0.62;                 // expanding wavefront
+          float band = exp(-wave * wave * 240.0);
+          float fade = (1.0 - R.z) * (1.0 - R.z);      // dies out as it travels
+          vec2 dir = r > 0.0001 ? d / r : vec2(0.0);
+          return (dir * band * R.w * fade * 0.016) / vec2(uAspect, 1.0);
+        }
+        void main(){
+          vec2 uv = vUv;
+          // cursor wake — a soft refractive lens travelling with the pointer
+          vec2 wd = (uv - uWake.xy) * vec2(uAspect, 1.0);
+          float wk = exp(-dot(wd, wd) * uWake.w) * uWake.z;
+          uv -= (wd / vec2(uAspect, 1.0)) * wk * 0.05;
+          // v11.2 — SCREEN PAINT (Lusion technique): the cursor's stroke lives
+          // in a self-advecting low-res velocity buffer; sampling it here bends
+          // the field along the remembered flow — a smear that keeps moving
+          // and curls after the hand has stopped.
+          vec4 pnt = texture2D(uPaint, uv);
+          vec2 pVel = (pnt.xy - 0.5) * 2.0;
+          float pAmt = min(1.0, pnt.z) * uPaintK;
+          uv -= pVel * pAmt * 0.085;
+          // disturbance ripples
+          vec2 disp = rippleDisp(uv, uR0) + rippleDisp(uv, uR1)
+                    + rippleDisp(uv, uR2) + rippleDisp(uv, uR3);
+          uv += disp;
+          float dAmt = length(disp);
+          vec2 d = uv - 0.5;
+          float r2 = dot(d, d);
+          // radial chromatic aberration — split grows toward the edges,
+          // locally on the ripple wavefront, and along the paint flow
+          vec2 dir = d * (uAberr * (0.35 + r2 * 2.0)) + disp * 0.55 + pVel * pAmt * 0.012;
+          float cr = texture2D(tDiffuse, uv + dir).r;
+          float cg = texture2D(tDiffuse, uv).g;
+          float cb = texture2D(tDiffuse, uv - dir).b;
+          vec3 col = vec3(cr, cg, cb);
+          // faint teal lift on the wavefront + wake + paint flow
+          col += vec3(0.0, 0.94, 0.78) * (dAmt * 7.5 + wk * 0.10 + pAmt * 0.045);
+          // small vignette (aspect-corrected so it stays circular)
+          vec2 vd = d * vec2(uAspect, 1.0);
+          float vig = smoothstep(0.85, 0.30, length(vd));
+          col *= mix(1.0, vig, uVignette);
+          // faint animated film grain
+          float g = hash(uv * vec2(uAspect,1.0) * 900.0 + uTime) - 0.5;
+          col += g * uGrain;
+          gl_FragColor = vec4(col, 1.0);
+        }
+      `,
+    };
+
+    let composer = null, bokehPass = null, gradePass = null, useComposer = false;
+    try {
+      const { EffectComposer, RenderPass, BokehPass, ShaderPass, OutputPass } = THREE;
+      if (EffectComposer && RenderPass && ShaderPass && OutputPass) {
+        composer = new EffectComposer(renderer);
+        composer.setPixelRatio(_composerDpr);
+        composer.setSize(w, h);
+        composer.addPass(new RenderPass(scene, camera));
+        if (GRADE.dof && !_veryWeak && BokehPass) {
+          bokehPass = new BokehPass(scene, camera, {
+            focus: GRADE.focus, aperture: GRADE.aperture, maxblur: GRADE.maxblur,
+          });
+          composer.addPass(bokehPass);
+        }
+        gradePass = new ShaderPass(MaslovGradeShader);
+        composer.addPass(gradePass);
+        composer.addPass(new OutputPass());
+        useComposer = true;
+        window.__mo_useComposer = true;
+        window.__mo_dofOn = !!bokehPass;
+      }
+    } catch (e) {
+      console.warn("[universe] composer unavailable, falling back to direct render", e);
+      composer = null; useComposer = false;
+    }
+
+    /* ============================================================
+       v11.2 — SCREEN PAINT (the Lusion fluid-wake technique)
+       A low-res ping-pong buffer stores the cursor's stroke as a velocity
+       field: each frame the texture re-samples ITSELF along its own flow
+       (self-advection), curl noise swirls it, dissipation cools it, and the
+       current pointer stroke is drawn in as a capsule (sdSegment) carrying
+       its velocity. The grade shader then bends the rendered field along
+       this remembered flow — so a gesture leaves a living smear that keeps
+       travelling and curling after the hand stops. This replaces the v11.1
+       per-stroke ripples. Cost: one ~240×135 pass, only while energy > 0.
+       ============================================================ */
+    const PAINT = (window.__mo_paintCfg = Object.assign({
+      push: 18.0,        // self-advection: how far the flow carries itself
+      dissV: 0.984,      // velocity dissipation per frame
+      dissA: 0.945,      // amount dissipation per frame
+      curlScale: 0.16,   // curl noise frequency (paint-px)
+      curlStrength: 1.6, // how much the smear swirls as it decays
+      radius: 0.085,     // stroke radius · fraction of buffer min-dim
+    }, window.__mo_paintCfg || {}));
+    let paintA = null, paintB = null, paintScene = null, paintCam = null,
+        paintMat = null, paintEnergy = 0, paintOK = false;
+    const _pp = { x: -1, y: -1, has: false };
+    if (useComposer && gradePass) {
+      try {
+        const pw = () => Math.max(64, Math.floor(window.innerWidth / 8));
+        const ph = () => Math.max(36, Math.floor(window.innerHeight / 8));
+        const rtOpts = {
+          minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter,
+          depthBuffer: false, stencilBuffer: false,
+          type: renderer.capabilities.isWebGL2 ? THREE.HalfFloatType : THREE.UnsignedByteType,
+        };
+        paintA = new THREE.WebGLRenderTarget(pw(), ph(), rtOpts);
+        paintB = new THREE.WebGLRenderTarget(pw(), ph(), rtOpts);
+        paintMat = new THREE.ShaderMaterial({
+          uniforms: {
+            uPrev:   { value: paintA.texture },
+            uTexel:  { value: new THREE.Vector2(1 / pw(), 1 / ph()) },
+            uFrom:   { value: new THREE.Vector3(0, 0, 0) },   // px.xy · radius px
+            uTo:     { value: new THREE.Vector3(0, 0, 0) },
+            uVel:    { value: new THREE.Vector2(0, 0) },      // 0.5-centred stroke vel
+            uAdd:    { value: 0 },                            // amount injection · speed-gated
+            uDiss:   { value: new THREE.Vector2(PAINT.dissV, PAINT.dissA) },
+            uPush:   { value: PAINT.push },
+            uCurl:   { value: new THREE.Vector2(PAINT.curlScale, PAINT.curlStrength) },
+          },
+          vertexShader: `
+            varying vec2 vUv;
+            void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }
+          `,
+          fragmentShader: `
+            precision highp float;
+            varying vec2 vUv;
+            uniform sampler2D uPrev;
+            uniform vec2 uTexel, uVel, uDiss, uCurl;
+            uniform vec3 uFrom, uTo;
+            uniform float uPush, uAdd;
+            // capsule distance — the stroke between last and current pointer pos
+            vec2 sdSegment(vec2 p, vec2 a, vec2 b){
+              vec2 pa = p - a, ba = b - a;
+              float h = clamp(dot(pa, ba) / max(dot(ba, ba), 1e-5), 0.0, 1.0);
+              return vec2(length(pa - ba * h), h);
+            }
+            // gradient noise w/ derivatives (Lusion's curl source)
+            vec2 hash(vec2 p){
+              vec3 p3 = fract(vec3(p.xyx) * vec3(.1031, .1030, .0973));
+              p3 += dot(p3, p3.yzx + 33.33);
+              return fract((p3.xx + p3.yz) * p3.zy) * 2.0 - 1.0;
+            }
+            vec3 noised(in vec2 p){
+              vec2 i = floor(p); vec2 f = fract(p);
+              vec2 u = f*f*f*(f*(f*6.0-15.0)+10.0);
+              vec2 du = 30.0*f*f*(f*(f-2.0)+1.0);
+              vec2 ga = hash(i); vec2 gb = hash(i+vec2(1,0));
+              vec2 gc = hash(i+vec2(0,1)); vec2 gd = hash(i+vec2(1,1));
+              float va = dot(ga,f), vb = dot(gb,f-vec2(1,0));
+              float vc = dot(gc,f-vec2(0,1)), vd = dot(gd,f-vec2(1,1));
+              return vec3(va+u.x*(vb-va)+u.y*(vc-va)+u.x*u.y*(va-vb-vc+vd),
+                          ga+u.x*(gb-ga)+u.y*(gc-ga)+u.x*u.y*(ga-gb-gc+gd)
+                          +du*(u.yx*(va-vb-vc+vd)+vec2(vb,vc)-va));
+            }
+            void main(){
+              vec2 px = vUv / uTexel;
+              vec2 seg = sdSegment(px, uFrom.xy, uTo.xy);
+              float rad = mix(uFrom.z, uTo.z, seg.y);
+              float d = 1.0 - smoothstep(0.0, max(rad, 1.0), seg.x);
+              // self-advection: trace BACK along the stored flow, with curl
+              vec4 low = texture2D(uPrev, vUv);
+              vec2 velInv = (0.5 - low.xy) * uPush;
+              vec3 n3 = noised(px * uCurl.x);
+              velInv += n3.yz * low.z * uCurl.y;
+              vec4 data = texture2D(uPrev, vUv + velInv * uTexel);
+              data.xy -= 0.5;
+              data.xy *= uDiss.x;
+              data.z  *= uDiss.y;
+              data.xy += uVel * d;
+              // v11.3 — injection is SPEED-GATED: a resting cursor adds zero
+              // amount, so the buffer always drains to black instead of
+              // pooling a glowing puddle under a stationary pointer.
+              data.z   = min(1.0, data.z + d * uAdd);
+              if (data.z < 0.004) { data.z = 0.0; data.xy *= 0.5; }
+              data.xy = clamp(data.xy, -0.5, 0.5);
+              gl_FragColor = vec4(data.xy + 0.5, data.z, 1.0);
+            }
+          `,
+        });
+        paintScene = new THREE.Scene();
+        paintCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+        paintScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), paintMat));
+        gradePass.uniforms.uPaint.value = paintA.texture;
+        paintOK = true;
+      } catch (e) {
+        console.warn("[universe] screen paint unavailable", e);
+        paintOK = false;
+      }
+    }
+    function resizePaint() {
+      if (!paintOK) return;
+      const W = Math.max(64, Math.floor(window.innerWidth / 8));
+      const H = Math.max(36, Math.floor(window.innerHeight / 8));
+      paintA.setSize(W, H); paintB.setSize(W, H);
+      paintMat.uniforms.uTexel.value.set(1 / W, 1 / H);
+      _pp.has = false;
+    }
+    function updatePaint() {
+      if (!paintOK) return;
+      const W = paintA.width, H = paintA.height;
+      // pointer in paint-buffer px (y up)
+      const cx = (_wake.lx / window.innerWidth) * W;
+      const cy = (1 - _wake.ly / window.innerHeight) * H;
+      if (!_pp.has) { _pp.x = cx; _pp.y = cy; _pp.has = true; }
+      const dx = cx - _pp.x, dy = cy - _pp.y;
+      const moved = Math.hypot(dx, dy);
+      // energy: refreshed by real movement, drains at the buffer's own rate —
+      // we keep the sim running (so it decays on screen) until genuinely cold
+      if (moved > 0.3) paintEnergy = 1;
+      else paintEnergy *= PAINT.dissA;
+      if (paintEnergy < 0.002) { _pp.x = cx; _pp.y = cy; return; }  // cold — skip the pass
+      const u = paintMat.uniforms;
+      const minDim = Math.min(W, H);
+      // radius swells a little with stroke speed, like Lusion's radiusDistanceRange
+      const rad = minDim * (PAINT.radius * (0.55 + Math.min(1, moved / (minDim * 0.5)) * 0.85));
+      u.uFrom.value.set(_pp.x, _pp.y, rad);
+      u.uTo.value.set(cx, cy, rad);
+      u.uAdd.value = Math.min(1, moved / (minDim * 0.10));
+      u.uVel.value.set(
+        Math.max(-0.45, Math.min(0.45, dx * 0.035)),
+        Math.max(-0.45, Math.min(0.45, dy * 0.035)),
+      );
+      u.uPrev.value = paintA.texture;
+      const prevRT = renderer.getRenderTarget();
+      renderer.setRenderTarget(paintB);
+      renderer.render(paintScene, paintCam);
+      renderer.setRenderTarget(prevRT);
+      const tmp = paintA; paintA = paintB; paintB = tmp;
+      gradePass.uniforms.uPaint.value = paintA.texture;
+      _pp.x = cx; _pp.y = cy;
+    }
+
+    /* ============================================================
+       v10 — DISTURBANCE LAYER state
+       The visitor is a wavefront. Every gesture injects energy into the
+       grade shader's ripple slots; the cursor drags a refractive wake.
+       window.__mo_disturb(clientX, clientY, strength) is the one public
+       entry point — used by hover/click here, KeyButtons, the score, and
+       the idle moment. Strengths are scaled by window.__mo_fx.ripple.
+       ============================================================ */
+    window.__mo_fx = Object.assign({ ripple: 1, topology: 1 }, window.__mo_fx || {});
+    const _ripples = [0, 1, 2, 3].map(() => ({ x: 0.5, y: 0.5, t0: -1, dur: 900, str: 0 }));
+    let _rNext = 0;
+    window.__mo_disturb = (cx, cy, strength) => {
+      const s = (strength == null ? 0.5 : strength) * (window.__mo_fx.ripple != null ? window.__mo_fx.ripple : 1);
+      if (s <= 0.001) return;
+      const r = _ripples[_rNext++ % _ripples.length];
+      r.x = cx / window.innerWidth;
+      r.y = 1 - cy / window.innerHeight;
+      r.t0 = performance.now();
+      r.dur = 800 + 700 * Math.min(1.5, s);
+      r.str = Math.min(1.6, s);
+    };
+    // cursor wake — smoothed in the frame loop
+    const _wake = { x: 0.5, y: 0.5, sx: 0.5, sy: 0.5, v: 0, sv: 0, lx: 0, ly: 0, lt: 0 };
+    const onWakeMove = (e) => {
+      const t = performance.now();
+      const dtm = Math.max(16, t - _wake.lt);
+      const vx = (e.clientX - _wake.lx) / dtm, vy = (e.clientY - _wake.ly) / dtm;
+      _wake.lx = e.clientX; _wake.ly = e.clientY; _wake.lt = t;
+      _wake.x = e.clientX / window.innerWidth;
+      _wake.y = e.clientY / window.innerHeight;
+      _wake.v = Math.min(1, Math.hypot(vx, vy) * 0.9);
+      // (v11.2) the per-stroke micro-ripples are gone — the motion distortion
+      // now lives in the screen-paint advection buffer below, Lusion-style.
+    };
+    window.addEventListener("pointermove", onWakeMove, { passive: true });
+    // audio-reactive level (smoothed) — the field breathes with the sound
+    let _lvlS = 0;
+    // velocity weight (written by cinematic.js) → FOV + aberration kick
+    let _lastFov = 58;
+    // v10 rack-focus state (smoothed focal distance)
+    let _focusS = 13.0;
+    // ARRIVAL overture — void → the field condenses into "0x00" → pulse → scatter
+    const ARR = { t0: 0, dur: 2600, burst: false };
+    const _arrR = new THREE.Vector3(), _arrU = new THREE.Vector3(), _arrUP = new THREE.Vector3(0, 1, 0);
+    window.__mo_arrival_start = () => { ARR.t0 = performance.now(); ARR.burst = false; };
+    // idle attention — after 30s of stillness the field notices you
+    let _lastAct = performance.now(), _idleFired = false;
+    const onAnyAct = () => { _lastAct = performance.now(); _idleFired = false; };
+    const onActSkipArrival = () => { onAnyAct(); ARR.t0 = 0; };
+    window.addEventListener("pointermove", onAnyAct, { passive: true });
+    window.addEventListener("pointerdown", onActSkipArrival, { passive: true });
+    window.addEventListener("wheel", onAnyAct, { passive: true });
+    window.addEventListener("keydown", onAnyAct, { passive: true });
+    window.addEventListener("scroll", onAnyAct, { passive: true });
+
+    // Adaptive DoF probe: sample FPS over the first ~2s of real rendering. If the
+    // device can't sustain it, disable the (expensive) bokeh pass automatically —
+    // the CA + vignette grade stays. This protects weak phones without punishing
+    // capable ones (iPhone 16 Pro Max keeps its DoF).
+    let _probeFrames = 0, _probeAccum = 0, _probeDone = false;
+    // DEBUG: when true, the adaptive FPS probe never runs, so DoF is NEVER
+    // auto-demoted on low-power devices — useful for inspecting the full grade
+    // path on any machine. Flip back to false to restore adaptive behaviour.
+    const _FPS_PROBE_DISABLED = true;
+    function probeDoF(dt) {
+      if (_FPS_PROBE_DISABLED) return;
+      if (_probeDone || !bokehPass) return;
+      // ignore absurd dt (tab was backgrounded / first frame)
+      if (dt > 0 && dt < 200) { _probeAccum += dt; _probeFrames++; }
+      if (_probeFrames >= 90) {            // ~1.5s of frames
+        const avgFps = 1000 / (_probeAccum / _probeFrames);
+        if (avgFps < 42) {
+          bokehPass.enabled = false;
+          window.__mo_dofOn = false;
+          if (window.console) console.log("[universe] DoF disabled — sustained " + avgFps.toFixed(0) + "fps");
+        }
+        _probeDone = true;
+      }
+    }
+
+    /* ---------- world configuration ---------- */
+    // Smaller box → denser cluster around the camera. Fog hides the wrap.
+    const BOX = new THREE.Vector3(26, 18, 26);
+    const TILE_W = 3.0;
+    const TILE_H = 4.0;
+
+    /* ---------- camera state ---------- */
+    // camera sits at origin (-ish) and rotates via yaw/pitch
+    const cam = {
+      pos:   new THREE.Vector3(0, 0, 0),
+      yaw:   0,
+      pitch: 0,
+      // exposed velocity (units/sec along look axis)
+      vel:   0,
+    };
+    const camTarget = { yaw: 0, pitch: 0 };
+
+    function updateCameraTransform() {
+      // Compose orientation
+      const q = new THREE.Quaternion();
+      const qy = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), cam.yaw);
+      const qp = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), cam.pitch);
+      q.multiplyQuaternions(qy, qp);
+      camera.quaternion.copy(q);
+      camera.position.copy(cam.pos);
+    }
+    updateCameraTransform();
+
+    /* ---------- starfield (parallax — also wraps) ---------- */
+    const starGeo = new THREE.BufferGeometry();
+    const SC = 1400;
+    const sPos = new Float32Array(SC * 3);
+    for (let i = 0; i < SC; i++) {
+      sPos[i*3+0] = (Math.random() - 0.5) * BOX.x * 2;
+      sPos[i*3+1] = (Math.random() - 0.5) * BOX.y * 2;
+      sPos[i*3+2] = (Math.random() - 0.5) * BOX.z * 2;
+    }
+    starGeo.setAttribute("position", new THREE.BufferAttribute(sPos, 3));
+    const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({
+      color: 0x5b6478, size: 0.06, sizeAttenuation: true, transparent: true, opacity: 0.7,
+    }));
+    scene.add(stars);
+    // These points are wrapped around the camera every frame by rewriting the
+    // position buffer, but the object itself stays at the origin — so its bounding
+    // sphere goes stale and Three.js frustum-culls the whole cloud once we fly far
+    // ("discover far away"). Disable culling: it always surrounds the camera.
+    stars.frustumCulled = false;
+    stars.userData = { wrapScale: 2.0 };  // larger box for stars
+
+    // The teal SIGNAL field is now one and the same as the particles that
+    // assemble into "0x00" — see the assembly cloud set up below. There is no
+    // longer a separate hidden glyph layer.
+
+    /* ---------- tiles (project cards) — placed via Fibonacci to start, then drift on wrap ---------- */
+    const tilesGroup = new THREE.Group();
+    scene.add(tilesGroup);
+
+    const tiles = [];
+    const tileWires = [];
+    const goldenAngle = Math.PI * (3 - Math.sqrt(5));
+    const N = projects.length;
+    projects.forEach((p, i) => {
+      const tex = makeTileTexture(p, THREE);
+      const mat = new THREE.MeshBasicMaterial({
+        map: tex, transparent: true, opacity: 1.0,
+        side: THREE.DoubleSide, depthWrite: false,
+      });
+      const geo = new THREE.PlaneGeometry(TILE_W, TILE_H);
+      const mesh = new THREE.Mesh(geo, mat);
+
+      // initial Fibonacci-spread positions inside BOX — closer in for density
+      const yN = 1 - (i / Math.max(1, N - 1)) * 2;
+      const radial = Math.sqrt(1 - yN * yN);
+      const theta = i * goldenAngle;
+      const r = 0.55 + 0.30 * ((i * 13 % 100) / 100);
+      mesh.position.set(
+        Math.cos(theta) * radial * BOX.x * r * 0.55,
+        yN * BOX.y * r * 0.6,
+        Math.sin(theta) * radial * BOX.z * r * 0.55,
+      );
+
+      mesh.userData = { project: p, texture: tex, kind: "tile", index: i,
+        // each card gets a small persistent rotational offset for personality
+        offsetYaw:   ((i * 37 % 100) / 100 - 0.5) * 0.5,   // ±15°
+        offsetPitch: ((i * 53 % 100) / 100 - 0.5) * 0.3,   // ±9°
+        offsetRoll:  ((i * 29 % 100) / 100 - 0.5) * 0.18,  // ±5°
+        wobble: { p: (i * 17 % 100) / 100, a: (i * 23 % 100) / 100 } };
+      tilesGroup.add(mesh);
+      tiles.push(mesh);
+
+      // ---- per-tile 3D overlay
+      // Two paths:
+      //   (a) project has a `model` URL → load the GLB, apply matcap, drop it in
+      //   (b) otherwise → procedural wireframe primitive as before
+      // Both paths register a single "wire" entry in tileWires so the existing
+      // follow/rotate/visibility logic in the frame loop works unchanged.
+      if (p.pcbBoard && window.makeAboutPCBMesh) {
+        // v3 ABOUT node: float the actual About PCB (same look as window.MOBoard)
+        // on the card, and let the GLB-overlay frame logic below drive it
+        // (scale/yaw/opacity) by tagging it as a loaded model.
+        const board = window.makeAboutPCBMesh(THREE);
+        board.userData.parentTile = mesh;
+        board.userData.prim = "pcb";
+        board.userData.addr = p.addr;
+        board.userData.isModel = true;
+        board.userData.loaded = true;
+        board.userData.loadedAt = performance.now();
+        tilesGroup.add(board);
+        tileWires.push(board);
+      } else if (p.model && window.loadProjectModel) {
+        // Reserve a placeholder Group right away so frame ordering doesn't blink.
+        const holder = new THREE.Group();
+        holder.userData = {
+          parentTile: mesh,
+          prim: p.prim || "model",
+          addr: p.addr,
+          isModel: true,
+          loaded: false,
+        };
+        holder.visible = false;
+        tilesGroup.add(holder);
+        tileWires.push(holder);
+
+        window.loadProjectModel(p.model, THREE).then((root) => {
+          // Centre + scale so longest edge ~2 world units; outer scale.setScalar
+          // then matches what the wireframe used to do (0.28 of that).
+          // Fit so longest edge = 2 world units; the frame loop then sets the
+          // outer holder scale (≈0.85 idle, 1.10 on focus) so the model reads
+          // as the card's hero, not a small inset.
+          window.fitModelToSize(root, THREE, p.modelFit || 2);
+          window.applyMatcapToModel(root, THREE);
+          // Per-project rest pose for the GLB (Spline exports keep their own
+          // orientation; this lets us point the keyboard face at the camera
+          // for wafer, etc., instead of relying on the source pose).
+          if (p.modelPose) {
+            root.rotation.x += p.modelPose.x || 0;
+            root.rotation.y += p.modelPose.y || 0;
+            root.rotation.z += p.modelPose.z || 0;
+          }
+          holder.add(root);
+          holder.visible = true;
+          holder.userData.loaded = true;
+          holder.userData.loadedAt = performance.now();   // drives a soft fade-in
+        }).catch((err) => {
+          console.warn("[universe] model load failed for " + p.addr, err);
+        });
+      } else if (p.prim && window.makePrimitiveMesh) {
+        const wire = window.makePrimitiveMesh(p.prim, THREE, {
+          wireframe: true,
+          color: 0x00f0c8,
+          opacity: 0.85,
+        });
+        wire.scale.setScalar(0.28);                  // tiny — fits in the upper area of the card
+        wire.userData.parentTile = mesh;
+        wire.userData.prim = p.prim;
+        wire.userData.addr = p.addr;
+        // Cone sits horizontally — same as on the project page
+        if (p.prim === "cone") wire.rotation.set(0, 0, Math.PI / 2);
+        tilesGroup.add(wire);
+        tileWires.push(wire);
+      }
+    });
+
+    /* ---------- Arranged-mode target positions ----------
+       grid     : 4×3 wall in front of camera (z=-16)
+       ambient  : 12 tiles on a Fibonacci sphere shell — slow ambient rotation
+       drift    : null (free) */
+    const GRID_COLS = 4;
+    const GRID_ROWS = 3;
+    const GRID_SPACING_X = 5.4;
+    const GRID_SPACING_Y = 4.3;
+    const GRID_Z = -16;
+    function targetForTile(mode, i, t) {
+      if (mode === "dive") {
+        // Everything clears far out — only node 0x00 (the hub) remains, centered.
+        const yN = 1 - (i / Math.max(1, projects.length - 1)) * 2;
+        const theta = i * goldenAngle;
+        return new THREE.Vector3(Math.cos(theta) * 22, yN * 13, -26 + Math.sin(theta) * 6);
+      }
+      if (mode === "origin") {
+        const concept = (window.__mo_origin && window.__mo_origin.concept) || "assembly";
+        const m = tiles[i];
+        const addr = m && m.userData.project.addr;
+        const fIdx = /^0x0[1-4]$/i.test(addr || "") ? (parseInt(addr, 16) - 1) : -1;
+        // ASSEMBLY: clear ALL nodes far out so the particle glyph reads clean.
+        if (concept === "assembly") {
+          const yN = 1 - (i / Math.max(1, projects.length - 1)) * 2;
+          const theta = i * goldenAngle;
+          return new THREE.Vector3(Math.cos(theta) * 19, yN * 11, -22 + Math.sin(theta) * 5);
+        }
+        // HUB: featured nodes ring the hub, the rest drift back.
+        if (fIdx >= 0) {
+          const ang = (fIdx / 4) * Math.PI * 2 - Math.PI / 2 + t * 0.00004;
+          return new THREE.Vector3(
+            ORIGIN_CENTER.x + Math.cos(ang) * ORIGIN_RING_R,
+            ORIGIN_CENTER.y + Math.sin(ang) * ORIGIN_RING_R * 0.62,
+            ORIGIN_CENTER.z + Math.sin(ang * 1.3) * 1.4,
+          );
+        }
+        const yN = 1 - (i / Math.max(1, projects.length - 1)) * 2;
+        const theta = i * goldenAngle;
+        return new THREE.Vector3(Math.cos(theta) * 16, yN * 9, -18 + Math.sin(theta) * 4);
+      }
+      if (mode === "reel") {
+        // v10 WORK REEL — the featured tiles parade past the lens (pos 1..4).
+        // At the FINAL stop ("Open the universe") every node — all 12 —
+        // spirals in and gathers into one slowly-turning galaxy disc in
+        // front of the lens: the whole universe collapsing to the passage
+        // door. The swirl unwinds as it settles (comets docking into orbit).
+        const rb = window.__mo_reel || { pos: 1 };
+        const pos = rb.pos || 0;
+        const g = Math.max(0, Math.min(1, pos - 4));   // 0→1 across the last beat
+        const m3 = tiles[i];
+        const addr3 = m3 && m3.userData.project.addr;
+        const rIdx = /^0x0[1-4]$/i.test(addr3 || "") ? (parseInt(addr3, 16) - 1) : -1;
+        // v11.1 — was 7.6: close enough that the NEXT card loitered half-visible
+        // behind the locked one (the "impostor"). 12.5 puts neighbours fully
+        // past the frustum edge at z−10.6 while the parade speed still tracks
+        // the scroll scrub 1:1.
+        const REEL_DX = 12.5;
+        let base;
+        if (rIdx >= 0) {
+          base = new THREE.Vector3((rIdx + 1 - pos) * REEL_DX, 0.62, -10.6);
+        } else {
+          const th = i * goldenAngle;
+          const yN = 1 - (i / Math.max(1, projects.length - 1)) * 2;
+          base = new THREE.Vector3(Math.cos(th) * 20, yN * 11, -25 + Math.sin(th) * 5);
+        }
+        if (g > 0.001) {
+          // CAROUSEL — the 12 nodes dock into a slow cylindrical carousel
+          // around the passage: the front cards sweep close past the lens
+          // (big, crisp), the far side recedes into the blurred deep field.
+          // Entry is a spiral — the swirl unwinds as each comet docks into
+          // its orbit slot. The ring is gently tilted so it reads in 3D.
+          const ang0 = (i / Math.max(1, projects.length)) * Math.PI * 2;
+          const spin = t * 0.00026;                  // full revolution ≈ 24s
+          const entry = (1 - g) * 2.6;               // swirl unwinds on dock
+          const ang = ang0 + spin + entry;
+          const R = 7.4;
+          const carousel = new THREE.Vector3(
+            Math.sin(ang) * R,
+            0.55 - Math.cos(ang) * 0.95,             // tilted ring — front dips low
+            -12.4 + Math.cos(ang) * R * 0.82,
+          );
+          base.lerp(carousel, g * g * (3 - 2 * g));  // smooth gather
+        }
+        return base;
+      }
+      if (mode === "grid") {
+        const col = i % GRID_COLS;
+        const row = Math.floor(i / GRID_COLS);
+        return new THREE.Vector3(
+          (col - (GRID_COLS - 1) / 2) * GRID_SPACING_X,
+          ((GRID_ROWS - 1) / 2 - row) * GRID_SPACING_Y,
+          GRID_Z,
+        );
+      }
+      if (mode === "ambient") {
+        // slow Fibonacci sphere shell ~12u radius — drift around it
+        const yN = 1 - (i / Math.max(1, projects.length - 1)) * 2;
+        const radial = Math.sqrt(1 - yN * yN);
+        const theta = i * goldenAngle + t * 0.00006;
+        const R = 13;
+        return new THREE.Vector3(
+          Math.cos(theta) * radial * R,
+          yN * R * 0.6,
+          Math.sin(theta) * radial * R - 4,
+        );
+      }
+      return null; // drift
+    }
+
+    /* ---------- ambient nodes — small "0x__" sprites scattered for density ---------- */
+    const ambient = [];
+    const ambientGroup = new THREE.Group();
+    scene.add(ambientGroup);
+    const AMB_N = 180;
+    for (let i = 0; i < AMB_N; i++) {
+      const id = "0x" + (0x10 + i).toString(16).toUpperCase().padStart(2, "0");
+      const tex = makeAmbientTexture(id, THREE);
+      const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, opacity: 0.55, depthWrite: false });
+      const sp = new THREE.Sprite(mat);
+      sp.position.set(
+        (Math.random() - 0.5) * BOX.x,
+        (Math.random() - 0.5) * BOX.y,
+        (Math.random() - 0.5) * BOX.z,
+      );
+      // small square-ish icon — matches v2 feel
+      sp.scale.set(1.3, 1.3, 1);
+      sp.userData = { phase: Math.random() * Math.PI * 2, kind: "ambient" };
+      sp.frustumCulled = false;   // wraps around the camera — never cull it out
+      ambientGroup.add(sp);
+      ambient.push(sp);
+    }
+
+    /* ---------- ORIGIN hub — node 0x00 (the self) ----------
+       A special, larger node that only matters in `origin` mode. Every
+       project node radiates from it. This is the literal target of the
+       later "dive into node 0x00" → About · Board transition. */
+    const ORIGIN_CENTER = new THREE.Vector3(0, 0, -9);   // in front of a levelled camera
+    const ORIGIN_RING_R = 6.2;                            // project nodes ring radius
+
+    function makeOriginTexture() {
+      const oc = document.createElement("canvas");
+      oc.width = 256; oc.height = 256;
+      const g = oc.getContext("2d");
+      g.clearRect(0, 0, 256, 256);
+      const cx = 128, cy = 128;
+      // concentric rings
+      g.strokeStyle = "#00f0c8";
+      for (let i = 0; i < 3; i++) {
+        g.globalAlpha = 0.9 - i * 0.28;
+        g.lineWidth = 2 - i * 0.4;
+        g.beginPath(); g.arc(cx, cy, 30 + i * 26, 0, Math.PI * 2); g.stroke();
+      }
+      g.globalAlpha = 1;
+      // crosshair ticks
+      g.strokeStyle = "#00f0c8"; g.lineWidth = 1.5;
+      [[0,-1],[0,1],[-1,0],[1,0]].forEach(([dx,dy]) => {
+        g.beginPath();
+        g.moveTo(cx + dx * 84, cy + dy * 84);
+        g.lineTo(cx + dx * 98, cy + dy * 98);
+        g.stroke();
+      });
+      // core
+      g.fillStyle = "#00f0c8";
+      g.beginPath(); g.arc(cx, cy, 7, 0, Math.PI * 2); g.fill();
+      g.fillStyle = "#04060d";
+      g.beginPath(); g.arc(cx, cy, 3, 0, Math.PI * 2); g.fill();
+      const t = new THREE.CanvasTexture(oc);
+      t.colorSpace = THREE.SRGBColorSpace;
+      return t;
+    }
+
+    const originGroup = new THREE.Group();
+    scene.add(originGroup);
+    originGroup.visible = false;
+
+    const originHub = new THREE.Sprite(new THREE.SpriteMaterial({
+      map: makeOriginTexture(), transparent: true, opacity: 0, depthWrite: false, depthTest: false,
+    }));
+    originHub.position.copy(ORIGIN_CENTER);
+    originHub.scale.set(4.2, 4.2, 1);
+    originGroup.add(originHub);
+
+    // radiating links hub → each featured project node (0x01–0x04)
+    const featuredTiles = tiles.filter(m => /^0x0[1-4]$/i.test(m.userData.project.addr));
+    const originLinks = featuredTiles.map((tile) => {
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(6), 3));
+      const line = new THREE.Line(geo, new THREE.LineBasicMaterial({
+        color: 0x00f0c8, transparent: true, opacity: 0, depthWrite: false, depthTest: false,
+      }));
+      line.userData = { tile };
+      originGroup.add(line);
+      return line;
+    });
+
+    /* ---------- ASSEMBLY cloud — particles that swarm to FORM "0x00" ----------
+       Concept 01. A dedicated point cloud whose rest state is scattered through
+       the box; in origin/assembly mode each point flies to a target sampled from
+       a canvas-rendered "0x00" glyph, giving a 3D constellation of the self. */
+    function sampleGlyphTargets(text, count) {
+      const cw = 720, ch = 260;
+      const gc = document.createElement("canvas");
+      gc.width = cw; gc.height = ch;
+      const gx = gc.getContext("2d");
+      gx.fillStyle = "#000"; gx.fillRect(0, 0, cw, ch);
+      gx.fillStyle = "#fff";
+      gx.textAlign = "center"; gx.textBaseline = "middle";
+      gx.font = "700 210px 'Geist Mono', monospace";
+      gx.fillText(text, cw / 2, ch / 2 + 6);
+      const data = gx.getImageData(0, 0, cw, ch).data;
+      // Finer sampling (every 2px) → crisper letterforms.
+      const hits = [];
+      for (let y = 0; y < ch; y += 2) {
+        for (let x = 0; x < cw; x += 2) {
+          if (data[(y * cw + x) * 4] > 128) hits.push([x, y]);
+        }
+      }
+      // Shuffle so any subset we draw is an even sample of the whole glyph
+      // (a strided index would band along scan-rows and leave gaps).
+      for (let i = hits.length - 1; i > 0; i--) {
+        const k = Math.floor(Math.random() * (i + 1));
+        const t = hits[i]; hits[i] = hits[k]; hits[k] = t;
+      }
+      // map sampled pixels into world-space targets centred on ORIGIN_CENTER
+      const SCALE = 0.024;
+      const out = new Float32Array(count * 3);
+      for (let i = 0; i < count; i++) {
+        const h = hits.length ? hits[i % hits.length] : [cw / 2, ch / 2];
+        // sub-cell jitter softens the sampling grid without blurring strokes
+        const jx = (Math.random() - 0.5) * 1.6;
+        const jy = (Math.random() - 0.5) * 1.6;
+        out[i*3+0] = ORIGIN_CENTER.x + (h[0] + jx - cw / 2) * SCALE;
+        out[i*3+1] = ORIGIN_CENTER.y - (h[1] + jy - ch / 2) * SCALE;
+        // SHALLOW depth — keeps the glyph close to a readable plane instead of
+        // puffing into a 3D cloud that never resolves into text.
+        out[i*3+2] = ORIGIN_CENTER.z + Math.sin(i * 12.9898) * 0.22;
+      }
+      return out;
+    }
+
+    // Denser than the original 560 so the strokes read, but kept modest. This
+    // is a single THREE.Points (one draw call); the only per-frame cost is the
+    // position loop below — trivial next to the GLB models + bokeh pass.
+    const ASM_N = 820;
+    const asmTargets = sampleGlyphTargets("0x00", ASM_N);
+    // Glyph offsets relative to ORIGIN_CENTER — lets us re-anchor the formed
+    // glyph in front of the *camera* each frame instead of at a fixed world
+    // point (so it's always in view no matter how far the camera has drifted).
+    const asmLocal = new Float32Array(ASM_N * 3);
+    for (let i = 0; i < ASM_N; i++) {
+      asmLocal[i*3+0] = asmTargets[i*3+0] - ORIGIN_CENTER.x;
+      asmLocal[i*3+1] = asmTargets[i*3+1] - ORIGIN_CENTER.y;
+      asmLocal[i*3+2] = asmTargets[i*3+2] - ORIGIN_CENTER.z;
+    }
+    // v11 — PORTRAIT FIT. The glyph's world width was tuned for landscape
+    // aspect; on a phone the visible width at the anchor distance is narrower
+    // than "0x00", so the word ran off both screen edges and read as noise.
+    // Scale the local offsets to fit the horizontal FOV, refreshed on resize.
+    let glyphHalfW = 0;
+    for (let i = 0; i < ASM_N; i++) glyphHalfW = Math.max(glyphHalfW, Math.abs(asmLocal[i*3]));
+    let glyphFit = 1;
+    function fitGlyphToView() {
+      const halfW = Math.tan((camera.fov * Math.PI) / 360) * Math.abs(ORIGIN_CENTER.z) * camera.aspect;
+      glyphFit = Math.min(1, (halfW * 0.84) / glyphHalfW);
+    }
+    fitGlyphToView();
+    const asmGeo = new THREE.BufferGeometry();
+    const asmPos  = new Float32Array(ASM_N * 3);   // rendered positions (what you see)
+    const asmHome = new Float32Array(ASM_N * 3);   // live field positions (drift + wrap)
+    for (let i = 0; i < ASM_N; i++) {
+      const x = (Math.random() - 0.5) * BOX.x;
+      const y = (Math.random() - 0.5) * BOX.y;
+      const z = (Math.random() - 0.5) * BOX.z;
+      asmHome[i*3+0] = asmPos[i*3+0] = x;
+      asmHome[i*3+1] = asmPos[i*3+1] = y;
+      asmHome[i*3+2] = asmPos[i*3+2] = z;
+    }
+    asmGeo.setAttribute("position", new THREE.BufferAttribute(asmPos, 3));
+    // The teal signal field. Drifts/wraps around the camera like any star; on
+    // the ORIGIN beat it peels out of the field to FORM "0x00", then melts back.
+    const assemblyPts = new THREE.Points(asmGeo, new THREE.PointsMaterial({
+      color: 0x00f0c8, size: 0.1, sizeAttenuation: true,
+      transparent: true, opacity: 0.55, depthWrite: false,
+    }));
+    const assemblyGroup = new THREE.Group();
+    assemblyGroup.add(assemblyPts);
+    // Same stale-bounding-sphere fix as the stars: the teal field wraps around the
+    // camera via the position buffer, so without this it culls out (green vanishes
+    // first) when flying far from origin.
+    assemblyPts.frustumCulled = false;
+    scene.add(assemblyGroup);
+
+    /* ============================================================
+       v10 — SIGNAL CONSTELLATION  (ported from Universe Lab)
+       Each project links to its 2 nearest neighbours; a shader runs a
+       travelling bright pulse along every segment over a faint base glow.
+       Rendered strictly BEHIND the card planes (renderOrder -2) so the
+       links can never sit over a card face — they only show in the void
+       between cards. Brightens on hover/focus; breathes with audio level.
+       ============================================================ */
+    const TOPO_MAX_E = 26;
+    const TOPO_CUT = 13;                                // max link length (world units)
+    const TOPO_SEG = 24;                                // segments per edge (smooth pulse gradient)
+    const constUniforms = {
+      uTime:  { value: 0 },
+      uFlow:  { value: 1.0 },
+      uInt:   { value: 0.85 },
+      uColor: { value: new THREE.Color(0x00f0c8) },
+      uVis:   { value: 1.0 },
+    };
+    const constMat = new THREE.ShaderMaterial({
+      uniforms: constUniforms, transparent: true, depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      vertexShader:
+        "attribute float aT; attribute float aA; varying float vT; varying float vA;\n" +
+        "void main(){ vT = aT; vA = aA; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }",
+      fragmentShader:
+        "uniform float uTime; uniform float uFlow; uniform float uInt; uniform vec3 uColor; uniform float uVis;\n" +
+        "varying float vT; varying float vA;\n" +
+        "void main(){\n" +
+        "  float base = 0.10;\n" +
+        "  float pulse = pow(max(0.0, sin((vT*6.2831 - uTime*uFlow*2.0))), 8.0);\n" +
+        "  float a = (base + pulse) * uInt * vA * uVis;\n" +
+        "  gl_FragColor = vec4(uColor, a);\n" +
+        "}",
+    });
+    const constGroup = new THREE.Group();
+    constGroup.renderOrder = -2;
+    scene.add(constGroup);
+    // Reusable pool of line objects — the graph rebuilds into these in place.
+    const constLines = [];
+    for (let i = 0; i < TOPO_MAX_E; i++) {
+      const g = new THREE.BufferGeometry();
+      const pos = new Float32Array(TOPO_SEG * 3);
+      const tt  = new Float32Array(TOPO_SEG);
+      const aa  = new Float32Array(TOPO_SEG);
+      for (let s = 0; s < TOPO_SEG; s++) tt[s] = s / (TOPO_SEG - 1);
+      g.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+      g.setAttribute("aT", new THREE.BufferAttribute(tt, 1));
+      g.setAttribute("aA", new THREE.BufferAttribute(aa, 1));
+      const line = new THREE.Line(g, constMat);
+      line.frustumCulled = false;
+      line.renderOrder = -2;
+      line.visible = false;
+      constGroup.add(line);
+      constLines.push(line);
+    }
+    const _topoEdges = [];          // rebuilt periodically: { A, B, ai, bi, len }
+    let _topoFrame = 0;
+
+    function updateTopology(dt, mode, focusAddrNow, formP, arrFade) {
+      const fx = window.__mo_fx.topology != null ? window.__mo_fx.topology : 1;
+      // v10: during the reel's final "Open the universe" gather, the network
+      // IGNITES — 12 nodes in one disc, every edge alive.
+      const gatherG = mode === "reel" ? Math.max(0, Math.min(1, ((window.__mo_reel || {}).pos || 0) - 4)) : 0;
+      const modeVis = mode === "drift" ? 1 : mode === "reel" ? 0.6 + gatherG * 0.9 : mode === "grid" ? 0.5 : 0;
+      const vis = fx * modeVis * (1 - formP) * arrFade;
+      constUniforms.uTime.value = (performance.now() % 100000) * 0.001;
+      constUniforms.uVis.value = vis;
+      if (vis <= 0.012) { constGroup.visible = false; return; }
+      constGroup.visible = true;
+      const hovAddr = (hoverObjRef.current && hoverObjRef.current.userData.project.addr) || focusAddrNow;
+
+      // rebuild the nearest-neighbour graph every 3rd frame (12 nodes — cheap)
+      if (_topoFrame++ % 3 === 0) {
+        _topoEdges.length = 0;
+        const live = [];
+        for (const m of tiles) if (m.material.opacity > 0.12) live.push(m);
+        for (let i = 0; i < live.length && _topoEdges.length < TOPO_MAX_E; i++) {
+          let n1 = -1, n2 = -1, d1 = Infinity, d2 = Infinity;
+          for (let j = 0; j < live.length; j++) {
+            if (j === i) continue;
+            const d = live[i].position.distanceTo(live[j].position);
+            if (d < d1)      { d2 = d1; n2 = n1; d1 = d; n1 = j; }
+            else if (d < d2) { d2 = d; n2 = j; }
+          }
+          for (const [nj, dd] of [[n1, d1], [n2, d2]]) {
+            if (nj < 0 || dd > TOPO_CUT) continue;
+            const a = Math.min(i, nj), b = Math.max(i, nj);
+            if (_topoEdges.some(e => e.ai === a && e.bi === b)) continue;
+            _topoEdges.push({ A: live[a], B: live[b], ai: a, bi: b, len: dd });
+            if (_topoEdges.length >= TOPO_MAX_E) break;
+          }
+        }
+      }
+
+      // write each edge into its line: segment positions + a constant per-edge
+      // alpha (closeness · hover-boost · endpoint opacity). The shader adds the
+      // travelling pulse over a faint base glow.
+      const breathe = 1 + _lvlS * 1.2;
+      for (let e = 0; e < TOPO_MAX_E; e++) {
+        const line = constLines[e];
+        const E = _topoEdges[e];
+        if (!E) { line.visible = false; continue; }
+        line.visible = true;
+        const posArr = line.geometry.attributes.position.array;
+        const aArr   = line.geometry.attributes.aA.array;
+        const A = E.A.position, B = E.B.position;
+        for (let s = 0; s < TOPO_SEG; s++) {
+          const t = s / (TOPO_SEG - 1);
+          posArr[s*3]   = A.x + (B.x - A.x) * t;
+          posArr[s*3+1] = A.y + (B.y - A.y) * t;
+          posArr[s*3+2] = A.z + (B.z - A.z) * t;
+        }
+        const closeness = Math.pow(Math.max(0, 1 - E.len / TOPO_CUT), 1.4);
+        let alpha = closeness * breathe;
+        const touches = hovAddr && (E.A.userData.project.addr === hovAddr || E.B.userData.project.addr === hovAddr);
+        if (touches) alpha = alpha * 2.4 + 0.5;
+        alpha *= Math.min(1, Math.min(E.A.material.opacity, E.B.material.opacity) * 1.4);
+        for (let s = 0; s < TOPO_SEG; s++) aArr[s] = alpha;
+        line.geometry.attributes.position.needsUpdate = true;
+        line.geometry.attributes.aA.needsUpdate = true;
+      }
+    }
+
+    /* ============================================================
+       v10 — ANAMORPHIC 0x00
+       "I am 0x00, scattered everywhere." A cloud of shards hangs in
+       camera-local space at random depths along rays toward a hidden view
+       direction. From almost every angle it reads as stray dust — but turn
+       to face the secret bearing and the shards collapse into a crisp
+       "0x00". The TRACE readout in the HUD is the hot/cold radar; holding
+       the alignment fires a lock event (sound + ripple).
+       ============================================================ */
+    function sampleGlyphLocal(text, count) {
+      const cw = 720, ch = 260;
+      const gc = document.createElement("canvas");
+      gc.width = cw; gc.height = ch;
+      const gx = gc.getContext("2d");
+      gx.fillStyle = "#000"; gx.fillRect(0, 0, cw, ch);
+      gx.fillStyle = "#fff";
+      gx.textAlign = "center"; gx.textBaseline = "middle";
+      gx.font = "700 210px 'Geist Mono', monospace";
+      gx.fillText(text, cw / 2, ch / 2 + 6);
+      const data = gx.getImageData(0, 0, cw, ch).data;
+      const hits = [];
+      for (let y = 0; y < ch; y += 3) for (let x = 0; x < cw; x += 3) {
+        if (data[(y * cw + x) * 4] > 128) hits.push([x, y]);
+      }
+      for (let i = hits.length - 1; i > 0; i--) {
+        const k = (Math.random() * (i + 1)) | 0;
+        const t = hits[i]; hits[i] = hits[k]; hits[k] = t;
+      }
+      const SC = 0.013;
+      const out = new Float32Array(count * 2);
+      for (let i = 0; i < count; i++) {
+        const hpt = hits.length ? hits[i % hits.length] : [cw / 2, ch / 2];
+        out[i*2]   = (hpt[0] + (Math.random() - 0.5) * 2 - cw / 2) * SC;
+        out[i*2+1] = -(hpt[1] + (Math.random() - 0.5) * 2 - ch / 2) * SC;
+      }
+      return out;
+    }
+    const ANAM_N = 440;
+    const ANAM_YAW = 2.35, ANAM_PITCH = 0.14, ANAM_D = 13;
+    const anamDirV = (() => {
+      const q = new THREE.Quaternion().multiplyQuaternions(
+        new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), ANAM_YAW),
+        new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), ANAM_PITCH),
+      );
+      return new THREE.Vector3(0, 0, -1).applyQuaternion(q).normalize();
+    })();
+    const anamGeo = new THREE.BufferGeometry();
+    const anamPos = new Float32Array(ANAM_N * 3);
+    {
+      const g2 = sampleGlyphLocal("0x00", ANAM_N);
+      const up = new THREE.Vector3(0, 1, 0);
+      const right = new THREE.Vector3().crossVectors(anamDirV, up).normalize();
+      const up2 = new THREE.Vector3().crossVectors(right, anamDirV).normalize();
+      const ray = new THREE.Vector3();
+      for (let i = 0; i < ANAM_N; i++) {
+        ray.copy(anamDirV).multiplyScalar(ANAM_D)
+          .addScaledVector(right, g2[i*2])
+          .addScaledVector(up2, g2[i*2+1])
+          .normalize();
+        const depth = 6.5 + Math.random() * 15;
+        anamPos[i*3]   = ray.x * depth;
+        anamPos[i*3+1] = ray.y * depth;
+        anamPos[i*3+2] = ray.z * depth;
+      }
+    }
+    anamGeo.setAttribute("position", new THREE.BufferAttribute(anamPos, 3));
+    const anamPts = new THREE.Points(anamGeo, new THREE.PointsMaterial({
+      color: 0x00f0c8, size: 0.085, sizeAttenuation: true,
+      transparent: true, opacity: 0.05, depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    }));
+    anamPts.frustumCulled = false;
+    const anamGroup = new THREE.Group();
+    anamGroup.add(anamPts);
+    // v10.1 — RETIRED per design review: the camera-locked shard glyph read as
+    // "floating on top" rather than living in the universe. The layer stays
+    // built (cheap, invisible) so the bearing hunt can return later in a
+    // world-anchored form.
+    anamGroup.visible = false;
+    scene.add(anamGroup);
+    let _anamA = 0, _anamHold = 0, _anamLockT = -30000, _anamTrace = 0;
+
+    function updateAnamorph(now, dt, mode) {
+      anamGroup.position.copy(cam.pos);
+      const align = _camDir.dot(anamDirV);
+      // radar value for the HUD (gradient as you turn toward the bearing)
+      _anamTrace = Math.max(0, Math.min(1, (align - 0.1) / 0.88));
+      // shards only resolve near-perfect alignment, and only in free drift
+      const aT = (mode === "drift" ? 1 : 0) * THREE.MathUtils.smoothstep(align, 0.86, 0.995);
+      _anamA += (aT - _anamA) * (1 - Math.pow(0.88, dt / 16));
+      anamPts.material.opacity = (mode === "drift" ? 0.05 : 0.0) + _anamA * 0.85;
+      anamPts.material.size = 0.085 + _anamA * 0.055;
+      window.__mo_anam = { align: _anamTrace, locked: _anamA > 0.9 };
+      // LOCK — hold the bearing ~0.5s, 20s cooldown
+      if (_anamA > 0.88) _anamHold += dt; else _anamHold = 0;
+      if (_anamHold > 480 && now - _anamLockT > 20000) {
+        _anamLockT = now;
+        if (window.__mo_disturb) window.__mo_disturb(window.innerWidth / 2, window.innerHeight / 2, 1.3);
+        try { window.dispatchEvent(new CustomEvent("mo:anamLock")); } catch (_) {}
+      }
+    }
+
+    /* ---------- wrap helper — keep object within [-half, +half] BOX around camera ---------- */
+    function wrapAroundCamera(obj, box) {
+      const dx = obj.position.x - cam.pos.x;
+      const dy = obj.position.y - cam.pos.y;
+      const dz = obj.position.z - cam.pos.z;
+      if (dx >  box.x / 2) obj.position.x -= box.x;
+      if (dx < -box.x / 2) obj.position.x += box.x;
+      if (dy >  box.y / 2) obj.position.y -= box.y;
+      if (dy < -box.y / 2) obj.position.y += box.y;
+      if (dz >  box.z / 2) obj.position.z -= box.z;
+      if (dz < -box.z / 2) obj.position.z += box.z;
+    }
+
+    /* ---------- input ---------- */
+    // Announce the FIRST genuine engagement with the field (drag / wheel-fly /
+    // node click) so the title's coachmark can dismiss itself. Cheap to fire
+    // repeatedly — the title listener self-removes after the first event.
+    const fireInteract = () => {
+      try { window.dispatchEvent(new CustomEvent("mo:universeInteract")); } catch (_) {}
+    };
+    let dragging = false, dragMoved = false;
+    let lastX = 0, lastY = 0, downX = 0, downY = 0;
+    let idleTimer = 0;
+    let driftActive = true;
+    // Pointer-in-zone tracking — wheel only flies the camera when the cursor
+    // is over the universe mount (not over UI). Updated by pointer enter/leave.
+    let pointerInZone = false;
+    const stopDrift = () => {
+      driftActive = false;
+      clearTimeout(idleTimer);
+      idleTimer = setTimeout(() => { driftActive = true; }, 3200);
+    };
+
+    mount.addEventListener("pointerenter", () => { pointerInZone = true;  });
+    mount.addEventListener("pointerleave", () => { pointerInZone = false; });
+
+    // v11 — multi-pointer tracking: one finger = look, two fingers = pinch-fly.
+    const _pts = new Map();
+    let pinching = false, _pinchD = 0;
+    const _pinchDist = () => {
+      const p = [..._pts.values()];
+      return Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y);
+    };
+    mount.addEventListener("pointerdown", (e) => {
+      _pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (_pts.size === 2) {
+        pinching = true; _pinchD = _pinchDist();
+        dragging = false;
+        stopDrift(); fireInteract();
+        try { mount.setPointerCapture(e.pointerId); } catch (_) {}
+        return;
+      }
+      dragging = true; dragMoved = false;
+      lastX = downX = e.clientX; lastY = downY = e.clientY;
+      mount.style.cursor = "grabbing";
+      stopDrift();
+      mount.setPointerCapture(e.pointerId);
+    });
+    mount.addEventListener("pointerup", (e) => {
+      _pts.delete(e.pointerId);
+      if (pinching) {
+        if (_pts.size < 2) pinching = false;
+        try { mount.releasePointerCapture(e.pointerId); } catch (_) {}
+        return;
+      }
+      if (!dragging) return;
+      dragging = false;
+      mount.style.cursor = "grab";
+      try { mount.releasePointerCapture(e.pointerId); } catch (_) {}
+      if (!dragMoved) handleClick(e.clientX, e.clientY);
+    });
+    mount.addEventListener("pointercancel", (e) => {
+      _pts.delete(e.pointerId);
+      if (_pts.size < 2) pinching = false;
+      dragging = false; mount.style.cursor = "grab";
+    });
+    mount.addEventListener("pointerleave", () => {
+      hoverObjRef.current = null;
+      setHover(null);
+      if (window.MOSound && MOSound.unhover) MOSound.unhover();
+    });
+    // hover hit-test is throttled to one raycast per frame — high-frequency
+    // mice fire several pointermove events per frame and the raycast is the cost.
+    let hoverRaf = 0, hoverX = 0, hoverY = 0;
+    const runHover = () => { hoverRaf = 0; if (!dragging) handleHover(hoverX, hoverY); };
+    mount.addEventListener("pointermove", (e) => {
+      if (_pts.has(e.pointerId)) _pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      // v11 — pinch = fly: spread to dolly forward, squeeze to pull back.
+      if (pinching) {
+        if (_pts.size === 2) {
+          const d = _pinchDist();
+          cam.vel += (d - _pinchD) * 0.05;
+          cam.vel = Math.max(-22, Math.min(22, cam.vel));
+          _pinchD = d;
+        }
+        return;
+      }
+      if (dragging) {
+        const dx = e.clientX - lastX;
+        const dy = e.clientY - lastY;
+        lastX = e.clientX; lastY = e.clientY;
+        if (Math.abs(e.clientX - downX) + Math.abs(e.clientY - downY) > 6) { if (!dragMoved) fireInteract(); dragMoved = true; }
+        if (!gyroOn) {
+          camTarget.yaw   -= dx * 0.0035;
+          camTarget.pitch -= dy * 0.0035;
+          camTarget.pitch = Math.max(-1.45, Math.min(1.45, camTarget.pitch));
+        }
+        hoverObjRef.current = null;
+        setHover(null);
+      } else {
+        hoverX = e.clientX; hoverY = e.clientY;
+        if (!hoverRaf) hoverRaf = requestAnimationFrame(runHover);
+      }
+    });
+
+    // Wheel: fly the camera only when the pointer is inside the universe zone
+    // AND we're in drift mode (title/intro). Otherwise pass-through to page scroll.
+    mount.addEventListener("wheel", (e) => {
+      if (!pointerInZone) return;
+      if (modeRef.current !== "drift") return;
+      e.preventDefault();
+      fireInteract();
+      cam.vel += -e.deltaY * 0.025;
+      cam.vel = Math.max(-22, Math.min(22, cam.vel));
+      stopDrift();
+    }, { passive: false });
+
+    /* ---------- v11 — MOBILE API: explore mode · fly · gyro look ----------
+       Tiny surface for the touch EXPLORE overlay: fly(v) nudges camera
+       velocity (FLY± hold buttons), setExplore toggles touch-action so a
+       one-finger drag rotates the camera instead of scrolling the page,
+       and setGyro maps device-orientation deltas onto the look target —
+       calibrated to the pose at enable time, so "forward" stays wherever
+       you were looking when you switched it on. */
+    let gyroOn = false, _gyroBase = null;
+    const onGyro = (e) => {
+      if (!gyroOn || e.alpha == null || e.beta == null) return;
+      if (!_gyroBase) _gyroBase = { a: e.alpha, b: e.beta, yaw: camTarget.yaw, pitch: camTarget.pitch };
+      let da = e.alpha - _gyroBase.a;
+      if (da > 180) da -= 360; else if (da < -180) da += 360;
+      const db = e.beta - _gyroBase.b;
+      camTarget.yaw   = _gyroBase.yaw + da * (Math.PI / 180);
+      camTarget.pitch = Math.max(-1.45, Math.min(1.45, _gyroBase.pitch + db * (Math.PI / 180) * 0.9));
+    };
+    window.addEventListener("deviceorientation", onGyro, true);
+    window.__mo_universe = {
+      fly(v) {
+        cam.vel = Math.max(-22, Math.min(22, cam.vel + v));
+        stopDrift(); fireInteract();
+      },
+      setExplore(on) {
+        mount.style.touchAction = on ? "none" : "";
+        if (on) { stopDrift(); fireInteract(); }
+      },
+      setGyro(on) { gyroOn = !!on; _gyroBase = null; },
+      isGyro() { return gyroOn; },
+    };
+
+    /* ---------- raycasting ---------- */
+    const raycaster = new THREE.Raycaster();
+    const ndc = new THREE.Vector2();
+    function pickAt(clientX, clientY) {
+      const rect = mount.getBoundingClientRect();
+      ndc.x =  ((clientX - rect.left) / rect.width)  * 2 - 1;
+      ndc.y = -((clientY - rect.top)  / rect.height) * 2 + 1;
+      raycaster.setFromCamera(ndc, camera);
+      const hits = raycaster.intersectObjects(tiles, false);
+      return hits[0] || null;
+    }
+
+    /* ---------- screen-space tile bounds (tight) ---------- */
+    const v3 = new THREE.Vector3();
+    const camDirTmp = new THREE.Vector3();
+    // Hoisted scratch — reused every call (this runs per-move AND every frame
+    // for HUD tracking, so per-call allocation showed up in the profile).
+    const _tsbHW = TILE_W / 2, _tsbHH = TILE_H / 2;
+    const _tsbCorners = [
+      new THREE.Vector3(-_tsbHW, -_tsbHH, 0),
+      new THREE.Vector3( _tsbHW, -_tsbHH, 0),
+      new THREE.Vector3(-_tsbHW,  _tsbHH, 0),
+      new THREE.Vector3( _tsbHW,  _tsbHH, 0),
+    ];
+    const _tsbCamRel = new THREE.Vector3();
+    function tileScreenBounds(mesh) {
+      const rect = mount.getBoundingClientRect();
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      camera.getWorldDirection(camDirTmp);
+      for (const c of _tsbCorners) {
+        v3.copy(c);
+        mesh.localToWorld(v3);
+        // skip overlay if any corner is behind the camera
+        _tsbCamRel.copy(v3).sub(camera.position);
+        if (_tsbCamRel.dot(camDirTmp) <= 0) return null;
+        v3.project(camera);
+        const sx = ( v3.x * 0.5 + 0.5) * rect.width;
+        const sy = (-v3.y * 0.5 + 0.5) * rect.height;
+        if (sx < minX) minX = sx;
+        if (sx > maxX) maxX = sx;
+        if (sy < minY) minY = sy;
+        if (sy > maxY) maxY = sy;
+      }
+      return { x: minX, y: minY, w: maxX - minX, h: maxY - minY };
+    }
+
+    /* ---------- screen-space tile CORNERS (perimeter order) ----------
+       Returns the 4 projected corners of the tilted card quad in mount-local
+       px — TL, TR, BR, BL clockwise — so the HUD can hug the card's true
+       (rotated) shape instead of an axis-aligned box. null = behind camera. */
+    const _tscCorners = [
+      new THREE.Vector3(-_tsbHW,  _tsbHH, 0), // TL (local y up)
+      new THREE.Vector3( _tsbHW,  _tsbHH, 0), // TR
+      new THREE.Vector3( _tsbHW, -_tsbHH, 0), // BR
+      new THREE.Vector3(-_tsbHW, -_tsbHH, 0), // BL
+    ];
+    const _tscOut = [ {x:0,y:0}, {x:0,y:0}, {x:0,y:0}, {x:0,y:0} ];
+    function tileScreenCorners(mesh) {
+      const rect = mount.getBoundingClientRect();
+      camera.getWorldDirection(camDirTmp);
+      for (let i = 0; i < 4; i++) {
+        v3.copy(_tscCorners[i]);
+        mesh.localToWorld(v3);
+        _tsbCamRel.copy(v3).sub(camera.position);
+        if (_tsbCamRel.dot(camDirTmp) <= 0) return null;   // any corner behind cam → bail
+        v3.project(camera);
+        _tscOut[i].x = ( v3.x * 0.5 + 0.5) * rect.width;
+        _tscOut[i].y = (-v3.y * 0.5 + 0.5) * rect.height;
+      }
+      return _tscOut;
+    }
+
+    function handleHover(cx, cy) {
+      const hit = pickAt(cx, cy);
+      if (!hit) {
+        if (hoverObjRef.current) { hoverObjRef.current = null; setHover(null); if (window.MOSound && MOSound.unhover) MOSound.unhover(); }
+        return;
+      }
+      const m = hit.object;
+      // The frame loop repositions the HUD every frame from hoverObjRef, so we
+      // only pay for a React re-render when the hovered PROJECT actually
+      // changes — moving within the same card is free.
+      if (hoverObjRef.current === m) return;
+      const screen = tileScreenBounds(m);
+      if (!screen) return;
+      hoverObjRef.current = m;
+      setHover({ project: m.userData.project, screen });
+      // the touch disturbs the field — a soft ripple spreads from the node
+      if (window.__mo_disturb) window.__mo_disturb(cx, cy, 0.3);
+      // sonify: the hovered node sings its sideband against the 0x00 carrier
+      if (window.MOSound && MOSound.hover) { MOSound.unhover(); MOSound.hover(m.userData.project.addr); }
+    }
+
+    function handleClick(cx, cy) {
+      const hit = pickAt(cx, cy);
+      if (!hit) return;
+      fireInteract();
+      // a click is a strong disturbance — the wavefront blooms from the node
+      if (window.__mo_disturb) window.__mo_disturb(cx, cy, 1.0);
+      const m = hit.object;
+      const p = m.userData.project;
+      // sonify the click: strike this node + let the 0x00 carrier bloom
+      if (window.MOSound && MOSound.open) MOSound.open(p.addr);
+
+      // Aim the camera at the tile first so the screen composes around it.
+      const rel = m.position.clone().sub(cam.pos);
+      const yaw = Math.atan2(rel.x, -rel.z);
+      const flat = Math.sqrt(rel.x * rel.x + rel.z * rel.z);
+      const pitch = Math.atan2(rel.y, flat);
+      camTarget.yaw   = nearestAngle(camTarget.yaw, yaw);
+      camTarget.pitch = Math.max(-1.45, Math.min(1.45, pitch));
+
+      // If this project has its own page, fly to it.
+      if (p.file) {
+        cam.vel = Math.max(cam.vel, 6);   // small forward dolly = "clicking into"
+        const originRect = tileScreenBounds(m);   // where the card sits on screen NOW
+        navigateToProject(p, originRect);
+        return;
+      }
+
+      cam.vel = Math.max(cam.vel, 0);
+      setActiveAddr(p.addr);
+      if (onActive) onActive(p);
+      stopDrift();
+    }
+
+    function navigateToProject(p, originRect) {
+      // v3 hook: when a host (Landing v3) wants to open projects in-place as
+      // cards (no page load), it installs window.__mo_open_project. v2 never
+      // sets it, so the classic fly-out navigation below is unchanged there.
+      if (typeof window.__mo_open_project === "function") {
+        window.__mo_open_project(p, originRect);
+        return;
+      }
+      sessionStorage.setItem("mo_navigate_from_addr", p.addr);
+      document.body.classList.add("landing-exit");
+      setTimeout(() => { window.location.href = p.file; }, 380);
+    }
+
+    function nearestAngle(cur, t) {
+      while (t - cur > Math.PI)  t -= Math.PI * 2;
+      while (t - cur < -Math.PI) t += Math.PI * 2;
+      return t;
+    }
+
+    /* ---------- resize ---------- */
+    const onResize = () => {
+      const s = sz(); w = s.w; h = s.h;
+      renderer.setSize(w, h);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      fitGlyphToView();
+      resizePaint();
+      if (composer) composer.setSize(w, h);
+      if (gradePass) gradePass.uniforms.uAspect.value = w / h;
+    };
+    window.addEventListener("resize", onResize);
+    const ro = new ResizeObserver(onResize);
+    ro.observe(mount);
+
+    /* ---------- loop ---------- */
+    let raf;
+    let last = performance.now();
+    let frameI = 0;
+    const FORWARD = new THREE.Vector3();
+
+    // Hoisted scratch — reused every frame so the hot loops allocate nothing.
+    const _camDir   = new THREE.Vector3();
+    const _off      = new THREE.Vector3();
+    const _localOff = new THREE.Vector3();
+    const _lookM    = new THREE.Matrix4();
+    const _baseQ    = new THREE.Quaternion();
+    const _offQ     = new THREE.Quaternion();
+    const _euler    = new THREE.Euler();
+    const _vScale   = new THREE.Vector3();
+    // Star wrap box never changes — compute once instead of cloning per frame.
+    const SBOX = BOX.clone().multiplyScalar(stars.userData.wrapScale);
+    // Keep absolute coordinates small over very long sessions: when the camera
+    // has flown far from the origin, shift the whole world back so floats stay
+    // precise (everything wraps around the camera, so this is invisible).
+    const REBASE_DIST2 = 600 * 600;
+    function shiftBufferAttr(attr, sx, sy, sz) {
+      const a = attr.array;
+      for (let i = 0; i < a.length; i += 3) { a[i] -= sx; a[i+1] -= sy; a[i+2] -= sz; }
+      attr.needsUpdate = true;
+    }
+    function rebaseWorld() {
+      const sx = cam.pos.x, sy = cam.pos.y, sz = cam.pos.z;
+      cam.pos.set(0, 0, 0);
+      camera.position.copy(cam.pos);
+      for (const m of tiles) {
+        m.position.x -= sx; m.position.y -= sy; m.position.z -= sz;
+        const d = m.userData.driftTarget;
+        if (d) { d.x -= sx; d.y -= sy; d.z -= sz; }
+      }
+      for (const sp of ambient) { sp.position.x -= sx; sp.position.y -= sy; sp.position.z -= sz; }
+      shiftBufferAttr(stars.geometry.attributes.position, sx, sy, sz);
+      const aArr = assemblyPts.geometry.attributes.position.array;
+      for (let i = 0; i < aArr.length; i += 3) {
+        aArr[i] -= sx; aArr[i+1] -= sy; aArr[i+2] -= sz;
+        asmHome[i] -= sx; asmHome[i+1] -= sy; asmHome[i+2] -= sz;
+      }
+      // The field-follow tracker is in absolute world space too — after a rebase
+      // the camera sits at the origin, so the tracker must reset with it (else
+      // the next frame computes a gigantic camera delta and flings the field).
+      _fieldCam.set(0, 0, 0);
+      assemblyPts.geometry.attributes.position.needsUpdate = true;
+    }
+
+    // Wrap the assembly field around the camera, mirroring each ±BOX shift onto
+    // the rendered buffer so eased points never streak across the box on wrap.
+    function wrapAssemblyField(arr, home, box) {
+      for (let i = 0; i < home.length; i += 3) {
+        const dx = home[i]   - cam.pos.x;
+        const dy = home[i+1] - cam.pos.y;
+        const dz = home[i+2] - cam.pos.z;
+        if      (dx >  box.x / 2) { home[i]   -= box.x; arr[i]   -= box.x; }
+        else if (dx < -box.x / 2) { home[i]   += box.x; arr[i]   += box.x; }
+        if      (dy >  box.y / 2) { home[i+1] -= box.y; arr[i+1] -= box.y; }
+        else if (dy < -box.y / 2) { home[i+1] += box.y; arr[i+1] += box.y; }
+        if      (dz >  box.z / 2) { home[i+2] -= box.z; arr[i+2] -= box.z; }
+        else if (dz < -box.z / 2) { home[i+2] += box.z; arr[i+2] += box.z; }
+      }
+    }
+
+    let prevMode = mode;
+    // Persistent assembly state — eased every frame so the "0x00" glyph forms and
+    // melts smoothly, fully decoupled from the discrete React `mode` (which flips
+    // on a coarse IntersectionObserver and can lag / stick). Formation is driven
+    // purely by the origin section's continuous scroll progress.
+    let formActual = 0;
+    const _glyphC = new THREE.Vector3();
+    // Camera position the assembly field was last anchored to. While the glyph
+    // is formed we translate the field by the per-frame camera delta so the
+    // un-formed scatter stays in NEAR space around the viewer (see frame loop).
+    const _fieldCam = new THREE.Vector3();
+    function scatterTiles() {
+      // Pick a fresh random spot per tile (centred on camera) and store it as a
+      // drift target. The tile keeps its current position; the drift-mode loop
+      // lerps toward this target so leaving grid/ambient looks smooth either
+      // direction, instead of snapping + fading in.
+      for (const m of tiles) {
+        const yN = 1 - (m.userData.index / Math.max(1, projects.length - 1)) * 2;
+        const radial = Math.sqrt(1 - yN * yN);
+        // jitter the theta each scatter so it doesn't always come back the same way
+        const theta = m.userData.index * goldenAngle + (Math.random() - 0.5) * 1.5;
+        const r = 0.55 + 0.30 * Math.random();
+        m.userData.driftTarget = new THREE.Vector3(
+          cam.pos.x + Math.cos(theta) * radial * BOX.x * r * 0.55,
+          cam.pos.y + yN * BOX.y * r * 0.6 + (Math.random() - 0.5) * 4,
+          cam.pos.z + Math.sin(theta) * radial * BOX.z * r * 0.55,
+        );
+      }
+    }
+
+    function frame(now) {
+      // Paused while the inline board flight covers the viewport — saves the GPU
+      // from rendering two WebGL scenes at once. dt is reset so resume won't jump.
+      // Also pause when the tab/preview is hidden (no point rendering offscreen).
+      if (window.__mo_universe_pause || document.hidden || !uniOnScreen) { last = now; raf = requestAnimationFrame(frame); return; }
+      const dt = Math.min(50, now - last); last = now;
+      const mode = modeRef.current;
+      const focusAddrNow = focusRef.current;
+      const isArranged = (mode === "grid" || mode === "reel" || mode === "ambient" || mode === "origin" || mode === "dive");
+
+      /* ── v10 per-frame FX state ── */
+      // real audio output level → the field visibly breathes with the sound
+      const lvlT = (window.MOSound && window.MOSound.getLevel && !window.MOSound.isMuted()) ? window.MOSound.getLevel() : 0;
+      _lvlS += (lvlT - _lvlS) * (1 - Math.pow(0.86, dt / 16));
+      // arrival overture — collapse → burst → the field fades up
+      let arrFade = 1, arrCollapse = 0;
+      if (ARR.t0) {
+        const ap = (now - ARR.t0) / ARR.dur;
+        if (ap >= 1) ARR.t0 = 0;
+        else {
+          arrCollapse = 1 - THREE.MathUtils.smoothstep(ap, 0.40, 0.62);
+          arrFade = THREE.MathUtils.smoothstep(ap, 0.50, 0.92);
+          if (!ARR.burst && ap >= 0.42) {
+            ARR.burst = true;
+            if (window.__mo_disturb) window.__mo_disturb(window.innerWidth / 2, window.innerHeight * 0.52, 1.35);
+            try { if (window.CarrierField && window.CarrierField.isWoken() && window.MOSound && !window.MOSound.isMuted()) window.CarrierField.carrierAccent(1); } catch (_) {}
+          }
+        }
+      }
+      stars.material.opacity = (0.7 + _lvlS * 0.45) * (0.35 + 0.65 * arrFade);
+      // idle attention — after ~30s of stillness the field notices you:
+      // the camera turns softly toward the nearest node, a slow ripple
+      // crosses the screen, and the field murmurs.
+      if (mode === "drift" && !_idleFired && now - _lastAct > 30000 && !ARR.t0) {
+        _idleFired = true;
+        let nearTile = null, nd = Infinity;
+        for (const m of tiles) {
+          const d = m.position.distanceToSquared(camera.position);
+          if (d > 9 && d < nd) { nd = d; nearTile = m; }
+        }
+        if (nearTile) {
+          const rel = nearTile.position.clone().sub(cam.pos);
+          camTarget.yaw = nearestAngle(camTarget.yaw, Math.atan2(rel.x, -rel.z));
+          camTarget.pitch = Math.max(-1.2, Math.min(1.2, Math.atan2(rel.y, Math.sqrt(rel.x * rel.x + rel.z * rel.z))));
+        }
+        if (window.__mo_disturb) window.__mo_disturb(window.innerWidth / 2, window.innerHeight / 2, 0.9);
+        try { if (window.MOSound && !window.MOSound.isMuted() && window.MOSound.gather) window.MOSound.gather(); } catch (_) {}
+        setIdleNote(true);
+        setTimeout(() => setIdleNote(false), 6000);
+      }
+
+      // Detect mode change. Going from an arranged mode back to drift needs
+      // a fresh scatter — otherwise the cards stay locked forever.
+      if (mode !== prevMode) {
+        if (mode === "drift" && (prevMode === "grid" || prevMode === "reel" || prevMode === "ambient" || prevMode === "origin" || prevMode === "dive")) {
+          scatterTiles();
+        }
+        prevMode = mode;
+      }
+
+      /* idle drift — only in drift mode */
+      if (driftActive && mode === "drift") {
+        cam.vel += dt * 0.0008;     // tiny accel toward forward drift
+        camTarget.yaw += dt * 0.00006;
+        camTarget.pitch += Math.sin(now * 0.00022) * dt * 0.00003;
+      }
+
+      /* In arranged modes, ease camera back toward origin/level */
+      if (isArranged) {
+        cam.vel *= Math.pow(0.86, dt / 16);
+        camTarget.yaw   *= Math.pow(0.92, dt / 16);
+        camTarget.pitch *= Math.pow(0.92, dt / 16);
+        // also pull cam.pos toward origin
+        cam.pos.multiplyScalar(Math.pow(0.94, dt / 16));
+      }
+
+      /* damping on velocity */
+      cam.vel *= Math.pow(0.92, dt / 16);
+      // clamp tiny
+      if (Math.abs(cam.vel) < 0.04) cam.vel = 0;
+
+      /* ease camera angles */
+      const k = 1 - Math.pow(0.001, dt / 1000);
+      cam.yaw   += (camTarget.yaw   - cam.yaw)   * k;
+      cam.pitch += (camTarget.pitch - cam.pitch) * k;
+      cam.pitch = Math.max(-1.45, Math.min(1.45, cam.pitch));
+
+      /* advance position along current look direction */
+      updateCameraTransform();
+      camera.getWorldDirection(FORWARD);
+      cam.pos.addScaledVector(FORWARD, cam.vel * dt / 1000);
+
+      // Re-apply position
+      camera.position.copy(cam.pos);
+
+      // Long-session safety: recentre the world when we've flown far out.
+      if (cam.pos.lengthSq() > REBASE_DIST2) rebaseWorld();
+
+      // dt-corrected easing factor — keeps motion identical at 30/60/120Hz so
+      // re-orientation and scaling feel the same (native) regardless of refresh.
+      const lerpK = (rate) => 1 - Math.pow(1 - rate, dt / 16);
+
+      /* wrap drifting objects — only in free drift mode */
+      if (mode === "drift") {
+        for (const m of tiles) {
+          // If a fresh drift target was queued on mode-change, ease toward it
+          // and DO NOT wrap — grid/ambient positions sit outside the wrap box
+          // (z = ±16 vs box half-depth 13), so wrapping here would teleport the
+          // tile across the camera before the lerp could play. Skip the wrap
+          // until we've landed inside the box, then resume normal wrapping.
+          const dt2 = m.userData.driftTarget;
+          if (dt2) {
+            const rate = 0.025;          // matches forward grid → ambient feel
+            m.position.lerp(dt2, 1 - Math.pow(1 - rate, dt / 16));
+            if (m.position.distanceToSquared(dt2) < 0.09) {
+              m.userData.driftTarget = null;
+            }
+          } else {
+            wrapAroundCamera(m, BOX);
+          }
+        }
+      }
+      for (const sp of ambient) wrapAroundCamera(sp, BOX);
+      // stars wrap in a larger box for parallax illusion
+      wrapPointsAroundCamera(stars, SBOX);
+
+      /* small per-tile overlays — wireframe primitives OR loaded GLBs.
+         Both branches follow their parent tile, rotate, and fade with it.
+         Models are centred on the card face and pushed further toward camera
+         so they read as the hero element; wireframes sit small above the art. */
+      // World-direction is constant for all overlays this frame — fetch once.
+      camera.getWorldDirection(_camDir);
+      for (const wire of tileWires) {
+        const parent = wire.userData.parentTile;
+        if (!parent) continue;
+        const isModel = !!wire.userData.isModel;
+        // Offset toward viewer — bigger for full models so they clear the card.
+        const forwardDist = isModel ? 1.4 : 0.6;
+        _off.copy(_camDir).multiplyScalar(-forwardDist);
+        // Card-local offset: models can be nudged to their visual centre;
+        // wireframes stay just above the card art.
+        const modelOffset = isModel ? (parent.userData.project.modelOffset || {}) : {};
+        _localOff.set(
+          modelOffset.x || 0,
+          isModel ? (modelOffset.y || 0) : parent.scale.y * 1.05,
+          modelOffset.z || 0,
+        ).applyQuaternion(parent.quaternion);
+        wire.position.set(
+          parent.position.x + _off.x + _localOff.x,
+          parent.position.y + _off.y + _localOff.y,
+          parent.position.z + _off.z + _localOff.z,
+        );
+        // Continuous slow rotation. Loaded GLBs are the "hero" presentation —
+        // they get a gentle yaw-only drift so the form stays readable and
+        // mostly faces the camera. Wireframe primitives still tumble as
+        // before (cheap, abstract, more decorative).
+        if (isModel) {
+          wire.rotation.y += 0.0025;
+        } else if (wire.userData.prim === "cone") {
+          wire.rotation.y += 0.012;
+        } else {
+          wire.rotation.y += 0.010;
+          wire.rotation.x += 0.004;
+        }
+        // Match parent visibility
+        const tileOp = parent.material.opacity;
+        const overlayOp = Math.min(0.95, tileOp * 1.15);
+        if (isModel) {
+          // Loaded GLB — fade every matcap material in the subtree, and hide
+          // the whole group below a threshold so we don't pay for invisible draws.
+          if (wire.userData.loaded) {
+            // Soft fade-in from the moment the GLB lands, so the model eases up
+            // instead of popping (the parent tile may already be fully visible).
+            const mFade = THREE.MathUtils.smoothstep(now - (wire.userData.loadedAt || now), 0, 600);
+            // Per request: loaded matcap models render FULLY SOLID at rest —
+            //  (1) no 0.95 cap (use the full distance opacity, clamped to 1), and
+            //  (2) no mode dimming (use the tile's pre-dim base opacity).
+            // Distance fade and the load fade-in are preserved.
+            const modelTileOp = parent.userData.modelOpacityBase != null
+              ? parent.userData.modelOpacityBase
+              : tileOp;
+            const modelOp = Math.min(1, modelTileOp * 1.15) * mFade;
+            wire.visible = modelOp > 0.02;
+            wire.traverse((obj) => {
+              if (obj.isMesh && obj.material) obj.material.opacity = modelOp;
+            });
+          }
+        } else {
+          // Procedural wireframe primitive — single material
+          wire.material.opacity = overlayOp;
+        }
+        // Pop with focus — models start much larger than wireframes.
+        const isFocused = focusAddrNow && wire.userData.addr === focusAddrNow;
+        const baseScale  = isModel ? 0.85 : 0.28;
+        const focusScale = isModel ? 1.10 : 0.42;
+        const targetScale = isFocused ? focusScale : baseScale;
+        wire.scale.lerp(_vScale.set(targetScale, targetScale, targetScale), lerpK(0.10));
+      }
+
+      /* tiles: position-lerp to arranged targets, then orient */
+      for (const m of tiles) {
+        const target = targetForTile(mode, m.userData.index, now);
+        if (target) {
+          // ease toward target; rate depends on distance for snappy arrange
+          // reel must track the scrubbed scroll position tightly — a slow lerp
+          // would let the parade lag the captions.
+          const rate = mode === "reel" ? 0.18 : mode === "grid" ? 0.055 : 0.025;
+          m.position.lerp(target, 1 - Math.pow(1 - rate, dt / 16));
+        }
+
+        // For meshes (not cameras), Object3D.lookAt aligns local +Z to target.
+        // PlaneGeometry's visible face IS the +Z face — so look AT the camera.
+        _lookM.lookAt(camera.position, m.position, camera.up);
+        _baseQ.setFromRotationMatrix(_lookM);
+
+        // Per-card constant offset so each tile floats at its own angle (suppressed in grid)
+        const offFactor = (mode === "grid" || mode === "reel") ? 0.15 : 1.0;
+        _euler.set(
+          m.userData.offsetPitch * offFactor,
+          m.userData.offsetYaw   * offFactor,
+          (m.userData.offsetRoll + Math.sin(now * 0.0006 + m.userData.wobble.p * 6) * 0.04) * offFactor,
+          "YXZ"
+        );
+        _offQ.setFromEuler(_euler);
+        _baseQ.multiply(_offQ);
+
+        // SOFT slerp — cards re-orient slowly so they feel like floating objects
+        m.quaternion.slerp(_baseQ, lerpK((mode === "grid" || mode === "reel") ? 0.12 : 0.06));
+
+        // Band-pass visibility per mode
+        const dist = m.position.distanceTo(camera.position);
+        let nearIn, farOut;
+        if (mode === "grid") {
+          nearIn  = THREE.MathUtils.smoothstep(dist, 2.0, 6.0);
+          farOut  = THREE.MathUtils.smoothstep(dist, 26, 40);
+        } else if (mode === "reel") {
+          // v11.2 — the "Catloading impostor" fix. The real culprit was THIS
+          // band, not the parade spacing: non-featured tiles park on a scatter
+          // ring 20–24u out, dead centre of the old 17→26 far-fade — so they
+          // hung around at ~50% opacity as blurred ghosts behind the captions.
+          // Tight band while the reel plays (active card at 10.6u stays hot,
+          // everything past ~16.5u is gone); the band relaxes toward the old
+          // range during the final gather so the carousel's far side can
+          // recede into the deep field instead of vanishing.
+          const rg = Math.max(0, Math.min(1, ((window.__mo_reel || {}).pos || 0) - 4));
+          nearIn  = THREE.MathUtils.smoothstep(dist, 2.0, 6.0);
+          farOut  = THREE.MathUtils.smoothstep(dist, 13 + rg * 4, 16.5 + rg * 9.5);
+        } else if (mode === "ambient") {
+          nearIn  = THREE.MathUtils.smoothstep(dist, 2.5, 6.0);
+          farOut  = THREE.MathUtils.smoothstep(dist, 18, 28);
+        } else if (mode === "drift") {
+          // DRIFT is the ONLY mode where the tile pool wraps around the camera
+          // inside BOX. A spherical far-fade sat almost entirely OUTSIDE the box
+          // (corner ≈ 20.5), so tiles teleported across the wrap boundary while
+          // still ~95% opaque → the "sudden appearance". Fade by proximity to the
+          // wrap surface instead: edge = 0 at box centre, 1 at the face a tile is
+          // about to cross. Full opacity until 95% of the way out, then a quick
+          // fade across the final 5% shell so the wrap happens invisibly.
+          nearIn = THREE.MathUtils.smoothstep(dist, 2.5, 6.0);
+          const ex = Math.abs(m.position.x - camera.position.x) / (BOX.x / 2);
+          const ey = Math.abs(m.position.y - camera.position.y) / (BOX.y / 2);
+          const ez = Math.abs(m.position.z - camera.position.z) / (BOX.z / 2);
+          const edge = Math.max(ex, ey, ez);
+          farOut = THREE.MathUtils.smoothstep(edge, 0.95, 1.0);
+        } else if (mode === "dive") {
+          // DIVE deliberately clears the field far out so only the hub remains —
+          // keep the original aggressive far-fade so distant tiles dissolve.
+          nearIn  = THREE.MathUtils.smoothstep(dist, 2.5, 6.0);
+          farOut  = THREE.MathUtils.smoothstep(dist, 20, 32);
+        } else {
+          // origin — tiles arrange on a ring (~16–26u) that sits OUTSIDE the wrap
+          // box, so a box-edge fade would wrongly treat them as past the boundary
+          // and hide them. Push the spherical far-fade out past the ring so the
+          // cards stay solid and readable; fog still lends gentle depth.
+          nearIn  = THREE.MathUtils.smoothstep(dist, 2.5, 6.0);
+          farOut  = THREE.MathUtils.smoothstep(dist, 34, 48);
+        }
+        let opacity = nearIn * (1 - farOut);
+        // Loaded matcap models intentionally ignore mode dimming (per request):
+        // capture the distance-only opacity BEFORE the ambient/grid multipliers so
+        // models read equally solid in every mode. Focus is applied below to both.
+        let modelOpacityBase = opacity;
+        if (mode === "ambient") opacity *= 0.38;   // recede behind content
+        if (mode === "grid"   ) opacity *= 0.92;   // slightly tame so HUD reads
+        if (mode === "reel"   ) opacity *= 0.96;   // the tiles ARE the reel — keep them hot
+
+        // Focus highlight — pop the matching tile
+        const isFocused = focusAddrNow && m.userData.project.addr === focusAddrNow;
+        if (isFocused) {
+          opacity = Math.min(1, opacity * 1.6 + 0.25);
+          modelOpacityBase = Math.min(1, modelOpacityBase * 1.6 + 0.25);
+          m.scale.lerp(_vScale.set(1.18, 1.18, 1), lerpK(0.14));
+        } else {
+          m.scale.lerp(_vScale.set(1, 1, 1), lerpK(0.10));
+        }
+        m.material.opacity = opacity * arrFade;
+        m.userData.modelOpacityBase = modelOpacityBase * arrFade;
+      }
+
+      /* ambient pulse */
+      for (const sp of ambient) {
+        const phase = sp.userData.phase + now * 0.0008;
+        const dist  = sp.position.distanceTo(camera.position);
+        const nearIn = THREE.MathUtils.smoothstep(dist, 1.5, 5.0);
+        // Wrap-surface fade (same reasoning as tiles) so ambient motes dissolve
+        // before they teleport across the box rather than blinking in.
+        const ex = Math.abs(sp.position.x - camera.position.x) / (BOX.x / 2);
+        const ey = Math.abs(sp.position.y - camera.position.y) / (BOX.y / 2);
+        const ez = Math.abs(sp.position.z - camera.position.z) / (BOX.z / 2);
+        const farOut = THREE.MathUtils.smoothstep(Math.max(ex, ey, ez), 0.95, 1.0);
+        const pulse  = 0.65 + Math.sin(phase) * 0.20;
+        let aOp = pulse * nearIn * (1 - farOut);
+        if (mode !== "drift") aOp *= 0.35;
+        sp.material.opacity = aOp * arrFade;
+      }
+
+      /* HUD frame tracking — the overlay is sized to the hovered card's
+         projected bounds so its corner brackets lock onto the card like a
+         targeting reticle. Clamped (incl. tab/readout margins) to stay on
+         screen. */
+      /* HUD lock-on tracking — feed the card's 4 projected corners to the
+         targeting frame so its brackets hug the card's true (rotated) shape.
+         No viewport clamp: the frame tracks the card exactly and clips
+         naturally at the screen edge, instead of detaching to the corner. */
+      if (hoverObjRef.current && overlayRef.current) {
+        const corners = tileScreenCorners(hoverObjRef.current);
+        const el = overlayRef.current;
+        if (corners && el.__updateHUD) {
+          el.style.display = "";
+          el.__updateHUD(corners);
+        } else {
+          el.style.display = "none";
+        }
+      }
+
+      /* ---------- Signal field ⇄ "0x00" glyph ----------
+         The teal particles are permanent residents of the field: they drift and
+         wrap around the camera like stars. As the ORIGIN section scrolls into
+         view they peel out of the field to FORM node 0x00 in front of the
+         camera, then melt back. One layer — the glyph IS universe particles.
+
+         Formation is driven by the section's continuous scroll progress and an
+         eased `formActual`, NOT by the discrete React mode. That means it can
+         begin assembling the instant the section enters view and always melts
+         cleanly when you scroll away — no "stuck formed" or "never appeared". */
+      {
+        const ob = window.__mo_origin || { p: 0, active: false, concept: "assembly" };
+        const concept = ob.concept || "assembly";
+        const op = Math.max(0, Math.min(1, ob.p || 0));
+        const eP = op < 0.5 ? 2*op*op : 1 - Math.pow(-2*op+2, 2)/2;  // easeInOut
+
+        // ---- HUB concept (exploration only) ----
+        const showHub = (mode === "origin") && concept === "hub";
+        originGroup.visible = showHub;
+        if (showHub) {
+          originHub.material.opacity = 0.25 + eP * 0.75;
+          const pulse = 1 + Math.sin(now * 0.0025) * 0.04;
+          originHub.scale.set(4.2 * pulse, 4.2 * pulse, 1);
+          for (const link of originLinks) {
+            const tile = link.userData.tile;
+            const la = link.geometry.attributes.position.array;
+            la[0] = ORIGIN_CENTER.x; la[1] = ORIGIN_CENTER.y; la[2] = ORIGIN_CENTER.z;
+            la[3] = tile.position.x; la[4] = tile.position.y; la[5] = tile.position.z;
+            link.geometry.attributes.position.needsUpdate = true;
+            link.material.opacity = eP * 0.45;
+          }
+        }
+
+        // ---- DIVE ignition (about gateway → board) ----
+        const inDive = (mode === "dive");
+        let igE = 0, eD = 0;
+        if (inDive) {
+          const db = window.__mo_dive || { p: 0, igniting: false };
+          const dp = Math.max(0, Math.min(1, db.p || 0));
+          eD = dp < 0.5 ? 2*dp*dp : 1 - Math.pow(-2*dp+2, 2)/2;
+          if (db.igniting && !db._t0) db._t0 = now;
+          const igT = db._t0 ? Math.max(0, Math.min(1, (now - db._t0) / 720)) : 0;
+          igE = igT * igT;  // easeIn — accelerates into the board
+        } else if (window.__mo_dive && window.__mo_dive._t0) {
+          window.__mo_dive._t0 = 0; window.__mo_dive.igniting = false;
+        }
+
+        // ---- target formedness (0 = pure field, 1 = full glyph) ----
+        // Continuous: rises with origin-section scroll whenever the section is in
+        // its active band; the dive holds a partial form. Never keyed to `mode`.
+        let formTarget = 0;
+        if (inDive)                              formTarget = 0.35 + eD * 0.65;
+        else if (ob.active && concept !== "hub") formTarget = eP;
+        // Ease toward the target so entry/exit is always gradual (no pop when the
+        // section's active flag toggles mid-scroll).
+        formActual += (formTarget - formActual) * lerpK(0.09);
+        if (formActual < 0.0015 && formTarget === 0) formActual = 0;
+        const formP = formActual;
+
+        const arr = assemblyPts.geometry.attributes.position.array;
+
+        // ── Field-follow — keeps the scatter source in NEAR space ──
+        // While the glyph is even slightly formed we STOP wrapping the field and
+        // instead slide every home (and its rendered point) by the camera's
+        // per-frame delta. Origin/dive ease the camera toward world-0, and free
+        // flight can start far out; without this the home cloud stays frozen in
+        // world space, gets left behind, and partially-formed particles streak
+        // in from that one distant point instead of scattering from up close.
+        const _fdx = cam.pos.x - _fieldCam.x;
+        const _fdy = cam.pos.y - _fieldCam.y;
+        const _fdz = cam.pos.z - _fieldCam.z;
+        _fieldCam.copy(cam.pos);
+        // Engage the rigid carry the instant the section is ARRANGED — which is
+        // exactly when the camera begins easing back toward world-0 — not only
+        // once formP has measurably ramped. After a far drift the pull-home moves
+        // the camera ~6%/frame of its distance, so the first few "still a pure
+        // field" frames would let the rendered points fall behind; formation would
+        // then reel them in from that distant trail instead of scattering them
+        // from near space. Gluing from frame one keeps the field pinned to the
+        // viewer through the whole approach-and-form.
+        if ((formP >= 0.0015 || isArranged) && (_fdx || _fdy || _fdz)) {
+          for (let i = 0; i < ASM_N * 3; i += 3) {
+            asmHome[i]   += _fdx; arr[i]   += _fdx;
+            asmHome[i+1] += _fdy; arr[i+1] += _fdy;
+            asmHome[i+2] += _fdz; arr[i+2] += _fdz;
+          }
+        }
+
+        if (formP < 0.0015) {
+          // PURE FIELD — wrap home positions around the camera (mirroring the
+          // shift onto the render buffer), then ease the render toward home.
+          wrapAssemblyField(arr, asmHome, BOX);
+          if (arrCollapse > 0.01) {
+            // ARRIVAL — v11.1: the field condenses into "0x00" ITSELF — every
+            // particle is pulled to its own glyph slot in front of the camera
+            // (each already has one: asmLocal), holds the word for a beat,
+            // then the burst releases it into the field. The metaphor lands
+            // in the first second: you arrive THROUGH the origin node.
+            const kA = lerpK(0.05 + arrCollapse * 0.16);
+            // glyph basis facing the camera at the origin-anchor distance
+            _arrR.crossVectors(FORWARD, _arrUP).normalize();
+            _arrU.crossVectors(_arrR, FORWARD).normalize();
+            const kx = cam.pos.x + FORWARD.x * 9;
+            const ky = cam.pos.y + FORWARD.y * 9;
+            const kz = cam.pos.z + FORWARD.z * 9;
+            const wobT = now * 0.0022;
+            for (let i = 0; i < ASM_N; i++) {
+              const j = i * 3;
+              const lx = asmLocal[j] * glyphFit;
+              const ly = asmLocal[j + 1] * glyphFit;
+              // shallow depth shimmer so the held word breathes, not freezes
+              const lz = asmLocal[j + 2] * glyphFit + 0.10 * Math.sin(wobT - lx * 1.5);
+              const tx = kx + _arrR.x * lx + _arrU.x * ly + FORWARD.x * lz;
+              const ty = ky + _arrR.y * lx + _arrU.y * ly + FORWARD.y * lz;
+              const tz = kz + _arrR.z * lx + _arrU.z * ly + FORWARD.z * lz;
+              const desX = asmHome[j]     * (1 - arrCollapse) + tx * arrCollapse;
+              const desY = asmHome[j + 1] * (1 - arrCollapse) + ty * arrCollapse;
+              const desZ = asmHome[j + 2] * (1 - arrCollapse) + tz * arrCollapse;
+              arr[j]     += (desX - arr[j])     * kA;
+              arr[j + 1] += (desY - arr[j + 1]) * kA;
+              arr[j + 2] += (desZ - arr[j + 2]) * kA;
+            }
+          } else {
+            const kField = lerpK(0.12);
+            for (let i = 0; i < ASM_N * 3; i++) arr[i] += (asmHome[i] - arr[i]) * kField;
+          }
+        } else {
+          // ASSEMBLING — anchor the glyph in front of the CURRENT camera so it's
+          // always in view, then blend each particle from its field home toward
+          // its glyph slot (rotating + breathing) by the form amount.
+          _glyphC.copy(cam.pos).add(ORIGIN_CENTER);   // camera-relative centre
+          // RESTING MOTION — a bounded "holographic rock" plus a depth ripple.
+          // Instead of a uniform scale pulse (too generic) or a full Y-spin (which
+          // goes edge-on and unreadable), the formed glyph gently tilts within a
+          // small angle on two axes while a sine wave travels across it in X,
+          // displacing only Z. XY barely moves, so "0x00" stays crisp at every
+          // instant, yet the surface genuinely undulates in depth — parallax +
+          // perspective make it shimmer in 3D. All resting motion scales with
+          // formP, so during assembly the looser swing below still dominates.
+          const wob = Math.max(0, 1 - formP * 1.2);
+          const assemblyYaw = inDive
+            ? now * 0.00024
+            : Math.sin(now * 0.00045) * 0.5 * wob;
+          // Bounded rock — yaw ≤ ~11°, pitch ≤ ~6°, on different periods so it
+          // drifts in a slow Lissajous instead of an obvious back-and-forth.
+          const restYaw   = inDive ? 0 : Math.sin(now * 0.00038) * 0.20 * formP;
+          const restPitch = inDive ? 0 : Math.sin(now * 0.00029 + 1.0) * 0.10 * formP;
+          const ang = assemblyYaw + restYaw;
+          const ca = Math.cos(ang), sa = Math.sin(ang);
+          const cp = Math.cos(restPitch), sp = Math.sin(restPitch);
+          // Depth ripple — wave travels across the glyph's width, displacing Z.
+          const rAmp   = 0.15 * formP;
+          const rPhase = now * 0.0019;
+          // Snap tighter the more it's formed so the letterforms crisp up.
+          const kForm = lerpK(0.16 + formP * 0.12);
+          for (let i = 0; i < ASM_N; i++) {
+            const j = i * 3;
+            const lx = asmLocal[j] * glyphFit;
+            const ly = asmLocal[j+1] * glyphFit;
+            // ripple keyed to the particle's X → a travelling depth wave
+            const lz = asmLocal[j+2] * glyphFit + rAmp * glyphFit * Math.sin(rPhase - lx * 1.5);
+            // pitch about X, then yaw about Y
+            const ly2 = ly * cp - lz * sp;
+            const lz2 = ly * sp + lz * cp;
+            const rx = lx * ca - lz2 * sa;
+            const rz = lx * sa + lz2 * ca;
+            const tX = _glyphC.x + rx, tY = _glyphC.y + ly2, tZ = _glyphC.z + rz;
+            const desX = asmHome[j]   + (tX - asmHome[j])   * formP;
+            const desY = asmHome[j+1] + (tY - asmHome[j+1]) * formP;
+            const desZ = asmHome[j+2] + (tZ - asmHome[j+2]) * formP;
+            arr[j]   += (desX - arr[j])   * kForm;
+            arr[j+1] += (desY - arr[j+1]) * kForm;
+            arr[j+2] += (desZ - arr[j+2]) * kForm;
+          }
+        }
+        assemblyPts.geometry.attributes.position.needsUpdate = true;
+
+        // Always visible as field; brighter + larger as it forms / ignites.
+        const fieldOp = (mode === "ambient" || mode === "grid" || mode === "reel") ? 0.34 : 0.55;
+        assemblyPts.material.opacity = Math.min(1, Math.max(fieldOp, 0.2 + formP * 0.8) + igE * 0.4 + arrCollapse * 0.45 + _lvlS * 0.16);
+        // v10: the formed glyph keeps near-field particle size — the old
+        // +0.055 growth made "0x00" read as soft blobs up close.
+        assemblyPts.material.size = 0.1 + formP * 0.015 + igE * 0.5 + arrCollapse * 0.07 + _lvlS * 0.04;
+
+        // Dive ignition rushes the formed node toward the camera.
+        if (inDive) {
+          assemblyGroup.position.set(0, 1.5, igE * (Math.abs(ORIGIN_CENTER.z) + 6));
+          const gs = 1 + igE * 4.5;
+          assemblyGroup.scale.set(gs, gs, gs);
+        } else {
+          assemblyGroup.position.set(0, 0, 0);
+          assemblyGroup.scale.set(1, 1, 1);
+        }
+
+        window.__mo_debug = { mode, active: !!ob.active, formP: +formP.toFixed(2), camZ: +cam.pos.z.toFixed(1) };
+      }
+
+      /* ── v10 layers: constellation (anamorph retired — see its setup) ── */
+      updateTopology(dt, mode, focusAddrNow, (window.__mo_debug && window.__mo_debug.formP) || 0, arrFade);
+
+      /* status ~ 3hz */
+      frameI++;
+      if (frameI % 18 === 0) {
+        const yawDeg = ((cam.yaw * 180 / Math.PI) % 360 + 360) % 360;
+        setStatus({
+          yaw: yawDeg.toFixed(0).padStart(3, "0"),
+          pit: (cam.pitch * 180 / Math.PI).toFixed(0),
+          vel: cam.vel.toFixed(1),
+          tile: hoverObjRef.current?.userData?.project?.addr || activeAddr || "—",
+          trace: Math.round(_anamTrace * 100),
+        });
+      }
+
+      // Maslov grade — advance grain + keep live-tunable uniforms in sync.
+      // v10: velocity weight (written by cinematic.js) leans on the aberration
+      // and the FOV so speed is something you FEEL; ripple + wake uniforms
+      // carry the disturbance layer.
+      const vW = Math.max(0, Math.min(1.4, window.__mo_vel || 0));
+      if (gradePass) {
+        const u = gradePass.uniforms;
+        u.uTime.value = (now % 100000) * 0.001;
+        u.uAberr.value = GRADE.aberration + vW * 0.0035 + arrCollapse * 0.002;
+        u.uVignette.value = GRADE.vignette;
+        u.uGrain.value = GRADE.grain;
+        for (let i = 0; i < 4; i++) {
+          const R = _ripples[i];
+          const prog = R.t0 > 0 ? (now - R.t0) / R.dur : 2;
+          u["uR" + i].value.set(R.x, R.y, Math.min(1, prog), prog >= 1 ? 0 : R.str);
+        }
+        const wkK = 1 - Math.pow(0.80, dt / 16);
+        _wake.sx += (_wake.x - _wake.sx) * wkK;
+        _wake.sy += (_wake.y - _wake.sy) * wkK;
+        _wake.sv += (_wake.v - _wake.sv) * (1 - Math.pow(0.86, dt / 16));
+        _wake.v *= Math.pow(0.92, dt / 16);
+        const fxR = window.__mo_fx.ripple != null ? window.__mo_fx.ripple : 1;
+        // the "old cloud" wake — v10 values, restored per request
+        u.uWake.value.set(_wake.sx, 1 - _wake.sy, _wake.sv * 0.42 * fxR, 30.0);
+        u.uPaintK.value = fxR;
+      }
+      const fovT = 58 + vW * 4;
+      camera.fov += (fovT - camera.fov) * lerpK(0.08);
+      if (Math.abs(camera.fov - _lastFov) > 0.02) { camera.updateProjectionMatrix(); _lastFov = camera.fov; }
+      if (bokehPass && bokehPass.uniforms) {
+        // v10.1 — DoF reads as FAR-ONLY: a tiny aperture with focus pinned to
+        // the card plane keeps everything within ~20u readable; only the deep
+        // field melts (capped by maxblur). No hover rack — it kept whatever
+        // you were NOT pointing at unreadable.
+        let focusT = GRADE.focus;
+        if (mode === "reel") focusT = 10.6;
+        const formPNow = (window.__mo_debug && window.__mo_debug.formP) || 0;
+        if (formPNow > 0.25) focusT = ORIGIN_CENTER.length();
+        _focusS += (focusT - _focusS) * lerpK(0.07);
+        bokehPass.uniforms.focus.value = _focusS;
+        bokehPass.uniforms.aperture.value = GRADE.aperture;
+        bokehPass.uniforms.maxblur.value = GRADE.maxblur;
+      }
+
+      if (useComposer && composer) { updatePaint(); composer.render(); }
+      else renderer.render(scene, camera);
+      probeDoF(dt);
+      raf = requestAnimationFrame(frame);
+    }
+
+    /* Wrap Points buffer attribute around camera (only modify entries that wrap) */
+    function wrapPointsAroundCamera(points, box) {
+      const attr = points.geometry.attributes.position;
+      const arr  = attr.array;
+      let dirty = false;
+      for (let i = 0; i < arr.length; i += 3) {
+        let dx = arr[i+0] - cam.pos.x;
+        let dy = arr[i+1] - cam.pos.y;
+        let dz = arr[i+2] - cam.pos.z;
+        if (dx >  box.x / 2) { arr[i+0] -= box.x; dirty = true; }
+        else if (dx < -box.x / 2) { arr[i+0] += box.x; dirty = true; }
+        if (dy >  box.y / 2) { arr[i+1] -= box.y; dirty = true; }
+        else if (dy < -box.y / 2) { arr[i+1] += box.y; dirty = true; }
+        if (dz >  box.z / 2) { arr[i+2] -= box.z; dirty = true; }
+        else if (dz < -box.z / 2) { arr[i+2] += box.z; dirty = true; }
+      }
+      if (dirty) attr.needsUpdate = true;
+    }
+
+    raf = requestAnimationFrame(frame);
+    mount.style.cursor = "grab";
+
+    return () => {
+      cancelAnimationFrame(raf);
+      clearTimeout(idleTimer);
+      window.removeEventListener("resize", onResize);
+      ro.disconnect();
+      uniIO.disconnect();
+      try { mount.removeChild(renderer.domElement); } catch (_) {}
+      renderer.dispose();
+      tiles.forEach(m => { m.geometry.dispose(); m.material.map?.dispose(); m.material.dispose(); });
+      tileWires.forEach(w => {
+        if (w.userData && w.userData.isModel) {
+          w.traverse((obj) => {
+            if (obj.isMesh) {
+              obj.geometry?.dispose();
+              obj.material?.dispose();
+            }
+          });
+        } else {
+          w.geometry?.dispose();
+          w.material?.dispose();
+        }
+      });
+      ambient.forEach(s => { s.material.map?.dispose(); s.material.dispose(); });
+      starGeo.dispose();
+      asmGeo.dispose(); assemblyPts.material.dispose();
+      if (paintA) { paintA.dispose(); paintB.dispose(); paintMat.dispose(); }
+      originHub.material.map?.dispose(); originHub.material.dispose();
+      originLinks.forEach(l => { l.geometry.dispose(); l.material.dispose(); });
+      constLines.forEach(l => l.geometry.dispose()); constMat.dispose();
+      anamGeo.dispose(); anamPts.material.dispose();
+      window.removeEventListener("pointermove", onWakeMove);
+      window.removeEventListener("pointermove", onAnyAct);
+      window.removeEventListener("pointerdown", onActSkipArrival);
+      window.removeEventListener("wheel", onAnyAct);
+      window.removeEventListener("keydown", onAnyAct);
+      window.removeEventListener("scroll", onAnyAct);
+      window.removeEventListener("deviceorientation", onGyro, true);
+      delete window.__mo_universe;
+      delete window.__mo_disturb;
+      delete window.__mo_arrival_start;
+    };
+  }, []);
+
+  return (
+    <div className="universe" data-screen-label="01 Universe">
+      <div className="universe__mount" ref={mountRef} />
+
+      {hover && window.UniverseHoverCard && (
+        <window.UniverseHoverCard
+          project={hover.project}
+          panelRef={overlayRef}
+        />
+      )}
+
+      <div className="universe__reticle" aria-hidden="true">
+        <span /><span /><span /><span />
+      </div>
+
+      <div className={"universe__whisper " + (idleNote ? "is-on" : "")} aria-hidden="true">
+        <span className="universe__whisperDot" />
+        the field notices you
+      </div>
+
+      {/* center crosshair removed per request */}
+
+      <div className="universe__hud universe__hud--bl">
+        <div className="universe__hudRow"><span className="universe__hudKey">YAW</span><span className="universe__hudVal">{status.yaw}°</span></div>
+        <div className="universe__hudRow"><span className="universe__hudKey">PITCH</span><span className="universe__hudVal">{status.pit}°</span></div>
+        <div className="universe__hudRow"><span className="universe__hudKey">VEL</span><span className="universe__hudVal">{status.vel}</span></div>
+        <div className="universe__hudRow"><span className="universe__hudKey">FOCUS</span><span className="universe__hudVal">{status.tile}</span></div>
+      </div>
+      <div className="universe__hud universe__hud--br">
+        <div className="universe__hudRow"><span className="universe__hudKey">DRAG</span><span className="universe__hudVal">ROTATE</span></div>
+        <div className="universe__hudRow"><span className="universe__hudKey">WHEEL</span><span className="universe__hudVal">FLY</span></div>
+        <div className="universe__hudRow"><span className="universe__hudKey">CLICK</span><span className="universe__hudVal">AIM</span></div>
+        <div className="universe__hudRow"><span className="universe__hudKey">SPACE</span><span className="universe__hudVal">∞</span></div>
+      </div>
+    </div>
+  );
+}
+
+window.Universe = Universe;

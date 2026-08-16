@@ -30,7 +30,7 @@
 
   <!-- KeyButton — reused from landing -->
   <script type="text/babel" data-presets="env,react">
-    function KeyButton({ children, legend = "⏎", primary, onPress }) {
+    function KeyButton({ children, legend = "↵", primary, onPress }) {
       const { useState } = React;
       const [pressed, setPressed] = useState(false);
       const [lit, setLit] = useState(false);

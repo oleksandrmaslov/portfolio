@@ -36,7 +36,7 @@ const mFams     = (p) => M_FAMILY_BY_ADDR[p.addr] || [];
 const MSORTS = [
   { id: "addr",   label: "ADDR ↑",   cmp: (a, b) => a.addr.localeCompare(b.addr) },
   { id: "year",   label: "YEAR ↓",   cmp: (a, b) => (b.year || "").localeCompare(a.year || "") },
-  { id: "name",   label: "NAME A→Z", cmp: (a, b) => a.name.localeCompare(b.name) },
+  { id: "name",   label: "NAME A–Z", cmp: (a, b) => a.name.localeCompare(b.name) },
   { id: "status", label: "STATUS",   cmp: (a, b) => (b.file ? 1 : 0) - (a.file ? 1 : 0) || a.addr.localeCompare(b.addr) },
 ];
 
@@ -63,22 +63,7 @@ function ManifestApp() {
     return () => clearInterval(id);
   }, []);
 
-  const filtered = useMM(() => {
-    const q = query.trim().toLowerCase();
-    return projects.filter(p => {
-      if (family !== "ALL" && !mFams(p).includes(family)) return false;
-      if (!q) return true;
-      const hay = [p.addr, p.name, p.sub, p.stack, p.year].join(" ").toLowerCase();
-      return hay.includes(q);
-    });
-  }, [projects, family, query]);
-
-  const sorted = useMM(() => {
-    const s = MSORTS.find(s => s.id === sortId) || MSORTS[0];
-    return filtered.slice().sort(s.cmp);
-  }, [filtered, sortId]);
-
-  /* Keyboard nav — j/k or ↓/↑ to move focus, Enter to open */
+  /* Keyboard nav — j/k or ↑/↓ to move focus, Enter to open */
   useME(() => {
     const onKey = (e) => {
       if (e.target && /input|textarea/i.test(e.target.tagName || "")) return;
@@ -106,6 +91,21 @@ function ManifestApp() {
     return () => window.removeEventListener("keydown", onKey);
   });
 
+  const filtered = useMM(() => {
+    const q = query.trim().toLowerCase();
+    return projects.filter(p => {
+      if (family !== "ALL" && !mFams(p).includes(family)) return false;
+      if (!q) return true;
+      const hay = [p.addr, p.name, p.sub, p.stack, p.year].join(" ").toLowerCase();
+      return hay.includes(q);
+    });
+  }, [projects, family, query]);
+
+  const sorted = useMM(() => {
+    const s = MSORTS.find(s => s.id === sortId) || MSORTS[0];
+    return filtered.slice().sort(s.cmp);
+  }, [filtered, sortId]);
+
   const live = projects.filter(p => p.file).length;
 
   const openProject = (p) => {
@@ -124,9 +124,9 @@ function ManifestApp() {
       <header className="shell m-shell">
         <div className="shell__brand">M.O.</div>
         <nav className="shell__nav">
-          <a href="Landing.html">LANDING →</a>
-          <a href="Landing.html#work">WORK</a>
-          <a href="Design System.html">SYSTEM →</a>
+          <a href="Landing v11.html">LANDING ↗</a>
+          <a href="Landing v11.html#work">WORK</a>
+          <a href="Design System.html">SYSTEM ↗</a>
         </nav>
         <div className="shell__status">
           <span className="shell__dot" />
@@ -156,7 +156,7 @@ function ManifestApp() {
             <p className="m-hero__sub">
               Every node in the universe — including the eight whose case files
               are still being written. Sort. Filter. Search. <kbd>j</kbd>/<kbd>k</kbd> to step,
-              <kbd>⏎</kbd> to open, <kbd>/</kbd> to search.
+              <kbd>↵</kbd> to open, <kbd>/</kbd> to search.
             </p>
             <div className="m-hero__bar">
               <span><b>{projects.length}</b> total</span>
@@ -317,7 +317,7 @@ function ManifestApp() {
             <span className="m-manifest__footSep" />
             <span>updated 2026 · munich · static html</span>
             <span className="m-manifest__footSep" />
-            <a className="m-manifest__footLink" href="Landing.html">return to universe →</a>
+            <a className="m-manifest__footLink" href="Landing v11.html">return to universe ↗</a>
           </footer>
         </section>
 
@@ -338,7 +338,7 @@ function ManifestApp() {
               <KeyButton
                 legend="U"
                 primary
-                onPress={() => { window.location.href = "Landing.html#work"; }}
+                onPress={() => { window.location.href = "Landing v11.html#work"; }}
               >
                 UNIVERSE
               </KeyButton>
