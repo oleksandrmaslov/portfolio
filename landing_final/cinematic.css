@@ -1,0 +1,88 @@
+/* ============================================================
+   M.O. — CINEMATIC LAYER (Landing v9)
+   Ported from the Transitions Lab · "Cinematic" @ intensity 67,
+   reveal = RISE + BLUR.
+
+   DESIGN CONSTRAINTS (why this is an overlay, not a rewrite):
+   • Every section except the Title already has bespoke
+     scroll-driven animation (origin frosted→sharp, work reel pan,
+     board flight). We do NOT double-animate them.
+   • Those components re-render every scroll frame, so we never
+     toggle classes on their children. Reveals use animation-based
+     classes whose BASE state is the natural/shown state — if React
+     ever re-applies a static className, content stays visible
+     (never hidden). Safe by construction.
+   • The cinematic "weight" is a global, CSS-only layer driven by a
+     rAF that only sets CSS variables — it never touches layout or
+     the existing scroll math.
+   ============================================================ */
+
+:root {
+  /* preset: Cinematic · intensity 0.67 · rise+blur */
+  --cin-k: 0.67;
+  --cin-rise: 52px;          /* reveal travel */
+  --cin-blur: 10px;          /* reveal blur   */
+  --cin-dur: 1.05s;
+  --cin-stagger: 80ms;
+  --cin-ease: cubic-bezier(.16, 1, .3, 1);
+
+  /* live, set by cinematic.js every frame (0..1 normalized velocity) */
+  --cin-vel: 0;
+  /* small base vignette (Maslov universe preset) that deepens with velocity */
+  --cin-vig: 0.30;
+}
+
+/* ---------- REVEAL (rise + blur) ----------
+   Base = natural/shown. Adding .cin-reveal plays the entrance FROM
+   hidden via a keyframe with fill `both`, so staggered delays hold the
+   hidden start state until each item's turn, then settle to natural. */
+@keyframes cinRise {
+  from {
+    opacity: 0;
+    transform: translateY(var(--cin-rise));
+    filter: blur(var(--cin-blur));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+.cin-reveal {
+  animation: cinRise var(--cin-dur) var(--cin-ease) both;
+  animation-delay: var(--cin-d, 0ms);
+  will-change: transform, opacity, filter;
+}
+
+/* ---------- UNIVERSE CINEMATIC TREATMENT ----------
+   v11: the v9 velocity motion-blur on .universeBg is GONE — a filter on a
+   full-screen canvas forced an offscreen re-composite every scroll frame
+   (expensive) and double-blurred what the WebGL grade already does. Scroll
+   feedback now lives in ONE clear place: cinematic.js publishes the
+   smoothed velocity as window.__mo_vel, and the universe leans FOV +
+   chromatic aberration on it (the v10 "push back"). The CSS keeps only the
+   cheap radial vignette that deepens slightly with speed. */
+
+/* vignette sits ABOVE the universe canvas but BELOW the page
+   content (the .lp main sits higher in the stack). */
+.cin-grade {
+  position: fixed;
+  inset: 0;
+  z-index: 1;                 /* universe canvas is 0-ish; page main is higher */
+  pointer-events: none;
+}
+.cin-grade__vig {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 120% 100% at 50% 48%,
+    transparent 52%,
+    rgba(2, 4, 9, calc(0.34 + var(--cin-vig) * 0.55)) 100%
+  );
+  transition: background 0.2s ease-out;
+}
+
+/* reduced motion: keep meaning, drop movement */
+@media (prefers-reduced-motion: reduce) {
+  .cin-reveal { animation-duration: 0.01ms; animation-delay: 0ms !important; }
+}

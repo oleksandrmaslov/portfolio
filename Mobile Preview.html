@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Landing v11 — Mobile Preview</title>
+<style>
+  :root {
+    --void: #04060d;
+    --hairline: rgba(160, 190, 200, 0.14);
+    --bone: #e8ecef;
+    --ash: #97a3ab;
+    --ghost: #5c6870;
+    --signal: #00f0c8;
+    --ff-mono: "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    min-height: 100vh;
+    background:
+      radial-gradient(ellipse 70% 50% at 50% 0%, rgba(0, 240, 200, 0.04), transparent),
+      var(--void);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 22px;
+    padding: 40px 20px 56px;
+    font-family: var(--ff-mono);
+    color: var(--ash);
+  }
+  header {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  header h1 {
+    font-size: 12px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--bone);
+    font-weight: 500;
+  }
+  header span { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ghost); }
+  header em { color: var(--signal); font-style: normal; }
+
+  /* phone shell — real 390×844 viewport inside, so every media query and
+     touch affordance fires exactly as it would on an iPhone */
+  .phone {
+    width: 390px;
+    height: 844px;
+    flex: none;
+    border-radius: 54px;
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    outline: 8px solid #0c0f16;
+    outline-offset: 0;
+    box-shadow:
+      0 0 0 9px rgba(255, 255, 255, 0.05),
+      0 50px 120px -30px rgba(0, 0, 0, 0.9),
+      0 0 90px -40px rgba(0, 240, 200, 0.25);
+    overflow: hidden;
+    position: relative;
+    background: #000;
+  }
+  .phone iframe {
+    width: 390px;
+    height: 844px;
+    border: 0;
+    display: block;
+  }
+  .phone .notch {
+    position: absolute;
+    top: 12px; left: 50%;
+    transform: translateX(-50%);
+    width: 120px; height: 34px;
+    border-radius: 20px;
+    background: #000;
+    z-index: 5;
+    pointer-events: none;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .controls {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .controls a, .controls button {
+    font-family: var(--ff-mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--bone);
+    background: rgba(10, 14, 24, 0.8);
+    border: 1px solid var(--hairline);
+    padding: 10px 16px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 160ms ease, color 160ms ease;
+  }
+  .controls a:hover, .controls button:hover { background: rgba(0, 240, 200, 0.07); color: var(--signal); }
+  .note { font-size: 10px; letter-spacing: 0.08em; color: var(--ghost); max-width: 480px; text-align: center; line-height: 1.7; }
+</style>
+</head>
+<body>
+  <header>
+    <h1>M.O. — <em>mobile</em> preview</h1>
+    <span>390 × 844 · live viewport · media queries fire for real</span>
+  </header>
+
+  <div class="phone">
+    <div class="notch"></div>
+    <iframe src="Landing v11.html" title="Landing v11 mobile"></iframe>
+  </div>
+
+  <div class="controls">
+    <button onclick="document.querySelector('.phone iframe').src = document.querySelector('.phone iframe').src">RELOAD</button>
+    <a href="Landing v11.html">OPEN V11 FULL ↗</a>
+  </div>
+  <p class="note">
+    Drag inside the frame works (mouse = touch-ish). EXPLORE mode, pinch-fly and
+    GYRO need a real phone — pinch and device orientation don't exist in a desktop iframe.
+  </p>
+</body>
+</html>

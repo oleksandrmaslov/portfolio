@@ -1,0 +1,90 @@
+/* ============================================================
+   Landing Final 3 · TITLE geometry overrides
+   ONE gutter: everything keys to the header's 34px (--s-7) column —
+   corner reticles, name stamp, M.O., PROCEED key share x = 34px.
+   Bottom mono lines live BELOW the bottom corners on one baseline.
+   Loaded after landing.css / flight.css / wide.css.
+   ============================================================ */
+.lp-title--v2 {
+  --tc-x: var(--s-7);              /* content + corner gutter = header gutter */
+  --tf-top: max(58px, 3.4vw);      /* frame top — sits just under the fixed header */
+  --tf-bot: 42px;                  /* frame bottom — baseline row lives beneath */
+  --tc-bot: var(--s-8);            /* content bottom, 13px inside the frame */
+}
+
+/* frame + shields follow the same box */
+.lp-title--v2 .title__frame { inset: var(--tf-top) var(--tc-x) var(--tf-bot); }
+.lp-title--v2 .title__shield--top   { height: var(--tf-top); }
+.lp-title--v2 .title__shield--bot   { height: var(--tf-bot); }
+.lp-title--v2 .title__shield--left  { top: var(--tf-top); bottom: var(--tf-bot); width: var(--tc-x); }
+.lp-title--v2 .title__shield--right { top: var(--tf-top); bottom: var(--tf-bot); width: var(--tc-x); }
+
+/* content aligned to the corner column */
+.lp-title--v2 .title__idTop { top: calc(var(--tf-top) + var(--s-5)); left: var(--tc-x); }
+.lp-title--v2 .title__wordmark {
+  left: var(--tc-x);
+  bottom: var(--tc-bot);
+  right: calc(var(--tc-x) + max(240px, 14vw));
+}
+.lp-title--v2 .title__ctl { right: var(--tc-x); bottom: var(--tc-bot); }
+/* board-flight overlays (chapter card, waypoint rail, progress, entry cue,
+   footer) carry pointer-events:auto and are stacked over the fixed title
+   stage at opacity 0 — they were swallowing drags inside the frame. None of
+   them may hit-test until the title has actually left. (.bf-rail sets
+   pointer-events inline from JSX, hence !important.) */
+body:not(.fl-titleGone) .bf-rail,
+body:not(.fl-titleGone) .bf-rail *,
+body:not(.fl-titleGone) .bf-prog,
+body:not(.fl-titleGone) .bf-cue,
+body:not(.fl-titleGone) .bf-foot,
+body:not(.fl-titleGone) .bf-foot *,
+body:not(.fl-titleGone) .bf-ch__card,
+.bf-ch:not(.is-on) .bf-ch__card { pointer-events: none !important; }
+
+/* THE M.O. IS THE EXIT. The wordmark alone blocks the field, so a wheel over
+   the biggest thing on screen scrolls the page instead of flying the camera —
+   everything else inside the frame stays discoverable. */
+.lp-title--v2 .title__stage .title__wordmark { pointer-events: auto; }
+.lp-title--v2 .title__idTop { pointer-events: none; }
+
+/* wheel handed back to the page mid-gesture — the Continue cue acknowledges it */
+body.mo-yield .lp-title--v2 .scrollcue { animation: moYieldPulse 700ms var(--e-out) 2; }
+@keyframes moYieldPulse { 0%,100% { opacity: 1 } 50% { opacity: 0.35 } }
+@media (prefers-reduced-motion: reduce) { body.mo-yield .lp-title--v2 .scrollcue { animation: none } }
+/* the PROCEED keycap scales 1.25× from its bottom-right corner, growing
+   ~30px leftward INTO the Continue cue — widen the gap to clear it */
+.lp-title--v2 .title__proceedRow { gap: calc(var(--s-6) + var(--s-7)); }
+
+/* baseline row — below the bottom corners, shared baseline L/R */
+.lp-title--v2 .title__baseline {
+  position: absolute;
+  left: var(--tc-x); right: var(--tc-x); bottom: 14px;
+  z-index: 3;
+  display: flex; justify-content: space-between; align-items: baseline;
+  pointer-events: none;
+}
+.lp-title--v2 .title__baseline .title__wordmarkSub {
+  border-top: 0; padding-top: 0;
+  font-size: 10px; line-height: 1;
+  opacity: 1; transform: none;
+}
+.lp-title--v2 .title__baseline .title__proceedCap { font-size: 10px; line-height: 1; }
+
+/* scroll-dissolve — the row exits with the b-stagger, like the old sub */
+.lp-title--v2 .title__stage .title__baseline {
+  opacity: calc(1 - var(--flt-b, 0) * 1.3);
+  transform: translateY(calc(var(--flt-b, 0) * -18px));
+}
+body.mo-explore .lp-title--v2 .title__baseline {
+  opacity: 0; pointer-events: none;
+  transition: opacity 300ms var(--e-out);
+}
+@media (prefers-reduced-motion: reduce) {
+  .lp-title--v2 .title__stage .title__baseline { transform: none; }
+}
+
+/* mobile — v1 lifts the wordmark above the control cluster; keep that,
+   but from the new aligned bottom */
+@media (max-width: 700px) {
+  .lp-title--v2 .title__wordmark { bottom: calc(var(--tc-bot) + 108px); right: var(--tc-x); }
+}

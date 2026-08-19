@@ -3,7 +3,6 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="icon" href="public/favicon.svg" type="image/svg+xml" />
   <title>ZMK PointAccel — Maslov Oleksandr</title>
   <meta name="description" content="ZMK PointAccel · project case file · Maslov Oleksandr · open-source pointer acceleration input processor · live curve demo." />
 
@@ -14,16 +13,14 @@
   <link rel="stylesheet" href="system/tokens.css" />
   <link rel="stylesheet" href="system/layout.css" />
   <link rel="stylesheet" href="system/extras.css" />
-  <link rel="stylesheet" href="system/cursor-field.css" />
-  <script src="system/cursor-field.js"></script>
   <link rel="stylesheet" href="project/page.css" />
   <link rel="stylesheet" href="project_v2/page2.css" />
   <link rel="stylesheet" href="demo/demo.css" />
   <link rel="stylesheet" href="demo/demo2.css" />
   <link rel="stylesheet" href="lab/ascii-photo/ascii-figure.css" />
+  <link rel="stylesheet" href="landing_v11/cursor-ascii.css" />
 </head>
 <body>
-  <script src="system/node-seam.js" data-node-addr="0x08" data-node-name="ZMK Pointing Acceleration"></script>
   <div id="root"></div>
 
   <!-- Three.js (ESM) exposed on window.THREE for the Babel scripts below -->
@@ -44,9 +41,12 @@
   </script>
 
   <!-- React + Babel -->
-  <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" integrity="sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z" crossorigin="anonymous"></script>
-  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" integrity="sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <!-- Shared system (FibGrid, Boot, Cursor) -->
+  <script type="text/babel" data-presets="env,react" src="system/core.jsx"></script>
 
   <!-- PLAY DEMO · field core + glide-grain palette + firmware-port controller -->
   <script src="demo/field-core.js"></script>
@@ -60,13 +60,14 @@
   <script type="text/babel" data-presets="env,react" src="project/data.jsx"></script>
   <script type="text/babel" data-presets="env,react" src="project/viewer3d.jsx"></script>
   <script type="text/babel" data-presets="env,react" src="project_v2/hero-rig.jsx"></script>
+  <script type="text/babel" data-presets="env,react" src="project_v2/tweaks-panel.jsx"></script>
   <script type="text/babel" data-presets="env,react" src="lab/ascii-photo/ascii-figure.jsx"></script>
   <script type="text/babel" data-presets="env,react" src="demo/accel-hud.jsx"></script>
 
   <!-- Page config — everything project-specific lives here -->
   <script type="text/babel" data-presets="env,react">
     window.PAGE_CONFIG = {
-      addr: "0x08",
+      addr: "0x03",
       docTitle: "ZMK PointAccel — Maslov Oleksandr",
       hero: {
         /* the acceleration curve made physical: a glowing ribbon over a
@@ -139,8 +140,8 @@
             const dt = Math.min(50, now - last); last = now;
             u += dt * 0.00009 * (0.35 + f(u) * 2.6);   // the curve drives its own speed
             if (u > 1) u = 0;
-            path.getPoint(Math.min(0.999999, Math.max(0, u % 1)), puck.position);
-            puck.position.y += 0.1;
+            const p = path.getPointAt(Math.min(u, 1));
+            puck.position.copy(p).add(new THREE.Vector3(0, 0.1, 0));
             halo.position.copy(puck.position);
             if (!window.__hv_leaving) requestAnimationFrame(tick);
           };
@@ -154,17 +155,36 @@
         hint: "YOUR CURSOR · THE CURVE · DT EMIT",
         label: "PLAY DEMO",
       },
-      tweakDefaults: {
+      tweakDefaults: /*EDITMODE-BEGIN*/{
         "direction": "cinematic",
         "hud": "full",
         "soundLevel": 0.8,
         "cpiScale": 2
-      },
+      }/*EDITMODE-END*/,
+      renderTweaks: (t, set) => (
+        <>
+          <TweakSection label="Demo" />
+          <TweakRadio label="Direction" value={t.direction}
+                      options={["cinematic", "sandbox"]}
+                      onChange={(v) => set("direction", v)} />
+          <TweakRadio label="HUD density" value={t.hud}
+                      options={["full", "minimal"]}
+                      onChange={(v) => set("hud", v)} />
+          <TweakSection label="Input sim" />
+          <TweakSlider label="CPI scale" value={t.cpiScale} min={1} max={4} step={0.5}
+                       onChange={(v) => set("cpiScale", v)} />
+          <TweakSection label="Sound" />
+          <TweakSlider label="Field level" value={t.soundLevel} min={0} max={1} step={0.05}
+                       onChange={(v) => set("soundLevel", v)} />
+        </>
+      ),
     };
   </script>
 
   <!-- Page core (generalized v2 template) -->
   <script type="text/babel" data-presets="env,react" src="project_v2/page-core.jsx"></script>
 
+  <!-- ASCII RAMP scrollbar (shared w/ Landing v11) -->
+  <script src="landing_v11/landing-scrollbar.js"></script>
 </body>
 </html>

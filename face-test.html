@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>kerfur face engine — test rig</title>
+  <style>
+    body { background: #07090d; color: #9aa3ad; font: 12px monospace; display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 24px; }
+    #screen { width: 512px; height: 256px; image-rendering: pixelated; background: #000; border: 1px solid #223; }
+    .row { display: flex; gap: 6px; flex-wrap: wrap; max-width: 760px; justify-content: center; }
+    button { background: #0d1117; color: #9aa3ad; border: 1px solid #223; font: 11px monospace; padding: 4px 8px; cursor: pointer; }
+    button:hover { border-color: #0fc; color: #0fc; }
+  </style>
+</head>
+<body>
+  <canvas id="screen" width="128" height="64"></canvas>
+  <div class="row" id="exprs"></div>
+  <div class="row" id="reacts"></div>
+  <div class="row">
+    <button id="lookBtn">look around</button>
+    <button id="indBtn">bt indicator</button>
+    <button id="ovlBtn">overlay 84%</button>
+  </div>
+  <script src="demo/kerfur-face.js"></script>
+  <script>
+    const face = window.makeKerfurFace();
+    const screen = document.getElementById("screen");
+    const sctx = screen.getContext("2d");
+    sctx.imageSmoothingEnabled = false;
+
+    face.ready.then(async () => {
+      const data = await fetch("assets/face/kerfur_faces.json").then(r => r.json());
+      const eRow = document.getElementById("exprs");
+      for (const e of data.expressions) {
+        const b = document.createElement("button");
+        b.textContent = e.id.replace("PET_EXPR_", "");
+        b.onclick = () => face.setExpression(e.id);
+        eRow.appendChild(b);
+      }
+      const rRow = document.getElementById("reacts");
+      for (const r of data.reactions) {
+        const b = document.createElement("button");
+        b.textContent = "R·" + r.id.replace("REACTION_", "");
+        b.onclick = () => face.react(r.id);
+        rRow.appendChild(b);
+      }
+      window.__faceReady = true;
+    });
+
+    document.getElementById("lookBtn").onclick = () => {
+      let i = 0;
+      const seq = [[100,0],[-100,0],[0,-100],[0,100],[0,0]];
+      const t = setInterval(() => { face.setLook(...seq[i++]); if (i >= seq.length) clearInterval(t); }, 600);
+    };
+    document.getElementById("indBtn").onclick = () => face.setIndicator(face._ind ? null : "icon_bt", face._ind = !face._ind);
+    document.getElementById("ovlBtn").onclick = () => face.setOverlayText("84%");
+
+    function loop(now) {
+      if (face.update(now)) {
+        sctx.fillStyle = "#000";
+        sctx.fillRect(0, 0, 128, 64);
+        sctx.drawImage(face.canvas, 0, 0);
+      }
+      requestAnimationFrame(loop);
+    }
+    requestAnimationFrame(loop);
+    window.__face = face;
+  </script>
+</body>
+</html>

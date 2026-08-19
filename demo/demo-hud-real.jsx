@@ -7,7 +7,7 @@
      · live: telemetry left, CONSOLE rail right (never covers the
        board — the camera look-target shifts the board left),
        typing line bottom-centre.
-   Visual language mirrors Final 5: mono micro K/V rows,
+   Visual language mirrors Landing v11: mono micro K/V rows,
    hairline plates, corner reticles, signal accents.
    ============================================================ */
 const { useState: useHD, useEffect: useEHD, useRef: useRHD } = React;

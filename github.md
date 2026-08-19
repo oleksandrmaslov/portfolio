@@ -1,11 +1,16 @@
-# GitHub deployment
+repo: oleksandrmaslov/wafer-studio
+branch: main
 
-- Repository: `oleksandrmaslov/portfolio`
-- Default/deploy branch: `master`
-- Pages URL: `https://oleksandrmaslov.github.io/portfolio/`
-- Pages source: GitHub Actions
-- Workflow: `.github/workflows/deploy-pages.yml`
-- Entry source: `Landing Final 5.html` (staged as `index.html` in the Pages artifact)
+## Last sync
+date: 2026-08-07T01:25:00Z
+### Updated in this project
+- Built the Wafer Studio case-file page (node 0x06) from README, DESIGN.md and docs/wafer-interaction-model.md.
+- Copied product imagery: public/zmk-mac.png, public/og-card.png, public/wafer-mark.png.
+- PLAY DEMO recreates "type through the board" plus the one-light dispersion law.
 
-The workflow publishes only runtime files. Backups, uploads, screenshots,
-references, tools, Markdown notes and agent metadata are excluded.
+## Screen map
+| Screen | Built from |
+| --- | --- |
+| Wafer Studio.html (hero, metrics, links) | README.md |
+| project_v3/wafer-studio-data.jsx (story blocks) | README.md, DESIGN.md, docs/wafer-interaction-model.md |
+| demo_studio/dispersion-bench.jsx + studio-demo.css | DESIGN.md (dispersion scale, finish levels, non-negotiables), README.md (type through the board) |

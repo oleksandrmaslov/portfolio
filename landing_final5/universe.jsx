@@ -424,11 +424,6 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       maxblur:    0.0045,   // low ceiling — only the deep field melts
     }, window.__mo_grade || {}));
 
-    // Final 5 installs one shared foreground cursor field before React mounts.
-    // Keep the Universe's non-pointer ripples, but do not allocate or drive its
-    // older private wake when that shared layer is present.
-    const USE_LOCAL_POINTER_FX = !window.__mo_cursor_field;
-
     // Device tier. We enable DoF OPTIMISTICALLY everywhere (modern phones like
     // the iPhone 16 Pro Max render it fine) and let a runtime FPS probe drop it
     // only on devices that actually struggle. The near-free grade pass
@@ -459,7 +454,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         uR3:        { value: new THREE.Vector4(0.5, 0.5, 2, 0) },
         uWake:      { value: new THREE.Vector4(0.5, 0.5, 0, 30.0) },
         uPaint:     { value: null },
-        uPaintK:    { value: USE_LOCAL_POINTER_FX ? 1.0 : 0.0 },
+        uPaintK:    { value: 1.0 },
       },
       vertexShader: `
         varying vec2 vUv;
@@ -575,7 +570,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     let paintA = null, paintB = null, paintScene = null, paintCam = null,
         paintMat = null, paintEnergy = 0, paintOK = false;
     const _pp = { x: -1, y: -1, has: false };
-    if (USE_LOCAL_POINTER_FX && useComposer && gradePass) {
+    if (useComposer && gradePass) {
       try {
         const pw = () => Math.max(64, Math.floor(window.innerWidth / 8));
         const ph = () => Math.max(36, Math.floor(window.innerHeight / 8));
@@ -745,10 +740,10 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       // (v11.2) the per-stroke micro-ripples are gone — the motion distortion
       // now lives in the screen-paint advection buffer below, Lusion-style.
     };
-    if (USE_LOCAL_POINTER_FX) window.addEventListener("pointermove", onWakeMove, { passive: true });
+    window.addEventListener("pointermove", onWakeMove, { passive: true });
     // audio-reactive level (smoothed) — the field breathes with the sound
     let _lvlS = 0;
-    // velocity weight (written by scroll-velocity.js) → FOV + aberration kick
+    // velocity weight (written by cinematic.js) → FOV + aberration kick
     let _lastFov = 58;
     // v10 rack-focus state (smoothed focal distance)
     let _focusS = 13.0;
@@ -1532,13 +1527,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       try { window.dispatchEvent(new CustomEvent("mo:universeInteract")); } catch (_) {}
     };
     let dragging = false, dragMoved = false;
-    let lastX = 0, lastY = 0, downX = 0, downY = 0, lastMoveT = 0;
-    let activeLookPointer = null;
-    let exploreOn = false;
-    let orbitVX = 0, orbitVY = 0; // released angular velocity, radians / second
-    const coarsePointer = !!(window.matchMedia && window.matchMedia("(pointer: coarse)").matches);
-    const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
-    const pitchLimit = () => exploreOn ? 1.22 : 1.45;
+    let lastX = 0, lastY = 0, downX = 0, downY = 0;
     let idleTimer = 0;
     let driftActive = true;
     // Pointer-in-zone tracking — wheel only flies the camera when the cursor
@@ -1547,104 +1536,51 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     const stopDrift = () => {
       driftActive = false;
       clearTimeout(idleTimer);
-      idleTimer = setTimeout(() => { if (!exploreOn) driftActive = true; }, 3200);
+      idleTimer = setTimeout(() => { driftActive = true; }, 3200);
     };
 
     mount.addEventListener("pointerenter", () => { pointerInZone = true;  });
     mount.addEventListener("pointerleave", () => { pointerInZone = false; });
 
-    // Stable pointer orbit. Each contact owns its own accumulated origin, so a
-    // re-touch never inherits a stale coordinate from the previous gesture.
-    // A second contact temporarily changes the gesture to depth; when it lifts,
-    // the remaining contact is rebased at its current position before orbiting.
+    // v11 — multi-pointer tracking: one finger = look, two fingers = pinch-fly.
     const _pts = new Map();
     let pinching = false, _pinchD = 0;
     const _pinchDist = () => {
       const p = [..._pts.values()];
-      if (p.length < 2) return 0;
       return Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y);
     };
-
-    const resetLook = () => {
-      dragging = false;
-      dragMoved = false;
-      activeLookPointer = null;
-      mount.style.cursor = coarsePointer ? "" : "grab";
-    };
-
     mount.addEventListener("pointerdown", (e) => {
-      if (e.pointerType === "mouse" && e.button !== 0) return;
       _pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
-      try { mount.setPointerCapture(e.pointerId); } catch (_) {}
-
-      if (_pts.size >= 2) {
+      if (_pts.size === 2) {
         pinching = true; _pinchD = _pinchDist();
-        resetLook();
-        orbitVX = orbitVY = 0;
+        dragging = false;
         stopDrift(); fireInteract();
+        try { mount.setPointerCapture(e.pointerId); } catch (_) {}
         return;
       }
-
-      activeLookPointer = e.pointerId;
       dragging = true; dragMoved = false;
       lastX = downX = e.clientX; lastY = downY = e.clientY;
-      lastMoveT = e.timeStamp || performance.now();
-      orbitVX = orbitVY = 0;
-      if (!coarsePointer) mount.style.cursor = "grabbing";
+      mount.style.cursor = "grabbing";
       stopDrift();
+      mount.setPointerCapture(e.pointerId);
     });
-
     mount.addEventListener("pointerup", (e) => {
       _pts.delete(e.pointerId);
-      try { mount.releasePointerCapture(e.pointerId); } catch (_) {}
-
       if (pinching) {
-        if (_pts.size < 2) {
-          pinching = false;
-          _pinchD = 0;
-          if (FLOW_RM) cam.vel = 0;
-          const remaining = [..._pts.entries()][0];
-          if (remaining) {
-            activeLookPointer = remaining[0];
-            dragging = true;
-            dragMoved = true;
-            lastX = downX = remaining[1].x;
-            lastY = downY = remaining[1].y;
-            lastMoveT = e.timeStamp || performance.now();
-          } else {
-            resetLook();
-          }
-        } else {
-          _pinchD = _pinchDist();
-        }
+        if (_pts.size < 2) pinching = false;
+        try { mount.releasePointerCapture(e.pointerId); } catch (_) {}
         return;
       }
-
-      if (!dragging || activeLookPointer !== e.pointerId) return;
-      const wasTap = !dragMoved;
-      resetLook();
-      if (FLOW_RM || !exploreOn) orbitVX = orbitVY = 0;
-      if (wasTap) handleClick(e.clientX, e.clientY);
+      if (!dragging) return;
+      dragging = false;
+      mount.style.cursor = "grab";
+      try { mount.releasePointerCapture(e.pointerId); } catch (_) {}
+      if (!dragMoved) handleClick(e.clientX, e.clientY);
     });
-
     mount.addEventListener("pointercancel", (e) => {
       _pts.delete(e.pointerId);
-      if (activeLookPointer === e.pointerId || pinching) {
-        _pts.clear();
-        pinching = false;
-        _pinchD = 0;
-        if (exploreOn) cam.vel = 0;
-        orbitVX = orbitVY = 0;
-        resetLook();
-      }
-    });
-    mount.addEventListener("lostpointercapture", (e) => {
-      if (!_pts.has(e.pointerId)) return;
-      _pts.delete(e.pointerId);
-      if (activeLookPointer === e.pointerId) {
-        orbitVX = orbitVY = 0;
-        resetLook();
-      }
+      if (_pts.size < 2) pinching = false;
+      dragging = false; mount.style.cursor = "grab";
     });
     mount.addEventListener("pointerleave", () => {
       hoverObjRef.current = null;
@@ -1654,61 +1590,29 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     // hover hit-test is throttled to one raycast per frame — high-frequency
     // mice fire several pointermove events per frame and the raycast is the cost.
     let hoverRaf = 0, hoverX = 0, hoverY = 0;
-    const runHover = () => { hoverRaf = 0; if (!dragging && !pinching) handleHover(hoverX, hoverY); };
+    const runHover = () => { hoverRaf = 0; if (!dragging) handleHover(hoverX, hoverY); };
     mount.addEventListener("pointermove", (e) => {
       if (_pts.has(e.pointerId)) _pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
-      // Pinch = depth: spread to move forward, squeeze to move back.
+      // v11 — pinch = fly: spread to dolly forward, squeeze to pull back.
       if (pinching) {
         if (_pts.size === 2) {
           const d = _pinchDist();
-          const delta = clamp(d - _pinchD, -48, 48);
-          cam.vel = clamp(cam.vel + delta * 0.04, -16, 16);
+          cam.vel += (d - _pinchD) * 0.05;
+          cam.vel = Math.max(-22, Math.min(22, cam.vel));
           _pinchD = d;
         }
         return;
       }
-
-      if (dragging && activeLookPointer === e.pointerId) {
+      if (dragging) {
         const dx = e.clientX - lastX;
         const dy = e.clientY - lastY;
         lastX = e.clientX; lastY = e.clientY;
-        const moveT = e.timeStamp || performance.now();
-        const moveDt = clamp(moveT - lastMoveT, 8, 50);
-        lastMoveT = moveT;
-
-        // Ignore impossible discontinuities reported by a few mobile browsers
-        // when a captured contact is handed back after browser chrome changes.
-        const jumpLimit = Math.max(160, Math.min(window.innerWidth, window.innerHeight) * 0.45);
-        if (Math.abs(dx) > jumpLimit || Math.abs(dy) > jumpLimit) {
-          orbitVX = orbitVY = 0;
-          return;
+        if (Math.abs(e.clientX - downX) + Math.abs(e.clientY - downY) > 6) { if (!dragMoved) fireInteract(); dragMoved = true; }
+        if (!gyroOn) {
+          camTarget.yaw   -= dx * 0.0035;
+          camTarget.pitch -= dy * 0.0035;
+          camTarget.pitch = Math.max(-1.45, Math.min(1.45, camTarget.pitch));
         }
-
-        if (Math.abs(e.clientX - downX) + Math.abs(e.clientY - downY) > 6) {
-          if (!dragMoved) {
-            fireInteract();
-            if (exploreOn) {
-              try { window.dispatchEvent(new CustomEvent("mo:exploreOrbit")); } catch (_) {}
-            }
-          }
-          dragMoved = true;
-        }
-
-        const sensitivity = exploreOn && coarsePointer ? 0.0042 : 0.0035;
-        const yawDelta = -dx * sensitivity;
-        const pitchDelta = -dy * sensitivity;
-        camTarget.yaw += yawDelta;
-        camTarget.pitch = clamp(camTarget.pitch + pitchDelta, -pitchLimit(), pitchLimit());
-        if (FLOW_RM) {
-          cam.yaw = camTarget.yaw;
-          cam.pitch = camTarget.pitch;
-        }
-
-        // Smooth the last few direct samples into a bounded release velocity.
-        const instantVX = clamp(yawDelta / (moveDt / 1000), -2.4, 2.4);
-        const instantVY = clamp(pitchDelta / (moveDt / 1000), -1.8, 1.8);
-        orbitVX += (instantVX - orbitVX) * 0.35;
-        orbitVY += (instantVY - orbitVY) * 0.35;
         hoverObjRef.current = null;
         setHover(null);
       } else {
@@ -1754,37 +1658,35 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     }, { passive: false });
     mount.addEventListener("pointerdown", rearmWheel);
 
-    /* ---------- MOBILE API: stable free orbit ----------
-       Explore owns touch input but never device orientation. Entry preserves
-       the exact camera pose; exit restores page panning without snapping home. */
+    /* ---------- v11 — MOBILE API: explore mode · fly · gyro look ----------
+       Tiny surface for the touch EXPLORE overlay: fly(v) nudges camera
+       velocity (FLY± hold buttons), setExplore toggles touch-action so a
+       one-finger drag rotates the camera instead of scrolling the page,
+       and setGyro maps device-orientation deltas onto the look target —
+       calibrated to the pose at enable time, so "forward" stays wherever
+       you were looking when you switched it on. */
+    let gyroOn = false, _gyroBase = null;
+    const onGyro = (e) => {
+      if (!gyroOn || e.alpha == null || e.beta == null) return;
+      if (!_gyroBase) _gyroBase = { a: e.alpha, b: e.beta, yaw: camTarget.yaw, pitch: camTarget.pitch };
+      let da = e.alpha - _gyroBase.a;
+      if (da > 180) da -= 360; else if (da < -180) da += 360;
+      const db = e.beta - _gyroBase.b;
+      camTarget.yaw   = _gyroBase.yaw + da * (Math.PI / 180);
+      camTarget.pitch = Math.max(-1.45, Math.min(1.45, _gyroBase.pitch + db * (Math.PI / 180) * 0.9));
+    };
+    window.addEventListener("deviceorientation", onGyro, true);
     window.__mo_universe = {
       fly(v) {
-        cam.vel = clamp(cam.vel + v, -16, 16);
+        cam.vel = Math.max(-22, Math.min(22, cam.vel + v));
         stopDrift(); fireInteract();
       },
       setExplore(on) {
-        exploreOn = !!on;
-        orbitVX = orbitVY = 0;
-        mount.style.touchAction = exploreOn ? "none" : (coarsePointer ? "pan-y" : "");
-        clearTimeout(idleTimer);
-        if (exploreOn) {
-          // Adopt the pose that is actually on screen, not an ambient target
-          // that was still easing in. Explore therefore opens without a turn.
-          camTarget.yaw = cam.yaw;
-          camTarget.pitch = clamp(cam.pitch, -pitchLimit(), pitchLimit());
-          cam.pitch = camTarget.pitch;
-          cam.vel = 0;
-          pdriftGain = 0;
-          driftActive = false;
-          fireInteract();
-        } else {
-          resetLook();
-          _pts.clear();
-          pinching = false;
-          cam.vel = 0;
-          idleTimer = setTimeout(() => { driftActive = true; }, 900);
-        }
+        mount.style.touchAction = on ? "none" : "";
+        if (on) { stopDrift(); fireInteract(); }
       },
+      setGyro(on) { gyroOn = !!on; _gyroBase = null; },
+      isGyro() { return gyroOn; },
     };
 
     /* ---------- raycasting ---------- */
@@ -2078,7 +1980,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       // idle attention — after ~30s of stillness the field notices you:
       // the camera turns softly toward the nearest node, a slow ripple
       // crosses the screen, and the field murmurs.
-      if (mode === "drift" && !exploreOn && !_idleFired && now - _lastAct > 30000 && !ARR.t0) {
+      if (mode === "drift" && !_idleFired && now - _lastAct > 30000 && !ARR.t0) {
         _idleFired = true;
         let nearTile = null, nd = Infinity;
         for (const m of tiles) {
@@ -2106,25 +2008,10 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       }
 
       /* idle drift — only in drift mode */
-      if (!FLOW_RM && !exploreOn && driftActive && mode === "drift") {
+      if (!FLOW_RM && driftActive && mode === "drift") {
         cam.vel += dt * 0.0008;     // tiny accel toward forward drift
         camTarget.yaw += dt * 0.000035;   // v14: halved — the parallax drift now carries the motion
         camTarget.pitch += Math.sin(now * 0.00022) * dt * 0.00003;
-      }
-
-      // A released Explore drag coasts briefly, then stops exponentially. The
-      // cap is applied while sampling above; this pass only dissipates it.
-      // Reduced-motion keeps the camera exactly under the visitor's finger.
-      if (exploreOn && !dragging && !pinching && !FLOW_RM) {
-        camTarget.yaw += orbitVX * dt / 1000;
-        camTarget.pitch = clamp(camTarget.pitch + orbitVY * dt / 1000, -pitchLimit(), pitchLimit());
-        const orbitDecay = Math.pow(0.035, dt / 1000);
-        orbitVX *= orbitDecay;
-        orbitVY *= orbitDecay;
-        if (Math.abs(orbitVX) < 0.003) orbitVX = 0;
-        if (Math.abs(orbitVY) < 0.003) orbitVY = 0;
-      } else if (FLOW_RM) {
-        orbitVX = orbitVY = 0;
       }
 
       /* v13 — TRANSIT TREADMILL: the camera stays PARKED (the v12 framing
@@ -2150,7 +2037,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
           const bell = Math.sin(Math.PI * tt);          // ease in and out of the leg
           flowTarget = (3.4 + Math.min(24, _fl.speed || 0) * 0.6) * bell * styleMul * warpMul;
           const legRoll = _fl.seg === "toWork" ? 1 : _fl.seg === "toAbout" ? -0.7 : -0.45;
-          // optional page-level scaler for the origin-to-work camera leg
+          // optional page-level scaler (window.__mo_fx.legRoll) — Landing Final 2
           // tempers the toWork bank; defaults to 1 so other pages are unchanged.
           const legRollMul = window.__mo_fx && window.__mo_fx.legRoll != null ? window.__mo_fx.legRoll : 1;
           rollTarget = legRoll * 0.055 * bell * styleMul * Math.min(1.3, warpMul) * legRollMul;
@@ -2205,7 +2092,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
          Damped to PDRIFT.focusDamp whenever a card is focused/hovered or the
          user is actively driving, so reading a label never feels seasick. */
       if (PDRIFT.amp > 0 && !FLOW_RM) {
-        const wantGain = exploreOn ? 0 : (mode === "drift" && driftActive && !dragging && !activeAddr && !hoverObjRef.current)
+        const wantGain = (mode === "drift" && driftActive && !dragging && !activeAddr && !hoverObjRef.current)
           ? 1 : PDRIFT.focusDamp;
         const gainRate = wantGain < pdriftGain ? 8 : PDRIFT.ease;
         pdriftGain += (wantGain - pdriftGain) * (1 - Math.exp(-gainRate * dt / 1000));
@@ -2708,7 +2595,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       }
 
       // Maslov grade — advance grain + keep live-tunable uniforms in sync.
-      // velocity weight (written by scroll-velocity.js) leans on the aberration
+      // v10: velocity weight (written by cinematic.js) leans on the aberration
       // and the FOV so speed is something you FEEL; ripple + wake uniforms
       // carry the disturbance layer.
       const vW = Math.max(0, Math.min(1.4, window.__mo_vel || 0));
@@ -2723,16 +2610,15 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
           const prog = R.t0 > 0 ? (now - R.t0) / R.dur : 2;
           u["uR" + i].value.set(R.x, R.y, Math.min(1, prog), prog >= 1 ? 0 : R.str);
         }
+        const wkK = 1 - Math.pow(0.80, dt / 16);
+        _wake.sx += (_wake.x - _wake.sx) * wkK;
+        _wake.sy += (_wake.y - _wake.sy) * wkK;
+        _wake.sv += (_wake.v - _wake.sv) * (1 - Math.pow(0.86, dt / 16));
+        _wake.v *= Math.pow(0.92, dt / 16);
         const fxR = window.__mo_fx.ripple != null ? window.__mo_fx.ripple : 1;
-        if (USE_LOCAL_POINTER_FX) {
-          const wkK = 1 - Math.pow(0.80, dt / 16);
-          _wake.sx += (_wake.x - _wake.sx) * wkK;
-          _wake.sy += (_wake.y - _wake.sy) * wkK;
-          _wake.sv += (_wake.v - _wake.sv) * (1 - Math.pow(0.86, dt / 16));
-          _wake.v *= Math.pow(0.92, dt / 16);
-          u.uWake.value.set(_wake.sx, 1 - _wake.sy, _wake.sv * 0.42 * fxR, 30.0);
-          u.uPaintK.value = fxR;
-        }
+        // the "old cloud" wake — v10 values, restored per request
+        u.uWake.value.set(_wake.sx, 1 - _wake.sy, _wake.sv * 0.42 * fxR, 30.0);
+        u.uPaintK.value = fxR;
       }
       const fovT = 58 + vW * 4 + warpNow * 4.5;
       camera.fov += (fovT - camera.fov) * lerpK(0.08);
@@ -2752,10 +2638,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         bokehPass.uniforms.maxblur.value = GRADE.maxblur;
       }
 
-      if (useComposer && composer) {
-        if (USE_LOCAL_POINTER_FX) updatePaint();
-        composer.render();
-      }
+      if (useComposer && composer) { updatePaint(); composer.render(); }
       else renderer.render(scene, camera);
       if (frameI === 1) { try { window.dispatchEvent(new CustomEvent("mo:first-frame")); } catch (_) {} }
       probeDoF(dt);
@@ -2815,12 +2698,13 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       originLinks.forEach(l => { l.geometry.dispose(); l.material.dispose(); });
       constLines.forEach(l => l.geometry.dispose()); constMat.dispose();
       anamGeo.dispose(); anamPts.material.dispose();
-      if (USE_LOCAL_POINTER_FX) window.removeEventListener("pointermove", onWakeMove);
+      window.removeEventListener("pointermove", onWakeMove);
       window.removeEventListener("pointermove", onAnyAct);
       window.removeEventListener("pointerdown", onActSkipArrival);
       window.removeEventListener("wheel", onAnyAct);
       window.removeEventListener("keydown", onAnyAct);
       window.removeEventListener("scroll", onAnyAct);
+      window.removeEventListener("deviceorientation", onGyro, true);
       delete window.__mo_universe;
       delete window.__mo_disturb;
       delete window.__mo_arrival_start;

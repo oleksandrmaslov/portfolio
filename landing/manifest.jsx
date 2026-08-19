@@ -16,7 +16,7 @@ const M_FAMILY_DEFS = [
   { id: "WEB",      label: "WEB · GFX",   color: "#6ee0c0"       },
   { id: "DESIGN",   label: "DESIGN",      color: "#e0b070"       },
 ];
-/* Addresses follow the canonical Final 5 project registry. */
+/* Addresses follow landing_final3/projects-data.js */
 const M_FAMILY_BY_ADDR = {
   "0x01": ["KEYBOARD", "HARDWARE", "ZMK", "ZEPHYR"],
   "0x02": ["HARDWARE", "ZEPHYR", "OSS"],
@@ -47,6 +47,8 @@ const MSORTS = [
    ============================================================ */
 function ManifestApp() {
   const projects = window.UNIVERSE_PROJECTS || [];
+  const [booted, setBooted] = useMA(() => sessionStorage.getItem("mo_booted") === "1");
+
   const [family, setFamily] = useMA("ALL");
   const [sortId, setSortId] = useMA("addr");
   const [query,  setQuery]  = useMA("");
@@ -54,14 +56,10 @@ function ManifestApp() {
   const [time,   setTime]   = useMA("--:--");
 
   useME(() => {
-    const clock = new Intl.DateTimeFormat("en-GB", {
-      timeZone: "Europe/Berlin",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-      timeZoneName: "short",
-    });
-    const tick = () => setTime(clock.format(new Date()).replace(",", ""));
+    if (booted) sessionStorage.setItem("mo_booted", "1");
+  }, [booted]);
+  useME(() => {
+    const tick = () => setTime(new Date().toTimeString().slice(0, 5));
     tick();
     const id = setInterval(tick, 30000);
     return () => clearInterval(id);
@@ -77,17 +75,15 @@ function ManifestApp() {
       if (dir !== 0) {
         e.preventDefault();
         setFocus(prev => {
-          const arr = sorted.filter(p => p.file);
+          const arr = sorted;
           if (arr.length === 0) return prev;
           const idx = prev ? arr.findIndex(p => p.addr === prev) : -1;
           const next = arr[(idx + dir + arr.length) % arr.length];
-          if (next && next.file) {
-            requestAnimationFrame(() => {
-              document.querySelector(`[data-project-link="${next.addr}"]`)?.focus();
-            });
-          }
           return next ? next.addr : prev;
         });
+      } else if (e.key === "Enter") {
+        const p = sorted.find(p => p.addr === focus);
+        if (p && p.file) openProject(p);
       } else if (e.key === "/") {
         const inp = document.querySelector(".m-search__input");
         if (inp) { e.preventDefault(); inp.focus(); }
@@ -123,16 +119,20 @@ function ManifestApp() {
 
   return (
     <>
-      <a className="m-skip" href="#project-manifest">Skip to project manifest</a>
+      {!booted && window.Boot ? React.createElement(window.Boot, { onDone: () => setBooted(true) }) : null}
+      {window.FibGrid ? React.createElement(window.FibGrid) : null}
+      {window.Cursor  ? React.createElement(window.Cursor)  : null}
+
       <header className="shell m-shell">
         <div className="shell__brand">M.O.</div>
         <nav className="shell__nav">
-          <a href="Landing Final 5.html">LANDING ↗</a>
-          <a href="Landing Final 5.html#work">WORK</a>
+          <a href="Landing Final 3.html">LANDING ↗</a>
+          <a href="Landing Final 3.html#work">WORK</a>
+          <a href="Design System.html">SYSTEM ↗</a>
         </nav>
         <div className="shell__status">
           <span className="shell__dot" />
-          <span>MUC · {time}</span>
+          <span>MUC · {time} GMT+1</span>
           <span className="shell__hint">[/] search</span>
         </div>
       </header>
@@ -175,10 +175,7 @@ function ManifestApp() {
         {/* ===== CONTROL BAR ===== */}
         <section className="m-controls">
           <div className="m-controls__row m-search">
-            <label className="m-search__caret" htmlFor="m-search-input">
-              <span aria-hidden="true">$</span>
-              <span className="m-sr-only">Search projects</span>
-            </label>
+            <label className="m-search__caret" htmlFor="m-search-input">$</label>
             <input
               id="m-search-input"
               className="m-search__input"
@@ -189,18 +186,17 @@ function ManifestApp() {
               autoComplete="off"
             />
             {query && (
-              <button className="m-search__clear" aria-label="Clear project search" onClick={() => setQuery("")}>clear</button>
+              <button className="m-search__clear" onClick={() => setQuery("")}>clear</button>
             )}
           </div>
 
           <div className="m-controls__row">
             <span className="m-controls__rowK">SORT</span>
-            <div className="m-controls__rowV" role="group" aria-label="Sort projects">
+            <div className="m-controls__rowV">
               {MSORTS.map(s => (
                 <button
                   key={s.id}
                   className={"m-pill " + (sortId === s.id ? "is-active" : "")}
-                  aria-pressed={sortId === s.id}
                   onClick={() => setSortId(s.id)}
                 >
                   {s.label}
@@ -211,10 +207,9 @@ function ManifestApp() {
 
           <div className="m-controls__row">
             <span className="m-controls__rowK">FILTER</span>
-            <div className="m-controls__rowV m-controls__rowV--wrap" role="group" aria-label="Filter projects by family">
+            <div className="m-controls__rowV m-controls__rowV--wrap">
               <button
                 className={"m-pill m-pill--family " + (family === "ALL" ? "is-active" : "")}
-                aria-pressed={family === "ALL"}
                 onClick={() => setFamily("ALL")}
               >
                 <span className="m-pill__dot" style={{ background: "var(--bone)" }} />
@@ -225,7 +220,6 @@ function ManifestApp() {
                   key={f.id}
                   className={"m-pill m-pill--family " + (family === f.id ? "is-active" : "")}
                   style={{ "--pillColor": f.color }}
-                  aria-pressed={family === f.id}
                   onClick={() => setFamily(f.id)}
                 >
                   <span className="m-pill__dot" style={{ background: f.color }} />
@@ -237,7 +231,7 @@ function ManifestApp() {
         </section>
 
         {/* ===== MANIFEST TABLE ===== */}
-        <section className="m-manifest" id="project-manifest" tabIndex="-1">
+        <section className="m-manifest">
           <div className="m-manifest__head">
             <span className="m-col-addr">ADDR</span>
             <span className="m-col-state">PAGE</span>
@@ -264,17 +258,10 @@ function ManifestApp() {
                   }
                   style={{ "--rowColor": mFamColor(primary), animationDelay: (i * 28) + "ms" }}
                   onMouseEnter={() => setFocus(p.addr)}
+                  onFocus={() => setFocus(p.addr)}
+                  onClick={() => openProject(p)}
+                  tabIndex={hasPage ? 0 : -1}
                 >
-                  {hasPage && (
-                    <a
-                      className="m-row__hit"
-                      href={p.file}
-                      data-project-link={p.addr}
-                      aria-label={`Open ${p.name} case file`}
-                      onFocus={() => setFocus(p.addr)}
-                      onClick={(e) => { e.preventDefault(); openProject(p); }}
-                    />
-                  )}
                   <span className="m-col-addr">
                     <span className="m-row__dot" style={{ background: mFamColor(primary) }} />
                     <span className="m-row__addrText">{p.addr}</span>
@@ -331,7 +318,7 @@ function ManifestApp() {
             <span className="m-manifest__footSep" />
             <span>updated 2026 · munich · static html</span>
             <span className="m-manifest__footSep" />
-            <a className="m-manifest__footLink" href="Landing Final 5.html">return to universe ↗</a>
+            <a className="m-manifest__footLink" href="Landing Final 3.html">return to universe ↗</a>
           </footer>
         </section>
 
@@ -352,7 +339,7 @@ function ManifestApp() {
               <KeyButton
                 legend="U"
                 primary
-                onPress={() => { window.location.href = "Landing Final 5.html#work"; }}
+                onPress={() => { window.location.href = "Landing Final 3.html#work"; }}
               >
                 UNIVERSE
               </KeyButton>

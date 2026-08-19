@@ -59,7 +59,7 @@
   color: var(--bone); margin: 0;
 }
 .origin__line { display: block; will-change: filter, opacity, transform; text-wrap: balance; }
-.origin__line--em { font-family: var(--ff-serif); font-style: italic; color: var(--bone); letter-spacing: -0.01em; }
+.origin__line--em { font-family: var(--ff-serif); font-style: italic; color: var(--signal); letter-spacing: -0.01em; }
 .origin__line--ghost { color: var(--ash); }
 .origin__period { font-family: var(--ff-serif); font-style: italic; color: var(--copper); }
 

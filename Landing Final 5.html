@@ -3,7 +3,6 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="icon" href="public/favicon.svg" type="image/svg+xml" />
   <title>Oleksandr Maslov | Product Systems · Embedded · Interaction</title>
   <meta name="description" content="Oleksandr Maslov is a product-minded designer and embedded developer based in Munich, building problem-driven systems across hardware, firmware, interfaces and production tooling." />
   <meta name="theme-color" content="#05060a" />
@@ -128,12 +127,12 @@
   <link rel="stylesheet" media="print" data-app-style href="system/tokens.css" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
   <link rel="stylesheet" media="print" data-app-style href="system/layout.css" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
   <link rel="stylesheet" media="print" data-app-style href="system/extras.css" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
-  <link rel="stylesheet" href="system/cursor-field.css" />
-  <script src="system/cursor-field.js"></script>
   <link rel="stylesheet" media="print" data-app-style href="landing_final/landing.css" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
   <link rel="stylesheet" media="print" data-app-style href="landing_final/origin.css" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
   <link rel="stylesheet" media="print" data-app-style href="landing_final/board-flight.css" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
   <link rel="stylesheet" media="print" data-app-style href="landing_final/landing-scroll.css" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
+  <link rel="stylesheet" media="print" data-app-style href="landing_final/cinematic.css" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
+  <link rel="stylesheet" media="print" data-app-style href="landing_final/cursor-ascii.css" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
   <link rel="stylesheet" media="print" data-app-style href="landing_final/v10.css" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
   <!-- FINAL 5 presentation layer: sticky stages fade on the compositor. -->
   <link rel="stylesheet" media="print" data-app-style href="landing_final5/flight.css" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
@@ -149,6 +148,8 @@
     <link rel="stylesheet" href="landing_final/origin.css" />
     <link rel="stylesheet" href="landing_final/board-flight.css" />
     <link rel="stylesheet" href="landing_final/landing-scroll.css" />
+    <link rel="stylesheet" href="landing_final/cinematic.css" />
+    <link rel="stylesheet" href="landing_final/cursor-ascii.css" />
     <link rel="stylesheet" href="landing_final/v10.css" />
     <link rel="stylesheet" href="landing_final5/flight.css" />
     <link rel="stylesheet" href="landing_final/wide.css" />
@@ -213,12 +214,13 @@
   </script>
 
   <!-- React + Babel -->
-  <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" integrity="sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z" crossorigin="anonymous"></script>
-  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" integrity="sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 
-  <!-- Project registry + local key control -->
+  <!-- Shared core (boot, fib grid, cursor) + key button -->
   <script src="landing_final5/projects-data.js"></script>
+  <script type="text/babel" data-presets="env,react" src="system/core.jsx"></script>
   <script type="text/babel" data-presets="env,react">
     function KeyButton({ children, legend = "↵", primary, onPress }) {
       const { useState } = React;
@@ -263,6 +265,7 @@
   <script type="text/babel" data-presets="env,react" src="project/viewer3d.jsx"></script>
   <script type="text/babel" data-presets="env,react" src="project_v3/hero-rig.jsx"></script>
   <script type="text/babel" data-presets="env,react" src="project_v3/node-rig.jsx"></script>
+  <script type="text/babel" data-presets="env,react" src="landing_final5/node-stage.jsx"></script>
   <script type="text/babel" data-presets="env,react" src="landing_final/hover-card.jsx"></script>
   <script type="text/babel" data-presets="env,react" src="landing_final5/universe.jsx"></script>
   <script type="text/babel" data-presets="env,react" src="landing_final5/node-handoff.jsx"></script>
@@ -274,11 +277,14 @@
   <script type="text/babel" data-presets="env,react" src="landing_final5/work.jsx"></script>
   <script type="text/babel" data-presets="env,react" src="landing_final5/app.jsx"></script>
 
-  <!-- Nonvisual scroll velocity bridge for the Universe grade. -->
-  <script src="landing_final5/scroll-velocity.js"></script>
+  <!-- Cinematic layer -->
+  <script src="landing_final/cinematic.js"></script>
 
   <!-- Continuous flight — master scroll timeline · unified HUD · doppler wind -->
   <script src="landing_final5/flight.js"></script>
+
+  <!-- ASCII RAMP scrollbar -->
+  <script src="landing_final/landing-scrollbar.js"></script>
 
   <!-- Sound score -->
   <script src="landing_final/score.js"></script>

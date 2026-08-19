@@ -1,0 +1,214 @@
+/* ============================================================
+   M.O. SYSTEM — ISKRA 3D · LINE SHIFT styles
+   Loaded after demo.css + demo2.css + iskra.css. Reuses the
+   .hvd overlay chrome, the .isk-spark glyph and the brand
+   palette (--isk-blue / --isk-yellow / pass / fail); adds the
+   3D-bench layout: optical bench (left, hero) + GDB console
+   under it, identify + action rail (right), score HUD on top.
+   ============================================================ */
+.hvd--iskra3d { --isk-blue: #2a8fff; --isk-yellow: #ffe500; --isk-pass: #2dd24a; --isk-fail: #ff3a2a; }
+
+/* ============================================================
+   SETUP
+   ============================================================ */
+.i3-setup { position: absolute; inset: 0; display: grid; place-items: center; padding: var(--s-7); animation: hvdFadeIn 420ms var(--e-out) both; }
+.i3-setup__card { width: min(560px, 92vw); background: rgba(8,12,20,0.92); border: 1px solid var(--hairline); padding: var(--s-7); display: flex; flex-direction: column; gap: var(--s-6); }
+.i3-setup__head { display: flex; align-items: center; gap: var(--s-5); }
+.i3-setup__title { font-family: var(--ff-mono); font-size: 15px; letter-spacing: 0.12em; color: var(--bone); }
+.i3-setup__sub { font-family: var(--ff-mono); font-size: 10px; letter-spacing: var(--tr-caps); text-transform: uppercase; color: var(--ghost); margin-top: 3px; }
+.i3-brief { border: 1px solid var(--hairline); background: rgba(4,6,10,0.5); padding: var(--s-4) var(--s-5); display: flex; flex-direction: column; gap: var(--s-3); }
+.i3-brief__row { font-family: var(--ff-mono); font-size: 11px; color: var(--ash); letter-spacing: 0.02em; }
+.i3-brief__row b { color: var(--isk-blue); font-weight: 600; margin-right: 6px; }
+.i3-brief__note { font-family: var(--ff-mono); font-size: 10px; color: var(--ghost); border-top: 1px solid var(--hairline); padding-top: var(--s-3); }
+.i3-field { display: flex; flex-direction: column; gap: var(--s-3); }
+.i3-field__k { font-family: var(--ff-mono); font-size: 10px; letter-spacing: var(--tr-caps); text-transform: uppercase; color: var(--ghost); }
+.i3-input { background: #04060a; border: 1px solid var(--hairline); color: var(--bone); font-family: var(--ff-mono); font-size: 13px; letter-spacing: 0.08em; padding: var(--s-4); outline: none; }
+.i3-input:focus { border-color: var(--isk-blue); }
+.i3-chips { display: flex; flex-wrap: wrap; gap: var(--s-3); }
+.i3-chip { display: inline-flex; align-items: center; gap: 6px; padding: var(--s-3) var(--s-4); background: rgba(13,17,26,0.85); border: 1px solid var(--hairline); color: var(--bone); font-family: var(--ff-mono); font-size: 11px; letter-spacing: 0.04em; cursor: pointer; transition: border-color var(--d-fast), background var(--d-fast), color var(--d-fast); }
+.i3-chip:hover { border-color: var(--isk-blue); }
+.i3-chip.is-on { border-color: var(--isk-blue); background: rgba(42,143,255,0.14); color: #fff; }
+.i3-chip:disabled { opacity: 0.4; cursor: default; }
+.i3-chip--prod { flex-direction: column; align-items: flex-start; gap: 2px; min-width: 124px; text-align: left; }
+.i3-chip--prod b { font-weight: 600; letter-spacing: 0.06em; }
+.i3-chip--prod span { font-size: 9px; color: var(--ghost); letter-spacing: var(--tr-caps); }
+.i3-start { margin-top: var(--s-3); display: inline-flex; align-items: center; gap: var(--s-4); justify-content: center; padding: var(--s-5); background: var(--isk-blue); border: 1px solid var(--isk-blue); color: #02060e; font-family: var(--ff-mono); font-size: 13px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; cursor: pointer; transition: filter var(--d-fast); }
+.i3-start:hover { filter: brightness(1.12); }
+.i3-start__k { font-size: 11px; }
+.i3-setup__foot { font-family: var(--ff-mono); font-size: 9px; letter-spacing: 0.08em; color: var(--ash); text-align: center; text-transform: uppercase; }
+
+/* ============================================================
+   GAME · layout
+   ============================================================ */
+.i3-game { position: absolute; inset: 58px var(--s-7) 46px var(--s-7); display: grid; grid-template-rows: auto 1fr; gap: var(--s-4); animation: hvdFadeIn 380ms var(--e-out) both; min-height: 0; }
+.i3-hud { display: flex; align-items: center; gap: var(--s-6); border: 1px solid var(--hairline); background: rgba(8,12,20,0.82); padding: var(--s-3) var(--s-5); }
+.i3-hud__cell { display: flex; align-items: baseline; gap: var(--s-3); }
+.i3-hud__k { font-family: var(--ff-mono); font-size: 9px; letter-spacing: var(--tr-caps); text-transform: uppercase; color: var(--ghost); }
+.i3-hud__v { font-family: var(--ff-mono); font-size: 14px; color: var(--bone); }
+.i3-hud__v--score { font-size: 18px; font-weight: 600; color: var(--isk-yellow); transition: transform 120ms; }
+.i3-hud__v--score.is-pulse { transform: scale(1.22); }
+.i3-hud__prog { flex: 1; height: 3px; background: var(--hairline); }
+.i3-hud__progFill { height: 100%; background: linear-gradient(90deg, var(--isk-blue), var(--isk-yellow)); transition: width 300ms var(--e-out); }
+
+.i3-main { display: grid; grid-template-columns: 1fr minmax(300px, 360px); gap: var(--s-5); min-height: 0; }
+.i3-benchCol { display: flex; flex-direction: column; gap: var(--s-4); min-height: 0; min-width: 0; }
+
+/* ============================================================
+   OPTICAL BENCH (3D)
+   ============================================================ */
+.i3-stage { position: relative; flex: 1; min-height: 0; border: 1px solid var(--hairline); background: radial-gradient(120% 90% at 50% 24%, #0c1626 0%, #060a10 64%, #04060a 100%); overflow: hidden; }
+.i3-mount { position: absolute; inset: 0; }
+.i3-mount canvas { display: block; }
+
+.i3-stage::before { /* scanline veil */ content: ""; position: absolute; inset: 0; pointer-events: none; background: repeating-linear-gradient(0deg, rgba(0,240,200,0.025) 0 1px, transparent 1px 3px); mix-blend-mode: screen; opacity: 0.5; z-index: 3; }
+.i3-stage--flash-pass::after, .i3-stage--flash-fail::after { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 4; animation: i3Flash 520ms var(--e-out) forwards; }
+.i3-stage--flash-pass::after { background: radial-gradient(120% 90% at 50% 50%, rgba(45,210,74,0.0) 40%, rgba(45,210,74,0.22) 100%); box-shadow: inset 0 0 0 2px rgba(45,210,74,0.5); }
+.i3-stage--flash-fail::after { background: radial-gradient(120% 90% at 50% 50%, rgba(255,58,42,0.0) 40%, rgba(255,58,42,0.24) 100%); box-shadow: inset 0 0 0 2px rgba(255,58,42,0.55); }
+@keyframes i3Flash { from { opacity: 1; } to { opacity: 0; } }
+
+.i3-reticle { position: absolute; width: 16px; height: 16px; border: 1px solid rgba(0,240,200,0.45); z-index: 5; pointer-events: none; }
+.i3-reticle--tl { top: 10px; left: 10px; border-right: 0; border-bottom: 0; }
+.i3-reticle--tr { top: 10px; right: 10px; border-left: 0; border-bottom: 0; }
+.i3-reticle--bl { bottom: 10px; left: 10px; border-right: 0; border-top: 0; }
+.i3-reticle--br { bottom: 10px; right: 10px; border-left: 0; border-top: 0; }
+
+.i3-chrome { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: var(--s-3); padding: 4px 12px; background: rgba(4,6,13,0.7); border: 1px solid var(--hairline); font-family: var(--ff-mono); font-size: 9px; letter-spacing: var(--tr-caps); text-transform: uppercase; color: var(--ghost); z-index: 6; white-space: nowrap; }
+.i3-chrome__dot { width: 6px; height: 6px; border-radius: 50%; background: var(--isk-blue); box-shadow: 0 0 6px var(--isk-blue); }
+.i3-chrome__sep { width: 1px; height: 10px; background: var(--hairline); }
+.i3-chrome__mode { color: var(--isk-blue); }
+
+.i3-reset { position: absolute; top: 12px; right: 12px; z-index: 6; display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; background: rgba(4,6,13,0.72); border: 1px solid var(--hairline); color: var(--bone); font-family: var(--ff-mono); font-size: 9px; letter-spacing: var(--tr-caps); text-transform: uppercase; cursor: pointer; transition: border-color var(--d-fast), color var(--d-fast); }
+.i3-reset:hover { border-color: var(--isk-blue); color: var(--isk-blue); }
+.i3-reset__g { font-size: 12px; }
+
+.i3-hint { position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: var(--s-3); padding: 5px 12px; background: rgba(4,6,13,0.72); border: 1px solid var(--hairline); font-family: var(--ff-mono); font-size: 9px; letter-spacing: var(--tr-caps); text-transform: uppercase; color: var(--ash); z-index: 6; pointer-events: none; animation: i3HintPulse 2.6s ease-in-out infinite; max-width: 90%; text-align: center; }
+.i3-hint__k { color: var(--isk-blue); }
+.i3-hint__sep { color: var(--ash); }
+@keyframes i3HintPulse { 0%,100% { opacity: 0.55; } 50% { opacity: 1; } }
+
+/* ============================================================
+   CONSOLE (under bench)
+   ============================================================ */
+.i3-con { display: flex; flex-direction: column; height: 168px; flex: none; border: 1px solid var(--hairline); background: #04060a; }
+.i3-con__head { display: flex; align-items: center; gap: var(--s-3); padding: var(--s-3) var(--s-4); border-bottom: 1px solid var(--hairline); font-family: var(--ff-mono); font-size: 10px; letter-spacing: var(--tr-caps); text-transform: uppercase; color: var(--ghost); }
+.i3-con__dot { width: 7px; height: 7px; border-radius: 50%; background: var(--isk-pass); box-shadow: 0 0 6px var(--isk-pass); }
+.i3-con__spacer { flex: 1; }
+.i3-con__pct { color: var(--isk-yellow); }
+.i3-con__body { flex: 1; overflow-y: auto; padding: var(--s-4); font-family: var(--ff-mono); font-size: 11.5px; line-height: 1.6; scrollbar-width: thin; scrollbar-color: var(--hairline) transparent; }
+.i3-con__body::-webkit-scrollbar { width: 5px; }
+.i3-con__body::-webkit-scrollbar-thumb { background: var(--hairline); }
+.i3-con__line { white-space: pre-wrap; word-break: break-word; color: #9fb0c4; }
+.i3-con__line--cmd { color: var(--isk-blue); margin-top: 5px; }
+.i3-con__line--dim { color: var(--ash); }
+.i3-con__line--ok { color: var(--isk-pass); }
+.i3-con__line--warn { color: var(--isk-yellow); }
+.i3-con__line--err { color: var(--isk-fail); }
+.i3-con__line--head { color: var(--bone); letter-spacing: 0.08em; margin-top: 7px; }
+.i3-con__line--pass { color: var(--isk-pass); font-weight: 600; letter-spacing: 0.1em; margin-top: 5px; }
+.i3-con__line--fail { color: var(--isk-fail); font-weight: 600; letter-spacing: 0.1em; margin-top: 5px; }
+.i3-con__bar { height: 3px; background: var(--hairline); }
+.i3-con__fill { height: 100%; background: linear-gradient(90deg, var(--isk-blue), var(--isk-yellow)); transition: width 90ms linear; }
+
+/* ============================================================
+   IDENTIFY + ACTION RAIL (right)
+   ============================================================ */
+.i3-rail { display: flex; flex-direction: column; gap: var(--s-4); min-height: 0; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--hairline) transparent; padding-right: 2px; }
+.i3-rail::-webkit-scrollbar { width: 4px; }
+.i3-rail::-webkit-scrollbar-thumb { background: var(--hairline); }
+
+.i3-ident { border: 1px solid var(--hairline); background: rgba(8,12,20,0.82); padding: var(--s-4) var(--s-5); display: flex; flex-direction: column; gap: var(--s-3); }
+.i3-ident__k { font-family: var(--ff-mono); font-size: 9px; letter-spacing: var(--tr-caps); text-transform: uppercase; color: var(--ghost); }
+.i3-ident__v { display: flex; flex-direction: column; gap: 3px; font-family: var(--ff-mono); }
+.i3-ident__v b { font-size: 16px; letter-spacing: 0.06em; color: var(--bone); }
+.i3-ident__v span { font-size: 10px; letter-spacing: var(--tr-caps); text-transform: uppercase; }
+.i3-ident__v--ok b { color: var(--bone); } .i3-ident__v--ok span { color: var(--isk-pass); }
+.i3-ident__v--bad b { color: var(--bone); } .i3-ident__v--bad span { color: var(--isk-fail); }
+.i3-ident__v--q b { color: var(--isk-yellow); letter-spacing: 0.18em; } .i3-ident__v--q span { color: var(--ash); }
+
+.i3-pick { border: 1px solid var(--hairline); background: rgba(8,12,20,0.82); padding: var(--s-4) var(--s-5); display: flex; flex-direction: column; gap: var(--s-3); }
+.i3-k { font-family: var(--ff-mono); font-size: 10px; letter-spacing: var(--tr-caps); text-transform: uppercase; color: var(--ghost); }
+.i3-chips--prod { gap: var(--s-3); }
+
+.i3-actions { display: grid; grid-template-columns: 1fr 1fr 1.4fr; gap: var(--s-3); }
+.i3-act { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: var(--s-4) var(--s-3); border: 1px solid var(--hairline); background: rgba(13,17,26,0.85); cursor: pointer; font-family: var(--ff-mono); font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--bone); transition: border-color var(--d-fast), background var(--d-fast), filter var(--d-fast); }
+.i3-act small { font-size: 8px; font-weight: 400; letter-spacing: var(--tr-caps); color: var(--ghost); text-transform: uppercase; }
+.i3-act__lg { font-size: 14px; }
+.i3-act:disabled { opacity: 0.4; cursor: default; }
+.i3-act--scan:hover:not(:disabled) { border-color: var(--isk-blue); color: var(--isk-blue); }
+.i3-act--reject:hover:not(:disabled) { border-color: var(--isk-fail); color: var(--isk-fail); }
+.i3-act--flash { background: linear-gradient(180deg, #18324f, #0d1f33); border-color: var(--isk-blue); color: #eaf3ff; }
+.i3-act--flash:hover:not(:disabled) { filter: brightness(1.16); }
+.i3-act--flash.is-busy { border-color: var(--isk-yellow); cursor: progress; animation: iskPulse 1.1s ease-in-out infinite; }
+
+.i3-flash--retry { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: var(--s-5); background: rgba(255,229,0,0.1); border: 1px solid var(--isk-yellow); color: var(--isk-yellow); font-family: var(--ff-mono); text-transform: uppercase; cursor: pointer; animation: iskPulse 1.1s ease-in-out infinite; }
+.i3-flash__legend { font-size: 9px; letter-spacing: var(--tr-caps); }
+.i3-flash__label { font-size: 22px; font-weight: 700; letter-spacing: 0.1em; }
+
+.i3-verdict { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: var(--s-5); cursor: pointer; font-family: var(--ff-mono); text-transform: uppercase; border: 1px solid; animation: hvdFadeIn 300ms var(--e-out) both; }
+.i3-verdict--pass { background: rgba(45,210,74,0.12); border-color: var(--isk-pass); color: var(--isk-pass); }
+.i3-verdict--fail { background: rgba(255,58,42,0.12); border-color: var(--isk-fail); color: var(--isk-fail); }
+.i3-verdict__big { font-size: 30px; font-weight: 800; letter-spacing: 0.1em; }
+.i3-verdict__sub { font-size: 10px; letter-spacing: 0.04em; color: var(--bone); text-transform: none; max-width: 260px; text-align: center; }
+.i3-verdict__next { font-size: 9px; letter-spacing: var(--tr-caps); color: var(--ghost); margin-top: 3px; }
+
+.i3-railSec { border: 1px solid var(--hairline); background: rgba(8,12,20,0.82); padding: var(--s-4); display: flex; flex-direction: column; gap: var(--s-3); flex: 1; min-height: 120px; }
+.i3-railHead { font-family: var(--ff-mono); font-size: 10px; letter-spacing: var(--tr-caps); text-transform: uppercase; color: var(--ghost); }
+.i3-hist { display: flex; flex-direction: column; gap: 2px; overflow-y: auto; font-family: var(--ff-mono); }
+.i3-hist__empty { font-size: 10px; color: var(--ash); padding: var(--s-3) 0; }
+.i3-hist__row { display: grid; grid-template-columns: 14px 38px 1fr auto; gap: 6px; align-items: baseline; font-size: 10px; padding: 3px 0; border-bottom: 1px solid rgba(232,228,218,0.05); }
+.i3-hist__res { font-weight: 700; }
+.i3-hist__row--pass .i3-hist__res { color: var(--isk-pass); }
+.i3-hist__row--fail .i3-hist__res { color: var(--isk-fail); }
+.i3-hist__unit { color: var(--ghost); }
+.i3-hist__prod { color: var(--bone); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.i3-hist__delta { font-family: var(--ff-mono); font-size: 10px; text-align: right; }
+.i3-hist__delta.is-pos { color: var(--isk-pass); }
+.i3-hist__delta.is-neg { color: var(--isk-fail); }
+
+/* toast */
+.i3-toast { position: absolute; bottom: var(--s-5); left: 50%; transform: translateX(-50%); padding: var(--s-3) var(--s-5); background: rgba(4,6,13,0.92); border: 1px solid var(--isk-blue); font-family: var(--ff-mono); font-size: 10px; letter-spacing: var(--tr-caps); text-transform: uppercase; color: var(--bone); animation: iskToast 2.6s var(--e-out) forwards; pointer-events: none; white-space: nowrap; z-index: 8; }
+
+/* ============================================================
+   REPORT
+   ============================================================ */
+.i3-report { position: absolute; inset: 0; display: grid; place-items: center; padding: var(--s-7); animation: hvdFadeIn 420ms var(--e-out) both; }
+.i3-report__card { width: min(560px, 92vw); border: 1px solid var(--hairline); background: rgba(8,12,20,0.94); padding: var(--s-7); display: flex; flex-direction: column; gap: var(--s-5); }
+.i3-report__head { display: flex; align-items: center; gap: var(--s-4); }
+.i3-report__title { font-family: var(--ff-mono); font-size: 14px; letter-spacing: 0.12em; color: var(--bone); }
+.i3-report__sub { font-family: var(--ff-mono); font-size: 10px; letter-spacing: var(--tr-caps); text-transform: uppercase; color: var(--ghost); margin-top: 2px; }
+.i3-report__rank { margin-left: auto; font-family: var(--ff-mono); font-size: 12px; letter-spacing: 0.1em; color: var(--isk-yellow); border: 1px solid var(--isk-yellow); padding: 4px 10px; }
+.i3-report__score { font-family: var(--ff-mono); font-size: 56px; font-weight: 700; color: var(--isk-pass); line-height: 1; }
+.i3-report__score span { font-size: 16px; color: var(--ghost); margin-left: 8px; }
+.i3-report__grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--s-4); }
+.i3-report__stat { display: flex; flex-direction: column; gap: 3px; border: 1px solid var(--hairline); padding: var(--s-3) var(--s-4); }
+.i3-report__sk { font-family: var(--ff-mono); font-size: 9px; letter-spacing: var(--tr-caps); color: var(--ghost); }
+.i3-report__sv { font-family: var(--ff-mono); font-size: 20px; color: var(--bone); }
+.i3-report__bricked { font-family: var(--ff-mono); font-size: 11px; letter-spacing: 0.04em; color: var(--isk-blue); border: 1px solid var(--isk-blue); background: rgba(42,143,255,0.08); padding: var(--s-4); text-align: center; }
+.c-ok { color: var(--isk-pass); }
+.c-bad { color: var(--isk-fail); }
+
+/* ============================================================
+   MOBILE — stack bench over rail, whole game scrolls
+   ============================================================ */
+@media (max-width: 920px) {
+  .i3-game { inset: 52px var(--s-4) var(--s-4) var(--s-4); display: flex; flex-direction: column; overflow-y: auto; -webkit-overflow-scrolling: touch; gap: var(--s-3); }
+  /* on mobile everything flows top-to-bottom and the whole game scrolls — so
+     nothing may keep the desktop grid's min-height:0 / flex sizing, which would
+     collapse these wrappers and let the rail's children (firmware pickers,
+     actions, log) overflow their box unreachably on top of each other. */
+  .i3-main { display: flex; flex-direction: column; gap: var(--s-3); min-height: auto; }
+  .i3-benchCol { min-height: auto; flex: none; }
+  .i3-stage { height: 54vh; min-height: 300px; flex: none; }
+  .i3-con { height: 150px; }
+  .i3-rail { overflow: visible; min-height: auto; flex: none; }
+  .i3-railSec { min-height: 140px; flex: none; }
+  .i3-hist { overflow: visible; }
+  .i3-report__grid { grid-template-columns: 1fr 1fr; }
+  .i3-report__score { font-size: 44px; }
+}
+@media (max-width: 560px) {
+  .i3-chip--prod { min-width: 0; flex: 1; }
+  .i3-actions { grid-template-columns: 1fr 1fr; }
+  .i3-act--flash { grid-column: 1 / -1; }
+  .i3-chrome { font-size: 8px; }
+}

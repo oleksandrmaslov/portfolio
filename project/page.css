@@ -830,27 +830,8 @@ body.pp-exit .pp-shell { opacity: 0; transition: opacity 280ms var(--e-out); }
   .pp-hero__meta { grid-template-columns: 1fr; }
   .pp-demo, .pp-story, .pp-links, .pp-foot { padding-left: var(--s-5); padding-right: var(--s-5); }
   .pp-body { grid-template-columns: 1fr; }
-  .pp-body__block { grid-column: auto; grid-template-columns: minmax(0, 1fr); min-width: 0; }
-  .pp-body__h,
-  .pp-body__copy { grid-column: auto; min-width: 0; overflow-wrap: anywhere; }
+  .pp-body__block { grid-column: auto; grid-template-columns: 1fr; }
   .pp-body__photo { grid-column: auto; }
   .pp-link { grid-template-columns: 1fr auto; }
   .pp-link__k { grid-column: 1 / -1; }
 }
-/* Keyboard-only bypass for the full-screen model hero. */
-.pp-skip {
-  position: fixed;
-  left: 16px;
-  top: 12px;
-  z-index: 1000;
-  padding: 10px 14px;
-  border: 1px solid var(--signal);
-  background: var(--void);
-  color: var(--bone);
-  font: 500 11px/1 var(--ff-mono);
-  letter-spacing: var(--tr-mono);
-  text-transform: uppercase;
-  transform: translateY(-160%);
-  transition: transform var(--d-fast) var(--e-out);
-}
-.pp-skip:focus-visible { transform: translateY(0); }

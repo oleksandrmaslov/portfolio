@@ -1,0 +1,348 @@
+/* ============================================================
+   M.O. SYSTEM — ISKRA STATION · operator GUI styles
+   Loaded after demo/demo.css + demo2.css. Speaks the system
+   language (mono micro K/V, hairline plates, signal accents)
+   with the Iskra brand blue/yellow as status colour and one
+   white spark. The demo fills the overlay as a flat console —
+   no 3D stage.
+   ============================================================ */
+.hvd--iskra { --isk-blue: #2a8fff; --isk-yellow: #ffe500; --isk-pass: #2dd24a; --isk-fail: #ff3a2a; }
+.hvd__stage--flat {
+  background: radial-gradient(130% 100% at 50% 0%, #0a1322 0%, var(--void) 60%), var(--void);
+  cursor: default;
+}
+
+/* the spark glyph (blue|yellow petals + white star) */
+.isk-spark { position: relative; width: 38px; height: 38px; flex: none; display: inline-block; }
+.isk-spark::before, .isk-spark::after {
+  content: ""; position: absolute; top: 4px; bottom: 4px; width: 42%;
+  border-radius: 10px 4px 4px 10px;
+}
+.isk-spark::before { left: 0; background: var(--isk-blue); border-radius: 10px 2px 2px 10px; clip-path: polygon(0 0, 100% 14%, 62% 50%, 100% 86%, 0 100%); }
+.isk-spark::after  { right: 0; background: var(--isk-yellow); clip-path: polygon(100% 0, 0 14%, 38% 50%, 0 86%, 100% 100%); }
+.isk-spark i {
+  position: absolute; left: 50%; top: 50%; width: 9px; height: 9px;
+  transform: translate(-50%, -50%) rotate(45deg);
+  background: #fff; clip-path: polygon(50% 0, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0 50%, 40% 40%);
+  z-index: 2;
+}
+
+/* ============================================================
+   SETUP screen
+   ============================================================ */
+.isk-setup {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  padding: var(--s-7); animation: hvdFadeIn 420ms var(--e-out) both;
+}
+.isk-setup__card {
+  width: min(540px, 92vw);
+  background: rgba(8, 12, 20, 0.92); border: 1px solid var(--hairline);
+  padding: var(--s-7); display: flex; flex-direction: column; gap: var(--s-6);
+}
+.isk-setup__head { display: flex; align-items: center; gap: var(--s-5); }
+.isk-setup__title { font-family: var(--ff-mono); font-size: 15px; letter-spacing: 0.12em; color: var(--bone); }
+.isk-setup__sub { font-family: var(--ff-mono); font-size: 10px; letter-spacing: var(--tr-caps); text-transform: uppercase; color: var(--ghost); margin-top: 3px; }
+.isk-field { display: flex; flex-direction: column; gap: var(--s-3); }
+.isk-field__k { font-family: var(--ff-mono); font-size: 10px; letter-spacing: var(--tr-caps); text-transform: uppercase; color: var(--ghost); }
+.isk-input {
+  background: #04060a; border: 1px solid var(--hairline); color: var(--bone);
+  font-family: var(--ff-mono); font-size: 13px; letter-spacing: 0.08em;
+  padding: var(--s-4); outline: none;
+}
+.isk-input:focus { border-color: var(--isk-blue); }
+.isk-chips { display: flex; flex-wrap: wrap; gap: var(--s-3); }
+.isk-chips--col { flex-direction: column; }
+.isk-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: var(--s-3) var(--s-4); background: rgba(13, 17, 26, 0.85);
+  border: 1px solid var(--hairline); color: var(--bone);
+  font-family: var(--ff-mono); font-size: 11px; letter-spacing: 0.04em; cursor: pointer;
+  transition: border-color var(--d-fast), background var(--d-fast), color var(--d-fast);
+}
+.isk-chip:hover { border-color: var(--isk-blue); }
+.isk-chip.is-on { border-color: var(--isk-blue); background: rgba(42, 143, 255, 0.14); color: #fff; }
+.isk-chip--prod { flex-direction: column; align-items: flex-start; gap: 2px; min-width: 120px; text-align: left; }
+.isk-chip--prod b { font-weight: 600; letter-spacing: 0.06em; }
+.isk-chip--prod span { font-size: 9px; color: var(--ghost); letter-spacing: var(--tr-caps); }
+.isk-chip.is-locked { opacity: 0.4; }
+.isk-start {
+  margin-top: var(--s-3); display: inline-flex; align-items: center; gap: var(--s-4);
+  justify-content: center; padding: var(--s-5);
+  background: var(--isk-blue); border: 1px solid var(--isk-blue); color: #02060e;
+  font-family: var(--ff-mono); font-size: 13px; font-weight: 600; letter-spacing: 0.14em;
+  text-transform: uppercase; cursor: pointer; transition: filter var(--d-fast);
+}
+.isk-start:hover { filter: brightness(1.12); }
+.isk-start__k { font-size: 11px; }
+.isk-setup__foot { font-family: var(--ff-mono); font-size: 9px; letter-spacing: 0.08em; color: var(--ash); text-align: center; text-transform: uppercase; }
+
+/* setup brief (game rules) */
+.isk-brief { border: 1px solid var(--hairline); background: rgba(4,6,10,0.5); padding: var(--s-4) var(--s-5); display: flex; flex-direction: column; gap: var(--s-3); }
+.isk-brief__row { font-family: var(--ff-mono); font-size: 11px; color: var(--ash); letter-spacing: 0.02em; }
+.isk-brief__row b { color: var(--isk-blue); font-weight: 600; margin-right: 6px; }
+.isk-brief__note { font-family: var(--ff-mono); font-size: 10px; color: var(--ghost); border-top: 1px solid var(--hairline); padding-top: var(--s-3); }
+
+/* ============================================================
+   GAME · score HUD + three columns
+   ============================================================ */
+.isk-game {
+  position: absolute; inset: 58px var(--s-8) 52px var(--s-8);
+  display: grid;
+  grid-template-columns: minmax(280px, 360px) 1fr minmax(210px, 280px);
+  grid-template-rows: auto 1fr;
+  gap: var(--s-4) var(--s-5); animation: hvdFadeIn 380ms var(--e-out) both;
+}
+.isk-hud {
+  grid-column: 1 / -1; display: flex; align-items: center; gap: var(--s-6);
+  border: 1px solid var(--hairline); background: rgba(8,12,20,0.82); padding: var(--s-3) var(--s-5);
+}
+.isk-hud__cell { display: flex; align-items: baseline; gap: var(--s-3); }
+.isk-hud__k { font-family: var(--ff-mono); font-size: 9px; letter-spacing: var(--tr-caps); text-transform: uppercase; color: var(--ghost); }
+.isk-hud__v { font-family: var(--ff-mono); font-size: 14px; color: var(--bone); }
+.isk-hud__v--score { font-size: 18px; font-weight: 600; color: var(--isk-yellow); transition: transform 120ms; }
+.isk-hud__v--score.is-pulse { transform: scale(1.22); }
+.isk-hud__prog { flex: 1; height: 3px; background: var(--hairline); }
+.isk-hud__progFill { height: 100%; background: linear-gradient(90deg, var(--isk-blue), var(--isk-yellow)); transition: width 300ms var(--e-out); }
+.isk-game .isk-col { grid-row: 2; }
+
+.isk-col { display: flex; flex-direction: column; gap: var(--s-4); min-height: 0; }
+.isk-station {
+  position: absolute; inset: 64px var(--s-8) 56px var(--s-8);
+  display: grid; grid-template-columns: minmax(248px, 320px) 1fr minmax(248px, 340px);
+  gap: var(--s-5); animation: hvdFadeIn 420ms var(--e-out) both;
+}
+.isk-col { display: flex; flex-direction: column; gap: var(--s-4); min-height: 0; }
+.isk-panel { background: rgba(8, 12, 20, 0.82); border: 1px solid var(--hairline); padding: var(--s-4) var(--s-5); display: flex; flex-direction: column; gap: var(--s-3); }
+.isk-panel.is-blocked { border-color: var(--isk-fail); animation: iskShake 380ms; }
+@keyframes iskShake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-4px)} 75%{transform:translateX(4px)} }
+.isk-row { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s-4); }
+.isk-k { font-family: var(--ff-mono); font-size: 10px; letter-spacing: var(--tr-caps); text-transform: uppercase; color: var(--ghost); }
+.isk-k--head { margin-top: var(--s-3); }
+.isk-v { font-family: var(--ff-mono); font-size: 12px; color: var(--bone); display: inline-flex; align-items: center; gap: 6px; }
+.isk-lockTag { font-size: 9px; color: var(--isk-yellow); letter-spacing: var(--tr-caps); }
+
+/* board + FLASH */
+.isk-flashbox { margin-top: auto; display: flex; flex-direction: column; gap: var(--s-4); }
+.isk-board {
+  display: flex; align-items: center; gap: var(--s-4); padding: var(--s-4) var(--s-5);
+  background: rgba(13, 17, 26, 0.85); border: 1px dashed var(--hairline); color: var(--ash);
+  font-family: var(--ff-mono); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer;
+  transition: border-color var(--d-fast), color var(--d-fast);
+}
+.isk-board:hover { border-color: var(--isk-blue); }
+.isk-board__led { width: 9px; height: 9px; border-radius: 50%; background: #2a3240; flex: none; }
+.isk-board.is-in { border-style: solid; border-color: var(--isk-pass); color: var(--bone); }
+.isk-board.is-in .isk-board__led { background: var(--isk-pass); box-shadow: 0 0 8px var(--isk-pass); }
+
+.isk-flash {
+  position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: var(--s-6); cursor: pointer;
+  background: linear-gradient(180deg, #18324f, #0d1f33);
+  border: 1px solid var(--isk-blue); color: #eaf3ff;
+  font-family: var(--ff-mono); text-transform: uppercase; transition: filter var(--d-fast), opacity var(--d-fast);
+}
+.isk-flash:hover { filter: brightness(1.14); }
+.isk-flash.is-wait { opacity: 0.5; }
+.isk-flash.is-busy { cursor: progress; border-color: var(--isk-yellow); animation: iskPulse 1.1s ease-in-out infinite; }
+@keyframes iskPulse { 0%,100%{ box-shadow: 0 0 0 rgba(255,229,0,0); } 50%{ box-shadow: 0 0 22px rgba(255,229,0,0.28); } }
+.isk-flash__legend { font-size: 9px; letter-spacing: var(--tr-caps); color: var(--isk-blue); }
+.isk-flash.is-busy .isk-flash__legend { color: var(--isk-yellow); }
+.isk-flash__label { font-size: 24px; font-weight: 700; letter-spacing: 0.1em; }
+
+.isk-verdict {
+  display: flex; flex-direction: column; align-items: center; gap: 4px; padding: var(--s-5);
+  cursor: pointer; font-family: var(--ff-mono); text-transform: uppercase; border: 1px solid;
+  animation: hvdFadeIn 300ms var(--e-out) both;
+}
+.isk-verdict--pass { background: rgba(45, 210, 74, 0.12); border-color: var(--isk-pass); color: var(--isk-pass); }
+.isk-verdict--fail { background: rgba(255, 58, 42, 0.12); border-color: var(--isk-fail); color: var(--isk-fail); }
+.isk-verdict__big { font-size: 34px; font-weight: 800; letter-spacing: 0.12em; }
+.isk-verdict__sub { font-size: 10px; letter-spacing: 0.05em; color: var(--bone); text-transform: none; max-width: 240px; text-align: center; }
+.isk-verdict__next { font-size: 9px; letter-spacing: var(--tr-caps); color: var(--ghost); margin-top: 4px; }
+
+/* ============================================================
+   GAME · the bench + board + actions
+   ============================================================ */
+.isk-col--bench { gap: var(--s-4); }
+.isk-benchHead, .isk-railHead { font-family: var(--ff-mono); font-size: 10px; letter-spacing: var(--tr-caps); text-transform: uppercase; color: var(--ghost); }
+.isk-bench__empty { display: grid; place-items: center; min-height: 120px; font-family: var(--ff-mono); font-size: 11px; color: var(--ash); border: 1px dashed var(--hairline); }
+
+/* the PCB card */
+.isk-pcb {
+  position: relative; border: 1px solid var(--hairline); background: linear-gradient(150deg, #112016, #0a1410);
+  padding: var(--s-5); display: flex; flex-direction: column; gap: var(--s-4); min-height: 132px;
+  animation: iskDealIn 360ms var(--e-out) both;
+}
+@keyframes iskDealIn { from { opacity: 0; transform: translateY(-10px) rotate(-1deg); } to { opacity: 1; transform: none; } }
+.isk-pcb.is-unknown { background: linear-gradient(150deg, #1a1408, #100c06); }
+.isk-pcb.is-busy { border-color: var(--isk-yellow); }
+.isk-pcb__chip { position: absolute; top: var(--s-4); right: var(--s-4); display: grid; grid-template-columns: 1fr 1fr; gap: 3px; }
+.isk-pcb__chipDot { width: 5px; height: 5px; background: #0a0d12; border: 1px solid rgba(232,228,218,0.14); }
+.isk-pcb__silk { display: flex; flex-direction: column; gap: 4px; }
+.isk-pcb__label { font-family: var(--ff-mono); font-size: 22px; font-weight: 600; letter-spacing: 0.08em; color: var(--bone); }
+.isk-pcb.is-unknown .isk-pcb__label { color: var(--isk-yellow); letter-spacing: 0.3em; }
+.isk-pcb__part { font-family: var(--ff-mono); font-size: 10px; letter-spacing: 0.06em; color: var(--ghost); }
+.isk-pcb__tags { display: flex; gap: var(--s-3); }
+.isk-pcb__fam { font-family: var(--ff-mono); font-size: 10px; letter-spacing: var(--tr-caps); padding: 2px 8px; border: 1px solid; }
+.isk-pcb__fam--ok { color: var(--isk-pass); border-color: var(--isk-pass); }
+.isk-pcb__fam--bad { color: var(--isk-fail); border-color: var(--isk-fail); }
+.isk-pcb__fam--q { color: var(--isk-yellow); border-color: var(--isk-yellow); }
+.isk-pcb__busy { font-family: var(--ff-mono); font-size: 10px; letter-spacing: var(--tr-caps); padding: 2px 8px; border: 1px solid var(--isk-yellow); color: var(--isk-yellow); }
+.isk-pcb__swd { position: absolute; bottom: var(--s-4); right: var(--s-4); font-family: var(--ff-mono); font-size: 9px; letter-spacing: var(--tr-caps); color: var(--ash); }
+
+/* pickers */
+.isk-pick { display: flex; flex-direction: column; gap: var(--s-3); }
+
+/* action triad */
+.isk-actions { margin-top: auto; display: grid; grid-template-columns: 1fr 1fr 1.4fr; gap: var(--s-3); }
+.isk-act {
+  display: flex; flex-direction: column; align-items: center; gap: 2px; padding: var(--s-4) var(--s-3);
+  border: 1px solid var(--hairline); background: rgba(13,17,26,0.85); cursor: pointer;
+  font-family: var(--ff-mono); font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--bone);
+  transition: border-color var(--d-fast), background var(--d-fast), filter var(--d-fast);
+}
+.isk-act small { font-size: 8px; font-weight: 400; letter-spacing: var(--tr-caps); color: var(--ghost); text-transform: uppercase; }
+.isk-act__lg { font-size: 14px; }
+.isk-act:disabled { opacity: 0.4; cursor: default; }
+.isk-act--scan:hover:not(:disabled) { border-color: var(--isk-blue); color: var(--isk-blue); }
+.isk-act--reject:hover:not(:disabled) { border-color: var(--isk-fail); color: var(--isk-fail); }
+.isk-act--flash { background: linear-gradient(180deg, #18324f, #0d1f33); border-color: var(--isk-blue); color: #eaf3ff; }
+.isk-act--flash:hover:not(:disabled) { filter: brightness(1.16); }
+.isk-act--flash.is-busy { border-color: var(--isk-yellow); cursor: progress; animation: iskPulse 1.1s ease-in-out infinite; }
+
+.isk-flash--retry {
+  margin-top: auto; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: var(--s-5);
+  background: rgba(255,229,0,0.1); border: 1px solid var(--isk-yellow); color: var(--isk-yellow);
+  font-family: var(--ff-mono); text-transform: uppercase; cursor: pointer; animation: iskPulse 1.1s ease-in-out infinite;
+}
+
+/* legend + report colour helpers */
+.c-ok { color: var(--isk-pass); }
+.c-bad { color: var(--isk-fail); }
+.isk-legend { border: 1px solid var(--hairline); background: rgba(8,12,20,0.82); padding: var(--s-4); display: flex; flex-direction: column; gap: 5px; font-family: var(--ff-mono); font-size: 9.5px; color: var(--ash); letter-spacing: 0.02em; }
+.isk-legend b { font-weight: 600; margin-right: 4px; }
+.isk-hist__delta { font-family: var(--ff-mono); font-size: 10px; text-align: right; }
+.isk-hist__delta.is-pos { color: var(--isk-pass); }
+.isk-hist__delta.is-neg { color: var(--isk-fail); }
+
+/* ============================================================
+   REPORT
+   ============================================================ */
+.isk-report { position: absolute; inset: 0; display: grid; place-items: center; padding: var(--s-7); animation: hvdFadeIn 420ms var(--e-out) both; }
+.isk-report__card { width: min(560px, 92vw); border: 1px solid var(--hairline); background: rgba(8,12,20,0.94); padding: var(--s-7); display: flex; flex-direction: column; gap: var(--s-5); }
+.isk-report__head { display: flex; align-items: center; gap: var(--s-4); }
+.isk-report__title { font-family: var(--ff-mono); font-size: 14px; letter-spacing: 0.12em; color: var(--bone); }
+.isk-report__sub { font-family: var(--ff-mono); font-size: 10px; letter-spacing: var(--tr-caps); text-transform: uppercase; color: var(--ghost); margin-top: 2px; }
+.isk-report__rank { margin-left: auto; font-family: var(--ff-mono); font-size: 12px; letter-spacing: 0.1em; color: var(--isk-yellow); border: 1px solid var(--isk-yellow); padding: 4px 10px; }
+.isk-report__score { font-family: var(--ff-mono); font-size: 56px; font-weight: 700; color: var(--isk-pass); line-height: 1; }
+.isk-report__score span { font-size: 16px; color: var(--ghost); margin-left: 8px; }
+.isk-report__grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--s-4); }
+.isk-report__stat { display: flex; flex-direction: column; gap: 3px; border: 1px solid var(--hairline); padding: var(--s-3) var(--s-4); }
+.isk-report__sk { font-family: var(--ff-mono); font-size: 9px; letter-spacing: var(--tr-caps); color: var(--ghost); }
+.isk-report__sv { font-family: var(--ff-mono); font-size: 20px; color: var(--bone); }
+.isk-report__bricked { font-family: var(--ff-mono); font-size: 11px; letter-spacing: 0.04em; color: var(--isk-blue); border: 1px solid var(--isk-blue); background: rgba(42,143,255,0.08); padding: var(--s-4); text-align: center; }
+
+/* ============================================================
+   CONSOLE (centre)
+   ============================================================ */
+.isk-con { display: flex; flex-direction: column; min-height: 0; height: 100%; border: 1px solid var(--hairline); background: #04060a; }
+.isk-con__head {
+  display: flex; align-items: center; gap: var(--s-3); padding: var(--s-3) var(--s-4);
+  border-bottom: 1px solid var(--hairline);
+  font-family: var(--ff-mono); font-size: 10px; letter-spacing: var(--tr-caps); text-transform: uppercase; color: var(--ghost);
+}
+.isk-con__dot { width: 7px; height: 7px; border-radius: 50%; background: var(--isk-pass); box-shadow: 0 0 6px var(--isk-pass); }
+.isk-con__spacer { flex: 1; }
+.isk-con__pct { color: var(--isk-yellow); }
+.isk-con__body { flex: 1; overflow-y: auto; padding: var(--s-4); font-family: var(--ff-mono); font-size: 11.5px; line-height: 1.65; scrollbar-width: thin; scrollbar-color: var(--hairline) transparent; }
+.isk-con__body::-webkit-scrollbar { width: 5px; }
+.isk-con__body::-webkit-scrollbar-thumb { background: var(--hairline); }
+.isk-con__line { white-space: pre-wrap; word-break: break-all; color: #9fb0c4; }
+.isk-con__line--cmd { color: var(--isk-blue); margin-top: 6px; }
+.isk-con__line--dim { color: var(--ash); }
+.isk-con__line--ok { color: var(--isk-pass); }
+.isk-con__line--warn { color: var(--isk-yellow); }
+.isk-con__line--err { color: var(--isk-fail); }
+.isk-con__line--head { color: var(--bone); letter-spacing: 0.08em; margin-top: 8px; }
+.isk-con__line--pass { color: var(--isk-pass); font-weight: 600; letter-spacing: 0.1em; margin-top: 6px; }
+.isk-con__line--fail { color: var(--isk-fail); font-weight: 600; letter-spacing: 0.1em; margin-top: 6px; }
+.isk-cur { color: var(--isk-blue); animation: iskBlink 0.9s steps(2) infinite; }
+@keyframes iskBlink { 50% { opacity: 0; } }
+.isk-con__bar { height: 3px; background: var(--hairline); }
+.isk-con__fill { height: 100%; background: linear-gradient(90deg, var(--isk-blue), var(--isk-yellow)); transition: width 90ms linear; }
+
+/* ============================================================
+   RAIL (right)
+   ============================================================ */
+.isk-col--rail { overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--hairline) transparent; }
+.isk-col--rail::-webkit-scrollbar { width: 4px; }
+.isk-col--rail::-webkit-scrollbar-thumb { background: var(--hairline); }
+.isk-badge { border: 1px solid var(--isk-yellow); background: rgba(255, 229, 0, 0.08); padding: var(--s-4); display: flex; flex-direction: column; gap: 3px; }
+.isk-badge__k { font-family: var(--ff-mono); font-size: 9px; letter-spacing: var(--tr-caps); color: var(--isk-yellow); }
+.isk-badge__v { font-family: var(--ff-mono); font-size: 13px; color: var(--bone); }
+.isk-badge__note { font-family: var(--ff-mono); font-size: 9px; color: var(--ash); }
+.isk-railSec { border: 1px solid var(--hairline); background: rgba(8, 12, 20, 0.82); padding: var(--s-4); display: flex; flex-direction: column; gap: var(--s-3); }
+.isk-railSec--hist { flex: 1; min-height: 120px; }
+.isk-railHead { font-family: var(--ff-mono); font-size: 10px; letter-spacing: var(--tr-caps); text-transform: uppercase; color: var(--ghost); display: flex; align-items: baseline; gap: 6px; }
+.isk-railHead__sub { color: var(--ash); font-size: 8px; }
+.isk-fault { display: flex; align-items: center; gap: var(--s-3); }
+.isk-fault__k { width: 52px; font-family: var(--ff-mono); font-size: 9px; letter-spacing: 0.04em; color: var(--ghost); }
+.isk-segRow { display: flex; gap: 4px; flex: 1; }
+.isk-station .hvd-seg { flex: 1; padding: 5px 4px; font-size: 9px; }
+
+.isk-hist { display: flex; flex-direction: column; gap: 2px; overflow-y: auto; font-family: var(--ff-mono); }
+.isk-hist__empty { font-size: 10px; color: var(--ash); padding: var(--s-3) 0; }
+.isk-hist__row { display: grid; grid-template-columns: 14px 38px 1fr auto; gap: 6px; align-items: baseline; font-size: 10px; padding: 3px 0; border-bottom: 1px solid rgba(232, 228, 218, 0.05); }
+.isk-hist__res { font-weight: 700; }
+.isk-hist__row--pass .isk-hist__res { color: var(--isk-pass); }
+.isk-hist__row--fail .isk-hist__res { color: var(--isk-fail); }
+.isk-hist__unit { color: var(--ghost); }
+.isk-hist__prod { color: var(--bone); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.isk-hist__code { color: var(--ash); font-size: 9px; }
+.isk-hist__row--fail .isk-hist__code { color: var(--isk-fail); }
+.isk-hist__ts { display: none; }
+
+/* toast */
+.isk-toast {
+  position: absolute; bottom: var(--s-6); left: 50%; transform: translateX(-50%);
+  padding: var(--s-3) var(--s-5); background: rgba(4, 6, 13, 0.92); border: 1px solid var(--isk-blue);
+  font-family: var(--ff-mono); font-size: 10px; letter-spacing: var(--tr-caps); text-transform: uppercase; color: var(--bone);
+  animation: iskToast 2.4s var(--e-out) forwards; pointer-events: none; white-space: nowrap;
+}
+@keyframes iskToast { 0% { opacity: 0; transform: translate(-50%, 8px); } 12%,72% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; } }
+
+/* ============================================================
+   MOBILE — stack the columns, console scrolls, rail collapses
+   ============================================================ */
+@media (max-width: 900px) {
+  .isk-station {
+    inset: 56px var(--s-5) var(--s-5) var(--s-5);
+    grid-template-columns: 1fr; grid-template-rows: auto minmax(180px, 1fr) auto;
+    overflow-y: auto; gap: var(--s-4);
+  }
+  .isk-game {
+    inset: 52px var(--s-4) var(--s-4) var(--s-4);
+    display: flex; flex-direction: column;
+    overflow-y: auto; -webkit-overflow-scrolling: touch; gap: var(--s-3);
+  }
+  /* every section flows at its natural height; the whole game scrolls */
+  .isk-game > .isk-hud,
+  .isk-game > .isk-col { width: 100%; flex: 0 0 auto; }
+  .isk-game .isk-col { grid-row: auto; }
+  .isk-hud { gap: var(--s-4); flex-wrap: wrap; }
+  .isk-col--bench { min-height: auto; }
+  .isk-actions { margin-top: var(--s-3); }
+  .isk-col--con { height: 240px; min-height: 240px; }
+  .isk-col--rail { min-height: auto; overflow: visible; }
+  .isk-railSec--hist { min-height: 140px; }
+  .isk-pcb__label { font-size: 18px; }
+  .isk-act { padding: var(--s-4) 4px; font-size: 11px; }
+  .isk-report__grid { grid-template-columns: 1fr 1fr; }
+  .isk-report__score { font-size: 44px; }
+  .isk-setup__card { padding: var(--s-6); }
+}
+@media (max-width: 560px) {
+  .isk-chip--prod { min-width: 0; flex: 1; }
+  .isk-actions { grid-template-columns: 1fr 1fr; }
+  .isk-act--flash { grid-column: 1 / -1; }
+}

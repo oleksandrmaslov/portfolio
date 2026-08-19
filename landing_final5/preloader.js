@@ -173,8 +173,11 @@
     }, 200);
   }
 
-  // A refresh inside the narrative should not replay the entry horizon.
-  if (window.scrollY > 80) {
+  // A refresh inside the narrative or a project-to-field handoff should not
+  // replay the entry horizon. The restored node transition owns that return.
+  var returningToField = false;
+  try { returningToField = sessionStorage.getItem("mo_node_return") === "1"; } catch (_) {}
+  if (returningToField || window.scrollY > 80) {
     finish();
     return;
   }

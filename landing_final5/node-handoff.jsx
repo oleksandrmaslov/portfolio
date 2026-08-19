@@ -32,9 +32,15 @@ function nhClearStale() {
   for (const k of ["mo_node_arrive", "mo_node_yaw", "mo_node_return", "mo_node_return_addr", "mo_node_return_target"]) sessionStorage.removeItem(k);
 }
 
+function nhHasPendingReturn() {
+  try { return sessionStorage.getItem("mo_node_return") === "1"; }
+  catch (_) { return false; }
+}
+
 function NodeHandoff() {
+  const returningRef = useNHR(nhHasPendingReturn());
   const mountRef = useNHR(null);
-  const [mode, setMode] = useNH("idle");            // idle | forward | return
+  const [mode, setMode] = useNH(returningRef.current ? "return" : "idle"); // idle | forward | return
   const [hud, setHud] = useNH({ addr: "", name: "" });
   const rigRef = useNHR(null);
   const rafRef = useNHR(0);
@@ -67,7 +73,7 @@ function NodeHandoff() {
   /* ---------- FORWARD: any card / tile → its project page ---------- */
   useNHE(() => {
     const onFly = (e) => {
-      if (mode !== "idle") return;
+      if (returningRef.current || mode !== "idle") return;
       const project = e && e.detail && e.detail.project;
       if (!project || !project.file) return;                       // RECORD FORMING — cards handle it
       const originRect = e.detail.originRect;
@@ -136,14 +142,19 @@ function NodeHandoff() {
 
   /* ---------- REVERSE: returning from a project page ---------- */
   useNHE(() => {
-    if (sessionStorage.getItem("mo_node_return") !== "1") return;
+    if (!returningRef.current) return;
     sessionStorage.removeItem("mo_node_return");
     const addr = sessionStorage.getItem("mo_node_return_addr") || "";
     const returnTarget = sessionStorage.getItem("mo_node_return_target") || "work";
     sessionStorage.removeItem("mo_node_return_target");
     sessionStorage.removeItem("mo_node_return_addr");
     const project = window.MO_PROJECT_BY_ADDR && window.MO_PROJECT_BY_ADDR[addr];
-    if (!project) { nhClearStale(); return; }
+    if (!project) {
+      returningRef.current = false;
+      nhClearStale();
+      setMode("idle");
+      return;
+    }
     const hp = Object.assign({}, NH_DEFAULTS, (project.model && project.model.handoffPose) || {});
     setHud({ addr: project.addr, name: project.name.toUpperCase() });
     setMode("return");
@@ -152,7 +163,14 @@ function NodeHandoff() {
 
     requestAnimationFrame(() => {
       const rig = buildRig(project);
-      if (!rig) { fadeUniverse(1, 600); document.body.classList.remove("wf-flying"); setMode("idle"); return; }
+      if (!rig) {
+        returningRef.current = false;
+        fadeUniverse(1, 600);
+        document.body.classList.remove("wf-flying");
+        nhClearStale();
+        setMode("idle");
+        return;
+      }
       const seamYaw = parseFloat(sessionStorage.getItem("mo_node_yaw"));
       rig.snapHandoff();
       if (isFinite(seamYaw)) rig.setYaw(seamYaw);
@@ -190,6 +208,7 @@ function NodeHandoff() {
           if (rigRef.current) { try { rigRef.current.dispose(); } catch (_) {} rigRef.current = null; }
           const m = mountRef.current; if (m) { while (m.firstChild) m.removeChild(m.firstChild); }
           if (el) el.classList.remove("wf--dissolve");
+          returningRef.current = false;
           nhClearStale();
           sessionStorage.removeItem("mo_node_seam");
           setMode("idle");
