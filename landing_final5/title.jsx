@@ -27,23 +27,23 @@ function FieldGuideT2({ dismissed, touch }) {
     <div className={"fieldHint " + (dismissed ? "is-dismissed" : "")} aria-hidden="true">
       <div className="fieldHint__inner">
         <div className="fieldHint__ring"><span className="cross" /><span className="dot" /></div>
-        <div className="fieldHint__lede">This field is live</div>
+        <div className="fieldHint__lede" data-mo-cursor-mirror data-mo-cursor-opacity=".fieldHint,.fieldHint__inner,.title__stage,.lp">This field is live</div>
         <div className="fieldHint__cues">
           {touch ? (
             <>
-              <span className="fieldHint__cue"><b>Tap</b> explore</span>
+              <span className="fieldHint__cue" data-mo-cursor-mirror data-mo-cursor-opacity=".fieldHint,.fieldHint__inner,.title__stage,.lp"><b>Tap</b> explore</span>
               <span className="fieldHint__sep" />
-              <span className="fieldHint__cue"><b>Pinch</b> to fly</span>
+              <span className="fieldHint__cue" data-mo-cursor-mirror data-mo-cursor-opacity=".fieldHint,.fieldHint__inner,.title__stage,.lp"><b>Pinch</b> to fly</span>
               <span className="fieldHint__sep" />
-              <span className="fieldHint__cue"><b>Tap</b> a node</span>
+              <span className="fieldHint__cue" data-mo-cursor-mirror data-mo-cursor-opacity=".fieldHint,.fieldHint__inner,.title__stage,.lp"><b>Tap</b> a node</span>
             </>
           ) : (
             <>
-              <span className="fieldHint__cue"><b>Drag</b> to look</span>
+              <span className="fieldHint__cue" data-mo-cursor-mirror data-mo-cursor-opacity=".fieldHint,.fieldHint__inner,.title__stage,.lp"><b>Drag</b> to look</span>
               <span className="fieldHint__sep" />
-              <span className="fieldHint__cue"><b>Scroll</b> to fly through</span>
+              <span className="fieldHint__cue" data-mo-cursor-mirror data-mo-cursor-opacity=".fieldHint,.fieldHint__inner,.title__stage,.lp"><b>Scroll</b> to fly through</span>
               <span className="fieldHint__sep" />
-              <span className="fieldHint__cue"><b>Click</b> a node</span>
+              <span className="fieldHint__cue" data-mo-cursor-mirror data-mo-cursor-opacity=".fieldHint,.fieldHint__inner,.title__stage,.lp"><b>Click</b> a node</span>
             </>
           )}
         </div>
@@ -144,8 +144,8 @@ function TitleScreenV2() {
       </div>
 
       <div className="title__idTop">
-        <span className="title__idName"><span className="title__idBullet">■</span>MASLOV / OLEKSANDR</span>
-        <span className="title__idRole">PRODUCT SYSTEMS · EMBEDDED · INTERACTION</span>
+        <span className="title__idName" data-mo-cursor-mirror data-mo-cursor-opacity=".title__idTop,.title__stage,.lp"><span className="title__idBullet">■</span>MASLOV / OLEKSANDR</span>
+        <span className="title__idRole" data-mo-cursor-mirror data-mo-cursor-opacity=".title__idTop,.title__stage,.lp">PRODUCT SYSTEMS · EMBEDDED · INTERACTION</span>
       </div>
 
       <FieldGuideT2 dismissed={touched} touch={showExplore} />
@@ -174,11 +174,11 @@ function TitleScreenV2() {
       <div className="title__baseline" aria-hidden="false">
         <span className="title__wordmarkSub">
           <span className="title__wordmarkSubBullet">■</span>
-          KYIV → MUNICH
+          <span data-mo-cursor-mirror data-mo-cursor-opacity=".title__wordmarkSub,.title__baseline,.title__stage,.lp">KYIV → MUNICH</span>
           <span className="title__wordmarkSubSep">·</span>
-          2026
+          <span data-mo-cursor-mirror data-mo-cursor-opacity=".title__wordmarkSub,.title__baseline,.title__stage,.lp">2026</span>
         </span>
-        <span className="title__proceedCap">{showExplore ? "tap · or swipe up to continue" : "press ↵ \u00a0·\u00a0 or scroll at the edges"}</span>
+        <span className="title__proceedCap" data-mo-cursor-mirror data-mo-cursor-opacity=".title__baseline,.title__stage,.lp">{showExplore ? "tap · or swipe up to continue" : "press ↵ \u00a0·\u00a0 or scroll at the edges"}</span>
       </div>
 
       </div>

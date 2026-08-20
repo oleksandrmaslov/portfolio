@@ -141,11 +141,11 @@ function Work({ onHoverWork }) {
         <div className="lp-workReel__rail" style={{ transform: `translateX(${railShiftVW}vw)` }}>
           <div className="lp-workReel__slot lp-workReel__slot--title" style={{ flex: `0 0 ${TITLE_SLOT_VW}vw` }}>
             <div className="lp-workReel__titleInner" style={{ left: titleInnerLeft }}>
-              <div className="lp-workReel__titleNum">02</div>
-              <h2 className="lp-workReel__title">Selected nodes<em>.</em></h2>
+              <div className="lp-workReel__titleNum"><span data-mo-cursor-mirror data-mo-cursor-opacity=".lp-workReel__sticky,.lp">02</span></div>
+              <h2 className="lp-workReel__title" data-mo-cursor-mirror data-mo-cursor-opacity=".lp-workReel__sticky,.lp">Selected nodes<em>.</em></h2>
               <div className="lp-workReel__titleSub">
                 <span className="lp-workReel__titleSubDot" />
-                <span>Scroll — each node resolves at the lens.</span>
+                <span data-mo-cursor-mirror data-mo-cursor-opacity=".lp-workReel__sticky,.lp">Scroll — each node resolves at the lens.</span>
               </div>
             </div>
           </div>

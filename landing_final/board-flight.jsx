@@ -70,7 +70,7 @@ function BoardFlight({ onEnter, onContact }) {
   useBFE(() => {
     const mount = mountRef.current;
     if (!mount) return;
-    let raf, last = performance.now(), disposed = false, started = false;
+    let raf, cursorFx = null, last = performance.now(), disposed = false, started = false;
     uniRef.current = document.querySelector(".universeBg");
     if (uniRef.current) uniRef.current.style.transition = "none";
 
@@ -79,6 +79,17 @@ function BoardFlight({ onEnter, onContact }) {
       const ctrl = window.MOBoard.build(mount, { lite: true });
       if (!ctrl) return;
       ctrlRef.current = ctrl;
+      const sharedCursor = window.MOCursorDistortion;
+      if (sharedCursor && typeof sharedCursor.mountStandalone === "function") {
+        cursorFx = sharedCursor.mountStandalone({
+          THREE: window.THREE,
+          selector: "[data-mo-board-cursor-mirror]",
+          zIndex: 20,
+          dprCap: 1,
+          disabledClasses: ["landing-exit", "mo-explore", "nx-page"],
+          chainPrevious: true,
+        });
+      }
       const loop = (now) => {
         if (disposed) return;
         const dt = Math.min(50, now - last); last = now;
@@ -109,6 +120,7 @@ function BoardFlight({ onEnter, onContact }) {
       window.removeEventListener("resize", onResize);
       window.__mo_universe_pause = false;
       window.__mo_morph = null;
+      if (cursorFx) cursorFx.destroy();
       if (uniRef.current) { uniRef.current.style.opacity = ""; uniRef.current.style.transition = ""; uniRef.current.style.transform = ""; }
       const c = ctrlRef.current;
       if (c) c.dispose();
@@ -312,9 +324,9 @@ function BoardFlight({ onEnter, onContact }) {
           <div className="uNode__head">
             <div className="uNode__headL">
               <span className="uNode__id"><span className="uNode__sq" />NODE 0x00</span>
-              <span className="uNode__year">ABOUT</span>
+              <span className="uNode__year" data-mo-board-cursor-mirror data-mo-cursor-opacity=".aboutNode-layer,.uNode,.lp">ABOUT</span>
             </div>
-            <div className="uNode__headR">
+            <div className="uNode__headR" data-mo-board-cursor-mirror data-mo-cursor-opacity=".aboutNode-layer,.uNode,.lp">
               <span>MASLOV / OLEKSANDR</span>
               <span>48.137° N · 11.575° E</span>
             </div>
@@ -326,8 +338,8 @@ function BoardFlight({ onEnter, onContact }) {
 
           {/* name block — bottom-left, like the tile cards */}
           <div className="uNode__foot">
-            <h3 className="uNode__name">Source node<em>.</em></h3>
-            <div className="uNode__sub">0x00 has no fixed coordinate. This board is one readable projection of how the source node was formed.</div>
+            <h3 className="uNode__name" data-mo-board-cursor-mirror data-mo-cursor-opacity=".aboutNode-layer,.uNode,.lp">Source node<em>.</em></h3>
+            <div className="uNode__sub" data-mo-board-cursor-mirror data-mo-cursor-opacity=".aboutNode-layer,.uNode,.lp">0x00 has no fixed coordinate. This board is one readable projection of how the source node was formed.</div>
             <div className="uNode__cue"><span className="uNode__cueLine" />KEEP SCROLLING — INSPECT THE SOURCE ↓</div>
           </div>
         </div>
@@ -368,13 +380,13 @@ function BoardFlight({ onEnter, onContact }) {
                     {st.live ? <span className="bf-ch__live" /> : <span className="bf-ch__dot" />}
                     {st.chapter.kicker}
                   </div>
-                  <h2 className="bf-ch__title">
+                  <h2 className="bf-ch__title" data-mo-board-cursor-mirror data-mo-cursor-opacity=".bf-ch,.bf-layer,.lp">
                     {st.chapter.title[0]}<em>{st.chapter.title[1]}</em>{st.chapter.title[2]}
                   </h2>
-                  <p className="bf-ch__body">{st.chapter.body}</p>
+                  <p className="bf-ch__body" data-mo-board-cursor-mirror data-mo-cursor-opacity=".bf-ch,.bf-layer,.lp">{st.chapter.body}</p>
                   <div className="bf-ch__ref">
-                    <span className="bf-ch__refK">COMPONENT</span>
-                    <span className="bf-ch__refV">{st.ref}</span>
+                    <span className="bf-ch__refK" data-mo-board-cursor-mirror data-mo-cursor-opacity=".bf-ch,.bf-layer,.lp">COMPONENT</span>
+                    <span className="bf-ch__refV" data-mo-board-cursor-mirror data-mo-cursor-opacity=".bf-ch,.bf-layer,.lp">{st.ref}</span>
                   </div>
                 </div>
               </article>
@@ -418,7 +430,7 @@ function BoardFlight({ onEnter, onContact }) {
           <div className="bf-foot__scrim" aria-hidden="true" />
           <div className="bf-foot__inner" style={{ transform: `translateY(${((1 - footE) * 40).toFixed(1)}px)` }}>
             <div className="bf-foot__kicker"><span className="bf-foot__live" />SW1 · OUTPUT — OPEN CHANNEL</div>
-            <div className="bf-foot__line">For products that cross hardware, software and interaction.</div>
+            <div className="bf-foot__line" data-mo-board-cursor-mirror data-mo-cursor-opacity=".bf-foot,.bf-layer,.lp">For products that cross hardware, software and interaction.</div>
             <a className="bf-foot__big t-link" href="mailto:oleksandrmaslov08@gmail.com">
               oleksandrmaslov08<wbr />@gmail.com
             </a>
@@ -441,9 +453,9 @@ function BoardFlight({ onEnter, onContact }) {
               </a>
             </div>
             <div className="bf-foot__meta">
-              <span>© 2026 · MASLOV OLEKSANDR</span>
-              <span>BUILT IN MUNICH · v0.1.0</span>
-              <span>NO COOKIES · NO TRACKERS · STATIC HTML</span>
+              <span data-mo-board-cursor-mirror data-mo-cursor-opacity=".bf-foot,.bf-layer,.lp">© 2026 · MASLOV OLEKSANDR</span>
+              <span data-mo-board-cursor-mirror data-mo-cursor-opacity=".bf-foot,.bf-layer,.lp">BUILT IN MUNICH · v0.1.0</span>
+              <span data-mo-board-cursor-mirror data-mo-cursor-opacity=".bf-foot,.bf-layer,.lp">NO COOKIES · NO TRACKERS · STATIC HTML</span>
             </div>
           </div>
         </div>

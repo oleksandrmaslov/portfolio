@@ -105,9 +105,9 @@ function PCSectionBlock({ block, i }) {
     <article className="pp-body__block">
       <header className="pp-body__h">
         <span className="pp-body__n">0{i + 1}</span>
-        <h3 className="pp-body__title">{block.h}<em>.</em></h3>
+        <h3 className="pp-body__title" data-mo-cursor-mirror data-mo-cursor-opacity=".hv-page">{block.h}<em>.</em></h3>
       </header>
-      <p className="pp-body__copy">{block.body}</p>
+      <p className="pp-body__copy" data-mo-cursor-mirror data-mo-cursor-opacity=".hv-page">{block.body}</p>
     </article>
   );
 }
@@ -117,12 +117,12 @@ function PCProjectStory({ project }) {
     <section className="pp-story" data-screen-label="03 Story">
       <header className="pp-section__head">
         <div className="pp-section__num">02</div>
-        <h2 className="pp-section__title">The story<em>.</em></h2>
+        <h2 className="pp-section__title" data-mo-cursor-mirror data-mo-cursor-opacity=".hv-page">The story<em>.</em></h2>
         <div className="pp-section__meta">
           <div>{project.sections.filter(s => s.kind !== "photo").length} BLOCKS · {project.sections.filter(s => s.kind === "photo").length} PHOTOS</div>
         </div>
       </header>
-      <div className="pp-story__lede">{project.intro}</div>
+      <div className="pp-story__lede" data-mo-cursor-mirror data-mo-cursor-opacity=".hv-page">{project.intro}</div>
       <div className="pp-body">
         {project.sections.map((b, i) => <PCSectionBlock key={i} block={b} i={i} />)}
       </div>
@@ -135,7 +135,7 @@ function PCProjectLinks({ project }) {
     <section className="pp-links" data-screen-label="04 Links">
       <header className="pp-section__head">
         <div className="pp-section__num">03</div>
-        <h2 className="pp-section__title">Files &amp; links<em>.</em></h2>
+        <h2 className="pp-section__title" data-mo-cursor-mirror data-mo-cursor-opacity=".hv-page">Files &amp; links<em>.</em></h2>
         <div className="pp-section__meta"><div>{project.links.length} ARTIFACTS</div></div>
       </header>
       <div className="pp-links__grid">
@@ -259,20 +259,20 @@ function PCHero({ project }) {
 
       <div className="hv__title">
         <div className="hv__overline"><span className="hv__pulse" />{project.overline}</div>
-        <h1 className="hv__name">{project.name}<em>.</em></h1>
-        <div className="hv__tagline">{project.tagline}</div>
+        <h1 className="hv__name" data-mo-cursor-mirror data-mo-cursor-opacity=".hv__title,.hv-page">{project.name}<em>.</em></h1>
+        <div className="hv__tagline" data-mo-cursor-mirror data-mo-cursor-opacity=".hv__title,.hv-page">{project.tagline}</div>
         <div className="hv__metric">
           {project.metrics.map((m, i) => (
             <div key={i} className="hv__metricCol">
-              <span className="hv__metricVal">{m.value}</span>
-              <span className="hv__metricKey">{m.unit}</span>
+              <span className="hv__metricVal" data-mo-cursor-mirror data-mo-cursor-opacity=".hv__title,.hv-page">{m.value}</span>
+              <span className="hv__metricKey" data-mo-cursor-mirror data-mo-cursor-opacity=".hv__title,.hv-page">{m.unit}</span>
             </div>
           ))}
         </div>
         <div className="hv__meta">
-          <div className="hv__metaCol"><span className="hv__metaK">ROLE</span><span className="hv__metaV">{project.role}</span></div>
-          <div className="hv__metaCol"><span className="hv__metaK">PLACE</span><span className="hv__metaV">{project.place}</span></div>
-          <div className="hv__metaCol"><span className="hv__metaK">STACK</span><span className="hv__metaV">{project.stack.slice(0, 4).join(" · ")}</span></div>
+          <div className="hv__metaCol" data-mo-cursor-mirror data-mo-cursor-opacity=".hv__title,.hv-page"><span className="hv__metaK">ROLE</span><span className="hv__metaV">{project.role}</span></div>
+          <div className="hv__metaCol" data-mo-cursor-mirror data-mo-cursor-opacity=".hv__title,.hv-page"><span className="hv__metaK">PLACE</span><span className="hv__metaV">{project.place}</span></div>
+          <div className="hv__metaCol" data-mo-cursor-mirror data-mo-cursor-opacity=".hv__title,.hv-page"><span className="hv__metaK">STACK</span><span className="hv__metaV">{project.stack.slice(0, 4).join(" · ")}</span></div>
         </div>
       </div>
 
@@ -297,6 +297,21 @@ function ProjectPageApp() {
   const rigRef   = useRPC(null);
   const demoRef  = useRPC(false);
   useEPC(() => { demoRef.current = demo; }, [demo]);
+
+  useEPC(() => {
+    const sharedCursor = window.MOCursorDistortion;
+    if (!sharedCursor || typeof sharedCursor.mountStandalone !== "function") return;
+    const cursorFx = sharedCursor.mountStandalone({
+      THREE: window.THREE,
+      selector: "[data-mo-cursor-mirror]",
+      zIndex: 20,
+      dprCap: 1,
+      disabledClasses: ["hv-exit", "hv-inspecting", "hv-demoing"],
+    });
+    return () => {
+      if (cursorFx && typeof cursorFx.destroy === "function") cursorFx.destroy();
+    };
+  }, []);
 
   /* build the rig once */
   useEPC(() => {

@@ -436,96 +436,15 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     // fill-rate-heavy DoF pass stays affordable on phones.
     const _composerDpr = Math.min(window.devicePixelRatio, _isSmall ? 1.25 : 1.5);
 
-    // Maslov grade shader — chromatic aberration + vignette + animated grain.
-    // v10: + disturbance RIPPLES (expanding refraction rings) + cursor WAKE
-    // (a soft lens that travels with the pointer). You are not a cursor —
-    // you are a wavefront moving through the field.
-    const MaslovGradeShader = {
-      uniforms: {
-        tDiffuse:   { value: null },
-        uAberr:     { value: GRADE.aberration },
-        uVignette:  { value: GRADE.vignette },
-        uGrain:     { value: GRADE.grain },
-        uTime:      { value: 0 },
-        uAspect:    { value: w / h },
-        uR0:        { value: new THREE.Vector4(0.5, 0.5, 2, 0) },
-        uR1:        { value: new THREE.Vector4(0.5, 0.5, 2, 0) },
-        uR2:        { value: new THREE.Vector4(0.5, 0.5, 2, 0) },
-        uR3:        { value: new THREE.Vector4(0.5, 0.5, 2, 0) },
-        uWake:      { value: new THREE.Vector4(0.5, 0.5, 0, 30.0) },
-        uPaint:     { value: null },
-        uPaintK:    { value: 1.0 },
-      },
-      vertexShader: `
-        varying vec2 vUv;
-        void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }
-      `,
-      fragmentShader: `
-        precision highp float;
-        varying vec2 vUv;
-        uniform sampler2D tDiffuse;
-        uniform float uAberr, uVignette, uGrain, uTime, uAspect;
-        uniform vec4 uR0, uR1, uR2, uR3;   // ripple: center.xy · progress · strength
-        uniform vec4 uWake;                // wake:   center.xy · strength · tightness
-        uniform sampler2D uPaint;          // v11.2 screen-paint: vel.xy(0.5c) · amount
-        uniform float uPaintK;
-        float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1,311.7))) * 43758.5453); }
-        vec2 rippleDisp(vec2 uv, vec4 R){
-          if (R.w <= 0.001 || R.z >= 1.0) return vec2(0.0);
-          vec2 d = (uv - R.xy) * vec2(uAspect, 1.0);
-          float r = length(d);
-          float wave = r - R.z * 0.62;                 // expanding wavefront
-          float band = exp(-wave * wave * 240.0);
-          float fade = (1.0 - R.z) * (1.0 - R.z);      // dies out as it travels
-          vec2 dir = r > 0.0001 ? d / r : vec2(0.0);
-          return (dir * band * R.w * fade * 0.016) / vec2(uAspect, 1.0);
-        }
-        void main(){
-          vec2 uv = vUv;
-          // cursor wake — a soft refractive lens travelling with the pointer
-          vec2 wd = (uv - uWake.xy) * vec2(uAspect, 1.0);
-          float wk = exp(-dot(wd, wd) * uWake.w) * uWake.z;
-          uv -= (wd / vec2(uAspect, 1.0)) * wk * 0.05;
-          // v11.2 — SCREEN PAINT (Lusion technique): the cursor's stroke lives
-          // in a self-advecting low-res velocity buffer; sampling it here bends
-          // the field along the remembered flow — a smear that keeps moving
-          // and curls after the hand has stopped.
-          vec4 pnt = texture2D(uPaint, uv);
-          vec2 pVel = (pnt.xy - 0.5) * 2.0;
-          float pAmt = min(1.0, pnt.z) * uPaintK;
-          uv -= pVel * pAmt * 0.085;
-          // disturbance ripples
-          vec2 disp = rippleDisp(uv, uR0) + rippleDisp(uv, uR1)
-                    + rippleDisp(uv, uR2) + rippleDisp(uv, uR3);
-          uv += disp;
-          float dAmt = length(disp);
-          vec2 d = uv - 0.5;
-          float r2 = dot(d, d);
-          // radial chromatic aberration — split grows toward the edges,
-          // locally on the ripple wavefront, and along the paint flow
-          vec2 dir = d * (uAberr * (0.35 + r2 * 2.0)) + disp * 0.55 + pVel * pAmt * 0.012;
-          float cr = texture2D(tDiffuse, uv + dir).r;
-          float cg = texture2D(tDiffuse, uv).g;
-          float cb = texture2D(tDiffuse, uv - dir).b;
-          vec3 col = vec3(cr, cg, cb);
-          // faint teal lift on the wavefront + wake + paint flow
-          col += vec3(0.0, 0.94, 0.78) * (dAmt * 7.5 + wk * 0.10 + pAmt * 0.045);
-          // small vignette (aspect-corrected so it stays circular)
-          vec2 vd = d * vec2(uAspect, 1.0);
-          float vig = smoothstep(0.85, 0.30, length(vd));
-          col *= mix(1.0, vig, uVignette);
-          // faint animated film grain
-          float g = hash(uv * vec2(uAspect,1.0) * 900.0 + uTime) - 0.5;
-          col += g * uGrain;
-          gl_FragColor = vec4(col, 1.0);
-        }
-      `,
-    };
-
-    let composer = null, bokehPass = null, gradePass = null, useComposer = false;
+    // The shared controller owns the exact combined cursor shader, its four
+    // ripple slots, the Lusion-style paint buffers and pointer wake. Universe
+    // still owns its scene, DoF and live grade values.
+    let composer = null, bokehPass = null, cursorFx = null, useComposer = false;
     try {
-      const { EffectComposer, RenderPass, BokehPass, ShaderPass, OutputPass } = THREE;
-      if (EffectComposer && RenderPass && ShaderPass && OutputPass) {
+      const { EffectComposer, RenderPass, BokehPass, OutputPass } = THREE;
+      const createCursorEffect = window.MOCursorDistortion
+        && window.MOCursorDistortion.createComposerEffect;
+      if (EffectComposer && RenderPass && OutputPass && createCursorEffect) {
         composer = new EffectComposer(renderer);
         composer.setPixelRatio(_composerDpr);
         composer.setSize(w, h);
@@ -536,211 +455,36 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
           });
           composer.addPass(bokehPass);
         }
-        gradePass = new ShaderPass(MaslovGradeShader);
-        composer.addPass(gradePass);
+        cursorFx = createCursorEffect({
+          THREE,
+          renderer,
+          width: w,
+          height: h,
+          pixelRatio: _composerDpr,
+          grade: GRADE,
+        });
+        if (!cursorFx || !cursorFx.effectPass) {
+          throw new Error("shared cursor effect unavailable");
+        }
+        // Keep mirrored DOM crisp after DoF, then bend it in the same combined
+        // cursor pass as the universe. The inverse-alpha marker prevents the
+        // universe-only aberration/vignette/grain from leaking onto the type.
+        if (cursorFx.mirrorPass) composer.addPass(cursorFx.mirrorPass);
+        composer.addPass(cursorFx.effectPass);
         composer.addPass(new OutputPass());
         useComposer = true;
         window.__mo_useComposer = true;
         window.__mo_dofOn = !!bokehPass;
       }
-    } catch (e) {
-      console.warn("[universe] composer unavailable, falling back to direct render", e);
-      composer = null; useComposer = false;
+    } catch (error) {
+      console.warn("[universe] composer unavailable, falling back to direct render", error);
+      if (cursorFx) cursorFx.destroy();
+      cursorFx = null;
+      composer = null;
+      useComposer = false;
+      window.__mo_useComposer = false;
+      window.__mo_dofOn = false;
     }
-
-    /* ============================================================
-       v11.2 — SCREEN PAINT (the Lusion fluid-wake technique)
-       A low-res ping-pong buffer stores the cursor's stroke as a velocity
-       field: each frame the texture re-samples ITSELF along its own flow
-       (self-advection), curl noise swirls it, dissipation cools it, and the
-       current pointer stroke is drawn in as a capsule (sdSegment) carrying
-       its velocity. The grade shader then bends the rendered field along
-       this remembered flow — so a gesture leaves a living smear that keeps
-       travelling and curling after the hand stops. This replaces the v11.1
-       per-stroke ripples. Cost: one ~240×135 pass, only while energy > 0.
-       ============================================================ */
-    const PAINT = (window.__mo_paintCfg = Object.assign({
-      push: 18.0,        // self-advection: how far the flow carries itself
-      dissV: 0.984,      // velocity dissipation per frame
-      dissA: 0.945,      // amount dissipation per frame
-      curlScale: 0.16,   // curl noise frequency (paint-px)
-      curlStrength: 1.6, // how much the smear swirls as it decays
-      radius: 0.085,     // stroke radius · fraction of buffer min-dim
-    }, window.__mo_paintCfg || {}));
-    let paintA = null, paintB = null, paintScene = null, paintCam = null,
-        paintMat = null, paintEnergy = 0, paintOK = false;
-    const _pp = { x: -1, y: -1, has: false };
-    if (useComposer && gradePass) {
-      try {
-        const pw = () => Math.max(64, Math.floor(window.innerWidth / 8));
-        const ph = () => Math.max(36, Math.floor(window.innerHeight / 8));
-        const rtOpts = {
-          minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter,
-          depthBuffer: false, stencilBuffer: false,
-          type: renderer.capabilities.isWebGL2 ? THREE.HalfFloatType : THREE.UnsignedByteType,
-        };
-        paintA = new THREE.WebGLRenderTarget(pw(), ph(), rtOpts);
-        paintB = new THREE.WebGLRenderTarget(pw(), ph(), rtOpts);
-        paintMat = new THREE.ShaderMaterial({
-          uniforms: {
-            uPrev:   { value: paintA.texture },
-            uTexel:  { value: new THREE.Vector2(1 / pw(), 1 / ph()) },
-            uFrom:   { value: new THREE.Vector3(0, 0, 0) },   // px.xy · radius px
-            uTo:     { value: new THREE.Vector3(0, 0, 0) },
-            uVel:    { value: new THREE.Vector2(0, 0) },      // 0.5-centred stroke vel
-            uAdd:    { value: 0 },                            // amount injection · speed-gated
-            uDiss:   { value: new THREE.Vector2(PAINT.dissV, PAINT.dissA) },
-            uPush:   { value: PAINT.push },
-            uCurl:   { value: new THREE.Vector2(PAINT.curlScale, PAINT.curlStrength) },
-          },
-          vertexShader: `
-            varying vec2 vUv;
-            void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }
-          `,
-          fragmentShader: `
-            precision highp float;
-            varying vec2 vUv;
-            uniform sampler2D uPrev;
-            uniform vec2 uTexel, uVel, uDiss, uCurl;
-            uniform vec3 uFrom, uTo;
-            uniform float uPush, uAdd;
-            // capsule distance — the stroke between last and current pointer pos
-            vec2 sdSegment(vec2 p, vec2 a, vec2 b){
-              vec2 pa = p - a, ba = b - a;
-              float h = clamp(dot(pa, ba) / max(dot(ba, ba), 1e-5), 0.0, 1.0);
-              return vec2(length(pa - ba * h), h);
-            }
-            // gradient noise w/ derivatives (Lusion's curl source)
-            vec2 hash(vec2 p){
-              vec3 p3 = fract(vec3(p.xyx) * vec3(.1031, .1030, .0973));
-              p3 += dot(p3, p3.yzx + 33.33);
-              return fract((p3.xx + p3.yz) * p3.zy) * 2.0 - 1.0;
-            }
-            vec3 noised(in vec2 p){
-              vec2 i = floor(p); vec2 f = fract(p);
-              vec2 u = f*f*f*(f*(f*6.0-15.0)+10.0);
-              vec2 du = 30.0*f*f*(f*(f-2.0)+1.0);
-              vec2 ga = hash(i); vec2 gb = hash(i+vec2(1,0));
-              vec2 gc = hash(i+vec2(0,1)); vec2 gd = hash(i+vec2(1,1));
-              float va = dot(ga,f), vb = dot(gb,f-vec2(1,0));
-              float vc = dot(gc,f-vec2(0,1)), vd = dot(gd,f-vec2(1,1));
-              return vec3(va+u.x*(vb-va)+u.y*(vc-va)+u.x*u.y*(va-vb-vc+vd),
-                          ga+u.x*(gb-ga)+u.y*(gc-ga)+u.x*u.y*(ga-gb-gc+gd)
-                          +du*(u.yx*(va-vb-vc+vd)+vec2(vb,vc)-va));
-            }
-            void main(){
-              vec2 px = vUv / uTexel;
-              vec2 seg = sdSegment(px, uFrom.xy, uTo.xy);
-              float rad = mix(uFrom.z, uTo.z, seg.y);
-              float d = 1.0 - smoothstep(0.0, max(rad, 1.0), seg.x);
-              // self-advection: trace BACK along the stored flow, with curl
-              vec4 low = texture2D(uPrev, vUv);
-              vec2 velInv = (0.5 - low.xy) * uPush;
-              vec3 n3 = noised(px * uCurl.x);
-              velInv += n3.yz * low.z * uCurl.y;
-              vec4 data = texture2D(uPrev, vUv + velInv * uTexel);
-              data.xy -= 0.5;
-              data.xy *= uDiss.x;
-              data.z  *= uDiss.y;
-              data.xy += uVel * d;
-              // v11.3 — injection is SPEED-GATED: a resting cursor adds zero
-              // amount, so the buffer always drains to black instead of
-              // pooling a glowing puddle under a stationary pointer.
-              data.z   = min(1.0, data.z + d * uAdd);
-              if (data.z < 0.004) { data.z = 0.0; data.xy *= 0.5; }
-              data.xy = clamp(data.xy, -0.5, 0.5);
-              gl_FragColor = vec4(data.xy + 0.5, data.z, 1.0);
-            }
-          `,
-        });
-        paintScene = new THREE.Scene();
-        paintCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
-        paintScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), paintMat));
-        gradePass.uniforms.uPaint.value = paintA.texture;
-        paintOK = true;
-      } catch (e) {
-        console.warn("[universe] screen paint unavailable", e);
-        paintOK = false;
-      }
-    }
-    function resizePaint() {
-      if (!paintOK) return;
-      const W = Math.max(64, Math.floor(window.innerWidth / 8));
-      const H = Math.max(36, Math.floor(window.innerHeight / 8));
-      paintA.setSize(W, H); paintB.setSize(W, H);
-      paintMat.uniforms.uTexel.value.set(1 / W, 1 / H);
-      _pp.has = false;
-    }
-    function updatePaint() {
-      if (!paintOK) return;
-      const W = paintA.width, H = paintA.height;
-      // pointer in paint-buffer px (y up)
-      const cx = (_wake.lx / window.innerWidth) * W;
-      const cy = (1 - _wake.ly / window.innerHeight) * H;
-      if (!_pp.has) { _pp.x = cx; _pp.y = cy; _pp.has = true; }
-      const dx = cx - _pp.x, dy = cy - _pp.y;
-      const moved = Math.hypot(dx, dy);
-      // energy: refreshed by real movement, drains at the buffer's own rate —
-      // we keep the sim running (so it decays on screen) until genuinely cold
-      if (moved > 0.3) paintEnergy = 1;
-      else paintEnergy *= PAINT.dissA;
-      if (paintEnergy < 0.002) { _pp.x = cx; _pp.y = cy; return; }  // cold — skip the pass
-      const u = paintMat.uniforms;
-      const minDim = Math.min(W, H);
-      // radius swells a little with stroke speed, like Lusion's radiusDistanceRange
-      const rad = minDim * (PAINT.radius * (0.55 + Math.min(1, moved / (minDim * 0.5)) * 0.85));
-      u.uFrom.value.set(_pp.x, _pp.y, rad);
-      u.uTo.value.set(cx, cy, rad);
-      u.uAdd.value = Math.min(1, moved / (minDim * 0.10));
-      u.uVel.value.set(
-        Math.max(-0.45, Math.min(0.45, dx * 0.035)),
-        Math.max(-0.45, Math.min(0.45, dy * 0.035)),
-      );
-      u.uPrev.value = paintA.texture;
-      const prevRT = renderer.getRenderTarget();
-      renderer.setRenderTarget(paintB);
-      renderer.render(paintScene, paintCam);
-      renderer.setRenderTarget(prevRT);
-      const tmp = paintA; paintA = paintB; paintB = tmp;
-      gradePass.uniforms.uPaint.value = paintA.texture;
-      _pp.x = cx; _pp.y = cy;
-    }
-
-    /* ============================================================
-       v10 — DISTURBANCE LAYER state
-       The visitor is a wavefront. Every gesture injects energy into the
-       grade shader's ripple slots; the cursor drags a refractive wake.
-       window.__mo_disturb(clientX, clientY, strength) is the one public
-       entry point — used by hover/click here, KeyButtons, the score, and
-       the idle moment. Strengths are scaled by window.__mo_fx.ripple.
-       ============================================================ */
-    window.__mo_fx = Object.assign({ ripple: 1, topology: 1 }, window.__mo_fx || {});
-    const _ripples = [0, 1, 2, 3].map(() => ({ x: 0.5, y: 0.5, t0: -1, dur: 900, str: 0 }));
-    let _rNext = 0;
-    window.__mo_disturb = (cx, cy, strength) => {
-      const s = (strength == null ? 0.5 : strength) * (window.__mo_fx.ripple != null ? window.__mo_fx.ripple : 1);
-      if (s <= 0.001) return;
-      const r = _ripples[_rNext++ % _ripples.length];
-      r.x = cx / window.innerWidth;
-      r.y = 1 - cy / window.innerHeight;
-      r.t0 = performance.now();
-      r.dur = 800 + 700 * Math.min(1.5, s);
-      r.str = Math.min(1.6, s);
-    };
-    // cursor wake — smoothed in the frame loop
-    const _wake = { x: 0.5, y: 0.5, sx: 0.5, sy: 0.5, v: 0, sv: 0, lx: 0, ly: 0, lt: 0 };
-    const onWakeMove = (e) => {
-      const t = performance.now();
-      const dtm = Math.max(16, t - _wake.lt);
-      const vx = (e.clientX - _wake.lx) / dtm, vy = (e.clientY - _wake.ly) / dtm;
-      _wake.lx = e.clientX; _wake.ly = e.clientY; _wake.lt = t;
-      _wake.x = e.clientX / window.innerWidth;
-      _wake.y = e.clientY / window.innerHeight;
-      _wake.v = Math.min(1, Math.hypot(vx, vy) * 0.9);
-      // (v11.2) the per-stroke micro-ripples are gone — the motion distortion
-      // now lives in the screen-paint advection buffer below, Lusion-style.
-    };
-    window.addEventListener("pointermove", onWakeMove, { passive: true });
     // audio-reactive level (smoothed) — the field breathes with the sound
     let _lvlS = 0;
     // velocity weight (written by cinematic.js) → FOV + aberration kick
@@ -1841,9 +1585,8 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
       fitGlyphToView();
-      resizePaint();
+      if (cursorFx) cursorFx.resize(w, h);
       if (composer) composer.setSize(w, h);
-      if (gradePass) gradePass.uniforms.uAspect.value = w / h;
     };
     window.addEventListener("resize", onResize);
     const ro = new ResizeObserver(onResize);
@@ -2599,26 +2342,12 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       // and the FOV so speed is something you FEEL; ripple + wake uniforms
       // carry the disturbance layer.
       const vW = Math.max(0, Math.min(1.4, window.__mo_vel || 0));
-      if (gradePass) {
-        const u = gradePass.uniforms;
-        u.uTime.value = (now % 100000) * 0.001;
-        u.uAberr.value = GRADE.aberration + vW * 0.0035 + arrCollapse * 0.002 + warpNow * 0.0022;
-        u.uVignette.value = GRADE.vignette;
-        u.uGrain.value = GRADE.grain;
-        for (let i = 0; i < 4; i++) {
-          const R = _ripples[i];
-          const prog = R.t0 > 0 ? (now - R.t0) / R.dur : 2;
-          u["uR" + i].value.set(R.x, R.y, Math.min(1, prog), prog >= 1 ? 0 : R.str);
-        }
-        const wkK = 1 - Math.pow(0.80, dt / 16);
-        _wake.sx += (_wake.x - _wake.sx) * wkK;
-        _wake.sy += (_wake.y - _wake.sy) * wkK;
-        _wake.sv += (_wake.v - _wake.sv) * (1 - Math.pow(0.86, dt / 16));
-        _wake.v *= Math.pow(0.92, dt / 16);
-        const fxR = window.__mo_fx.ripple != null ? window.__mo_fx.ripple : 1;
-        // the "old cloud" wake — v10 values, restored per request
-        u.uWake.value.set(_wake.sx, 1 - _wake.sy, _wake.sv * 0.42 * fxR, 30.0);
-        u.uPaintK.value = fxR;
+      if (cursorFx) {
+        cursorFx.update(now, dt, {
+          aberration: GRADE.aberration + vW * 0.0035 + arrCollapse * 0.002 + warpNow * 0.0022,
+          vignette: GRADE.vignette,
+          grain: GRADE.grain,
+        });
       }
       const fovT = 58 + vW * 4 + warpNow * 4.5;
       camera.fov += (fovT - camera.fov) * lerpK(0.08);
@@ -2638,7 +2367,9 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         bokehPass.uniforms.maxblur.value = GRADE.maxblur;
       }
 
-      if (useComposer && composer) { updatePaint(); composer.render(); }
+      if (useComposer && composer) {
+        composer.render();
+      }
       else renderer.render(scene, camera);
       if (frameI === 1) { try { window.dispatchEvent(new CustomEvent("mo:first-frame")); } catch (_) {} }
       probeDoF(dt);
@@ -2671,6 +2402,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     return () => {
       cancelAnimationFrame(raf);
       clearTimeout(idleTimer);
+      if (cursorFx) cursorFx.destroy();
       window.removeEventListener("resize", onResize);
       ro.disconnect();
       uniIO.disconnect();
@@ -2693,12 +2425,10 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       ambient.forEach(s => { s.material.map?.dispose(); s.material.dispose(); });
       starGeo.dispose();
       asmGeo.dispose(); assemblyPts.material.dispose();
-      if (paintA) { paintA.dispose(); paintB.dispose(); paintMat.dispose(); }
       originHub.material.map?.dispose(); originHub.material.dispose();
       originLinks.forEach(l => { l.geometry.dispose(); l.material.dispose(); });
       constLines.forEach(l => l.geometry.dispose()); constMat.dispose();
       anamGeo.dispose(); anamPts.material.dispose();
-      window.removeEventListener("pointermove", onWakeMove);
       window.removeEventListener("pointermove", onAnyAct);
       window.removeEventListener("pointerdown", onActSkipArrival);
       window.removeEventListener("wheel", onAnyAct);
@@ -2706,7 +2436,6 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       window.removeEventListener("scroll", onAnyAct);
       window.removeEventListener("deviceorientation", onGyro, true);
       delete window.__mo_universe;
-      delete window.__mo_disturb;
       delete window.__mo_arrival_start;
       delete window.__mo_cam;
     };
