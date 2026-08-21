@@ -8,9 +8,9 @@
    - createComposerEffect() plugs into Landing Final 5's existing composer.
    - mountStandalone() gives canonical project pages a transparent overlay.
 
-   Textures are cached. Layout/opacity are synchronized while the effect is
-   active; project pages hand the text back to native DOM when the trail is
-   cold, so their idle GPU cost is zero.
+   Textures are cached and used only as displacement silhouettes. Native DOM
+   text remains visible at all times; project pages stop rendering the overlay
+   when the trail is cold, so they do no idle draw work.
    ============================================================ */
 (function cursorDistortionModule(global) {
   "use strict";
@@ -39,8 +39,8 @@
     return text;
   }
 
-  function drawTrackedText(ctx, text, x, y, tracking) {
-    if (!tracking) {
+  function drawTrackedText(ctx, text, x, y, tracking, nativeTracking) {
+    if (!tracking || nativeTracking) {
       ctx.fillText(text, x, y);
       return;
     }
@@ -49,18 +49,6 @@
       ctx.fillText(glyph, pen, y);
       pen += ctx.measureText(glyph).width + tracking;
     }
-  }
-
-  function saveInlineStyle(element, property) {
-    return {
-      value: element.style.getPropertyValue(property),
-      priority: element.style.getPropertyPriority(property),
-    };
-  }
-
-  function restoreInlineStyle(element, property, saved) {
-    if (saved.value) element.style.setProperty(property, saved.value, saved.priority);
-    else element.style.removeProperty(property);
   }
 
   function createTextMirror(options) {
@@ -106,20 +94,7 @@
       ? new global.MutationObserver(scheduleRefresh)
       : null;
 
-    function mask(entry) {
-      if (!active || entry.masked) return;
-      entry.element.style.setProperty("opacity", "0", "important");
-      entry.masked = true;
-    }
-
-    function unmask(entry) {
-      if (!entry.masked) return;
-      restoreInlineStyle(entry.element, "opacity", entry.inlineOpacity);
-      entry.masked = false;
-    }
-
     function disposeEntry(entry) {
-      unmask(entry);
       if (observer) observer.unobserve(entry.element);
       scene.remove(entry.mesh);
       entry.mesh.geometry.dispose();
@@ -134,24 +109,46 @@
       ctx.fillStyle = style.color;
       ctx.textAlign = "left";
       ctx.textBaseline = "alphabetic";
-      const metrics = ctx.measureText(output);
       const tracking = style.letterSpacing === "normal" ? 0 : px(style.letterSpacing);
+      let nativeTracking = false;
+      if ("letterSpacing" in ctx) {
+        try {
+          ctx.letterSpacing = style.letterSpacing === "normal" ? "0px" : style.letterSpacing;
+          nativeTracking = true;
+        } catch (_) {}
+      }
+      if ("fontKerning" in ctx) {
+        try {
+          const kerning = style.fontKerning;
+          if (kerning === "auto" || kerning === "normal" || kerning === "none") {
+            ctx.fontKerning = kerning;
+          }
+        } catch (_) {}
+      }
+      if ("fontStretch" in ctx && style.fontStretch) {
+        try { ctx.fontStretch = style.fontStretch; } catch (_) {}
+      }
+      const metrics = ctx.measureText(output);
       const glyphCount = Array.from(output).length;
-      const naturalWidth = metrics.width + tracking * Math.max(0, glyphCount - 1);
+      const naturalWidth = metrics.width
+        + (nativeTracking ? 0 : tracking * Math.max(0, glyphCount - 1));
       // Range rects include ancestor transforms while computed font sizes do
       // not. Matching the browser run width keeps scaled Board Flight copy and
       // ordinary text on the same baseline without rasterizing whole sections.
-      const runScale = naturalWidth > 0.01 ? clamp(rect.width / naturalWidth, 0.75, 1.25) : 1;
-      const ascent = metrics.actualBoundingBoxAscent || px(style.fontSize) * 0.78;
-      const descent = metrics.actualBoundingBoxDescent || px(style.fontSize) * 0.22;
+      const runScaleX = naturalWidth > 0.01 ? clamp(rect.width / naturalWidth, 0.75, 1.25) : 1;
+      const fontSize = px(style.fontSize);
+      // Unlike glyph bounds, font bounds do not shift between words such as
+      // "AY" and "gg", so every run on a line shares a stable baseline.
+      const ascent = metrics.fontBoundingBoxAscent || fontSize * 0.78;
+      const descent = metrics.fontBoundingBoxDescent || fontSize * 0.22;
       const x = rect.left - targetRect.left;
       const y = rect.top - targetRect.top
-        + (rect.height - (ascent + descent) * runScale) * 0.5
-        + ascent * runScale;
+        + (rect.height - (ascent + descent)) * 0.5
+        + ascent;
       ctx.save();
       ctx.translate(x, y);
-      ctx.scale(runScale, runScale);
-      drawTrackedText(ctx, output, 0, 0, tracking);
+      ctx.scale(runScaleX, 1);
+      drawTrackedText(ctx, output, 0, 0, tracking, nativeTracking);
       ctx.restore();
     }
 
@@ -195,9 +192,15 @@
       const style = global.getComputedStyle(element);
       if (!rect.width || !rect.height || style.display === "none") return null;
 
+      // Leave room for italic overhangs, antialiasing and a displaced fringe.
+      // The plane remains centred on the DOM box, so this does not move text.
+      const padding = clamp(Math.ceil(Math.max(12, px(style.fontSize) * 0.35)), 12, 48);
+      const paddedWidth = rect.width + padding * 2;
+      const paddedHeight = rect.height + padding * 2;
+      const paintRect = { left: rect.left - padding, top: rect.top - padding };
       const canvas = document.createElement("canvas");
-      canvas.width = Math.max(1, Math.ceil(rect.width * pixelRatio));
-      canvas.height = Math.max(1, Math.ceil(rect.height * pixelRatio));
+      canvas.width = Math.max(1, Math.ceil(paddedWidth * pixelRatio));
+      canvas.height = Math.max(1, Math.ceil(paddedHeight * pixelRatio));
       const ctx = canvas.getContext("2d");
       if (!ctx) return null;
       ctx.scale(pixelRatio, pixelRatio);
@@ -205,7 +208,7 @@
       const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
       let node = walker.nextNode();
       while (node) {
-        paintTextNode(ctx, node, rect);
+        paintTextNode(ctx, node, paintRect);
         node = walker.nextNode();
       }
 
@@ -228,8 +231,10 @@
         Object.assign(materialOptions, {
           blending: THREE.CustomBlending,
           blendEquation: THREE.AddEquation,
-          blendSrc: THREE.SrcAlphaFactor,
-          blendDst: THREE.OneMinusSrcAlphaFactor,
+          // Preserve the composer's destination RGB. Only destination alpha is
+          // tagged: opaque text coverage turns alpha from 1 toward 0.
+          blendSrc: THREE.ZeroFactor,
+          blendDst: THREE.OneFactor,
           blendEquationAlpha: THREE.AddEquation,
           blendSrcAlpha: THREE.ZeroFactor,
           blendDstAlpha: THREE.OneMinusSrcAlphaFactor,
@@ -258,8 +263,9 @@
         texture,
         opacityElements,
         baseOpacity: Number.isFinite(baseOpacity) ? baseOpacity : 1,
-        inlineOpacity: saveInlineStyle(element, "opacity"),
-        masked: false,
+        captureWidth: rect.width,
+        captureHeight: rect.height,
+        padding,
         near: rect.bottom >= -240 && rect.top <= viewportH + 240,
       };
       if (observer) observer.observe(element);
@@ -305,7 +311,6 @@
       }
       if (!active) {
         entries.forEach((entry) => {
-          unmask(entry);
           entry.mesh.visible = false;
         });
         if (pass) pass.enabled = false;
@@ -322,13 +327,13 @@
       let anyVisible = false;
       entries.forEach((entry) => {
         if (!entry.near) {
-          unmask(entry);
           entry.mesh.visible = false;
           return;
         }
         const rect = entry.element.getBoundingClientRect();
         const ownStyle = readStyle(entry.element);
-        let opacity = entry.baseOpacity;
+        const ownOpacity = parseFloat(ownStyle.opacity);
+        let opacity = Number.isFinite(ownOpacity) ? ownOpacity : entry.baseOpacity;
         let filtered = false;
         entry.opacityElements.forEach((element) => {
           const style = readStyle(element);
@@ -342,13 +347,17 @@
         const visible = inViewport && rect.width > 0 && rect.height > 0
           && ownStyle.display !== "none" && ownStyle.visibility !== "hidden"
           && opacity > 0.002;
-        if (filtered || !visible) unmask(entry);
-        else mask(entry);
         entry.mesh.visible = visible && !filtered;
         if (!entry.mesh.visible) return;
         anyVisible = true;
         entry.mesh.position.set(rect.left + rect.width * 0.5, rect.top + rect.height * 0.5, 0);
-        entry.mesh.scale.set(rect.width, rect.height, 1);
+        const scaleX = rect.width / entry.captureWidth;
+        const scaleY = rect.height / entry.captureHeight;
+        entry.mesh.scale.set(
+          rect.width + entry.padding * 2 * scaleX,
+          rect.height + entry.padding * 2 * scaleY,
+          1
+        );
         entry.material.opacity = clamp(opacity, 0, 1);
       });
       if (pass) pass.enabled = anyVisible;
@@ -448,21 +457,21 @@
       vec4 pxR = texture2D(tDiffuse, uv + dir);
       vec4 pxC = texture2D(tDiffuse, uv);
       vec4 pxB = texture2D(tDiffuse, uv - dir);
-      float rMirror = step(1.0 / 255.0, clamp(1.0 - pxR.a, 0.0, 1.0));
-      float cMirror = step(1.0 / 255.0, clamp(1.0 - pxC.a, 0.0, 1.0));
-      float bMirror = step(1.0 / 255.0, clamp(1.0 - pxB.a, 0.0, 1.0));
-      float cr = mix(pxR.r, pxC.r, rMirror);
-      float cb = mix(pxB.b, pxC.b, bMirror);
-      vec3 graded = vec3(cr, pxC.g, cb);
+      vec3 col = vec3(pxR.r, pxC.g, pxB.b);
       vec3 cursorLift = vec3(0.0, 0.94, 0.78) * (dAmt * 7.5 + wk * 0.10 + pAmt * 0.045);
-      graded += cursorLift;
+      col += cursorLift;
       vec2 vd = d * vec2(uAspect, 1.0);
       float vig = smoothstep(0.85, 0.30, length(vd));
-      graded *= mix(1.0, vig, uVignette);
+      col *= mix(1.0, vig, uVignette);
       float g = hash(uv * vec2(uAspect,1.0) * 900.0 + uTime) - 0.5;
-      graded += g * uGrain;
-      vec3 cursorOnly = pxC.rgb + cursorLift;
-      vec3 col = mix(graded, cursorOnly, cMirror);
+      col += g * uGrain;
+      // The mirror leaves RGB untouched and stores inverse text coverage in
+      // alpha. Add only coverage newly revealed by displacement; native DOM
+      // remains the undisturbed body of every glyph above this canvas.
+      float baseCoverage = clamp(1.0 - texture2D(tDiffuse, vUv).a, 0.0, 1.0);
+      float warpedCoverage = clamp(1.0 - pxC.a, 0.0, 1.0);
+      float fringe = min(max(warpedCoverage - baseCoverage, 0.0) * 0.72, 0.42);
+      col += vec3(0.0, 0.94, 0.78) * fringe;
       gl_FragColor = vec4(col, 1.0);
     }
   `;
@@ -498,12 +507,10 @@
       vec2 disp = rippleDisp(uv, uR0) + rippleDisp(uv, uR1)
                 + rippleDisp(uv, uR2) + rippleDisp(uv, uR3);
       uv += disp;
-      float dAmt = length(disp);
-      vec4 ink = texture2D(tDiffuse, uv);
-      float coverage = clamp(ink.a, 0.0, 1.0);
-      vec3 straightInk = coverage > 0.0001 ? ink.rgb / coverage : vec3(0.0);
-      vec3 cursorLift = vec3(0.0, 0.94, 0.78) * (dAmt * 7.5 + wk * 0.10 + pAmt * 0.045);
-      gl_FragColor = vec4(straightInk + cursorLift, coverage);
+      float baseCoverage = clamp(texture2D(tDiffuse, vUv).a, 0.0, 1.0);
+      float warpedCoverage = clamp(texture2D(tDiffuse, uv).a, 0.0, 1.0);
+      float fringe = min(max(warpedCoverage - baseCoverage, 0.0) * 0.72, 0.42);
+      gl_FragColor = vec4(vec3(0.0, 0.94, 0.78), fringe);
       #include <colorspace_fragment>
     }
   `;
@@ -834,10 +841,16 @@
     let destroyed = false, contextLost = false, active = false, mirrorLive = false, raf = 0;
     let last = performance.now();
     const disabledClasses = Array.isArray(opts.disabledClasses) ? opts.disabledClasses : [];
+    const useScreenBlend = !!(global.CSS && global.CSS.supports
+      && global.CSS.supports("mix-blend-mode", "screen"));
+    // Screen blending is the fail-safe that guarantees the overlay can only
+    // brighten native pixels. If it is unavailable, leave the page untouched.
+    if (!useScreenBlend) return null;
 
     try {
       renderer = new THREE.WebGLRenderer({
-        alpha: true, antialias: false, depth: false, stencil: false, powerPreference: "low-power",
+        alpha: true, premultipliedAlpha: false,
+        antialias: false, depth: false, stencil: false, powerPreference: "low-power",
       });
       const dpr = Math.max(0.5, Math.min(global.devicePixelRatio || 1, opts.dprCap || 1));
       renderer.setPixelRatio(dpr);
@@ -849,7 +862,8 @@
       canvas.setAttribute("data-mo-cursor-surface", "project");
       Object.assign(canvas.style, {
         position: "fixed", inset: "0", width: "100%", height: "100%",
-        pointerEvents: "none", zIndex: String(opts.zIndex == null ? 20 : opts.zIndex), display: "none",
+        pointerEvents: "none", mixBlendMode: useScreenBlend ? "screen" : "normal",
+        zIndex: String(opts.zIndex == null ? 20 : opts.zIndex), display: "none",
       });
       document.body.appendChild(canvas);
 
@@ -937,8 +951,13 @@
       renderer.clear(true, false, false);
       renderer.render(mirror.scene, mirror.camera);
       renderer.setRenderTarget(null);
+      // The visible overlay is an opaque black additive plate. CSS screen
+      // blending makes black a visual no-op and lets only the teal fringe
+      // brighten the native page, avoiding transparent-canvas alpha holes.
+      renderer.setClearColor(0x000000, useScreenBlend ? 1 : 0);
       renderer.clear(true, false, false);
       renderer.render(screenScene, screenCamera);
+      renderer.setClearColor(0x000000, 0);
       if (core.isHot(now)) raf = global.requestAnimationFrame(renderFrame);
       else deactivate(false);
     }

@@ -323,7 +323,7 @@ function BoardFlight({ onEnter, onContact }) {
           {/* compact mono header — mirrors makeTileTexture */}
           <div className="uNode__head">
             <div className="uNode__headL">
-              <span className="uNode__id"><span className="uNode__sq" />NODE 0x00</span>
+              <span className="uNode__id" data-mo-board-cursor-mirror data-mo-cursor-opacity=".aboutNode-layer,.uNode,.lp"><span className="uNode__sq" />NODE 0x00</span>
               <span className="uNode__year" data-mo-board-cursor-mirror data-mo-cursor-opacity=".aboutNode-layer,.uNode,.lp">ABOUT</span>
             </div>
             <div className="uNode__headR" data-mo-board-cursor-mirror data-mo-cursor-opacity=".aboutNode-layer,.uNode,.lp">
@@ -340,7 +340,7 @@ function BoardFlight({ onEnter, onContact }) {
           <div className="uNode__foot">
             <h3 className="uNode__name" data-mo-board-cursor-mirror data-mo-cursor-opacity=".aboutNode-layer,.uNode,.lp">Source node<em>.</em></h3>
             <div className="uNode__sub" data-mo-board-cursor-mirror data-mo-cursor-opacity=".aboutNode-layer,.uNode,.lp">0x00 has no fixed coordinate. This board is one readable projection of how the source node was formed.</div>
-            <div className="uNode__cue"><span className="uNode__cueLine" />KEEP SCROLLING — INSPECT THE SOURCE ↓</div>
+            <div className="uNode__cue" data-mo-board-cursor-mirror data-mo-cursor-opacity=".aboutNode-layer,.uNode,.lp"><span className="uNode__cueLine" />KEEP SCROLLING — INSPECT THE SOURCE ↓</div>
           </div>
         </div>
       </div>
@@ -353,7 +353,7 @@ function BoardFlight({ onEnter, onContact }) {
         {/* section marker */}
         <div className="bf-mark" style={{ opacity: chromeFade }}>
           <span className="bf-mark__dot" />
-          0x00 · INTERNAL ARCHITECTURE
+          <span data-mo-board-cursor-mirror data-mo-cursor-opacity=".bf-mark,.bf-layer,.lp">0x00 · INTERNAL ARCHITECTURE</span>
         </div>
 
         {/* chapter overlays (fade out as the footer beat takes over) */}
@@ -374,9 +374,9 @@ function BoardFlight({ onEnter, onContact }) {
                 }}
                 data-screen-label={st.chapter.n + " " + st.chapter.kicker}
               >
-                <div className="bf-ch__num">{st.chapter.n}</div>
+                <div className="bf-ch__num" data-mo-board-cursor-mirror data-mo-cursor-opacity=".bf-ch,.bf-layer,.lp">{st.chapter.n}</div>
                 <div className="bf-ch__card">
-                  <div className="bf-ch__kicker">
+                  <div className="bf-ch__kicker" data-mo-board-cursor-mirror data-mo-cursor-opacity=".bf-ch,.bf-layer,.lp">
                     {st.live ? <span className="bf-ch__live" /> : <span className="bf-ch__dot" />}
                     {st.chapter.kicker}
                   </div>
@@ -396,16 +396,16 @@ function BoardFlight({ onEnter, onContact }) {
 
         {/* probe HUD */}
         <div className="bf-hud" style={{ opacity: chromeFade }}>
-          <div className="bf-hudRow"><span>REF</span><span className="v">{refShort}</span></div>
-          <div className="bf-hudRow"><span>STOP</span><span className="v">{(active + 1).toString().padStart(2, "0")} / {N.toString().padStart(2, "0")}</span></div>
-          <div className="bf-hudRow"><span>CAM</span><span className="v">{foot > 0.5 ? "HERO" : "PROBE"}</span></div>
+          <div className="bf-hudRow" data-mo-board-cursor-mirror data-mo-cursor-opacity=".bf-hud,.bf-layer,.lp"><span>REF</span><span className="v">{refShort}</span></div>
+          <div className="bf-hudRow" data-mo-board-cursor-mirror data-mo-cursor-opacity=".bf-hud,.bf-layer,.lp"><span>STOP</span><span className="v">{(active + 1).toString().padStart(2, "0")} / {N.toString().padStart(2, "0")}</span></div>
+          <div className="bf-hudRow" data-mo-board-cursor-mirror data-mo-cursor-opacity=".bf-hud,.bf-layer,.lp"><span>CAM</span><span className="v">{foot > 0.5 ? "HERO" : "PROBE"}</span></div>
         </div>
 
         {/* waypoint rail */}
         <div className="bf-rail" style={{ opacity: chromeFade, pointerEvents: foot > 0.4 ? "none" : "auto" }}>
           {STOPS.map((st, i) => (
             <button key={i} className={"bf-rail__stop " + (active === i ? "is-active" : "")} onClick={() => jump(i)}>
-              <span className="bf-rail__dot" /><span>{st.chapter.n} · {st.ref.split(" · ")[0]}</span>
+              <span className="bf-rail__dot" /><span data-mo-board-cursor-mirror data-mo-cursor-opacity=".bf-rail,.bf-layer,.lp">{st.chapter.n} · {st.ref.split(" · ")[0]}</span>
             </button>
           ))}
         </div>
@@ -417,7 +417,7 @@ function BoardFlight({ onEnter, onContact }) {
 
         {/* entry cue */}
         <div className="bf-cue" style={{ opacity: (openGate > 0.99 && prog < 0.05 && foot < 0.02 ? 1 : 0) }}>
-          <span className="bf-cue__line" />KEEP SCROLLING — FOLLOW THE TRACE ↓
+          <span className="bf-cue__line" /><span data-mo-board-cursor-mirror data-mo-cursor-opacity=".bf-cue,.bf-layer,.lp">KEEP SCROLLING — FOLLOW THE TRACE ↓</span>
         </div>
 
         {/* ── FOOTER beat — resolves in-scene over the hero board shot ── */}
@@ -429,25 +429,25 @@ function BoardFlight({ onEnter, onContact }) {
         >
           <div className="bf-foot__scrim" aria-hidden="true" />
           <div className="bf-foot__inner" style={{ transform: `translateY(${((1 - footE) * 40).toFixed(1)}px)` }}>
-            <div className="bf-foot__kicker"><span className="bf-foot__live" />SW1 · OUTPUT — OPEN CHANNEL</div>
+            <div className="bf-foot__kicker" data-mo-board-cursor-mirror data-mo-cursor-opacity=".bf-foot,.bf-layer,.lp"><span className="bf-foot__live" />SW1 · OUTPUT — OPEN CHANNEL</div>
             <div className="bf-foot__line" data-mo-board-cursor-mirror data-mo-cursor-opacity=".bf-foot,.bf-layer,.lp">For products that cross hardware, software and interaction.</div>
-            <a className="bf-foot__big t-link" href="mailto:oleksandrmaslov08@gmail.com">
+            <a className="bf-foot__big t-link" href="mailto:oleksandrmaslov08@gmail.com" data-mo-board-cursor-mirror data-mo-cursor-opacity=".bf-foot,.bf-layer,.lp">
               oleksandrmaslov08<wbr />@gmail.com
             </a>
             <div className="bf-foot__links">
-              <a className="bf-foot__link" href="https://github.com/oleksandrmaslov">
+              <a className="bf-foot__link" href="https://github.com/oleksandrmaslov" data-mo-board-cursor-mirror data-mo-cursor-opacity=".bf-foot,.bf-layer,.lp">
                 <span className="bf-foot__linkKey">GITHUB</span>
                 <span className="bf-foot__linkVal">@oleksandrmaslov</span><span className="bf-foot__arr">↗</span>
               </a>
-              <a className="bf-foot__link" href="https://t.me/maslov_oleksandr08">
+              <a className="bf-foot__link" href="https://t.me/maslov_oleksandr08" data-mo-board-cursor-mirror data-mo-cursor-opacity=".bf-foot,.bf-layer,.lp">
                 <span className="bf-foot__linkKey">TELEGRAM</span>
                 <span className="bf-foot__linkVal">@maslov_oleksandr08</span><span className="bf-foot__arr">↗</span>
               </a>
-              <a className="bf-foot__link" href="assets/Oleksandr-Maslov-CV.pdf" download>
+              <a className="bf-foot__link" href="assets/Oleksandr-Maslov-CV.pdf" download data-mo-board-cursor-mirror data-mo-cursor-opacity=".bf-foot,.bf-layer,.lp">
                 <span className="bf-foot__linkKey">CV · PDF</span>
                 <span className="bf-foot__linkVal">download · 2 pages</span><span className="bf-foot__arr">↓</span>
               </a>
-              <a className="bf-foot__link" href="Design System.html">
+              <a className="bf-foot__link" href="Design System.html" data-mo-board-cursor-mirror data-mo-cursor-opacity=".bf-foot,.bf-layer,.lp">
                 <span className="bf-foot__linkKey">SYSTEM</span>
                 <span className="bf-foot__linkVal">design foundation · v0.1</span><span className="bf-foot__arr">→</span>
               </a>

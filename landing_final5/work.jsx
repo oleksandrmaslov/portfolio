@@ -189,18 +189,18 @@ function Work({ onHoverWork }) {
                 >
                   <span className="showAllGate__spine" aria-hidden="true" />
                   <div className="showAllGate__body">
-                    <div className="showAllGate__overline">04 / END · PASSAGE</div>
-                    <h3 className="showAllGate__name">Open the universe<em>.</em></h3>
-                    <div className="showAllGate__sub">
+                    <div className="showAllGate__overline" data-mo-cursor-mirror data-mo-cursor-opacity=".showAllGate,.lp-workReel__sticky,.lp">04 / END · PASSAGE</div>
+                    <h3 className="showAllGate__name" data-mo-cursor-mirror data-mo-cursor-opacity=".showAllGate,.lp-workReel__sticky,.lp">Open the universe<em>.</em></h3>
+                    <div className="showAllGate__sub" data-mo-cursor-mirror data-mo-cursor-opacity=".showAllGate,.lp-workReel__sticky,.lp">
                       12 nodes — products, systems, modules and studies. Enter the full field. ESC returns here.
                     </div>
                   </div>
                   <div className="showAllGate__key">
-                    <KeyButton legend="A" primary onPress={() => {
+                    <KeyButton legend={<span data-mo-cursor-mirror data-mo-cursor-opacity=".showAllGate,.lp-workReel__sticky,.lp">A</span>} primary onPress={() => {
                       document.body.classList.add("landing-exit");
                       setTimeout(() => { window.location.href = "All Projects.html"; }, 380);
                     }}>
-                      SHOW ALL
+                      <span data-mo-cursor-mirror data-mo-cursor-opacity=".showAllGate,.lp-workReel__sticky,.lp">SHOW ALL</span>
                     </KeyButton>
                   </div>
                 </div>
@@ -218,7 +218,7 @@ function Work({ onHoverWork }) {
             onClick={() => jumpToStop(0)}
           >
             <span className="lp-workReel__stopDot" />
-            <span>00 · TITLE</span>
+            <span data-mo-cursor-mirror data-mo-cursor-opacity=".lp-workReel__stops,.lp-workReel__sticky,.lp">00 · TITLE</span>
           </button>
           {WORKS.map((w, i) => (
             <button
@@ -228,7 +228,7 @@ function Work({ onHoverWork }) {
               onClick={() => jumpToStop(i + 1)}
             >
               <span className="lp-workReel__stopDot" />
-              <span>{(i + 1).toString().padStart(2, "0")} · {w.name.toUpperCase()}</span>
+              <span data-mo-cursor-mirror data-mo-cursor-opacity=".lp-workReel__stops,.lp-workReel__sticky,.lp">{(i + 1).toString().padStart(2, "0")} · {w.name.toUpperCase()}</span>
             </button>
           ))}
           <button
@@ -237,7 +237,7 @@ function Work({ onHoverWork }) {
             onClick={() => jumpToStop(N + 1)}
           >
             <span className="lp-workReel__stopDot" />
-            <span>{(N + 1).toString().padStart(2, "0")} · ALL ↗</span>
+            <span data-mo-cursor-mirror data-mo-cursor-opacity=".lp-workReel__stops,.lp-workReel__sticky,.lp">{(N + 1).toString().padStart(2, "0")} · ALL ↗</span>
           </button>
         </div>
 
@@ -298,16 +298,16 @@ function NodeCard({ work, i, total, absD, locked, focused, onFocus }) {
 
       {/* CAPTION PLATE — original caption-bar block, unchanged */}
       <div className="rcard__body">
-        <div className="rcard__top">
+        <div className="rcard__top" data-mo-cursor-mirror data-mo-cursor-opacity=".rcard,.lp-workReel__sticky,.lp">
           <span className="rcard__topAddr">NODE {work.addr}</span>
           <span className="rcard__topSep" />
           <span className="rcard__topIdx">{(i + 1).toString().padStart(2, "0")} / {total.toString().padStart(2, "0")}</span>
         </div>
-        <h3 className="rcard__name">{work.name}<em>.</em></h3>
-        <div className="rcard__sub">{work.short || work.statement}</div>
+        <h3 className="rcard__name" data-mo-cursor-mirror data-mo-cursor-opacity=".rcard,.lp-workReel__sticky,.lp">{work.name}<em>.</em></h3>
+        <div className="rcard__sub" data-mo-cursor-mirror data-mo-cursor-opacity=".rcard,.lp-workReel__sticky,.lp">{work.short || work.statement}</div>
       </div>
 
-      <div className={"rcard__open " + (hasPage ? "" : "rcard__open--forming")}>
+      <div className={"rcard__open " + (hasPage ? "" : "rcard__open--forming")} data-mo-cursor-mirror data-mo-cursor-opacity=".rcard,.lp-workReel__sticky,.lp">
         <span>{hasPage ? "OPEN" : "RECORD FORMING"}</span>
         {hasPage && <span className="rcard__arr">→</span>}
       </div>

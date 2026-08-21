@@ -160,22 +160,33 @@ function TitleScreenV2() {
       <div className="title__ctl">
         <div className="title__proceedRow">
           {showExplore && (
-            <KeyButton legend="✛" onPress={() => { requestGyroInGestureT2(); setExplore(true); }}>EXPLORE</KeyButton>
+            <KeyButton
+              legend={<span data-mo-cursor-mirror data-mo-cursor-opacity=".title__ctl,.title__stage,.lp">✛</span>}
+              onPress={() => { requestGyroInGestureT2(); setExplore(true); }}
+            >
+              <span data-mo-cursor-mirror data-mo-cursor-opacity=".title__ctl,.title__stage,.lp">EXPLORE</span>
+            </KeyButton>
           )}
           <span className="scrollcue scrollcue--stack">
-            <span className="scrollcue__txt">Continue</span>
+            <span className="scrollcue__txt" data-mo-cursor-mirror data-mo-cursor-opacity=".title__ctl,.title__stage,.lp">Continue</span>
             <span className="scrollcue__chev"><span /><span /></span>
           </span>
-          <KeyButton legend="↵" primary onPress={proceed}>PROCEED</KeyButton>
+          <KeyButton
+            legend={<span data-mo-cursor-mirror data-mo-cursor-opacity=".title__ctl,.title__stage,.lp">↵</span>}
+            primary
+            onPress={proceed}
+          >
+            <span data-mo-cursor-mirror data-mo-cursor-opacity=".title__ctl,.title__stage,.lp">PROCEED</span>
+          </KeyButton>
         </div>
       </div>
 
       {/* BASELINE ROW — below the bottom corners, one shared baseline */}
       <div className="title__baseline" aria-hidden="false">
         <span className="title__wordmarkSub">
-          <span className="title__wordmarkSubBullet">■</span>
+          <span className="title__wordmarkSubBullet" data-mo-cursor-mirror data-mo-cursor-opacity=".title__wordmarkSub,.title__baseline,.title__stage,.lp">■</span>
           <span data-mo-cursor-mirror data-mo-cursor-opacity=".title__wordmarkSub,.title__baseline,.title__stage,.lp">KYIV → MUNICH</span>
-          <span className="title__wordmarkSubSep">·</span>
+          <span className="title__wordmarkSubSep" data-mo-cursor-mirror data-mo-cursor-opacity=".title__wordmarkSub,.title__baseline,.title__stage,.lp">·</span>
           <span data-mo-cursor-mirror data-mo-cursor-opacity=".title__wordmarkSub,.title__baseline,.title__stage,.lp">2026</span>
         </span>
         <span className="title__proceedCap" data-mo-cursor-mirror data-mo-cursor-opacity=".title__baseline,.title__stage,.lp">{showExplore ? "tap · or swipe up to continue" : "press ↵ \u00a0·\u00a0 or scroll at the edges"}</span>

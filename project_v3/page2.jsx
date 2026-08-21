@@ -93,7 +93,7 @@ function SectionBlock({ block, i }) {
   return (
     <article className="pp-body__block">
       <header className="pp-body__h">
-        <span className="pp-body__n">0{i + 1}</span>
+        <span className="pp-body__n" data-mo-cursor-mirror data-mo-cursor-opacity=".hv-page">0{i + 1}</span>
         <h3 className="pp-body__title" data-mo-cursor-mirror data-mo-cursor-opacity=".hv-page">{block.h}<em>.</em></h3>
       </header>
       <p className="pp-body__copy" data-mo-cursor-mirror data-mo-cursor-opacity=".hv-page">{block.body}</p>
@@ -105,10 +105,10 @@ function ProjectStory({ project }) {
   return (
     <section className="pp-story" data-screen-label="03 Story">
       <header className="pp-section__head">
-        <div className="pp-section__num">02</div>
+        <div className="pp-section__num" data-mo-cursor-mirror data-mo-cursor-opacity=".hv-page">02</div>
         <h2 className="pp-section__title" data-mo-cursor-mirror data-mo-cursor-opacity=".hv-page">The story<em>.</em></h2>
         <div className="pp-section__meta">
-          <div>{project.sections.filter(s => s.kind !== "photo").length} BLOCKS · {project.sections.filter(s => s.kind === "photo").length} PHOTOS</div>
+          <div data-mo-cursor-mirror data-mo-cursor-opacity=".hv-page">{project.sections.filter(s => s.kind !== "photo").length} BLOCKS · {project.sections.filter(s => s.kind === "photo").length} PHOTOS</div>
         </div>
       </header>
       <div className="pp-story__lede" data-mo-cursor-mirror data-mo-cursor-opacity=".hv-page">{project.intro}</div>
@@ -123,16 +123,16 @@ function ProjectLinks({ project }) {
   return (
     <section className="pp-links" data-screen-label="04 Links">
       <header className="pp-section__head">
-        <div className="pp-section__num">03</div>
+        <div className="pp-section__num" data-mo-cursor-mirror data-mo-cursor-opacity=".hv-page">03</div>
         <h2 className="pp-section__title" data-mo-cursor-mirror data-mo-cursor-opacity=".hv-page">Files &amp; links<em>.</em></h2>
-        <div className="pp-section__meta"><div>{project.links.length} ARTIFACTS</div></div>
+        <div className="pp-section__meta"><div data-mo-cursor-mirror data-mo-cursor-opacity=".hv-page">{project.links.length} ARTIFACTS</div></div>
       </header>
       <div className="pp-links__grid">
         {project.links.map((l, i) => (
           <a key={i} className="pp-link" href={l.href}>
-            <span className="pp-link__k">{l.kind}</span>
-            <span className="pp-link__v">{l.label}</span>
-            <span className="pp-link__arr">↗</span>
+            <span className="pp-link__k" data-mo-cursor-mirror data-mo-cursor-opacity=".hv-page">{l.kind}</span>
+            <span className="pp-link__v" data-mo-cursor-mirror data-mo-cursor-opacity=".hv-page">{l.label}</span>
+            <span className="pp-link__arr" data-mo-cursor-mirror data-mo-cursor-opacity=".hv-page">↗</span>
           </a>
         ))}
       </div>
@@ -170,30 +170,30 @@ function ProjectFooterNav({ project }) {
   return (
     <footer className="pp-foot" data-screen-label="05 Foot">
       <button className="pp-foot__nav pp-foot__nav--prev" onClick={() => goTo(prev)}>
-        <span className="pp-foot__arr">←</span>
-        <span className="pp-foot__col">
+        <span className="pp-foot__arr" data-mo-cursor-mirror data-mo-cursor-opacity=".hv-page">←</span>
+        <span className="pp-foot__col" data-mo-cursor-mirror data-mo-cursor-opacity=".hv-page">
           <span className="pp-foot__k">PREV · NODE {prev.addr}</span>
           <span className="pp-foot__v">{prev.name}</span>
           <span className="pp-foot__sub">{prev.tagline}</span>
         </span>
       </button>
-      <button className="pp-foot__home" onClick={leaveToUniverse}>
+      <button className="pp-foot__home" onClick={leaveToUniverse} data-mo-cursor-mirror data-mo-cursor-opacity=".hv-page">
         <span className="pp-foot__homeK">M.O.</span>
         <span className="pp-foot__homeV">back to universe</span>
       </button>
       <button className="pp-foot__nav pp-foot__nav--next" onClick={() => goTo(next)}>
-        <span className="pp-foot__col pp-foot__col--right">
+        <span className="pp-foot__col pp-foot__col--right" data-mo-cursor-mirror data-mo-cursor-opacity=".hv-page">
           <span className="pp-foot__k">NEXT · NODE {next.addr}</span>
           <span className="pp-foot__v">{next.name}</span>
           <span className="pp-foot__sub">{next.tagline}</span>
         </span>
-        <span className="pp-foot__arr">→</span>
+        <span className="pp-foot__arr" data-mo-cursor-mirror data-mo-cursor-opacity=".hv-page">→</span>
       </button>
       <div className="pp-foot__rule" />
       <div className="pp-foot__legal">
-        <span>© 2026 · MASLOV OLEKSANDR</span>
-        <span>BUILT IN MUNICH · v0.1.0</span>
-        <span>[ESC] · back to universe</span>
+        <span data-mo-cursor-mirror data-mo-cursor-opacity=".hv-page">© 2026 · MASLOV OLEKSANDR</span>
+        <span data-mo-cursor-mirror data-mo-cursor-opacity=".hv-page">BUILT IN MUNICH · v0.1.0</span>
+        <span data-mo-cursor-mirror data-mo-cursor-opacity=".hv-page">[ESC] · back to universe</span>
       </div>
     </footer>
   );
@@ -208,23 +208,23 @@ function WaferShell({ project }) {
       <div className="pp-shell__blur" aria-hidden="true">
         <div /><div /><div /><div /><div /><div /><div />
       </div>
-      <a href="Landing Final 5.html" className="shell__brand pp-shell__brand"
+      <a href="Landing Final 5.html" className="shell__brand pp-shell__brand" data-mo-cursor-mirror data-mo-cursor-opacity=".pp-shell,.hv-page"
          onClick={(e) => { e.preventDefault(); leaveToUniverse(); }}>
         <span className="pp-shell__brandM">M.O.</span>
         <span className="pp-shell__brandSep" />
         <span className="pp-shell__brandBack">← UNIVERSE</span>
       </a>
       <nav className="shell__nav pp-shell__nav">
-        <a href="Landing Final 5.html#work" onClick={(e) => { e.preventDefault(); leaveToUniverse(); }}>WORK</a>
-        <a href="Landing Final 5.html#about" onClick={(e) => { e.preventDefault(); leaveToUniverse(); }}>ABOUT</a>
-        <a href="Landing Final 5.html#contact" onClick={(e) => { e.preventDefault(); leaveToUniverse(); }}>CONTACT</a>
-        <a href="Design System.html">SYSTEM ↗</a>
+        <a href="Landing Final 5.html#work" onClick={(e) => { e.preventDefault(); leaveToUniverse(); }} data-mo-cursor-mirror data-mo-cursor-opacity=".pp-shell,.hv-page">WORK</a>
+        <a href="Landing Final 5.html#about" onClick={(e) => { e.preventDefault(); leaveToUniverse(); }} data-mo-cursor-mirror data-mo-cursor-opacity=".pp-shell,.hv-page">ABOUT</a>
+        <a href="Landing Final 5.html#contact" onClick={(e) => { e.preventDefault(); leaveToUniverse(); }} data-mo-cursor-mirror data-mo-cursor-opacity=".pp-shell,.hv-page">CONTACT</a>
+        <a href="Design System.html" data-mo-cursor-mirror data-mo-cursor-opacity=".pp-shell,.hv-page">SYSTEM ↗</a>
       </nav>
       <div className="shell__status pp-shell__status">
         <span className="shell__dot" />
-        <span>NODE {project.addr}</span>
+        <span data-mo-cursor-mirror data-mo-cursor-opacity=".pp-shell,.hv-page">NODE {project.addr}</span>
         <span className="pp-shell__sep" />
-        <span>[ESC] back</span>
+        <span data-mo-cursor-mirror data-mo-cursor-opacity=".pp-shell,.hv-page">[ESC] back</span>
       </div>
     </header>
   );
@@ -241,12 +241,12 @@ function WaferHero({ project, layout, onInspect }) {
         <span className="hv__corner hv__corner--tr" />
         <span className="hv__corner hv__corner--bl" />
         <span className="hv__corner hv__corner--br" />
-        <span className="hv__edgeLabel hv__edgeLabel--tl">NODE {project.addr} · {project.year}</span>
-        <span className="hv__edgeLabel hv__edgeLabel--tr"><span className="hv__liveDot" />MODEL · LIVE</span>
+        <span className="hv__edgeLabel hv__edgeLabel--tl" data-mo-cursor-mirror data-mo-cursor-opacity=".hv-page">NODE {project.addr} · {project.year}</span>
+        <span className="hv__edgeLabel hv__edgeLabel--tr" data-mo-cursor-mirror data-mo-cursor-opacity=".hv-page"><span className="hv__liveDot" />MODEL · LIVE</span>
       </div>
 
       <div className="hv__title">
-        <div className="hv__overline"><span className="hv__pulse" />{project.overline}</div>
+        <div className="hv__overline" data-mo-cursor-mirror data-mo-cursor-opacity=".hv__title,.hv-page"><span className="hv__pulse" />{project.overline}</div>
         <h1 className="hv__name" data-mo-cursor-mirror data-mo-cursor-opacity=".hv__title,.hv-page">{project.name}<em>.</em></h1>
         <div className="hv__tagline" data-mo-cursor-mirror data-mo-cursor-opacity=".hv__title,.hv-page">{project.tagline}</div>
         <div className="hv__metric">
@@ -266,7 +266,7 @@ function WaferHero({ project, layout, onInspect }) {
 
       <div className="hv__scrollCue">
         <span className="hv__scrollCueLine" />
-        <span>SCROLL · CASE FILE</span>
+        <span data-mo-cursor-mirror data-mo-cursor-opacity=".hv__scrollCue,.hv-page">SCROLL · CASE FILE</span>
       </div>
     </section>
   );
@@ -451,8 +451,15 @@ function WaferV2App() {
 
       {/* bottom-right PLAY DEMO keycap (remounts per demo cycle — no stale lit/focus state) */}
       <div className="hv-demo">
-        <span className="hv-demo__hint"><span className="hv-demo__hintDot" />PRESS KEYS · EXPLODE · LAYERS</span>
-        <KeyButton key={demo ? "demo-on" : "demo-off"} legend="▸" primary onPress={enterDemo}>PLAY DEMO</KeyButton>
+        <span className="hv-demo__hint" data-mo-cursor-mirror data-mo-cursor-opacity=".hv-demo"><span className="hv-demo__hintDot" />PRESS KEYS · EXPLODE · LAYERS</span>
+        <KeyButton
+          key={demo ? "demo-on" : "demo-off"}
+          legend={<span data-mo-cursor-mirror data-mo-cursor-opacity=".hv-demo">▸</span>}
+          primary
+          onPress={enterDemo}
+        >
+          <span data-mo-cursor-mirror data-mo-cursor-opacity=".hv-demo">PLAY DEMO</span>
+        </KeyButton>
       </div>
 
       {/* fullscreen demo stage + HUD (always mounted; controls its own fade) */}
