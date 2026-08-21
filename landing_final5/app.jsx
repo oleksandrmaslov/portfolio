@@ -196,5 +196,13 @@ function VolumeToggle() {
   );
 }
 
-const root = ReactDOM.createRoot(document.getElementById("root"));
-root.render(<LandingApp />);
+let landingFinal5Mounted = false;
+function mountLandingFinal5() {
+  if (landingFinal5Mounted || !window.THREE) return;
+  landingFinal5Mounted = true;
+  const root = ReactDOM.createRoot(document.getElementById("root"));
+  root.render(<LandingApp />);
+}
+
+if (window.THREE) mountLandingFinal5();
+else window.addEventListener("mo:three-ready", mountLandingFinal5, { once: true });

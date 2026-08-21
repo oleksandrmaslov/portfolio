@@ -12,7 +12,7 @@
   <style>
     html.mo-origin-on,
     html.mo-origin-on body { overflow: hidden; background: #05060a; }
-    html:not(.mo-cursor-ready) .cursor { visibility: hidden !important; }
+    .cursor { visibility: hidden !important; }
     #mo-pl {
       --p: .0039;
       --pl-bg: #05060a;
@@ -105,6 +105,7 @@
       #mo-pl * { transition-duration: 80ms !important; }
     }
   </style>
+  <link rel="stylesheet" href="system/cursor.css" />
   <script>
     document.documentElement.classList.add("mo-origin-on");
     window.__mo_origin_watchdog = setTimeout(function () {
@@ -127,36 +128,32 @@
 
   <!-- Tokens + shared system -->
   <link rel="stylesheet" media="print" data-app-style href="system/tokens.css" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
-  <link rel="stylesheet" media="print" data-app-style href="system/layout.css" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
-  <link rel="stylesheet" media="print" data-app-style href="system/extras.css" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
+  <link rel="stylesheet" media="print" data-app-style href="landing_final5/chrome.css" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
   <link rel="stylesheet" media="print" data-app-style href="landing_final/landing.css" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
   <link rel="stylesheet" media="print" data-app-style href="landing_final/origin.css" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
   <link rel="stylesheet" media="print" data-app-style href="landing_final/board-flight.css" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
   <link rel="stylesheet" media="print" data-app-style href="landing_final/landing-scroll.css" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
   <link rel="stylesheet" media="print" data-app-style href="landing_final/cinematic.css" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
-  <link rel="stylesheet" media="print" data-app-style href="landing_final/cursor-ascii.css" onload="this.onload=null;this.media='all';this.dataset.loaded='1';document.documentElement.classList.add('mo-cursor-ready');window.dispatchEvent(new Event('mo:style-ready'))" onerror="document.documentElement.classList.add('mo-cursor-ready')" />
+  <link rel="stylesheet" media="print" data-app-style href="system/scrollbar.css" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
   <link rel="stylesheet" media="print" data-app-style href="landing_final/v10.css" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
   <!-- FINAL 5 presentation layer: sticky stages fade on the compositor. -->
   <link rel="stylesheet" media="print" data-app-style href="landing_final5/flight.css" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
   <link rel="stylesheet" media="print" data-app-style href="landing_final/wide.css" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
   <link rel="stylesheet" media="print" data-app-style href="landing_final5/title.css" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
-  <link rel="stylesheet" media="print" data-app-style href="landing_final5/nodes.css" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
   <noscript>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap" />
     <link rel="stylesheet" href="system/tokens.css" />
-    <link rel="stylesheet" href="system/layout.css" />
-    <link rel="stylesheet" href="system/extras.css" />
+    <link rel="stylesheet" href="landing_final5/chrome.css" />
     <link rel="stylesheet" href="landing_final/landing.css" />
     <link rel="stylesheet" href="landing_final/origin.css" />
     <link rel="stylesheet" href="landing_final/board-flight.css" />
     <link rel="stylesheet" href="landing_final/landing-scroll.css" />
     <link rel="stylesheet" href="landing_final/cinematic.css" />
-    <link rel="stylesheet" href="landing_final/cursor-ascii.css" />
+    <link rel="stylesheet" href="system/scrollbar.css" />
     <link rel="stylesheet" href="landing_final/v10.css" />
     <link rel="stylesheet" href="landing_final5/flight.css" />
     <link rel="stylesheet" href="landing_final/wide.css" />
     <link rel="stylesheet" href="landing_final5/title.css" />
-    <link rel="stylesheet" href="landing_final5/nodes.css" />
   </noscript>
 
   <!-- Warm the Wafer v3 handoff target so the cross-page seam has no boot gap. -->
@@ -206,50 +203,14 @@
       GLTFLoader, MeshoptDecoder, KTX2Loader,
       RoomEnvironment, EffectComposer, RenderPass, BokehPass, ShaderPass, OutputPass,
     });
+    window.dispatchEvent(new Event("mo:three-ready"));
   </script>
 
-  <!-- React + Babel -->
+  <!-- React + precompiled Final 5 runtime -->
   <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" integrity="sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" integrity="sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1" crossorigin="anonymous"></script>
-  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 
-  <!-- Shared core (boot, fib grid, cursor) + key button -->
   <script src="landing_final5/projects-data.js"></script>
-  <script type="text/babel" data-presets="env,react" src="system/core.jsx"></script>
-  <script type="text/babel" data-presets="env,react">
-    function KeyButton({ children, legend = "↵", primary, onPress }) {
-      const { useState } = React;
-      const [pressed, setPressed] = useState(false);
-      const [lit, setLit] = useState(false);
-      const fire = (e) => {
-        setPressed(true);
-        setLit(true);
-        if (window.MOSound) { window.MOSound.unlock(); window.MOSound.thock({ vel: 0.85 }); }
-        if (window.__mo_disturb && e && e.currentTarget && e.currentTarget.getBoundingClientRect) {
-          const r = e.currentTarget.getBoundingClientRect();
-          window.__mo_disturb(r.left + r.width / 2, r.top + r.height / 2, 0.8);
-        }
-        onPress && onPress();
-        setTimeout(() => { setPressed(false); if (window.MOSound) window.MOSound.thockUp(); }, 140);
-        setTimeout(() => setLit(false), 520);
-      };
-      const onKey = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fire(); } };
-      return (
-        <button
-          className={"key " + (pressed ? "key--down " : "") + (lit ? "key--lit " : "") + (primary ? "key--primary" : "")}
-          onClick={fire}
-          onKeyDown={onKey}
-        >
-          <span className="key__cap">
-            <span className="key__legendTop">{legend}</span>
-            <span className="key__label">{children}</span>
-          </span>
-          <span className="key__shadow" aria-hidden="true" />
-        </button>
-      );
-    }
-    window.KeyButton = KeyButton;
-  </script>
 
   <!-- Sound engine + MOSound shell adapter -->
   <script src="landing_final/carrier-field-v10.js"></script>
@@ -257,20 +218,7 @@
   <!-- Solid materials (plain JS, defined before the rig/cards run) -->
   <script src="project_v3/solid-materials.js"></script>
   <script src="system/cursor-distortion.js"></script>
-  <script type="text/babel" data-presets="env,react" src="landing_final/ascii.jsx"></script>
-  <script type="text/babel" data-presets="env,react" src="project/viewer3d.jsx"></script>
-  <script type="text/babel" data-presets="env,react" src="project_v3/hero-rig.jsx"></script>
-  <script type="text/babel" data-presets="env,react" src="project_v3/node-rig.jsx"></script>
-  <script type="text/babel" data-presets="env,react" src="landing_final/hover-card.jsx"></script>
-  <script type="text/babel" data-presets="env,react" src="landing_final5/universe.jsx"></script>
-  <script type="text/babel" data-presets="env,react" src="landing_final5/node-handoff.jsx"></script>
-  <script type="text/babel" data-presets="env,react" src="about_v2/board-scene3.jsx"></script>
-  <script type="text/babel" data-presets="env,react" src="landing_final/board-flight.jsx"></script>
-  <!-- FINAL 5 page sections: one title, one origin, one work reel -->
-  <script type="text/babel" data-presets="env,react" src="landing_final5/title.jsx"></script>
-  <script type="text/babel" data-presets="env,react" src="landing_final5/origin.jsx"></script>
-  <script type="text/babel" data-presets="env,react" src="landing_final5/work.jsx"></script>
-  <script type="text/babel" data-presets="env,react" src="landing_final5/app.jsx"></script>
+  <script src="landing_final5/runtime.js"></script>
 
   <!-- Cinematic layer -->
   <script src="landing_final/cinematic.js"></script>

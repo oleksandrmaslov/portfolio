@@ -230,6 +230,8 @@
 }
 .rcard:hover .rcard__open,
 .rcard--locked .rcard__open { color: var(--signal); }
+.rcard__open--forming { color: var(--ghost, #5b6478) !important; letter-spacing: 0.14em; }
+.rcard:focus-visible { outline: 1.5px solid var(--signal, #00f0c8); outline-offset: 4px; }
 .rcard__arr { transition: transform var(--d-base) var(--e-out); }
 .rcard:hover .rcard__arr,
 .rcard--locked .rcard__arr { transform: translateX(6px); }

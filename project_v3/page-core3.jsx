@@ -37,7 +37,7 @@
 
    Differences from page2.jsx by design:
      · no landing seam-bridge (the flight arrives on Wafer only)
-     · footer prev/next prefers data.file2 (v2 pages) over file
+     · footer prev/next follows the canonical data.file route
      · leave → straight fade back to Landing v11 (no return-flight
        protocol — that contract is wafer-specific)
    ============================================================ */
@@ -180,7 +180,7 @@ function PCProjectFooterNav({ project }) {
   const goTo = (p) => {
     if (!p) return;
     document.body.classList.add("hv-exit");
-    setTimeout(() => { window.location.href = p.file2 || p.file; }, 420);
+    setTimeout(() => { window.location.href = p.file; }, 420);
   };
   return (
     <footer className="pp-foot" data-screen-label="05 Foot">

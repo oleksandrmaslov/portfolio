@@ -1,0 +1,97 @@
+/* Shipping terminal scrollbar, separated from cursor presentation. */
+html { scrollbar-width: none; }
+::-webkit-scrollbar { width: 0; height: 0; display: none; }
+
+.asb--rail {
+  position: fixed;
+  top: 60px;
+  bottom: 40px;
+  right: 4px;
+  width: 24px;
+  z-index: 40;
+  cursor: none;
+  user-select: none;
+  touch-action: none;
+}
+.asb--rail.is-void { opacity: 0; pointer-events: none; }
+.asb__col {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+}
+.asb__cell {
+  width: 100%;
+  height: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--shadow);
+  font-family: var(--ff-mono);
+  font-size: 12px;
+  line-height: 13px;
+  text-align: center;
+  transition: color 120ms linear, text-shadow 120ms linear, opacity 120ms linear;
+}
+.asb__cell[data-state="faint"] { color: var(--shadow); opacity: 0.5; }
+.asb__cell[data-state="thumb"] { color: var(--ash); }
+.asb__cell[data-state="thumb-dim"] { color: var(--ghost); }
+.asb--rail.is-hot .asb__cell[data-state="thumb"] {
+  color: var(--signal);
+  text-shadow: 0 0 10px var(--signal-glow);
+}
+.asb--rail.is-hot .asb__cell[data-state="thumb-dim"] { color: var(--signal-dim); }
+.asb--rail.is-hot .asb__cell[data-state="faint"] { color: var(--ghost); opacity: 0.7; }
+
+.asb--rail::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 50%;
+  width: 1px;
+  background: var(--hairline);
+  opacity: 0;
+  transform: translateX(-50%);
+  transition: opacity 150ms;
+}
+.asb--rail.is-hot::after { opacity: 0.4; }
+
+.asb__tag {
+  position: absolute;
+  right: 100%;
+  margin-right: 11px;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  color: var(--ghost);
+  font-family: var(--ff-mono);
+  white-space: nowrap;
+  pointer-events: none;
+  text-align: right;
+  opacity: 0;
+  transition: opacity 160ms;
+}
+.asb--rail.is-hot .asb__tag { opacity: 1; }
+.asb__tag b {
+  color: var(--signal);
+  font-weight: 500;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.asb__tag span {
+  color: var(--ghost);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (pointer: coarse) {
+  .asb--rail { display: none; }
+  html { scrollbar-width: auto; }
+}

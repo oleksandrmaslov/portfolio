@@ -10,8 +10,7 @@ const PROJECT_DATA = {
   "0x01": {
     addr: "0x01",
     slug: "wafer",
-    file: "Wafer.html",
-    file2: "Wafer v2.html",
+    file: "Wafer v3.html",
     name: "Wafer",
     tagline: "36-key ultrathin split keyboard",
     overline: "EMBEDDED · HARDWARE · FIRMWARE",
@@ -53,7 +52,7 @@ const PROJECT_DATA = {
       { kind: "CASE PDF", label: "case-file · 8 pages · pending", href: "#" },
       { kind: "ZMK PR",  label: "battery-voltage · merged",       href: "#" },
     ],
-    prev: "0x09",
+    prev: "0x08",
     next: "0x02",
   },
 
@@ -63,8 +62,7 @@ const PROJECT_DATA = {
   "0x02": {
     addr: "0x02",
     slug: "kerfur",
-    file: "Kerfur.html",
-    file2: "Kerfur v2.html",
+    file: "Kerfur v2.html",
     name: "Kerfur",
     tagline: "Embedded pet on nRF52840",
     overline: "EMBEDDED · ARCHITECTURE · BLE",
@@ -110,13 +108,12 @@ const PROJECT_DATA = {
   },
 
   /* =========================================================
-     0x03 · ZMK POINTING ACCELERATION
+     0x08 · ZMK POINTING ACCELERATION
      ========================================================= */
-  "0x03": {
-    addr: "0x03",
+  "0x08": {
+    addr: "0x08",
     slug: "zmk-pointaccel",
-    file: "ZMK-PointAccel.html",
-    file2: "ZMK-PointAccel v2.html",
+    file: "ZMK-PointAccel v2.html",
     name: "ZMK PointAccel",
     tagline: "Open-source input processor",
     overline: "OPEN SOURCE · INPUT · DEVICETREE",
@@ -152,8 +149,8 @@ const PROJECT_DATA = {
       { kind: "STREAMLIT",  label: "configurator · live",                 href: "#" },
       { kind: "DOCS",       label: "usage · presets",                     href: "#" },
     ],
-    prev: "0x02",
-    next: "0x04",
+    prev: "0x07",
+    next: "0x01",
   },
 
   /* =========================================================
@@ -162,8 +159,7 @@ const PROJECT_DATA = {
   "0x04": {
     addr: "0x04",
     slug: "tactical-flashlight",
-    file: "Tactical-Flashlight.html",
-    file2: "Tactical Flashlight v2.html",
+    file: "Tactical Flashlight v2.html",
     name: "Tactical Flashlight",
     tagline: "Volunteer firmware · For Energy for Ukraine",
     overline: "VOLUNTEER · FIRMWARE · SCHEMATIC",
@@ -201,7 +197,7 @@ const PROJECT_DATA = {
       { kind: "PROJECT", label: "Energy for Ukraine", href: "https://energyforukraine.de/" },
     ],
     prev: "0x03",
-    next: "0x07",
+    next: "0x06",
   },
 };
 
@@ -211,11 +207,10 @@ const PROJECT_DATA = {
    footer works standalone before the universe cards are
    swapped over.
    ========================================================= */
-PROJECT_DATA["0x09"] = {
-  addr: "0x09",
+PROJECT_DATA["0x03"] = {
+  addr: "0x03",
   slug: "iskra",
-  file: "Iskra v2.html",
-  file2: "Iskra v2.html",
+  file: "Iskra v3.html",
   name: "Iskra",
   tagline: "Volunteer flashing station · zero firmware knowledge needed",
   overline: "FLASHING STATION · FACTORY-SAFE · WPF",
@@ -256,75 +251,73 @@ PROJECT_DATA["0x09"] = {
     { kind: "INSTALLER", label: "Iskra setup · Windows", href: "https://github.com/oleksandrmaslov/iskra/releases" },
     { kind: "PROJECT", label: "Energy for Ukraine", href: "https://energyforukraine.de/" },
   ],
-  prev: "0x08",
-  next: "0x01",
+  prev: "0x02",
+  next: "0x04",
 };
 
 /* =========================================================
-   0x07 · M.O. SYSTEM  (full-weight meta page · replaces the
-   Catloading card slot). The portfolio profiled as one of its
-   own nodes — how it's built. Its PLAY DEMO is a link keycap:
-   the portfolio itself.
+   0x06 · WAFER STUDIO
    ========================================================= */
-PROJECT_DATA["0x07"] = {
-  addr: "0x07",
-  slug: "mo-system",
-  file: "M.O. System v2.html",
-  file2: "M.O. System v2.html",
-  name: "M.O. System",
-  tagline: "The portfolio, profiled as one of its own devices",
-  overline: "META · DESIGN SYSTEM · BUILD",
+PROJECT_DATA["0x06"] = {
+  addr: "0x06",
+  slug: "wafer-studio",
+  file: "Wafer Studio.html",
+  name: "Wafer Studio",
+  tagline: "A keyboard configurator for ZMK Studio-enabled keyboards",
+  overline: "PRODUCT SOFTWARE · ZMK · INTERACTION",
   year: "2026",
-  place: "Munich",
-  role: "Design · engineering · the whole rig",
-  stack: ["HTML", "React", "three.js", "Web Audio", "Canvas", "CSS"],
+  place: "Munich, DE",
+  role: "Design · front-end · desktop build",
+  stack: ["TypeScript", "React", "Tauri", "ZMK Studio protocol", "Vite", "Rust"],
   primitive: "slab",
-  model: "models/wafer.glb",
-  demoSize: { d: 120, w: 28, h: 28 },
+  model: "models/wafer-mark.glb",
+  modelFit: 3.2,
+  demoSize: { d: 0, w: 0, h: 0 },
   metrics: [
-    { value: "12", unit: "nodes · one addressed grid" },
-    { value: "4", unit: "bespoke live demos" },
-    { value: "1", unit: "carrier field · shared sound" },
+    { value: "168", unit: "bindings on a 42-key split" },
+    { value: "1", unit: "keypress per binding" },
+    { value: "3", unit: "desktop targets" },
   ],
   intro:
-    "This portfolio is itself a built thing — so here it is, profiled like any other node. " +
-    "M.O. is a small operating system for case files: one addressed grid of projects, one design " +
-    "language (void / bone / signal-cyan, mono micro-labels, hairline plates), one page template that " +
-    "every project fills in, and one sound field that all the demos ride. Nothing here is a stock " +
-    "component; every screen is the same handful of parts, recombined.",
+    "Setting up a 42-key split with four layers is 168 bindings. Through a conventional " +
+    "configurator — click a key, read a list, find the action, click it — that is over two hours, " +
+    "which is why people give up and hand-edit a .keymap file instead. Wafer Studio is built around " +
+    "getting that number down. It speaks the standard ZMK Studio protocol and changes nothing on the " +
+    "wire; what it changes is the number of decisions between you and a finished keyboard.",
   sections: [
-    { kind: "stub", h: "One grid",
-      body: "Every project is a node with a hex address (0x01–0x0C) on a single map. The landing universe, the card flight, the case-file pages and the footer ring all read from one data file keyed by that address — add an entry and a project simply exists everywhere at once." },
-    { kind: "stub", h: "One template",
-      body: "Each project page is the same core — hero rig on the right, story, ASCII photos, links, footer — driven entirely by a small per-project config. Wafer was the reference; everything after is that core plus a few dozen lines: which model, which demo, which tweaks." },
-    { kind: "photo", caption: "the page template · one core, many configs" },
-    { kind: "stub", h: "Bespoke demos, shared spine",
-      body: "Each flagship gets its own playable demo — a firmware switch sim, a living face engine, a pointer-acceleration toy, a flashing-line game — but they all mount in the same demo shell and boot the same way. Real device logic is ported, not faked: the curves, state machines and error codes are the firmware's own." },
-    { kind: "stub", h: "The Carrier Field",
-      body: "All sound is one ambient field — a low just-intonation drone — with a per-node sideband, so every demo hums its own address while staying in tune with the rest. Each palette adds its character on top: hard clicks, soft chirps, glide grains, a spark." },
-    { kind: "photo", caption: "the 0x00 carrier field · twelve sidebands" },
+    { kind: "stub", h: "Type through the board",
+      body: "Select a key, then press the key you want it to become. It binds, advances to the next key in reading order, and waits — you set your base layer by typing your base layer. The application is running on a keyboard; hunting for A in a searchable list while your finger rests on A is the central absurdity of every configurator, and it is free to fix." },
+    { kind: "photo", src: "public/zmk-mac.png", caption: "the editor · the canvas is the product, chrome only frames it" },
+    { kind: "stub", h: "Fewer decisions, not fewer features",
+      body: "Alphas are read off the current layer and matched against QWERTY, Colemak, Colemak-DH, Dvorak and Workman — recognised, they permute to any of the others in one step, letters only. A layer copies as a single undo entry rather than forty-two. Painting a hold-tap across the home row wraps each key instead of replacing it, so every key keeps its own letter: home-row mods in eight clicks. Mirror is offered per key, and only when the board actually has an opposite one." },
+    { kind: "stub", h: "One light, one law",
+      body: "Surfaces carry no colour of their own. Colour appears only where an edge turns away from the light and splits it: distance decides brightness, bearing decides hue, steepness decides whether any colour appears at all. The whole application shares one light source and every dispersive edge paints its gradient in viewport space, so moving the light re-disperses the entire interface coherently. The accent is achromatic — what marks an element as primary is its position on the dispersion scale, not a brand hue." },
+    { kind: "photo", src: "public/og-card.png", caption: "the mark · dispersion at rest" },
+    { kind: "stub", h: "The protocol boundary",
+      body: "A ZMK Studio binding is one behavior id and two integers, with no field that can reference another binding — behaviour composition is impossible through the protocol, not merely unbuilt. Combos, macros, tap-dance, conditional layers, encoders, lighting and hold-tap timing are not exposed at all. Those need firmware work upstream in ZMK; any UI here would be a UI over nothing. Wafer Studio shows only what the connected keyboard reports it can do." },
+    { kind: "stub", h: "Browser and desktop",
+      body: "Over USB the web version does everything the desktop one does. Browsers expose Web Bluetooth on Linux only, which is the entire reason the Tauri desktop build exists — it ships .dmg, .deb and .msi from a tagged release. With no keyboard nearby, Explore demo keyboard opens the full editor against a deterministic fixture." },
   ],
   links: [
-    { kind: "LIVE",   label: "Open the portfolio", href: "Landing v11.html" },
-    { kind: "SYSTEM", label: "Design System", href: "Design System.html" },
-    { kind: "INDEX",  label: "All nodes", href: "Landing v11.html#work" },
+    { kind: "GITHUB", label: "oleksandrmaslov/wafer-studio", href: "https://github.com/oleksandrmaslov/wafer-studio" },
+    { kind: "LIVE", label: "open in your browser", href: "https://oleksandrmaslov.github.io/wafer-studio/" },
+    { kind: "DESKTOP", label: "download · macOS · Linux · Windows", href: "https://oleksandrmaslov.github.io/wafer-studio/download.html" },
+    { kind: "UPSTREAM", label: "zmkfirmware/zmk-studio · protocol", href: "https://github.com/zmkfirmware/zmk-studio" },
   ],
-  link: { label: "OPEN THE PORTFOLIO", href: "Landing v11.html", hint: "THIS PAGE · IS · A NODE", self: true },
   prev: "0x04",
-  next: "0x08",
+  next: "0x07",
 };
 
 /* =========================================================
-   0x08 · SPLIT HID DISPLAY  (full-weight page · link keycap,
+   0x07 · SPLIT HID DISPLAY  (full-weight page · link keycap,
    no bespoke demo). Renamed from the old "nice-view-elemental"
    working name to the shipped module name. Threaded into the
    by-address nav ring: 0x07 → 0x08 → 0x09.
    ========================================================= */
-PROJECT_DATA["0x08"] = {
-  addr: "0x08",
+PROJECT_DATA["0x07"] = {
+  addr: "0x07",
   slug: "zmk-split-hid-display",
   file: "Split HID Display v2.html",
-  file2: "Split HID Display v2.html",
   name: "Split HID Display",
   tagline: "Live host state on both nice!view halves",
   overline: "OPEN SOURCE · ZMK MODULE · RAW HID",
@@ -365,8 +358,8 @@ PROJECT_DATA["0x08"] = {
     { kind: "CREDITS",  label: "nice-view-hid · forked & extended",     href: "https://github.com/zzeneg/zmk-nice-view-hid" },
   ],
   link: { label: "VIEW ON GITHUB", href: "https://github.com/oleksandrmaslov/zmk-split-hid-display", hint: "ZMK MODULE · SOURCE" },
-  prev: "0x07",
-  next: "0x09",
+  prev: "0x06",
+  next: "0x08",
 };
 
 window.PROJECT_DATA = PROJECT_DATA;

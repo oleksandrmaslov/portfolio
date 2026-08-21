@@ -82,9 +82,11 @@ body.fl-titleGone .title__stage { visibility: hidden; }
     animation-name: flStageIn, flStageOut;
     animation-duration: auto;
     animation-timing-function: linear;
-    animation-fill-mode: none;      /* outside its range an animation must not
-                                       hold a value — the pinned middle falls
-                                       back to the base opacity above */
+    /* Entry owns only the pre-entry hidden state; exit owns only the
+       post-exit hidden state. Between the ranges the JS presence value still
+       owns the pinned middle. Keeping the exit's zero is what prevents a
+       stale rAF value from revealing the stage after sticky has released. */
+    animation-fill-mode: backwards, forwards;
     animation-range: cover 0 cover 100vh, cover calc(100% - 150vh) cover 100%;
   }
   .origin__stage { animation-timeline: --flOriginTrack; }
