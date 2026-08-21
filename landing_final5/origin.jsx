@@ -24,10 +24,10 @@ const { useState: useO, useEffect: useOE, useRef: useOR } = React;
    the text started dying the moment it finished being born. */
 const ORIGIN_LINES = [
   { t: "I build", at: 0.20 },
-  { t: "complete products —", at: 0.34, em: true },
+  { t: "complete products,", at: 0.34, em: true },
   { t: "starting with", at: 0.34, ghost: true },
-  { t: "a real problem,", at: 0.48 },
-  { t: "not a discipline", at: 0.60, em: true },
+  { t: "a real problem—", at: 0.48 },
+  { t: "not a technology.", at: 0.60, em: true },
 ];
 
 const _oEase  = (t) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
@@ -53,10 +53,11 @@ function OriginBeat() {
     let raf;
     const update = () => {
       const total = el.offsetHeight - window.innerHeight;
-      const top = -el.getBoundingClientRect().top;
+      const rect = el.getBoundingClientRect();
+      const top = -rect.top;
       const np = total > 0 ? _oClamp(top / total, 0, 1) : 0;
-      const active = el.getBoundingClientRect().top < window.innerHeight * 0.6 &&
-                     el.getBoundingClientRect().bottom > window.innerHeight * 0.4;
+      const active = rect.top < window.innerHeight * 0.6 &&
+                     rect.bottom > window.innerHeight * 0.4;
       window.__mo_origin.p = np;
       window.__mo_origin.active = active;
       setP(np);
@@ -101,11 +102,11 @@ function OriginBeat() {
         }}>
           <div className="origin__kicker">
             <span className="origin__kickerDot" />
-            <span className="origin__kickerAddr">0x00</span>
+            <span className="origin__kickerAddr" data-mo-cursor-mirror data-mo-cursor-opacity=".origin__type,.origin__stage,.lp">0x00</span>
             <span className="origin__kickerSep" />
-            <span className="origin__kickerName">MASLOV / OLEKSANDR</span>
+            <span className="origin__kickerName" data-mo-cursor-mirror data-mo-cursor-opacity=".origin__type,.origin__stage,.lp">MASLOV / OLEKSANDR</span>
             <span className="origin__kickerSep" />
-            <span className="origin__kickerRoute">KYIV → MÜNCHEN</span>
+            <span className="origin__kickerRoute" data-mo-cursor-mirror data-mo-cursor-opacity=".origin__type,.origin__stage,.lp">KYIV → MÜNCHEN</span>
           </div>
           <h2 className="origin__head2">
             {ORIGIN_LINES.map((ln, i) => {
@@ -115,24 +116,27 @@ function OriginBeat() {
                 filter: `blur(${((1 - e) * 16).toFixed(2)}px)`,
                 opacity: (0.08 + e * 0.92).toFixed(3),
                 transform: `translateY(${((1 - e) * 18).toFixed(1)}px)`,
+                color: "var(--bone)",
               };
               const cls = "origin__line" +
                 (ln.em ? " origin__line--em" : "") +
                 (ln.ghost ? " origin__line--ghost" : "");
               return (
                 <span key={i} className={cls} style={style}>
-                  {ln.t}{ln.dot ? <em className="origin__period">.</em> : null}
+                  <span data-mo-cursor-mirror data-mo-cursor-opacity=".origin__line,.origin__type,.origin__stage,.lp">
+                    {ln.t}{ln.dot ? <em className="origin__period">.</em> : null}
+                  </span>
                 </span>
               );
             })}
           </h2>
 
           <div className="origin__sig" style={{ opacity: _oClamp((p - 0.56) / 0.16, 0, 1).toFixed(3) }}>
-            <div className="origin__sigCol">
+            <div className="origin__sigCol" data-mo-cursor-mirror data-mo-cursor-opacity=".origin__sig,.origin__type,.origin__stage,.lp">
               <span className="origin__sigK">▙ NOW</span>
               <span className="origin__sigV">ZMK · Kerfur · Iskra</span>
             </div>
-            <div className="origin__sigCol">
+            <div className="origin__sigCol" data-mo-cursor-mirror data-mo-cursor-opacity=".origin__sig,.origin__type,.origin__stage,.lp">
               <span className="origin__sigK">▙ NEXT</span>
               <span className="origin__sigV">University / technical Ausbildung · Wafer company</span>
             </div>

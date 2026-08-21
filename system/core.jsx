@@ -133,13 +133,12 @@ function Cursor() {
     const node = ref.current;
 
     // Two decoupled jobs on mousemove:
-    //   1. position + live pixel readout  → written DIRECTLY to the DOM every
-    //      move (cheap: one transform + one textContent), so the crosshair and
-    //      coordinate counter feel instant and never trigger a React render.
+    //   1. position + live pixel readout  → written DIRECTLY to the DOM once
+    //      per display frame, so high-rate mice cannot flood style/text writes.
     //   2. hover-target detection (elementFromPoint + .closest tree-walks) →
     //      this is the genuinely expensive part, so it's time-throttled and the
     //      mode state only updates when it actually changes.
-    let px = 0, py = 0, lastMode = "idle", lastProbe = 0;
+    let px = 0, py = 0, lastMode = "idle", lastProbe = 0, raf = 0;
     const HOT = "button, a, .node, .swatch, .curve, .family, .compBlock, .t-link, [data-hot]";
 
     const writeCoords = () => {
@@ -161,17 +160,23 @@ function Cursor() {
       if (next !== lastMode) { lastMode = next; setMode(next); }
     };
 
-    const onMove = e => {
-      px = e.clientX; py = e.clientY;
+    const flushMove = now => {
+      raf = 0;
       if (node) node.style.transform =
         `translate(${px}px, ${py}px) translate(-50%, -50%)`;
-      writeCoords();                 // live pixel readout — every move
-      probe(e.timeStamp || performance.now());
+      writeCoords();
+      probe(now);
+    };
+
+    const onMove = e => {
+      px = e.clientX; py = e.clientY;
+      if (!raf) raf = requestAnimationFrame(flushMove);
     };
 
     window.addEventListener("mousemove", onMove, { passive: true });
     return () => {
       window.removeEventListener("mousemove", onMove);
+      if (raf) cancelAnimationFrame(raf);
       document.documentElement.classList.remove("custom-cursor");
     };
   }, []);

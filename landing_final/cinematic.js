@@ -79,9 +79,10 @@
   // getComputedStyle (style+layout flush) every animation frame.
   var cinK = 0.67;
   var lastVelW = -1, lastVigW = -1;
+  var raf = 0;
 
   function frame() {
-    requestAnimationFrame(frame);
+    raf = 0;
     var target = window.scrollY || window.pageYOffset || 0;
     smoothY += (target - smoothY) * 0.12;
     var inst = target - lastY;
@@ -99,6 +100,22 @@
     }
     // v10: expose the velocity weight to the universe (FOV + aberration kick)
     window.__mo_vel = vel;
+    // At rest there is no changing output. Sleep until the next scroll instead
+    // of keeping a permanent page-wide animation callback alive.
+    if (Math.abs(target - smoothY) > 0.05 || Math.abs(smVel) > 0.02 || Math.abs(inst) > 0.02) {
+      raf = requestAnimationFrame(frame);
+    } else window.__mo_vel = 0;
+  }
+
+  function wakeFrame() {
+    if (!reduceMotion && !raf) raf = requestAnimationFrame(frame);
+  }
+
+  if (!reduceMotion) {
+    window.addEventListener("scroll", wakeFrame, { passive: true });
+    document.addEventListener("visibilitychange", function () {
+      if (!document.hidden) wakeFrame();
+    });
   }
 
   /* ---------- boot (poll until React has mounted the title) ---------- */
@@ -108,7 +125,7 @@
     cinK = parseFloat(getComputedStyle(root).getPropertyValue("--cin-k")) || 0.67;
     var ok = revealTitle();
     if (!ok && tries++ < 80) { setTimeout(boot, 60); return; }
-    if (!reduceMotion) requestAnimationFrame(frame);
+    wakeFrame();
   }
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", boot);

@@ -114,29 +114,53 @@ function AsciiHero({ cols = 108, rows = 20, ramp = " ·:-=+*#%@", className = ""
     el.addEventListener("mousemove", onMove);
     el.addEventListener("mouseleave", onLeave);
 
-    /* ---------- visibility gate — only burn cycles on-screen ---------- */
-    let onScreen = true;
-    const io = new IntersectionObserver(
-      (entries) => { onScreen = entries[0].isIntersecting; },
-      { threshold: 0 }
-    );
-    io.observe(el);
-
-    /* ---------- render loop — one string per frame ---------- */
-    let raf;
+    /* ---------- demand-driven render gate ---------- */
+    const initialRect = el.getBoundingClientRect();
+    let onScreen = initialRect.bottom > 0 && initialRect.top < window.innerHeight;
+    let disposed = false;
+    let raf = 0;
     let last = 0;
 
+    const cancelLoop = () => {
+      if (!raf) return;
+      cancelAnimationFrame(raf);
+      raf = 0;
+    };
+    const requestLoop = () => {
+      if (disposed || raf || !onScreen || document.hidden) return;
+      raf = requestAnimationFrame(frame);
+    };
+    const syncLoop = () => {
+      if (!onScreen || document.hidden) cancelLoop();
+      else requestLoop();
+    };
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        onScreen = entries[0].isIntersecting;
+        syncLoop();
+      },
+      { threshold: 0 }
+    );
+    const onScroll = () => requestLoop();
+    const onVisibility = () => syncLoop();
+    io.observe(el);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    document.addEventListener("visibilitychange", onVisibility);
+
+    /* ---------- render loop — one string per frame ---------- */
     function frame(now) {
-      if (!onScreen || document.hidden) { raf = requestAnimationFrame(frame); return; }
-      if (now - last < 33) { raf = requestAnimationFrame(frame); return; }   // ~30 fps
-      last = now;
+      raf = 0;
+      if (disposed || !onScreen || document.hidden) return;
 
       const ex = Math.max(0, Math.min(1, window.__mo_titleExit || 0));
       if (ex >= 0.999) {
         if (!el.__exCleared) { el.textContent = ""; el.__exCleared = true; }
-        raf = requestAnimationFrame(frame);
         return;
       }
+      if (now - last < 33) { requestLoop(); return; }   // ~30 fps
+      last = now;
+
       el.__exCleared = false;
 
       const t = now * 0.0009;
@@ -204,13 +228,16 @@ function AsciiHero({ cols = 108, rows = 20, ramp = " ·:-=+*#%@", className = ""
         buf.push(line);
       }
       el.innerHTML = buf.join("\n");
-      raf = requestAnimationFrame(frame);
+      requestLoop();
     }
-    raf = requestAnimationFrame(frame);
+    requestLoop();
 
     return () => {
-      cancelAnimationFrame(raf);
+      disposed = true;
+      cancelLoop();
       io.disconnect();
+      window.removeEventListener("scroll", onScroll);
+      document.removeEventListener("visibilitychange", onVisibility);
       el.removeEventListener("mousemove", onMove);
       el.removeEventListener("mouseleave", onLeave);
     };

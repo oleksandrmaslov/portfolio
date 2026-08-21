@@ -70,7 +70,9 @@ function BoardFlight({ onEnter, onContact }) {
   useBFE(() => {
     const mount = mountRef.current;
     if (!mount) return;
-    let raf, cursorFx = null, last = performance.now(), disposed = false, started = false;
+    let bootRaf = 0, renderRaf = 0, cursorFx = null, last = performance.now();
+    let disposed = false, started = false, near = false, bootObserver = null;
+    let fallbackListening = false;
     uniRef.current = document.querySelector(".universeBg");
     if (uniRef.current) uniRef.current.style.transition = "none";
 
@@ -87,6 +89,7 @@ function BoardFlight({ onEnter, onContact }) {
           zIndex: 20,
           dprCap: 1,
           disabledClasses: ["landing-exit", "mo-explore", "nx-page"],
+          disabledWhen: () => presRef.current <= 0.004,
           chainPrevious: true,
         });
       }
@@ -98,25 +101,76 @@ function BoardFlight({ onEnter, onContact }) {
           ctrl.render();
           if (a !== undefined) setActive((prev) => (prev === a ? prev : a));
         }
-        raf = requestAnimationFrame(loop);
+        renderRaf = requestAnimationFrame(loop);
       };
-      raf = requestAnimationFrame(loop);
+      renderRaf = requestAnimationFrame(loop);
+    };
+
+    const removeFallbackListeners = () => {
+      if (!fallbackListening) return;
+      fallbackListening = false;
+      window.removeEventListener("scroll", fallbackProbe);
+      window.removeEventListener("resize", fallbackProbe);
+    };
+
+    const stopBootWatch = () => {
+      if (bootRaf) cancelAnimationFrame(bootRaf);
+      bootRaf = 0;
+      if (bootObserver) bootObserver.disconnect();
+      bootObserver = null;
+      removeFallbackListeners();
     };
 
     const tryBoot = () => {
+      bootRaf = 0;
+      if (disposed || started || !near) return;
+      if (window.THREE && window.MOBoard) {
+        started = true;
+        stopBootWatch();
+        boot();
+        return;
+      }
+      bootRaf = requestAnimationFrame(tryBoot);
+    };
+
+    const setNear = (next) => {
+      near = !!next;
+      if (near) {
+        if (!bootRaf && !started) bootRaf = requestAnimationFrame(tryBoot);
+      } else if (bootRaf) {
+        cancelAnimationFrame(bootRaf);
+        bootRaf = 0;
+      }
+    };
+
+    function fallbackProbe() {
       if (disposed || started) return;
       const el = secRef.current;
-      const near = el && el.getBoundingClientRect().top < window.innerHeight * 1.5;
-      if (near && window.THREE && window.MOBoard) { started = true; boot(); return; }
-      raf = requestAnimationFrame(tryBoot);
-    };
-    raf = requestAnimationFrame(tryBoot);
+      if (!el) { setNear(false); return; }
+      const rect = el.getBoundingClientRect();
+      setNear(rect.bottom > 0 && rect.top < window.innerHeight);
+    }
+
+    const section = secRef.current;
+    if (section && window.IntersectionObserver) {
+      bootObserver = new window.IntersectionObserver((entries) => {
+        const entry = entries.find((candidate) => candidate.target === section);
+        if (entry) setNear(entry.isIntersecting);
+      }, { root: null, threshold: 0 });
+      bootObserver.observe(section);
+    } else if (section) {
+      fallbackListening = true;
+      window.addEventListener("scroll", fallbackProbe, { passive: true });
+      window.addEventListener("resize", fallbackProbe, { passive: true });
+      fallbackProbe();
+    }
 
     const onResize = () => { const c = ctrlRef.current; if (c) c.setSize(mount.clientWidth, mount.clientHeight); };
     window.addEventListener("resize", onResize);
     return () => {
       disposed = true;
-      cancelAnimationFrame(raf);
+      stopBootWatch();
+      if (renderRaf) cancelAnimationFrame(renderRaf);
       window.removeEventListener("resize", onResize);
       window.__mo_universe_pause = false;
       window.__mo_morph = null;

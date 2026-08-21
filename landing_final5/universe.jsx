@@ -15,6 +15,10 @@
    is adapted into the tile shape this file has always used. The old inline
    12-project array is gone. Falls back to an empty field if the data file
    failed to load (console warning below). */
+// Final 5 owns these tuning defaults. Keeping them beside their consumers
+// avoids a page-level override racing the shared cursor module during boot.
+window.__mo_fx = Object.assign({ legRoll: 0.4, wheelYield: 420 }, window.__mo_fx || {});
+
 const PROJECTS = (window.MO_PROJECTS || []).map((p) => {
   const m = p.model || {};
   const cp = m.cardPose || {};
@@ -33,24 +37,6 @@ if (!PROJECTS.length) console.warn("[universe] MO_PROJECTS missing — load land
 const MO_FEATURED = window.MO_FEATURED_ADDRS || ["0x01", "0x02", "0x03", "0x04"];
 
 window.UNIVERSE_PROJECTS = PROJECTS;
-
-// Kick the GLB preload as soon as we know the URLs — independent of Boot,
-// which can be skipped via sessionStorage. We defer until the next tick so
-// viewer3d.jsx has had a chance to define window.preloadModels.
-// Held until the entry sequence hands over: 12 model downloads during the
-// preloader steal bandwidth from the critical field the visitor is watching.
-let _moWarmed = false;
-function _moWarmModels() {
-  if (_moWarmed) return;
-  _moWarmed = true;
-  if (typeof window.preloadModels !== "function") return;
-  const urls = PROJECTS.map(p => p.model).filter(Boolean);
-  if (urls.length) window.preloadModels(urls);
-}
-if (document.getElementById("mo-pl")) {
-  window.addEventListener("mo:preloader-done", () => setTimeout(_moWarmModels, 250), { once: true });
-  setTimeout(_moWarmModels, 11000);
-} else setTimeout(_moWarmModels, 0);
 
 /* ============================================================
    Per-tile canvas texture
@@ -338,7 +324,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     let { w, h } = sz();
 
     /* ---------- renderer / scene / camera ---------- */
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance", preserveDrawingBuffer: true });
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
     // Cap at 1.5 — on a soft drifting field the extra retina pixels are
     // imperceptible but cost ~1.8× the fragment work at DPR 2.
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
@@ -392,10 +378,16 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     // lighting-independent; real metal renders pure BLACK without an env map +
     // key light — which is why the wafer/flashlight models went "missing". Add
     // a cheap one-time PMREM environment + a key/rim light so they read.
+    let _pmrem = null, _roomEnvironment = null;
     try {
-      const _pmrem = new THREE.PMREMGenerator(renderer);
-      scene.environment = _pmrem.fromScene(new THREE.RoomEnvironment(), 0.06).texture;
+      _pmrem = new THREE.PMREMGenerator(renderer);
+      _roomEnvironment = new THREE.RoomEnvironment();
+      scene.environment = _pmrem.fromScene(_roomEnvironment, 0.06).texture;
     } catch (_) {}
+    finally {
+      if (_roomEnvironment && _roomEnvironment.dispose) _roomEnvironment.dispose();
+      if (_pmrem) _pmrem.dispose();
+    }
     { const _k = new THREE.DirectionalLight(0xffffff, 1.6); _k.position.set(2.4, 3.2, 2.6); scene.add(_k);
       const _r = new THREE.PointLight(0x00f0c8, 1.6, 26); _r.position.set(-3, 1.6, -2); scene.add(_r); }
 
@@ -510,12 +502,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     // the CA + vignette grade stays. This protects weak phones without punishing
     // capable ones (iPhone 16 Pro Max keeps its DoF).
     let _probeFrames = 0, _probeAccum = 0, _probeDone = false;
-    // DEBUG: when true, the adaptive FPS probe never runs, so DoF is NEVER
-    // auto-demoted on low-power devices — useful for inspecting the full grade
-    // path on any machine. Flip back to false to restore adaptive behaviour.
-    const _FPS_PROBE_DISABLED = true;
     function probeDoF(dt) {
-      if (_FPS_PROBE_DISABLED) return;
       if (_probeDone || !bokehPass) return;
       // ignore absurd dt (tab was backgrounded / first frame)
       if (dt > 0 && dt < 200) { _probeAccum += dt; _probeFrames++; }
@@ -2403,11 +2390,15 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       cancelAnimationFrame(raf);
       clearTimeout(idleTimer);
       if (cursorFx) cursorFx.destroy();
+      if (bokehPass && bokehPass.dispose) bokehPass.dispose();
+      if (composer && composer.dispose) composer.dispose();
       window.removeEventListener("resize", onResize);
       ro.disconnect();
       uniIO.disconnect();
       try { mount.removeChild(renderer.domElement); } catch (_) {}
       renderer.dispose();
+      if (scene.background && scene.background.dispose) scene.background.dispose();
+      if (scene.environment && scene.environment.dispose) scene.environment.dispose();
       tiles.forEach(m => { m.geometry.dispose(); m.material.map?.dispose(); m.material.dispose(); });
       tileWires.forEach(w => {
         if (w.userData && w.userData.isModel) {

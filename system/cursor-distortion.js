@@ -126,7 +126,13 @@
         } catch (_) {}
       }
       if ("fontStretch" in ctx && style.fontStretch) {
-        try { ctx.fontStretch = style.fontStretch; } catch (_) {}
+        // Chromium exposes computed stretch as percentages (usually "100%"),
+        // while CanvasFontStretch accepts keywords only. Invalid assignments
+        // emit one console warning per painted word and are ignored anyway.
+        const stretch = style.fontStretch;
+        if (/^(ultra-condensed|extra-condensed|condensed|semi-condensed|normal|semi-expanded|expanded|extra-expanded|ultra-expanded)$/.test(stretch)) {
+          try { ctx.fontStretch = stretch; } catch (_) {}
+        }
       }
       const metrics = ctx.measureText(output);
       const glyphCount = Array.from(output).length;
@@ -800,14 +806,25 @@
     const effectPass = new THREE.ShaderPass(shader);
     const mirror = createTextMirror({
       THREE, selector: opts.selector || DEFAULT_SELECTOR, width, height,
-      pixelRatio: opts.pixelRatio, alphaTag: true, active: true,
+      pixelRatio: opts.pixelRatio, alphaTag: true, active: false,
     });
     const core = createCursorCore({ THREE, renderer: opts.renderer, uniforms: effectPass.uniforms });
-    let destroyed = false;
+    let destroyed = false, mirrorLive = false;
     function update(now, dt, grade) {
       if (destroyed) return;
       core.update(now, dt, grade);
-      if (mirror) mirror.update();
+      if (!mirror) return;
+      if (core.isHot(now)) {
+        if (!mirrorLive) {
+          mirror.setActive(true);
+          mirrorLive = true;
+        } else {
+          mirror.update();
+        }
+      } else if (mirrorLive) {
+        mirror.setActive(false);
+        mirrorLive = false;
+      }
     }
     function resize(nextWidth, nextHeight) {
       if (destroyed) return;
@@ -841,6 +858,7 @@
     let destroyed = false, contextLost = false, active = false, mirrorLive = false, raf = 0;
     let last = performance.now();
     const disabledClasses = Array.isArray(opts.disabledClasses) ? opts.disabledClasses : [];
+    const disabledWhen = typeof opts.disabledWhen === "function" ? opts.disabledWhen : null;
     const useScreenBlend = !!(global.CSS && global.CSS.supports
       && global.CSS.supports("mix-blend-mode", "screen"));
     // Screen blending is the fail-safe that guarantees the overlay can only
@@ -914,7 +932,11 @@
 
     const canvas = renderer.domElement;
     function isDisabled() {
-      return document.hidden || disabledClasses.some((className) => document.body.classList.contains(className));
+      if (document.hidden || disabledClasses.some((className) => document.body.classList.contains(className))) {
+        return true;
+      }
+      if (!disabledWhen) return false;
+      try { return !!disabledWhen(); } catch (_) { return false; }
     }
     function deactivate(reset) {
       if (raf) global.cancelAnimationFrame(raf);

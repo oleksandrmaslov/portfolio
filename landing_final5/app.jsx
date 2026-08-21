@@ -143,11 +143,10 @@ function VolumeToggle() {
   useEffect(() => {
     if (!window.MOSound) return;
     window.MOSound.init();
-    window.MOSound.onState(s => setMuted(s.muted));
     const W = 38, H = 16, MID = H / 2, N = 40;
-    let raf, phase = 0, amp = 0;
+    let raf = 0, phase = 0, amp = 0;
     const tick = () => {
-      raf = requestAnimationFrame(tick);
+      raf = 0;
       const path = pathRef.current; if (!path) return;
       const on = !window.MOSound.isMuted();
       const lvl = on ? window.MOSound.getLevel() : 0;
@@ -164,8 +163,15 @@ function VolumeToggle() {
         d += (i ? "L" : "M") + x.toFixed(1) + " " + y.toFixed(2) + " ";
       }
       path.setAttribute("d", d);
+      if (on || amp > 0.02) raf = requestAnimationFrame(tick);
+      else {
+        amp = 0;
+        path.setAttribute("d", "M0 8 L38 8");
+      }
     };
-    tick();
+    const wake = () => { if (!raf) raf = requestAnimationFrame(tick); };
+    window.MOSound.onState(s => { setMuted(s.muted); wake(); });
+    wake();
     return () => cancelAnimationFrame(raf);
   }, []);
 
