@@ -84,25 +84,24 @@
         buildModel: (THREE) => {
           const body = window.makeKerfurBody(THREE);
           window.__heroKerfur = body;
-          /* self-driven tick: hero rig renders continuously, we only
-             need to keep the face engine + springs advancing */
-          let last = performance.now();
-          const tick = (now) => {
-            body.update(now, now - last);
-            last = now;
-            if (!window.__hv_leaving) requestAnimationFrame(tick);
+          /* Advance the face and springs inside the shared hero loop. This
+             pauses with the offscreen renderer instead of running a second
+             permanent RAF plus interval for the lifetime of the page. */
+          let nextGlance = performance.now() + 3400;
+          return {
+            group: body.group,
+            update(now, dt) {
+              body.update(now, dt);
+              if (now < nextGlance) return;
+              nextGlance = now + 3400;
+              if (document.body.classList.contains("hv-demoing")) return;
+              const f = body.face;
+              const r = Math.random();
+              if (r < 0.45) f.setLook((Math.random() - 0.5) * 120, (Math.random() - 0.5) * 60);
+              else if (r < 0.55) f.react("REACTION_GLANCE_LEFT");
+              else f.setLook(0, 0);
+            },
           };
-          requestAnimationFrame(tick);
-          /* a calm pet on its shelf: occasional ambient glances */
-          setInterval(() => {
-            if (document.body.classList.contains("hv-demoing")) return;
-            const f = body.face;
-            const r = Math.random();
-            if (r < 0.45) f.setLook((Math.random() - 0.5) * 120, (Math.random() - 0.5) * 60);
-            else if (r < 0.55) f.react("REACTION_GLANCE_LEFT");
-            else f.setLook(0, 0);
-          }, 3400);
-          return body.group;
         },
       },
       demo: {

@@ -46,7 +46,7 @@ const { useState: usePC, useEffect: useEPC, useRef: useRPC } = React;
 const PC = window.PAGE_CONFIG || {};
 const PC_IDLE_DRIFT = true;
 
-/* keycap button — same as the inline one in Wafer v2.html */
+/* Shared project keycap button. */
 function PCKeyButton({ children, legend = "↵", primary, onPress }) {
   const [pressed, setPressed] = usePC(false);
   const [lit, setLit] = usePC(false);
@@ -383,8 +383,13 @@ function ProjectPageApp() {
     let raf, last = performance.now();
     const loop = (now) => {
       const dt = now - last; last = now;
-      if (window.__hv_exitSpin) rig.nudgeYaw(Math.min(50, dt) * 0.0019);
-      rig.update(dt); rig.render();
+      const stageVisible = window.scrollY < window.innerHeight * 0.74
+        || window.__hv_exitSpin
+        || document.body.classList.contains("hv-inspecting");
+      if (!document.hidden && stageVisible) {
+        if (window.__hv_exitSpin) rig.nudgeYaw(Math.min(50, dt) * 0.0019);
+        rig.update(dt); rig.render();
+      }
       raf = requestAnimationFrame(loop);
     };
     raf = requestAnimationFrame(loop);

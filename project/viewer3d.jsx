@@ -35,11 +35,17 @@
     if (!THREE.KTX2Loader) { _ktx2 = false; return null; }
     const k = new THREE.KTX2Loader()
       .setTranscoderPath("https://unpkg.com/three@0.160.0/examples/jsm/libs/basis/");
+    let r = null;
     try {
-      const r = new THREE.WebGLRenderer();
+      r = new THREE.WebGLRenderer({ antialias: false, depth: false, stencil: false });
       k.detectSupport(r);
-      r.dispose();
     } catch (e) { console.warn("[viewer3d] KTX2 detectSupport failed", e); }
+    finally {
+      if (r) {
+        r.dispose();
+        if (r.forceContextLoss) r.forceContextLoss();
+      }
+    }
     _ktx2 = k;
     return k;
   }
@@ -90,6 +96,7 @@
       urls.map((u) => window.loadProjectModel(u, window.THREE).catch(() => null))
     ));
   };
+  window.dispatchEvent(new Event("mo:model-loader-ready"));
 
   /* Fit-and-centre helper — recentres a loaded model on its bounding-box
      centre and scales it so its longest edge equals `targetSize` world units.

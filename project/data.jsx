@@ -219,7 +219,7 @@ PROJECT_DATA["0x03"] = {
   role: "Tooling · C# · state machine",
   stack: ["C#", ".NET / WPF", "Black Magic Probe", "arm-none-eabi-gdb", "SQLite", "Ed25519"],
   primitive: "slab",
-  model: "models/wafer.glb",
+  model: "models/iskra-mark.glb",
   demoSize: { d: 120, w: 28, h: 28 },
   metrics: [
     { value: "2-PHASE", unit: "scan → flash · safe-by-design" },
@@ -326,6 +326,7 @@ PROJECT_DATA["0x07"] = {
   role: "Maintainer · integration · fork",
   stack: ["C", "ZMK", "Zephyr", "Raw HID", "Split BLE", "nice!view"],
   primitive: "slab",
+  model: "models/keyboard-display.opt.glb",
   demoSize: { d: 36, w: 22, h: 4 },
   metrics: [
     { value: "5",      unit: "host payloads" },
@@ -364,11 +365,29 @@ PROJECT_DATA["0x07"] = {
 
 window.PROJECT_DATA = PROJECT_DATA;
 
-// Start the GLB preload as soon as data is registered, so by the time the
-// page-entry FlyIn mounts, the model is (or is about to be) in cache.
-// Deferred a tick so viewer3d.jsx's window.preloadModels is defined first.
-setTimeout(() => {
+// Warm only the current page's hero. Preloading every project here kept all
+// parsed GLBs resident on every case-file page and was a large, invisible RAM
+// cost. viewer3d.jsx announces when its shared loader is ready, so a slow
+// external script fetch cannot make this warmup race and silently disappear.
+function warmCurrentProjectModel() {
   if (typeof window.preloadModels !== "function") return;
-  const urls = Object.values(PROJECT_DATA).map(p => p && p.model).filter(Boolean);
+  const config = window.PAGE_CONFIG || {};
+  let project = PROJECT_DATA[config.addr];
+  if (!project) {
+    let pathname = window.location.pathname || "";
+    try { pathname = decodeURIComponent(pathname); } catch (_) {}
+    pathname = pathname.replace(/\\/g, "/");
+    project = Object.values(PROJECT_DATA).find((candidate) =>
+      candidate && candidate.file
+        && (pathname === candidate.file || pathname.endsWith("/" + candidate.file))
+    );
+  }
+  const urls = Array.from(new Set([
+    config.hero && config.hero.model,
+    project && project.model,
+  ].filter(Boolean)));
   if (urls.length) window.preloadModels(urls);
-}, 0);
+}
+
+if (typeof window.preloadModels === "function") warmCurrentProjectModel();
+else window.addEventListener("mo:model-loader-ready", warmCurrentProjectModel, { once: true });

@@ -47,7 +47,12 @@
     const sz = () => ({ w: mount.clientWidth || 1, h: mount.clientHeight || 1 });
     let { w, h } = sz();
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance", preserveDrawingBuffer: true });
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      alpha: true,
+      powerPreference: "high-performance",
+      preserveDrawingBuffer: opts.preserveDrawingBuffer === true,
+    });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(w, h);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -63,12 +68,26 @@
     camera.lookAt(0, 0, 0);
 
     /* environment for PBR reflections — the anodized metal lives off this */
-    let pmrem = null;
+    let pmrem = null, envTarget = null, roomEnvironment = null;
     if (THREE.RoomEnvironment) {
       try {
         pmrem = new THREE.PMREMGenerator(renderer);
-        scene.environment = pmrem.fromScene(new THREE.RoomEnvironment(), 0.08).texture;
+        roomEnvironment = new THREE.RoomEnvironment();
+        envTarget = pmrem.fromScene(roomEnvironment, 0.08);
+        scene.environment = envTarget.texture;
       } catch (_) {}
+      finally {
+        if (roomEnvironment) {
+          if (roomEnvironment.dispose) roomEnvironment.dispose();
+          else roomEnvironment.traverse((object) => {
+            if (object.geometry && object.geometry.dispose) object.geometry.dispose();
+            const mats = object.material ? (Array.isArray(object.material) ? object.material : [object.material]) : [];
+            mats.forEach((material) => material && material.dispose && material.dispose());
+          });
+        }
+        if (pmrem) pmrem.dispose();
+        pmrem = null;
+      }
     }
 
     /* lights — pushed harder than v2 so the dark real materials read */
@@ -267,8 +286,10 @@
       get explode() { return tgt.explode; },
       dispose() {
         try { mount.removeChild(renderer.domElement); } catch (_) {}
-        if (pmrem) pmrem.dispose();
+        if (envTarget) envTarget.dispose();
+        if (renderer.renderLists) renderer.renderLists.dispose();
         renderer.dispose();
+        if (renderer.forceContextLoss) renderer.forceContextLoss();
       },
       _debug() {
         const box = new THREE.Box3().setFromObject(pivot);

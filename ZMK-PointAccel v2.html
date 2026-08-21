@@ -136,19 +136,18 @@
           const halo = new THREE.PointLight(0x00f0c8, 0.9, 2.2);
           g.add(halo);
 
-          let u = 0, last = performance.now();
-          const tick = (now) => {
-            const dt = Math.min(50, now - last); last = now;
-            u += dt * 0.00009 * (0.35 + f(u) * 2.6);   // the curve drives its own speed
-            if (u > 1) u = 0;
-            const p = path.getPointAt(Math.min(u, 1));
-            puck.position.copy(p).add(new THREE.Vector3(0, 0.1, 0));
-            halo.position.copy(puck.position);
-            if (!window.__hv_leaving) requestAnimationFrame(tick);
+          let u = 0;
+          return {
+            group: g,
+            update(now, dt) {
+              u += dt * 0.00009 * (0.35 + f(u) * 2.6);   // the curve drives its own speed
+              if (u > 1) u = 0;
+              const p = path.getPointAt(Math.min(u, 1));
+              puck.position.copy(p);
+              puck.position.y += 0.1;
+              halo.position.copy(puck.position);
+            },
           };
-          requestAnimationFrame(tick);
-
-          return g;
         },
       },
       demo: {

@@ -734,11 +734,24 @@
     const scene = new THREE.Scene();
     scene.fog = new THREE.Fog(0x04060d, 55, 150);
 
+    let envTarget = null, pmrem = null, envScene = null;
     try {
-      const pmrem = new THREE.PMREMGenerator(renderer);
-      const envScene = new THREE.RoomEnvironment();
-      scene.environment = pmrem.fromScene(envScene, 0.04).texture;
+      pmrem = new THREE.PMREMGenerator(renderer);
+      envScene = new THREE.RoomEnvironment();
+      envTarget = pmrem.fromScene(envScene, 0.04);
+      scene.environment = envTarget.texture;
     } catch (e) { console.warn("env failed", e); }
+    finally {
+      if (envScene) {
+        if (envScene.dispose) envScene.dispose();
+        else envScene.traverse((object) => {
+          if (object.geometry && object.geometry.dispose) object.geometry.dispose();
+          const mats = object.material ? (Array.isArray(object.material) ? object.material : [object.material]) : [];
+          mats.forEach((material) => material && material.dispose && material.dispose());
+        });
+      }
+      if (pmrem) pmrem.dispose();
+    }
 
     const camera = new THREE.PerspectiveCamera(40, W / H, 0.5, 400);
     camera.position.set(0, 30, 40);
@@ -749,10 +762,13 @@
     const rim = new THREE.PointLight(0x00f0c8, 60, 120, 2); rim.position.set(0, 14, -10); scene.add(rim);
     scene.add(new THREE.AmbientLight(0xffffff, 0.25));
 
-    const TW = LITE ? 2048 : 4096, TH = Math.round(TW * BOARD_D / BOARD_W);
-    const colorTex = drawColor(TW, TH);
-    const specTex = drawSpec(TW, TH);
-    const bumpTex = drawBump(TW, TH);
+    // Preserve the close-up silkscreen at its authored resolution. The
+    // non-color material maps can be smaller without softening PCB text.
+    const colorW = LITE ? 2048 : 4096;
+    const detailW = LITE ? 1024 : 4096;
+    const colorTex = drawColor(colorW, Math.round(colorW * BOARD_D / BOARD_W));
+    const specTex = drawSpec(detailW, Math.round(detailW * BOARD_D / BOARD_W));
+    const bumpTex = drawBump(detailW, Math.round(detailW * BOARD_D / BOARD_W));
     const boardMat = new THREE.MeshStandardMaterial({
       map: colorTex, metalnessMap: specTex, roughnessMap: specTex,
       bumpMap: bumpTex, bumpScale: 0.4,
@@ -981,10 +997,32 @@
       if (composer) composer.setSize(w, h);
     }
     function dispose() {
+      if (bokeh && bokeh.dispose) bokeh.dispose();
+      if (composer && composer.dispose) composer.dispose();
+      const geometries = new Set();
+      const materials = new Set();
+      const textures = new Set([colorTex, specTex, bumpTex]);
+      scene.traverse((object) => {
+        if (object.geometry && object.geometry.dispose) geometries.add(object.geometry);
+        const objectMaterials = object.material
+          ? (Array.isArray(object.material) ? object.material : [object.material])
+          : [];
+        objectMaterials.forEach((material) => {
+          if (!material || !material.dispose) return;
+          materials.add(material);
+          Object.keys(material).forEach((key) => {
+            const value = material[key];
+            if (value && value.isTexture && value.dispose) textures.add(value);
+          });
+        });
+      });
+      geometries.forEach((geometry) => geometry.dispose());
+      materials.forEach((material) => material.dispose());
+      textures.forEach((texture) => texture && texture.dispose());
+      if (envTarget) envTarget.dispose();
+      if (renderer.renderLists) renderer.renderLists.dispose();
       renderer.dispose();
-      colorTex.dispose(); specTex.dispose(); bumpTex.dispose();
-      starGeo2.dispose(); starField2.material.dispose();
-      asmGeo2.dispose(); assembly2.material.dispose();
+      if (renderer.forceContextLoss) renderer.forceContextLoss();
       try { mount.removeChild(renderer.domElement); } catch (_) {}
     }
 

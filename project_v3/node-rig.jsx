@@ -79,6 +79,7 @@
       modelFit: model.rigFit || 4.0,
       pose: model.rigPose || { x: -0.35, y: 0, z: 0 },
       onReady: opts.onReady,
+      preserveDrawingBuffer: true,
     };
     if (model.ready && model.src) {
       base.model = model.src;

@@ -353,15 +353,16 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     // matching the CSS gradient. (scene.background is unaffected by fog.)
     (function makeBackdrop() {
       const bg = document.createElement("canvas");
-      bg.width = bg.height = 1024;
+      const BG = 512;
+      bg.width = bg.height = BG;
       const bx = bg.getContext("2d");
       bx.fillStyle = "#04060d";
-      bx.fillRect(0, 0, 1024, 1024);
-      const grad = bx.createRadialGradient(512, 512, 0, 512, 512, 512 * 0.58);
+      bx.fillRect(0, 0, BG, BG);
+      const grad = bx.createRadialGradient(BG / 2, BG / 2, 0, BG / 2, BG / 2, (BG / 2) * 0.58);
       grad.addColorStop(0, "rgba(0,240,200,0.06)");
       grad.addColorStop(1, "rgba(0,240,200,0)");
       bx.fillStyle = grad;
-      bx.fillRect(0, 0, 1024, 1024);
+      bx.fillRect(0, 0, BG, BG);
       const tex = new THREE.CanvasTexture(bg);
       tex.colorSpace = THREE.SRGBColorSpace;
       scene.background = tex;
@@ -378,14 +379,22 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     // lighting-independent; real metal renders pure BLACK without an env map +
     // key light — which is why the wafer/flashlight models went "missing". Add
     // a cheap one-time PMREM environment + a key/rim light so they read.
-    let _pmrem = null, _roomEnvironment = null;
+    let _pmrem = null, _roomEnvironment = null, _environmentTarget = null;
     try {
       _pmrem = new THREE.PMREMGenerator(renderer);
       _roomEnvironment = new THREE.RoomEnvironment();
-      scene.environment = _pmrem.fromScene(_roomEnvironment, 0.06).texture;
+      _environmentTarget = _pmrem.fromScene(_roomEnvironment, 0.06);
+      scene.environment = _environmentTarget.texture;
     } catch (_) {}
     finally {
-      if (_roomEnvironment && _roomEnvironment.dispose) _roomEnvironment.dispose();
+      if (_roomEnvironment) {
+        if (_roomEnvironment.dispose) _roomEnvironment.dispose();
+        else _roomEnvironment.traverse((object) => {
+          if (object.geometry && object.geometry.dispose) object.geometry.dispose();
+          const mats = object.material ? (Array.isArray(object.material) ? object.material : [object.material]) : [];
+          mats.forEach((material) => material && material.dispose && material.dispose());
+        });
+      }
       if (_pmrem) _pmrem.dispose();
     }
     { const _k = new THREE.DirectionalLight(0xffffff, 1.6); _k.position.set(2.4, 3.2, 2.6); scene.add(_k);
@@ -2398,7 +2407,8 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       try { mount.removeChild(renderer.domElement); } catch (_) {}
       renderer.dispose();
       if (scene.background && scene.background.dispose) scene.background.dispose();
-      if (scene.environment && scene.environment.dispose) scene.environment.dispose();
+      if (_environmentTarget) _environmentTarget.dispose();
+      else if (scene.environment && scene.environment.dispose) scene.environment.dispose();
       tiles.forEach(m => { m.geometry.dispose(); m.material.map?.dispose(); m.material.dispose(); });
       tileWires.forEach(w => {
         if (w.userData && w.userData.isModel) {
@@ -2420,6 +2430,8 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       originLinks.forEach(l => { l.geometry.dispose(); l.material.dispose(); });
       constLines.forEach(l => l.geometry.dispose()); constMat.dispose();
       anamGeo.dispose(); anamPts.material.dispose();
+      if (renderer.renderLists) renderer.renderLists.dispose();
+      if (renderer.forceContextLoss) renderer.forceContextLoss();
       window.removeEventListener("pointermove", onAnyAct);
       window.removeEventListener("pointerdown", onActSkipArrival);
       window.removeEventListener("wheel", onAnyAct);

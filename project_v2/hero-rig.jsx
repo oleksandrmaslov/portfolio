@@ -52,7 +52,12 @@
     const sz = () => ({ w: mount.clientWidth || 1, h: mount.clientHeight || 1 });
     let { w, h } = sz();
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance", preserveDrawingBuffer: true });
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      alpha: true,
+      powerPreference: "high-performance",
+      preserveDrawingBuffer: opts.preserveDrawingBuffer === true,
+    });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(w, h);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -68,12 +73,26 @@
     camera.lookAt(0, 0, 0);
 
     /* environment for PBR reflections (optional addon) */
-    let pmrem = null;
+    let pmrem = null, envTarget = null, roomEnvironment = null;
     if (THREE.RoomEnvironment) {
       try {
         pmrem = new THREE.PMREMGenerator(renderer);
-        scene.environment = pmrem.fromScene(new THREE.RoomEnvironment(), 0.04).texture;
+        roomEnvironment = new THREE.RoomEnvironment();
+        envTarget = pmrem.fromScene(roomEnvironment, 0.04);
+        scene.environment = envTarget.texture;
       } catch (_) {}
+      finally {
+        if (roomEnvironment) {
+          if (roomEnvironment.dispose) roomEnvironment.dispose();
+          else roomEnvironment.traverse((object) => {
+            if (object.geometry && object.geometry.dispose) object.geometry.dispose();
+            const mats = object.material ? (Array.isArray(object.material) ? object.material : [object.material]) : [];
+            mats.forEach((material) => material && material.dispose && material.dispose());
+          });
+        }
+        if (pmrem) pmrem.dispose();
+        pmrem = null;
+      }
     }
 
     /* lights — deep + signal rim (matches the demo viewer language) */
@@ -95,6 +114,7 @@
     /* explode bookkeeping — per-mesh base local position + out vector */
     const parts = [];
     let modelReady = false;
+    let modelUpdate = null;
 
     function ingest(root) {
       window.fitModelToSize(root, THREE, opts.modelFit || RIG.modelFit);
@@ -121,8 +141,15 @@
     }
 
     if (typeof opts.buildModel === "function") {
-      // procedural hero (no GLB yet) — builder returns a THREE.Group/Object3D
-      try { ingest(opts.buildModel(THREE)); }
+      // Procedural hero (no GLB yet). A descriptor can supply an update hook
+      // that is driven by this rig, so it inherits the shared visibility gate.
+      try {
+        const built = opts.buildModel(THREE);
+        if (built && built.group && built.group.isObject3D) {
+          modelUpdate = typeof built.update === "function" ? built.update : null;
+          ingest(built.group);
+        } else ingest(built);
+      }
       catch (e) { console.warn("[wafer-rig] buildModel failed", e); }
     } else if (window.loadProjectModel) {
       window.loadProjectModel(modelUrl, THREE)
@@ -181,6 +208,13 @@
 
     function update(dt) {
       dt = Math.min(50, dt);
+      if (modelUpdate) {
+        try { modelUpdate(performance.now(), dt); }
+        catch (error) {
+          console.warn("[wafer-rig] procedural model update failed", error);
+          modelUpdate = null;
+        }
+      }
       const R = easeRate;      // base ease rate (tunable for graceful handoff)
       cur.entry   = damp(cur.entry,   tgt.entry,   R, dt);
       cur.offX    = damp(cur.offX,    tgt.offX,    R, dt);
@@ -291,8 +325,11 @@
       get explode() { return tgt.explode; },
       dispose() {
         try { mount.removeChild(renderer.domElement); } catch (_) {}
-        if (pmrem) pmrem.dispose();
+        modelUpdate = null;
+        if (envTarget) envTarget.dispose();
+        if (renderer.renderLists) renderer.renderLists.dispose();
         renderer.dispose();
+        if (renderer.forceContextLoss) renderer.forceContextLoss();
       },
       _debug() {
         const THREE = window.THREE;
