@@ -30,6 +30,15 @@
 .title__stage .title__ctl { opacity: calc(1 - var(--flt-c, 0) * 1.5); transform: translateY(calc(var(--flt-c, 0) * 30px)); filter: blur(calc(var(--flt-c, 0) * 3px)); }
 .title__stage .title__frame { opacity: calc(1 - var(--flt-b, 0) * 1.4); transform: scale(calc(1 + var(--flt-b, 0) * 0.05)); }
 
+/* iOS WebKit can expose the edge of this filtered transparent layer as a
+   bright horizontal compositor seam. Keep the authored lift + fade on touch
+   iOS, but leave this one small blur to the desktop/Android render paths. */
+@supports (-webkit-touch-callout: none) {
+  @media (hover: none) and (pointer: coarse) {
+    .title__stage .title__idTop { filter: none; }
+  }
+}
+
 /* once the exit engages, the controls stop catching the pointer */
 body.fl-titleDim .title__stage .title__shield,
 body.fl-titleDim .title__stage .title__wordmark,

@@ -179,7 +179,7 @@
   <script src="landing_final5/preloader.js"></script>
 
   <!-- Three.js (ESM) + GLTFLoader, exposed on window.THREE for the
-       non-module Babel-standalone scripts below. -->
+       precompiled classic runtime below. -->
   <script type="importmap">
   {
     "imports": {
@@ -203,50 +203,15 @@
       GLTFLoader, MeshoptDecoder, KTX2Loader,
       RoomEnvironment, EffectComposer, RenderPass, BokehPass, ShaderPass, OutputPass,
     });
+    window.dispatchEvent(new Event("mo:three-ready"));
   </script>
 
-  <!-- React + Babel -->
+  <!-- React + precompiled Final 5 runtime -->
   <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" integrity="sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" integrity="sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1" crossorigin="anonymous"></script>
-  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 
-  <!-- Shared core (cursor) + key button -->
+  <!-- Shared project registry -->
   <script src="landing_final5/projects-data.js"></script>
-  <script type="text/babel" data-presets="env,react" src="system/core.jsx"></script>
-  <script type="text/babel" data-presets="env,react">
-    function KeyButton({ children, legend = "↵", primary, onPress }) {
-      const { useState } = React;
-      const [pressed, setPressed] = useState(false);
-      const [lit, setLit] = useState(false);
-      const fire = (e) => {
-        setPressed(true);
-        setLit(true);
-        if (window.MOSound) { window.MOSound.unlock(); window.MOSound.thock({ vel: 0.85 }); }
-        if (window.__mo_disturb && e && e.currentTarget && e.currentTarget.getBoundingClientRect) {
-          const r = e.currentTarget.getBoundingClientRect();
-          window.__mo_disturb(r.left + r.width / 2, r.top + r.height / 2, 0.8);
-        }
-        onPress && onPress();
-        setTimeout(() => { setPressed(false); if (window.MOSound) window.MOSound.thockUp(); }, 140);
-        setTimeout(() => setLit(false), 520);
-      };
-      const onKey = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fire(); } };
-      return (
-        <button
-          className={"key " + (pressed ? "key--down " : "") + (lit ? "key--lit " : "") + (primary ? "key--primary" : "")}
-          onClick={fire}
-          onKeyDown={onKey}
-        >
-          <span className="key__cap">
-            <span className="key__legendTop">{legend}</span>
-            <span className="key__label">{children}</span>
-          </span>
-          <span className="key__shadow" aria-hidden="true" />
-        </button>
-      );
-    }
-    window.KeyButton = KeyButton;
-  </script>
 
   <!-- Sound engine + MOSound shell adapter -->
   <script src="landing_final/carrier-field-v10.js"></script>
@@ -254,20 +219,7 @@
   <!-- Solid materials (plain JS, defined before the rig/cards run) -->
   <script src="project_v3/solid-materials.js"></script>
   <script src="system/cursor-distortion.js"></script>
-  <script type="text/babel" data-presets="env,react" src="landing_final/ascii.jsx"></script>
-  <script type="text/babel" data-presets="env,react" src="project/viewer3d.jsx"></script>
-  <script type="text/babel" data-presets="env,react" src="project_v3/hero-rig.jsx"></script>
-  <script type="text/babel" data-presets="env,react" src="project_v3/node-rig.jsx"></script>
-  <script type="text/babel" data-presets="env,react" src="landing_final/hover-card.jsx"></script>
-  <script type="text/babel" data-presets="env,react" src="landing_final5/universe.jsx"></script>
-  <script type="text/babel" data-presets="env,react" src="landing_final5/node-handoff.jsx"></script>
-  <script type="text/babel" data-presets="env,react" src="about_v2/board-scene3.jsx"></script>
-  <script type="text/babel" data-presets="env,react" src="landing_final/board-flight.jsx"></script>
-  <!-- FINAL 5 page sections: one title, one origin, one work reel -->
-  <script type="text/babel" data-presets="env,react" src="landing_final5/title.jsx"></script>
-  <script type="text/babel" data-presets="env,react" src="landing_final5/origin.jsx"></script>
-  <script type="text/babel" data-presets="env,react" src="landing_final5/work.jsx"></script>
-  <script type="text/babel" data-presets="env,react" src="landing_final5/app.jsx"></script>
+  <script src="landing_final5/runtime.js?v=06235a45af4e"></script>
 
   <!-- Cinematic layer -->
   <script src="landing_final/cinematic.js"></script>

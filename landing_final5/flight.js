@@ -114,7 +114,7 @@
       } catch (e) {}
     }
     if (window.__mo_disturb && !reduceMotion && transit) {
-      window.__mo_disturb(window.innerWidth / 2, window.innerHeight * 0.5, 0.5);
+      window.__mo_disturb(window.innerWidth / 2, layout.vh * 0.5, 0.5);
     }
   }
 
@@ -130,6 +130,120 @@
     var over = r.bottom - vh; // px of track left below the viewport
     var outP = over >= vh * 0.5 ? 1 : over <= vh * 0.06 ? 0 : (over - vh * 0.06) / (vh * 0.44);
     return clamp01(Math.min(inP, outP));
+  }
+
+  /* ---------- coalesced layout snapshot ----------
+     Section geometry is stable while scrolling, so keep it in document
+     coordinates and derive viewport rects from scrollY. This keeps all
+     layout reads out of the flight frame's CSS-var/class write phase. */
+  var layout = {
+    dirty: true,
+    ready: false,
+    raf: 0,
+    destroyed: false,
+    vh: 0,
+    sections: null,
+    observed: null,
+    observer: null,
+    view: {
+      title: { top: 0, bottom: 0, height: 0 },
+      origin: { top: 0, bottom: 0, height: 0 },
+      work: { top: 0, bottom: 0, height: 0 },
+      about: { top: 0, bottom: 0, height: 0 },
+    },
+  };
+
+  function observeLayoutSections(elements) {
+    if (!layout.observer) return;
+    var prev = layout.observed;
+    var same = prev && prev.length === elements.length;
+    for (var i = 0; same && i < elements.length; i++) same = prev[i] === elements[i];
+    if (same) return;
+    layout.observer.disconnect();
+    for (var j = 0; j < elements.length; j++) layout.observer.observe(elements[j]);
+    layout.observed = elements.slice();
+  }
+
+  function measureLayout() {
+    layout.raf = 0;
+    if (layout.destroyed) return;
+
+    var eT = document.getElementById("title");
+    var eO = document.getElementById("intro");
+    var eW = document.getElementById("work");
+    var eA = document.getElementById("about");
+    if (!eT || !eO || !eW || !eA) {
+      layout.ready = false;
+      layout.dirty = false;
+      return;
+    }
+
+    // Keep the read phase together: one layout flush, never interleaved with
+    // the per-frame style writes below.
+    var vh = window.innerHeight;
+    var y = window.scrollY;
+    var rT = eT.getBoundingClientRect();
+    var rO = eO.getBoundingClientRect();
+    var rW = eW.getBoundingClientRect();
+    var rA = eA.getBoundingClientRect();
+    var hT = eT.offsetHeight;
+    var hO = eO.offsetHeight;
+    var hW = eW.offsetHeight;
+    var hA = eA.offsetHeight;
+
+    layout.vh = vh;
+    layout.sections = {
+      title: { el: eT, top: rT.top + y, height: rT.height, dockHeight: hT },
+      origin: { el: eO, top: rO.top + y, height: rO.height, dockHeight: hO },
+      work: { el: eW, top: rW.top + y, height: rW.height, dockHeight: hW },
+      about: { el: eA, top: rA.top + y, height: rA.height, dockHeight: hA },
+    };
+    layout.ready = true;
+    layout.dirty = false;
+    observeLayoutSections([eT, eO, eW, eA]);
+  }
+
+  function scheduleLayoutMeasure() {
+    if (layout.destroyed) return;
+    layout.dirty = true;
+    if (!layout.raf) layout.raf = requestAnimationFrame(measureLayout);
+  }
+
+  function syncViewportRect(out, src, y) {
+    out.top = src.top - y;
+    out.height = src.height;
+    out.bottom = out.top + out.height;
+  }
+
+  function syncViewportRects(y) {
+    var sections = layout.sections;
+    var view = layout.view;
+    syncViewportRect(view.title, sections.title, y);
+    syncViewportRect(view.origin, sections.origin, y);
+    syncViewportRect(view.work, sections.work, y);
+    syncViewportRect(view.about, sections.about, y);
+  }
+
+  function destroyLayoutCache(event) {
+    // Keep the cache alive for back/forward-cache restores.
+    if (event && event.persisted) return;
+    layout.destroyed = true;
+    if (layout.raf) cancelAnimationFrame(layout.raf);
+    layout.raf = 0;
+    if (layout.observer) layout.observer.disconnect();
+    window.removeEventListener("mo:title-ready", scheduleLayoutMeasure);
+    window.removeEventListener("resize", scheduleLayoutMeasure);
+    window.removeEventListener("orientationchange", scheduleLayoutMeasure);
+    window.removeEventListener("pagehide", destroyLayoutCache);
+  }
+
+  if (window.ResizeObserver) layout.observer = new ResizeObserver(scheduleLayoutMeasure);
+  window.addEventListener("mo:title-ready", scheduleLayoutMeasure);
+  window.addEventListener("resize", scheduleLayoutMeasure, { passive: true });
+  window.addEventListener("orientationchange", scheduleLayoutMeasure, { passive: true });
+  window.addEventListener("pagehide", destroyLayoutCache);
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(scheduleLayoutMeasure, function () {});
   }
 
   /* ---------- TRANSIT AUTO-DOCK ----------
@@ -152,22 +266,21 @@
     window.addEventListener("pointerup", release, { passive: true, capture: true });
     window.addEventListener("pointercancel", release, { passive: true, capture: true });
   })();
-  function dockTarget(seg, fwd, els, vh) {
-    var top = function (el) { return el.getBoundingClientRect().top + window.scrollY; };
+  function dockTarget(seg, fwd, sections, vh) {
     if (seg === "toOrigin") return fwd
-      ? top(els.eO) + 0.25 * (els.eO.offsetHeight - vh)      // origin: first line resolved
-      : top(els.eT) + 0.20 * els.eT.offsetHeight;            // title still framed
+      ? sections.origin.top + 0.25 * (sections.origin.dockHeight - vh) // origin: first line resolved
+      : sections.title.top + 0.20 * sections.title.dockHeight;         // title still framed
     if (seg === "toWork") return fwd
       // reel TITLE stop exactly: progress 0 sits at padN = PADS/TOTAL_V
       // (0.6 / 6.6) into the section — 0.15 overshot it and left the
       // "Selected work." title panned half off-screen after auto-dock.
-      ? top(els.eW) + 0.091 * (els.eW.offsetHeight - vh)
-      : top(els.eO) + 0.80 * (els.eO.offsetHeight - vh);     // origin hold (pre lift-off)
+      ? sections.work.top + 0.091 * (sections.work.dockHeight - vh)
+      : sections.origin.top + 0.80 * (sections.origin.dockHeight - vh); // origin hold (pre lift-off)
     return fwd
-      ? top(els.eA) + 0.065 * (els.eA.offsetHeight - vh)     // about node-card resolved
-      : top(els.eW) + 0.90 * (els.eW.offsetHeight - vh);     // last reel stops
+      ? sections.about.top + 0.065 * (sections.about.dockHeight - vh) // about node-card resolved
+      : sections.work.top + 0.90 * (sections.work.dockHeight - vh);   // last reel stops
   }
-  function dockUpdate(seg, t, dt, els, vh, now, enabled) {
+  function dockUpdate(seg, t, dt, sections, vh, now, enabled) {
     var b = document.body;
     if (!enabled || b.classList.contains("wf-flying") || b.classList.contains("mo-explore")) {
       dock.anim = null; dock.idle = 0; return;
@@ -186,7 +299,7 @@
     if (Math.abs(y - dock.lastY) < 0.6) dock.idle += dt; else dock.idle = 0;
     dock.lastY = y;
     if (dock.idle < 360) return;
-    var to = dockTarget(seg, t >= 0.5, els, vh);
+    var to = dockTarget(seg, t >= 0.5, sections, vh);
     var dist = Math.abs(to - y);
     if (dist < 2) { dock.idle = 0; return; }
     dock.anim = {
@@ -222,19 +335,22 @@
     var dt = Math.min(80, now - lastT);
     lastT = now;
     var C = cfg();
-    var vh = window.innerHeight;
 
-    var eT = document.getElementById("title");
-    var eO = document.getElementById("intro");
-    var eW = document.getElementById("work");
-    var eA = document.getElementById("about");
-    if (!eT || !eO || !eW || !eA) return;   // React not mounted yet
+    if (!layout.ready || layout.dirty) {
+      scheduleLayoutMeasure();
+      return; // React not mounted yet, or a coalesced read phase is pending
+    }
     buildIris();
 
-    var rT = eT.getBoundingClientRect();
-    var rO = eO.getBoundingClientRect();
-    var rW = eW.getBoundingClientRect();
-    var rA = eA.getBoundingClientRect();
+    var vh = layout.vh;
+    var y = window.scrollY;
+    syncViewportRects(y);
+    var sections = layout.sections;
+    var eT = sections.title.el;
+    var rT = layout.view.title;
+    var rO = layout.view.origin;
+    var rW = layout.view.work;
+    var rA = layout.view.about;
     var pT = clamp01(-rT.top / Math.max(1, rT.height));
     var pO = clamp01(-rO.top / Math.max(1, rO.height - vh));
     var pW = clamp01(-rW.top / Math.max(1, rW.height - vh));
@@ -267,7 +383,7 @@
     if (seg !== prevSeg) { segChanged(seg); prevSeg = seg; }
 
     /* ── transit auto-dock — finish the leg if the visitor rests mid-transit ── */
-    dockUpdate(seg, t, dt, { eT: eT, eO: eO, eW: eW, eA: eA }, vh, now, C.dock);
+    dockUpdate(seg, t, dt, sections, vh, now, C.dock);
 
     /* ── rail distance → speed → surge (station spacing matches the
            universe rig: 13 / +15 / +16) ── */
@@ -330,6 +446,7 @@
 
   function boot() {
     buildIris();
+    scheduleLayoutMeasure();
     requestAnimationFrame(frame);
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);

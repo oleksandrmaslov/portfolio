@@ -1,0 +1,13 @@
+{
+  "name": "final5-runtime-build",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Deterministic build-only compiler for the static Final 5 landing runtime.",
+  "scripts": {
+    "build": "node build.cjs",
+    "check": "node build.cjs --check"
+  },
+  "devDependencies": {
+    "@babel/standalone": "7.29.0"
+  }
+}

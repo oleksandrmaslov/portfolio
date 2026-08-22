@@ -235,6 +235,11 @@
       };
       if (alphaTag) {
         Object.assign(materialOptions, {
+          // WebKit can still blend fully transparent CanvasTexture fragments at
+          // a quad edge when separate alpha blending is active. Discard only
+          // those empty texels so the mirror plane itself can never become a
+          // one-pixel line; meaningful antialiased glyph coverage is retained.
+          alphaTest: 1 / 255,
           blending: THREE.CustomBlending,
           blendEquation: THREE.AddEquation,
           // Preserve the composer's destination RGB. Only destination alpha is
@@ -595,12 +600,14 @@
     const pointerPaint = { x: -1, y: -1, has: false };
     let paintA = null, paintB = null, paintScene = null, paintCamera = null;
     let paintMaterial = null, paintMesh = null, paintEnergy = 0, paintOK = false, destroyed = false;
+    let viewportW = Math.max(1, options.width || global.innerWidth || 1);
+    let viewportH = Math.max(1, options.height || global.innerHeight || 1);
 
     const neutralTexture = new THREE.DataTexture(new Uint8Array([128, 128, 0, 255]), 1, 1, THREE.RGBAFormat);
     neutralTexture.needsUpdate = true;
     uniforms.uPaint.value = neutralTexture;
-    const paintWidth = () => Math.max(64, Math.floor((global.innerWidth || 1) / 8));
-    const paintHeight = () => Math.max(36, Math.floor((global.innerHeight || 1) / 8));
+    const paintWidth = () => Math.max(64, Math.floor(viewportW / 8));
+    const paintHeight = () => Math.max(36, Math.floor(viewportH / 8));
 
     try {
       const width = paintWidth();
@@ -645,8 +652,8 @@
       const amount = (strength == null ? 0.5 : strength) * scale;
       if (amount <= 0.001) return;
       const ripple = ripples[rippleNext++ % ripples.length];
-      ripple.x = clientX / Math.max(1, global.innerWidth || 1);
-      ripple.y = 1 - clientY / Math.max(1, global.innerHeight || 1);
+      ripple.x = clientX / viewportW;
+      ripple.y = 1 - clientY / viewportH;
       ripple.t0 = performance.now();
       ripple.dur = 800 + 700 * Math.min(1.5, amount);
       ripple.str = Math.min(1.6, amount);
@@ -671,8 +678,8 @@
         wake.lx = event.clientX;
         wake.ly = event.clientY;
         wake.lt = now;
-        wake.x = event.clientX / Math.max(1, global.innerWidth || 1);
-        wake.y = event.clientY / Math.max(1, global.innerHeight || 1);
+        wake.x = event.clientX / viewportW;
+        wake.y = event.clientY / viewportH;
         wake.v = 0;
         pointerPaint.has = false;
         return;
@@ -683,8 +690,8 @@
       wake.lx = event.clientX;
       wake.ly = event.clientY;
       wake.lt = now;
-      wake.x = event.clientX / Math.max(1, global.innerWidth || 1);
-      wake.y = event.clientY / Math.max(1, global.innerHeight || 1);
+      wake.x = event.clientX / viewportW;
+      wake.y = event.clientY / viewportH;
       wake.v = Math.min(1, Math.hypot(vx, vy) * 0.9);
       if (onEnergy) onEnergy();
     }
@@ -707,7 +714,9 @@
       uniforms.uPaint.value = paintA.texture;
     }
 
-    function resize() {
+    function resize(nextWidth, nextHeight) {
+      viewportW = Math.max(1, nextWidth || global.innerWidth || 1);
+      viewportH = Math.max(1, nextHeight || global.innerHeight || 1);
       if (!paintOK) return;
       const width = paintWidth(), height = paintHeight();
       paintA.setSize(width, height);
@@ -721,8 +730,8 @@
     function updatePaint() {
       if (!paintOK) return;
       const width = paintA.width, height = paintA.height;
-      const cx = (wake.lx / Math.max(1, global.innerWidth || 1)) * width;
-      const cy = (1 - wake.ly / Math.max(1, global.innerHeight || 1)) * height;
+      const cx = (wake.lx / viewportW) * width;
+      const cy = (1 - wake.ly / viewportH) * height;
       if (!pointerPaint.has) {
         pointerPaint.x = cx; pointerPaint.y = cy; pointerPaint.has = true;
       }
@@ -823,7 +832,9 @@
       THREE, selector: opts.selector || DEFAULT_SELECTOR, width, height,
       pixelRatio: opts.pixelRatio, alphaTag: true, active: false,
     });
-    const core = createCursorCore({ THREE, renderer: opts.renderer, uniforms: effectPass.uniforms });
+    const core = createCursorCore({
+      THREE, renderer: opts.renderer, uniforms: effectPass.uniforms, width, height,
+    });
     let destroyed = false, mirrorLive = false;
     function update(now, dt, grade) {
       if (destroyed) return;
@@ -845,7 +856,7 @@
       if (destroyed) return;
       const safeWidth = Math.max(1, nextWidth || 1), safeHeight = Math.max(1, nextHeight || 1);
       effectPass.uniforms.uAspect.value = safeWidth / safeHeight;
-      core.resize();
+      core.resize(safeWidth, safeHeight);
       if (mirror) mirror.resize(safeWidth, safeHeight);
     }
     function destroy() {
@@ -928,6 +939,8 @@
         THREE,
         renderer,
         uniforms,
+        width,
+        height,
         onEnergy: schedule,
         chainPrevious: opts.chainPrevious === true,
       });
@@ -1007,7 +1020,7 @@
       sourceTarget.setSize(Math.max(1, Math.round(width * dpr)), Math.max(1, Math.round(height * dpr)));
       material.uniforms.uAspect.value = width / height;
       mirror.resize(width, height);
-      core.resize();
+      core.resize(width, height);
       if (active) schedule();
     }
     function onContextLost(event) {

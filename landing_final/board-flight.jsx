@@ -25,6 +25,7 @@ const { useState: useBF, useEffect: useBFE, useRef: useBFR } = React;
 const _bfEaseInOut = (t) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
 const _bfEaseOut   = (t) => 1 - Math.pow(1 - t, 3);
 const _bfClamp     = (v, a, b) => Math.max(a, Math.min(b, v));
+const _bfRenderEps = 0.004;
 
 function BoardFlight({ onEnter, onContact }) {
   const secRef     = useBFR(null);
@@ -39,6 +40,7 @@ function BoardFlight({ onEnter, onContact }) {
   const uniRef     = useBFR(null);
   const enteredRef = useBFR(false);
   const contactRef = useBFR(false);
+  const wakeRenderRef = useBFR(null);
   const onEnterRef = useBFR(onEnter);
   const onContactRef = useBFR(onContact);
   useBFE(() => { onEnterRef.current = onEnter; onContactRef.current = onContact; });
@@ -70,7 +72,7 @@ function BoardFlight({ onEnter, onContact }) {
   useBFE(() => {
     const mount = mountRef.current;
     if (!mount) return;
-    let bootRaf = 0, renderRaf = 0, cursorFx = null, last = performance.now();
+    let bootRaf = 0, bootIdle = 0, renderRaf = 0, cursorFx = null, last = performance.now();
     let disposed = false, started = false, near = false, bootObserver = null;
     let fallbackListening = false;
     uniRef.current = document.querySelector(".universeBg");
@@ -89,21 +91,29 @@ function BoardFlight({ onEnter, onContact }) {
           zIndex: 20,
           dprCap: 1,
           disabledClasses: ["landing-exit", "mo-explore", "nx-page"],
-          disabledWhen: () => presRef.current <= 0.004,
+          disabledWhen: () => presRef.current <= _bfRenderEps,
           chainPrevious: true,
         });
       }
       const loop = (now) => {
+        renderRaf = 0;
         if (disposed) return;
+        if (presRef.current <= _bfRenderEps) return;
         const dt = Math.min(50, now - last); last = now;
-        if (presRef.current > 0.004) {
-          const a = ctrl.update(tRef.current, "probe", dt, footRef.current, introRef.current, nodeRef.current);
-          ctrl.render();
-          if (a !== undefined) setActive((prev) => (prev === a ? prev : a));
-        }
+        const a = ctrl.update(tRef.current, "probe", dt, footRef.current, introRef.current, nodeRef.current);
+        ctrl.render();
+        if (a !== undefined) setActive((prev) => (prev === a ? prev : a));
         renderRaf = requestAnimationFrame(loop);
       };
-      renderRaf = requestAnimationFrame(loop);
+      const wakeRender = () => {
+        if (disposed || renderRaf || presRef.current <= _bfRenderEps) return;
+        // A sleeping board may have been off-screen for minutes. Reset the
+        // clock so its first visible update cannot receive a giant delta.
+        last = performance.now();
+        renderRaf = requestAnimationFrame(loop);
+      };
+      wakeRenderRef.current = wakeRender;
+      wakeRender();
     };
 
     const removeFallbackListeners = () => {
@@ -116,6 +126,8 @@ function BoardFlight({ onEnter, onContact }) {
     const stopBootWatch = () => {
       if (bootRaf) cancelAnimationFrame(bootRaf);
       bootRaf = 0;
+      if (bootIdle && window.cancelIdleCallback) window.cancelIdleCallback(bootIdle);
+      bootIdle = 0;
       if (bootObserver) bootObserver.disconnect();
       bootObserver = null;
       removeFallbackListeners();
@@ -123,6 +135,7 @@ function BoardFlight({ onEnter, onContact }) {
 
     const tryBoot = () => {
       bootRaf = 0;
+      bootIdle = 0;
       if (disposed || started || !near) return;
       if (window.THREE && window.MOBoard) {
         started = true;
@@ -133,13 +146,26 @@ function BoardFlight({ onEnter, onContact }) {
       bootRaf = requestAnimationFrame(tryBoot);
     };
 
+    const scheduleBoot = () => {
+      if (disposed || started || !near || bootRaf || bootIdle) return;
+      if (window.requestIdleCallback) {
+        // Start construction shortly before the section arrives, but yield to
+        // the universe while the browser still has useful foreground work.
+        bootIdle = window.requestIdleCallback(tryBoot, { timeout: 600 });
+      } else {
+        bootRaf = requestAnimationFrame(tryBoot);
+      }
+    };
+
     const setNear = (next) => {
       near = !!next;
       if (near) {
-        if (!bootRaf && !started) bootRaf = requestAnimationFrame(tryBoot);
-      } else if (bootRaf) {
-        cancelAnimationFrame(bootRaf);
+        scheduleBoot();
+      } else {
+        if (bootRaf) cancelAnimationFrame(bootRaf);
         bootRaf = 0;
+        if (bootIdle && window.cancelIdleCallback) window.cancelIdleCallback(bootIdle);
+        bootIdle = 0;
       }
     };
 
@@ -156,7 +182,7 @@ function BoardFlight({ onEnter, onContact }) {
       bootObserver = new window.IntersectionObserver((entries) => {
         const entry = entries.find((candidate) => candidate.target === section);
         if (entry) setNear(entry.isIntersecting);
-      }, { root: null, threshold: 0 });
+      }, { root: null, rootMargin: "75% 0px", threshold: 0 });
       bootObserver.observe(section);
     } else if (section) {
       fallbackListening = true;
@@ -165,12 +191,17 @@ function BoardFlight({ onEnter, onContact }) {
       fallbackProbe();
     }
 
-    const onResize = () => { const c = ctrlRef.current; if (c) c.setSize(mount.clientWidth, mount.clientHeight); };
+    const onResize = () => {
+      const c = ctrlRef.current;
+      if (c) c.setSize(mount.clientWidth, mount.clientHeight);
+      if (wakeRenderRef.current) wakeRenderRef.current();
+    };
     window.addEventListener("resize", onResize);
     return () => {
       disposed = true;
       stopBootWatch();
       if (renderRaf) cancelAnimationFrame(renderRaf);
+      wakeRenderRef.current = null;
       window.removeEventListener("resize", onResize);
       window.__mo_universe_pause = false;
       window.__mo_morph = null;
@@ -247,6 +278,7 @@ function BoardFlight({ onEnter, onContact }) {
         introRef.current = 0;
         nodeRef.current = 1 - oe;
         presRef.current = cardP;         // render the board as soon as the card is up
+        if (wakeRenderRef.current) wakeRenderRef.current();
 
         // The board renders fullscreen + TRANSPARENT (LITE path = no opaque
         // composer), so it floats over the node-card as a real 3D model. No
@@ -290,6 +322,7 @@ function BoardFlight({ onEnter, onContact }) {
         const exit  = rect.bottom < vh ? _bfClamp(rect.bottom / (0.6 * vh), 0, 1) : 1;
         const presence = Math.min(entry, exit);
         presRef.current = presence;
+        if (wakeRenderRef.current) wakeRenderRef.current();
         if (presence > 0.45 && !enteredRef.current) { enteredRef.current = true; onEnterRef.current && onEnterRef.current(); }
         else if (presence < 0.1 && enteredRef.current) { enteredRef.current = false; }
         if (layer) {

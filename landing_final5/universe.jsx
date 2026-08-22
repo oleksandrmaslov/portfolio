@@ -701,9 +701,17 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
           if (p.assignMaterial && window.applySolidMaterials) window.applySolidMaterials(root, THREE, p.assignMaterial);
           else if (window.tuneRealMaterials) window.tuneRealMaterials(root, THREE, { envMapIntensity: 2.2 });
           // card overlays fade with distance / wrap → materials must be transparent
+          const fadeMaterials = [];
+          const seenFadeMaterials = new Set();
           root.traverse((o) => {
             if (!o.isMesh || !o.material) return;
-            (Array.isArray(o.material) ? o.material : [o.material]).forEach((m) => { m.transparent = true; });
+            (Array.isArray(o.material) ? o.material : [o.material]).forEach((m) => {
+              m.transparent = true;
+              if (!seenFadeMaterials.has(m)) {
+                seenFadeMaterials.add(m);
+                fadeMaterials.push(m);
+              }
+            });
           });
           // Per-project rest pose. Apply it to a WRAPPER, never to root:
           // fitModelToSize leaves root.position = -centre·s (and CAD origins sit
@@ -718,6 +726,8 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
           holder.add(poseGroup);
           holder.visible = true;
           holder.userData.loaded = true;
+          holder.userData.fadeMaterials = fadeMaterials;
+          holder.userData.lastModelOpacity = NaN;
           holder.userData.loadedAt = performance.now();   // drives a soft fade-in
         }).catch((err) => {
           console.warn("[universe] model load failed for " + p.addr, err);
@@ -748,12 +758,15 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     const GRID_SPACING_X = 5.4;
     const GRID_SPACING_Y = 4.3;
     const GRID_Z = -16;
+    const tileTargets = projects.map(() => new THREE.Vector3());
+    const carouselTarget = new THREE.Vector3();
     function targetForTile(mode, i, t) {
+      const target = tileTargets[i];
       if (mode === "dive") {
         // Everything clears far out — only node 0x00 (the hub) remains, centered.
         const yN = 1 - (i / Math.max(1, projects.length - 1)) * 2;
         const theta = i * goldenAngle;
-        return new THREE.Vector3(Math.cos(theta) * 22, yN * 13, -26 + Math.sin(theta) * 6);
+        return target.set(Math.cos(theta) * 22, yN * 13, -26 + Math.sin(theta) * 6);
       }
       if (mode === "origin") {
         const concept = (window.__mo_origin && window.__mo_origin.concept) || "assembly";
@@ -764,12 +777,12 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         if (concept === "assembly") {
           const yN = 1 - (i / Math.max(1, projects.length - 1)) * 2;
           const theta = i * goldenAngle;
-          return new THREE.Vector3(Math.cos(theta) * 19, yN * 11, -22 + Math.sin(theta) * 5);
+          return target.set(Math.cos(theta) * 19, yN * 11, -22 + Math.sin(theta) * 5);
         }
         // HUB: featured nodes ring the hub, the rest drift back.
         if (fIdx >= 0) {
           const ang = (fIdx / Math.max(1, MO_FEATURED.length)) * Math.PI * 2 - Math.PI / 2 + t * 0.00004;
-          return new THREE.Vector3(
+          return target.set(
             ORIGIN_CENTER.x + Math.cos(ang) * ORIGIN_RING_R,
             ORIGIN_CENTER.y + Math.sin(ang) * ORIGIN_RING_R * 0.62,
             ORIGIN_CENTER.z + Math.sin(ang * 1.3) * 1.4,
@@ -777,7 +790,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         }
         const yN = 1 - (i / Math.max(1, projects.length - 1)) * 2;
         const theta = i * goldenAngle;
-        return new THREE.Vector3(Math.cos(theta) * 16, yN * 9, -18 + Math.sin(theta) * 4);
+        return target.set(Math.cos(theta) * 16, yN * 9, -18 + Math.sin(theta) * 4);
       }
       if (mode === "reel") {
         // v10 WORK REEL — the featured tiles parade past the lens (pos 1..4).
@@ -796,13 +809,12 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         // past the frustum edge at z−10.6 while the parade speed still tracks
         // the scroll scrub 1:1.
         const REEL_DX = 12.5;
-        let base;
         if (rIdx >= 0) {
-          base = new THREE.Vector3((rIdx + 1 - pos) * REEL_DX, 0.62, -10.6);
+          target.set((rIdx + 1 - pos) * REEL_DX, 0.62, -10.6);
         } else {
           const th = i * goldenAngle;
           const yN = 1 - (i / Math.max(1, projects.length - 1)) * 2;
-          base = new THREE.Vector3(Math.cos(th) * 20, yN * 11, -25 + Math.sin(th) * 5);
+          target.set(Math.cos(th) * 20, yN * 11, -25 + Math.sin(th) * 5);
         }
         if (g > 0.001) {
           // CAROUSEL — the 12 nodes dock into a slow cylindrical carousel
@@ -815,19 +827,19 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
           const entry = (1 - g) * 2.6;               // swirl unwinds on dock
           const ang = ang0 + spin + entry;
           const R = 7.4;
-          const carousel = new THREE.Vector3(
+          carouselTarget.set(
             Math.sin(ang) * R,
             0.55 - Math.cos(ang) * 0.95,             // tilted ring — front dips low
             -12.4 + Math.cos(ang) * R * 0.82,
           );
-          base.lerp(carousel, g * g * (3 - 2 * g));  // smooth gather
+          target.lerp(carouselTarget, g * g * (3 - 2 * g));  // smooth gather
         }
-        return base;
+        return target;
       }
       if (mode === "grid") {
         const col = i % GRID_COLS;
         const row = Math.floor(i / GRID_COLS);
-        return new THREE.Vector3(
+        return target.set(
           (col - (GRID_COLS - 1) / 2) * GRID_SPACING_X,
           ((GRID_ROWS - 1) / 2 - row) * GRID_SPACING_Y,
           GRID_Z,
@@ -839,7 +851,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         const radial = Math.sqrt(1 - yN * yN);
         const theta = i * goldenAngle + t * 0.00006;
         const R = 13;
-        return new THREE.Vector3(
+        return target.set(
           Math.cos(theta) * radial * R,
           yN * R * 0.6,
           Math.sin(theta) * radial * R - 4,
@@ -1042,6 +1054,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     const TOPO_MAX_E = 26;
     const TOPO_CUT = 13;                                // max link length (world units)
     const TOPO_SEG = 24;                                // segments per edge (smooth pulse gradient)
+    const TOPO_CAMERA_GUARD = Math.max(camera.near * 4, 1.2);
     const constUniforms = {
       uTime:  { value: 0 },
       uFlow:  { value: 1.0 },
@@ -1133,10 +1146,24 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         const line = constLines[e];
         const E = _topoEdges[e];
         if (!E) { line.visible = false; continue; }
+        const A = E.A.position, B = E.B.position;
+        // A link with endpoints on opposite sides of the camera is clipped at
+        // the near plane into a viewport-spanning streak. It is not a readable
+        // world-space connection, so keep only links wholly in front of the
+        // camera with a small near-plane safety margin.
+        const depthA = (A.x - camera.position.x) * FORWARD.x
+          + (A.y - camera.position.y) * FORWARD.y
+          + (A.z - camera.position.z) * FORWARD.z;
+        const depthB = (B.x - camera.position.x) * FORWARD.x
+          + (B.y - camera.position.y) * FORWARD.y
+          + (B.z - camera.position.z) * FORWARD.z;
+        if (depthA <= TOPO_CAMERA_GUARD || depthB <= TOPO_CAMERA_GUARD) {
+          line.visible = false;
+          continue;
+        }
         line.visible = true;
         const posArr = line.geometry.attributes.position.array;
         const aArr   = line.geometry.attributes.aA.array;
-        const A = E.A.position, B = E.B.position;
         for (let s = 0; s < TOPO_SEG; s++) {
           const t = s / (TOPO_SEG - 1);
           posArr[s*3]   = A.x + (B.x - A.x) * t;
@@ -1765,6 +1792,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     let last = performance.now();
     let frameI = 0;
     const FORWARD = new THREE.Vector3();
+    const frameLerp = (rate, dt) => 1 - Math.pow(1 - rate, dt / 16);
 
     // Hoisted scratch — reused every frame so the hot loops allocate nothing.
     const _camDir   = new THREE.Vector3();
@@ -2052,7 +2080,6 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
 
       // dt-corrected easing factor — keeps motion identical at 30/60/120Hz so
       // re-orientation and scaling feel the same (native) regardless of refresh.
-      const lerpK = (rate) => 1 - Math.pow(1 - rate, dt / 16);
 
       /* wrap drifting objects — only in free drift mode */
       if (mode === "drift") {
@@ -2135,9 +2162,11 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
               : tileOp;
             const modelOp = Math.min(1, modelTileOp * 1.15) * mFade;
             wire.visible = modelOp > 0.02;
-            wire.traverse((obj) => {
-              if (obj.isMesh && obj.material) obj.material.opacity = modelOp;
-            });
+            if (modelOp !== wire.userData.lastModelOpacity) {
+              const fadeMaterials = wire.userData.fadeMaterials || [];
+              for (const material of fadeMaterials) material.opacity = modelOp;
+              wire.userData.lastModelOpacity = modelOp;
+            }
           }
         } else {
           // Procedural wireframe primitive — single material
@@ -2148,7 +2177,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         const baseScale  = isModel ? 0.85 : 0.28;
         const focusScale = isModel ? 1.10 : 0.42;
         const targetScale = isFocused ? focusScale : baseScale;
-        wire.scale.lerp(_vScale.set(targetScale, targetScale, targetScale), lerpK(0.10));
+        wire.scale.lerp(_vScale.set(targetScale, targetScale, targetScale), frameLerp(0.10, dt));
       }
 
       /* tiles: position-lerp to arranged targets, then orient */
@@ -2179,7 +2208,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         _baseQ.multiply(_offQ);
 
         // SOFT slerp — cards re-orient slowly so they feel like floating objects
-        m.quaternion.slerp(_baseQ, lerpK((mode === "grid" || mode === "reel") ? 0.12 : 0.06));
+        m.quaternion.slerp(_baseQ, frameLerp((mode === "grid" || mode === "reel") ? 0.12 : 0.06, dt));
 
         // Band-pass visibility per mode
         const dist = m.position.distanceTo(camera.position);
@@ -2243,9 +2272,9 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         if (isFocused) {
           opacity = Math.min(1, opacity * 1.6 + 0.25);
           modelOpacityBase = Math.min(1, modelOpacityBase * 1.6 + 0.25);
-          m.scale.lerp(_vScale.set(1.18, 1.18, 1), lerpK(0.14));
+          m.scale.lerp(_vScale.set(1.18, 1.18, 1), frameLerp(0.14, dt));
         } else {
-          m.scale.lerp(_vScale.set(1, 1, 1), lerpK(0.10));
+          m.scale.lerp(_vScale.set(1, 1, 1), frameLerp(0.10, dt));
         }
         // Temporal smoothing — the distance-band definitions switch INSTANTLY
         // when the mode flips (drift box-edge → origin sphere → reel tight
@@ -2253,7 +2282,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         // the origin transits. Ease the rendered opacity toward its target so
         // every band hand-off reads as a fade, never a pop.
         const uD = m.userData;
-        const opK = lerpK(0.10);
+        const opK = frameLerp(0.10, dt);
         uD.opSm  = uD.opSm  == null ? opacity          : uD.opSm  + (opacity          - uD.opSm)  * opK;
         uD.mobSm = uD.mobSm == null ? modelOpacityBase : uD.mobSm + (modelOpacityBase - uD.mobSm) * opK;
         m.material.opacity = uD.opSm * arrFade;
@@ -2351,7 +2380,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         else if (ob.active && concept !== "hub") formTarget = eP;
         // Ease toward the target so entry/exit is always gradual (no pop when the
         // section's active flag toggles mid-scroll).
-        formActual += (formTarget - formActual) * lerpK(0.09);
+        formActual += (formTarget - formActual) * frameLerp(0.09, dt);
         if (formActual < 0.0015 && formTarget === 0) formActual = 0;
         const formP = formActual;
 
@@ -2408,7 +2437,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
             // (each already has one: asmLocal), holds the word for a beat,
             // then the burst releases it into the field. The metaphor lands
             // in the first second: you arrive THROUGH the origin node.
-            const kA = lerpK(0.05 + arrCollapse * 0.16);
+            const kA = frameLerp(0.05 + arrCollapse * 0.16, dt);
             // glyph basis facing the camera at the origin-anchor distance
             _arrR.crossVectors(FORWARD, _arrUP).normalize();
             _arrU.crossVectors(_arrR, FORWARD).normalize();
@@ -2433,7 +2462,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
               arr[j + 2] += (desZ - arr[j + 2]) * kA;
             }
           } else {
-            const kField = lerpK(0.12);
+            const kField = frameLerp(0.12, dt);
             for (let i = 0; i < ASM_N * 3; i++) arr[i] += (asmHome[i] - arr[i]) * kField;
           }
         } else {
@@ -2464,7 +2493,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
           const rAmp   = 0.15 * formP;
           const rPhase = now * 0.0019;
           // Snap tighter the more it's formed so the letterforms crisp up.
-          const kForm = lerpK(0.16 + formP * 0.12);
+          const kForm = frameLerp(0.16 + formP * 0.12, dt);
           for (let i = 0; i < ASM_N; i++) {
             const j = i * 3;
             const lx = asmLocal[j] * glyphFit;
@@ -2504,7 +2533,11 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
           assemblyGroup.scale.set(1, 1, 1);
         }
 
-        window.__mo_debug = { mode, active: !!ob.active, formP: +formP.toFixed(2), camZ: +cam.pos.z.toFixed(1) };
+        const debugState = window.__mo_debug || (window.__mo_debug = {});
+        debugState.mode = mode;
+        debugState.active = !!ob.active;
+        debugState.formP = +formP.toFixed(2);
+        debugState.camZ = +cam.pos.z.toFixed(1);
       }
 
       /* ── v10 layers: constellation (anamorph retired — see its setup) ── */
@@ -2544,7 +2577,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         });
       }
       const fovT = 58 + vW * 4 + warpNow * 4.5;
-      camera.fov += (fovT - camera.fov) * lerpK(0.08);
+      camera.fov += (fovT - camera.fov) * frameLerp(0.08, dt);
       if (Math.abs(camera.fov - _lastFov) > 0.02) { camera.updateProjectionMatrix(); _lastFov = camera.fov; }
       if (bokehPass && bokehPass.uniforms) {
         // v10.1 — DoF reads as FAR-ONLY: a tiny aperture with focus pinned to
@@ -2555,7 +2588,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         if (mode === "reel") focusT = 10.6;
         const formPNow = (window.__mo_debug && window.__mo_debug.formP) || 0;
         if (formPNow > 0.25) focusT = ORIGIN_CENTER.length();
-        _focusS += (focusT - _focusS) * lerpK(0.07);
+        _focusS += (focusT - _focusS) * frameLerp(0.07, dt);
         bokehPass.uniforms.focus.value = _focusS;
         bokehPass.uniforms.aperture.value = GRADE.aperture;
         bokehPass.uniforms.maxblur.value = GRADE.maxblur;
