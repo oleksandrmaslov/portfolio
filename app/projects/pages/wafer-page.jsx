@@ -157,7 +157,7 @@ function leaveToUniverse() {
   sessionStorage.setItem("mo_node_return", "1");
   sessionStorage.setItem("mo_node_return_addr", "0x01");
   sessionStorage.setItem("mo_node_return_target", returnTo);
-  const dest = returnTo === "universe" ? "Landing Final 5.html" : "Landing Final 5.html#work";
+  const dest = returnTo === "universe" ? "./" : "./#work";
   setTimeout(() => { window.location.href = dest; }, 720);
 }
 
@@ -210,16 +210,16 @@ function WaferShell({ project }) {
       <div className="pp-shell__blur" aria-hidden="true">
         <div /><div /><div /><div /><div /><div /><div />
       </div>
-      <a href="Landing Final 5.html" className="shell__brand pp-shell__brand" data-mo-cursor-mirror data-mo-cursor-opacity=".pp-shell,.hv-page"
+      <a href="./" className="shell__brand pp-shell__brand" data-mo-cursor-mirror data-mo-cursor-opacity=".pp-shell,.hv-page"
          onClick={(e) => { e.preventDefault(); leaveToUniverse(); }}>
         <span className="pp-shell__brandM">M.O.</span>
         <span className="pp-shell__brandSep" />
         <span className="pp-shell__brandBack">← UNIVERSE</span>
       </a>
       <nav className="shell__nav pp-shell__nav">
-        <a href="Landing Final 5.html#work" onClick={(e) => { e.preventDefault(); leaveToUniverse(); }} data-mo-cursor-mirror data-mo-cursor-opacity=".pp-shell,.hv-page">WORK</a>
-        <a href="Landing Final 5.html#about" onClick={(e) => { e.preventDefault(); leaveToUniverse(); }} data-mo-cursor-mirror data-mo-cursor-opacity=".pp-shell,.hv-page">ABOUT</a>
-        <a href="Landing Final 5.html#contact" onClick={(e) => { e.preventDefault(); leaveToUniverse(); }} data-mo-cursor-mirror data-mo-cursor-opacity=".pp-shell,.hv-page">CONTACT</a>
+        <a href="./#work" onClick={(e) => { e.preventDefault(); leaveToUniverse(); }} data-mo-cursor-mirror data-mo-cursor-opacity=".pp-shell,.hv-page">WORK</a>
+        <a href="./#about" onClick={(e) => { e.preventDefault(); leaveToUniverse(); }} data-mo-cursor-mirror data-mo-cursor-opacity=".pp-shell,.hv-page">ABOUT</a>
+        <a href="./#contact" onClick={(e) => { e.preventDefault(); leaveToUniverse(); }} data-mo-cursor-mirror data-mo-cursor-opacity=".pp-shell,.hv-page">CONTACT</a>
         <a href="Design System.html" data-mo-cursor-mirror data-mo-cursor-opacity=".pp-shell,.hv-page">SYSTEM ↗</a>
       </nav>
       <div className="shell__status pp-shell__status">

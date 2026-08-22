@@ -51,7 +51,6 @@ jobs:
             --exclude='tools/' \
             --exclude='*.md' \
             ./ _site/
-          cp 'Landing Final 5.html' _site/index.html
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v4

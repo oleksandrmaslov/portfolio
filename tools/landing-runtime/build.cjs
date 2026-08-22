@@ -7,7 +7,7 @@ const Babel = require("@babel/standalone");
 
 const EXPECTED_BABEL_VERSION = "7.29.0";
 const root = path.resolve(__dirname, "..", "..");
-const htmlPath = path.join(root, "Landing Final 5.html");
+const htmlPath = path.join(root, "index.html");
 const runtimePath = path.join(root, "app", "landing", "runtime.js");
 const checkOnly = process.argv.includes("--check");
 
@@ -96,7 +96,7 @@ const htmlFresh = sameFile(htmlPath, html);
 if (checkOnly) {
   if (!runtimeFresh || !htmlFresh) {
     if (!runtimeFresh) console.error("app/landing/runtime.js is stale or missing.");
-    if (!htmlFresh) console.error("Landing Final 5.html has a stale runtime version.");
+    if (!htmlFresh) console.error("index.html has a stale runtime version.");
     console.error("Run: npm run build --prefix tools/landing-runtime");
     process.exit(1);
   }

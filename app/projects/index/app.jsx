@@ -126,8 +126,8 @@ function ManifestApp() {
       <header className="shell m-shell">
         <div className="shell__brand">M.O.</div>
         <nav className="shell__nav">
-          <a href="Landing Final 5.html">LANDING ↗</a>
-          <a href="Landing Final 5.html#work">WORK</a>
+          <a href="./">LANDING ↗</a>
+          <a href="./#work">WORK</a>
           <a href="Design System.html">SYSTEM ↗</a>
         </nav>
         <div className="shell__status">
@@ -318,7 +318,7 @@ function ManifestApp() {
             <span className="m-manifest__footSep" />
             <span>updated 2026 · munich · static html</span>
             <span className="m-manifest__footSep" />
-            <a className="m-manifest__footLink" href="Landing Final 5.html">return to universe ↗</a>
+            <a className="m-manifest__footLink" href="./">return to universe ↗</a>
           </footer>
         </section>
 
@@ -339,7 +339,7 @@ function ManifestApp() {
               <KeyButton
                 legend="U"
                 primary
-                onPress={() => { window.location.href = "Landing Final 5.html#work"; }}
+                onPress={() => { window.location.href = "./#work"; }}
               >
                 UNIVERSE
               </KeyButton>

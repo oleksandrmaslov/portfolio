@@ -3,8 +3,11 @@
 ## Public routes
 
 The deployed root HTML filenames are public URLs and must remain stable.
-`Landing Final 5.html` is the canonical landing source and is also deployed as
-`/index.html`. The other public pages are:
+`index.html` is the canonical landing source and is served directly at `/`.
+It was renamed from `Landing Final 5.html` on 2026-08-22 as a clean break: the
+old URL is gone and no redirect stub was kept. Inbound links to the landing use
+the relative form `./` (and `./#work`, `./#about`, `./#contact`) so they resolve
+correctly under the GitHub Pages project subpath. The other public pages are:
 
 - `All Projects.html`
 - `Wafer v3.html`
