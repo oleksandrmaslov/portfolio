@@ -34,7 +34,7 @@ function FieldGuideT2({ dismissed, touch }) {
             <>
               <span className="fieldHint__cue" data-mo-cursor-mirror data-mo-cursor-opacity=".fieldHint,.fieldHint__inner,.title__stage,.lp"><b>Tap</b> explore</span>
               <span className="fieldHint__sep" />
-              <span className="fieldHint__cue" data-mo-cursor-mirror data-mo-cursor-opacity=".fieldHint,.fieldHint__inner,.title__stage,.lp"><b>Pinch</b> to zoom</span>
+              <span className="fieldHint__cue" data-mo-cursor-mirror data-mo-cursor-opacity=".fieldHint,.fieldHint__inner,.title__stage,.lp"><b>Pinch</b> to fly</span>
               <span className="fieldHint__sep" />
               <span className="fieldHint__cue" data-mo-cursor-mirror data-mo-cursor-opacity=".fieldHint,.fieldHint__inner,.title__stage,.lp"><b>Tap</b> a node</span>
             </>
@@ -87,8 +87,8 @@ function ExploreOverlayT2({ onClose }) {
       </div>
       <div className="xpl__hint">
         {gyro
-          ? "move phone — look · drag — adjust · pinch — zoom · tap — open"
-          : "drag — look · pinch — zoom · tap — open"}
+          ? "move phone — look · drag — adjust · pinch — fly · tap — open"
+          : "drag — look · pinch — fly · tap — open"}
       </div>
     </div>
   );

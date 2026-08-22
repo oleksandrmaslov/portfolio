@@ -539,16 +539,13 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       vel:   0,
     };
     const camTarget = { yaw: 0, pitch: 0 };
-    // Mobile Explore is a separate, fixed-eye panorama camera. It is enabled
-    // only by the explicit EXPLORE control, so the desktop path stays intact.
+    // Mobile Explore is a separate panorama camera. Automatic drift is removed,
+    // while deliberate pinch-flight can still move its current orbit centre.
     let exploreOn = false;
-    const EXPLORE_FOV_MIN = 40;
-    const EXPLORE_FOV_MAX = 72;
     const exploreAnchor = new THREE.Vector3();
     const exploreViewQ = new THREE.Quaternion();
     const exploreTargetQ = new THREE.Quaternion();
     const exploreEuler = new THREE.Euler(0, 0, 0, "YXZ");
-    let exploreFov = 58;
     /* ============================================================
        PARALLAX DRIFT (v14)
        ------------------------------------------------------------
@@ -1295,8 +1292,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     mount.addEventListener("pointerenter", () => { pointerInZone = true;  });
     mount.addEventListener("pointerleave", () => { pointerInZone = false; });
 
-    // Multi-pointer tracking: one finger = look; Explore uses panorama zoom,
-    // while the legacy non-Explore path keeps its original pinch-flight.
+    // Multi-pointer tracking: one finger = look, two fingers = pinch-flight.
     const _pts = new Map();
     let pinching = false, _pinchD = 0;
     const _pinchDist = () => {
@@ -1361,17 +1357,13 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     const runHover = () => { hoverRaf = 0; if (!dragging) handleHover(hoverX, hoverY); };
     mount.addEventListener("pointermove", (e) => {
       if (_pts.has(e.pointerId)) _pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
-      // A panorama zooms its lens instead of translating the viewer.
+      // Preserve the original pinch-flight: spread to move forward, squeeze
+      // to move back. Explore suppresses only automatic camera translation.
       if (pinching) {
         if (_pts.size === 2) {
           const d = _pinchDist();
-          if (exploreOn) {
-            exploreFov = Math.max(EXPLORE_FOV_MIN, Math.min(EXPLORE_FOV_MAX,
-              exploreFov - (d - _pinchD) * 0.085));
-          } else {
-            cam.vel += (d - _pinchD) * 0.05;
-            cam.vel = Math.max(-22, Math.min(22, cam.vel));
-          }
+          cam.vel += (d - _pinchD) * 0.05;
+          cam.vel = Math.max(-22, Math.min(22, cam.vel));
           _pinchD = d;
         }
         return;
@@ -1574,7 +1566,6 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
           camRollFX = 0;
           pdriftGain = PDRIFT.focusDamp;
           exploreAnchor.copy(cam.pos);
-          exploreFov = Math.max(EXPLORE_FOV_MIN, Math.min(EXPLORE_FOV_MAX, camera.fov));
           exploreEuler.set(cam.pitch, cam.yaw, 0, "YXZ");
           exploreViewQ.setFromEuler(exploreEuler).normalize();
           exploreTargetQ.copy(exploreViewQ);
@@ -1994,9 +1985,10 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       }
 
       if (exploreOn) {
-        // Fixed-eye panorama: orientation is the only moving camera degree of
-        // freedom. Small sensor motion is deliberately calmer than a large turn.
-        cam.vel = 0;
+        // Stable panorama orbit: sensor/touch orientation is calm, while the
+        // user's explicit pinch velocity retains the original forward travel.
+        cam.vel *= Math.pow(0.92, dt / 16);
+        if (Math.abs(cam.vel) < 0.04) cam.vel = 0;
         camRollFX = 0;
         cam.pos.copy(exploreAnchor);
         const orbitAngle = exploreViewQ.angleTo(exploreTargetQ);
@@ -2012,6 +2004,9 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         syncAnglesFromExploreView();
         updateCameraTransform();
         camera.getWorldDirection(FORWARD);
+        exploreAnchor.addScaledVector(FORWARD, cam.vel * dt / 1000);
+        cam.pos.copy(exploreAnchor);
+        camera.position.copy(exploreAnchor);
       } else {
         /* damping on velocity */
         cam.vel *= Math.pow(0.92, dt / 16);
@@ -2548,7 +2543,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
           grain: GRADE.grain,
         });
       }
-      const fovT = exploreOn ? exploreFov : 58 + vW * 4 + warpNow * 4.5;
+      const fovT = 58 + vW * 4 + warpNow * 4.5;
       camera.fov += (fovT - camera.fov) * lerpK(0.08);
       if (Math.abs(camera.fov - _lastFov) > 0.02) { camera.updateProjectionMatrix(); _lastFov = camera.fov; }
       if (bokehPass && bokehPass.uniforms) {
