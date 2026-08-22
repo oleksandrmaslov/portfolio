@@ -1,8 +1,8 @@
 /* ============================================================
-   M.O. SYSTEM — Wafer v2 · project page
+   M.O. SYSTEM — Wafer v3 · project page
    ------------------------------------------------------------
    The wafer model (shared rig) is the hero. On arrival from the
-   Landing v6 flight it SNAPS to the canonical pose (seam), then
+   Landing Final 5 flight it SNAPS to the canonical pose (seam), then
    eases to the hero rest layout while the title resolves around it.
 
    · bottom-right INSPECT keycap → dim the page, raise the model
@@ -10,13 +10,11 @@
    · leaving (ESC / wordmark / footer home) → the model flies back
      out and we return to wherever the user came from (universe title
      screen or the work reel).
-   · hero layout is fixed to classic (model right · title left);
-     explore other layouts in project_v2/lab/Hero Lab.html.
+   · hero layout is fixed to classic (model right · title left).
    ============================================================ */
 const { useState: useP2, useEffect: useEP2, useRef: useRP2 } = React;
 
-/* Wafer hero config — the production page is fixed to the classic layout
-   (model right, title left). Use "Hero Lab.html" to explore other layouts. */
+/* Wafer hero config — the production page is fixed to the classic layout. */
 const HERO_LAYOUT = "right";   // "right" | "center" | "left"
 const IDLE_DRIFT = true;
 
@@ -46,8 +44,8 @@ function applyHeroLayout(rig) {
 }
 
 /* ============================================================
-   Reused long-form sections (markup mirrors project/page.jsx,
-   so project/page.css styles them unchanged)
+   Reused long-form sections shared with the canonical project cores;
+   project/page.css styles them consistently.
    ============================================================ */
 function PhotoHolder({ caption, label = "PHOTO · PLACEHOLDER", id }) {
   return (
@@ -272,8 +270,8 @@ function WaferHero({ project, layout, onInspect }) {
   );
 }
 
-/* INSPECT overlay retired — replaced by the PLAY DEMO experience
-   (demo/wafer-demo.js + demo/demo-hud.jsx). */
+/* INSPECT overlay retired — replaced by the production PLAY DEMO experience
+   (demo/wafer-demo-real.js + demo/demo-hud-real.jsx). */
 
 /* ============================================================
    APP

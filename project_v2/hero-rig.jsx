@@ -43,7 +43,7 @@
   window.makeWaferRig = function (mount, opts = {}) {
     const THREE = window.THREE;
     if (!THREE || !mount) return null;
-    const modelUrl = opts.model || "models/wafer.glb";
+    const modelUrl = opts.model || "models/wafer_demo.glb";
 
     /* per-page pose override (e.g. flashlight lies at a different angle,
        Kerfur faces the camera). Falls back to the wafer contract pose. */

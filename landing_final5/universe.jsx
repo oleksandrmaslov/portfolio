@@ -7,8 +7,6 @@
        anything that drifts out of view wraps back in from the
        opposite side. The space feels infinite in every axis.
 
-   v1 (sparse free-pan)   → landing/_unused/universe-v1-sparse.jsx
-   v2 (Fibonacci sphere)  → landing/_unused/universe-v2-sphere.jsx
    ============================================================ */
 
 /* v15 — SINGLE SOURCE: landing_final5/projects-data.js (window.MO_PROJECTS)

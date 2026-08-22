@@ -1,8 +1,7 @@
 /* ============================================================
    M.O. SYSTEM — WAFER DEMO BOARD  (REAL GLB parts · v3)
    ------------------------------------------------------------
-   Fork of demo/wafer-board.js. Instead of building the board
-   from primitives, this loads the 53 real exploded part GLBs
+   Production board loader for the 53 real exploded part GLBs
    (models/wafer_parts/*.glb — meshopt+quantized, each carrying
    its real material) and reassembles them, including the two
    USB-C connectors (usbc_L/usbc_R), which explode as their own

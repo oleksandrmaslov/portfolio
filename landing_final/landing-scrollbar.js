@@ -8,7 +8,7 @@
    directly on top of the hex "node code" (0x00–0xFF), both right-
    aligned, so it reads like the universe's node addresses.
 
-   Native scrollbar is hidden in cursor-ascii.css; this rail is the
+   Native scrollbar is hidden in system/cursor.css; this rail is the
    only scroll indicator. Draggable + click-to-scroll.
    ============================================================ */
 (function () {

@@ -2,9 +2,8 @@
    M.O. SYSTEM — FIELD CORE  ·  shared 0x00 Carrier Field scaffold
    ------------------------------------------------------------
    The common substrate every per-project demo sound palette sits
-   on (brief: SOUND-DESIGN-RESEARCH.md + the 0x00 Carrier Field
-   doc). Extracted from demo/demo-sound.js (Wafer's palette keeps
-   its own copy — canonical, untouched).
+   on. Extracted from demo/demo-sound.js; Wafer's production palette
+   keeps its own tuned copy.
 
      window.makeFieldCore({ ratio })  →  core
 

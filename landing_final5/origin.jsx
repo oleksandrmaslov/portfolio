@@ -6,7 +6,7 @@
 
    The section is a tall scroll track; its progress is published
    to `window.__mo_origin = { p, active, concept }` and READ by
-   landing/universe.jsx inside its render loop, which drives one
+   landing_final5/universe.jsx inside its render loop, which drives one
    of two concepts behind this DOM type:
 
      01 ASSEMBLY — the particle field swarms to FORM "0x00"

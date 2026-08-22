@@ -2,7 +2,7 @@
    M.O. SYSTEM — TORCH DEMO HUD  (React overlay + stage layer)
    ------------------------------------------------------------
    <TorchDemoLayer active onClose tweaks /> — mirrors the wafer
-   HUD shell (demo/demo-hud.jsx): boot console during the intro;
+   production HUD shell: boot console during the intro;
    live telemetry left, CONSOLE rail right, morse line bottom-
    centre while SOS runs. The rail's SW1/SW2 caps drive the SAME
    firmware state machine as clicking the 3D switches.

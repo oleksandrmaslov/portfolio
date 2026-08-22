@@ -1,8 +1,8 @@
 # Wafer — Fusion 360 → real demo GLB · export guide
 
-> Goal: replace the procedural mock board in `demo/wafer-board.js` with your real
-> Wafer model, keeping every demo feature (pressable caps, staggered explode,
-> X-ray/wire/matcap, layers). The demo code stays; only the geometry source swaps.
+> Production contract for `demo/wafer-board-real.js`: keep every live demo
+> feature (pressable caps, staggered explode, X-ray/wire/matcap, layers) while
+> exporting replacement geometry.
 > What makes that possible: **separate, named meshes** + **real scale** + **simple PBR materials**.
 
 ---

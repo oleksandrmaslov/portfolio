@@ -1,8 +1,7 @@
 /* ============================================================
-   M.O. — FINAL 3 · CONTINUOUS FLIGHT · master scroll timeline
+   M.O. — FINAL 5 · CONTINUOUS FLIGHT · master scroll timeline
    ------------------------------------------------------------
-   Fork of landing_final2/flight.js. FINAL 3 changes nothing in the
-   timeline; the stage-presence vars this file writes are now only the
+   The stage-presence vars this file writes are now only the
    FALLBACK path — landing_final5/flight.css drives the same fades from
    the scroll offset itself (compositor, paint-synced) wherever the
    browser supports scroll-driven animations, so a dropped frame can no

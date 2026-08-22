@@ -35,13 +35,9 @@ jobs:
             --exclude='.github/' \
             --exclude='.agents/' \
             --exclude='_site/' \
-            --exclude='backup_*/' \
-            --exclude='uploads/' \
-            --exclude='screenshots/' \
-            --exclude='references/' \
+            --exclude='face-test.html' \
             --exclude='tools/' \
             --exclude='*.md' \
-            --exclude='.thumbnail' \
             ./ _site/
           cp 'Landing Final 5.html' _site/index.html
 

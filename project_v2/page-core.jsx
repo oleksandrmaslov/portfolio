@@ -1,8 +1,7 @@
 /* ============================================================
    M.O. SYSTEM — PROJECT PAGE CORE (v2 template, generalized)
    ------------------------------------------------------------
-   Derived from project_v2/page2.jsx (Wafer v2 = the canonical
-   reference, untouched). Every OTHER project page loads THIS
+   Shared by the canonical v2 project pages. Each project loads this
    file plus a small window.PAGE_CONFIG defined inline:
 
      window.PAGE_CONFIG = {

@@ -1,6 +1,6 @@
 /* ============================================================
    M.O. SYSTEM — Project data
-   Keyed by addr. Each entry feeds project/page.jsx.
+   Keyed by addr. Each entry feeds the shipping project page cores.
    ============================================================ */
 
 const PROJECT_DATA = {
@@ -19,7 +19,7 @@ const PROJECT_DATA = {
     role: "Designer · firmware · hardware",
     stack: ["ZMK", "Zephyr", "KiCad", "nRF52840", "NPM1300", "Sharp memory"],
     primitive: "slab",                // small 3D object kind
-    model: "models/wafer.glb",        // optimized GLB (~2 MB, meshopt)
+    model: "models/wafer_demo.glb",   // canonical assembled hero GLB
     modelFit: 3.4,                    // longest-edge size in world units (bigger = bigger on card)
     modelPose: { x: 1.05, y: 0, z: 0 }, // rest pose — keyboard face toward the camera
     demoSize: { d: 200, w: 110, h: 14 }, // demo model dimensions (label values)
@@ -382,11 +382,10 @@ function warmCurrentProjectModel() {
         && (pathname === candidate.file || pathname.endsWith("/" + candidate.file))
     );
   }
-  const urls = Array.from(new Set([
-    config.hero && config.hero.model,
-    project && project.model,
-  ].filter(Boolean)));
-  if (urls.length) window.preloadModels(urls);
+  const hero = config.hero || {};
+  const modelUrl = hero.model
+    || (typeof hero.buildModel === "function" ? null : project && project.model);
+  if (modelUrl) window.preloadModels([modelUrl]);
 }
 
 if (typeof window.preloadModels === "function") warmCurrentProjectModel();
