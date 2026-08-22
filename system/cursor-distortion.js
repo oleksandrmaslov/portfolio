@@ -662,6 +662,21 @@
 
     function onWakeMove(event) {
       const now = performance.now();
+      // The visual cursor is hidden on touch devices. In mobile Explore, do not
+      // turn a camera-orbit gesture into a second, nervous paint gesture too.
+      // Keep the position current so leaving Explore cannot create a large jump.
+      if (event.pointerType === "touch"
+        && global.document
+        && global.document.body.classList.contains("mo-explore")) {
+        wake.lx = event.clientX;
+        wake.ly = event.clientY;
+        wake.lt = now;
+        wake.x = event.clientX / Math.max(1, global.innerWidth || 1);
+        wake.y = event.clientY / Math.max(1, global.innerHeight || 1);
+        wake.v = 0;
+        pointerPaint.has = false;
+        return;
+      }
       const elapsed = Math.max(16, now - wake.lt);
       const vx = (event.clientX - wake.lx) / elapsed;
       const vy = (event.clientY - wake.ly) / elapsed;

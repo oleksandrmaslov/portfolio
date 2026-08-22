@@ -449,8 +449,9 @@ body.landing-exit .universeBg {
 .universe__mount {
   position: absolute;
   inset: 0;
-  touch-action: none;
+  touch-action: pan-y pinch-zoom;
 }
+body.mo-explore .universe__mount { touch-action: none; }
 .universe__mount canvas { display: block; }
 
 /* corner reticles — small + asymmetric */

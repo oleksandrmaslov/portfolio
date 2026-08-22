@@ -539,6 +539,16 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       vel:   0,
     };
     const camTarget = { yaw: 0, pitch: 0 };
+    // Mobile Explore is a separate, fixed-eye panorama camera. It is enabled
+    // only by the explicit EXPLORE control, so the desktop path stays intact.
+    let exploreOn = false;
+    const EXPLORE_FOV_MIN = 40;
+    const EXPLORE_FOV_MAX = 72;
+    const exploreAnchor = new THREE.Vector3();
+    const exploreViewQ = new THREE.Quaternion();
+    const exploreTargetQ = new THREE.Quaternion();
+    const exploreEuler = new THREE.Euler(0, 0, 0, "YXZ");
+    let exploreFov = 58;
     /* ============================================================
        PARALLAX DRIFT (v14)
        ------------------------------------------------------------
@@ -568,6 +578,11 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     const _AXIS_Z = new THREE.Vector3(0, 0, 1);
 
     function updateCameraTransform() {
+      if (exploreOn) {
+        camera.quaternion.copy(exploreViewQ);
+        camera.position.copy(exploreAnchor);
+        return;
+      }
       // Compose orientation
       const q = new THREE.Quaternion();
       const qy = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), cam.yaw);
@@ -1274,13 +1289,14 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     const stopDrift = () => {
       driftActive = false;
       clearTimeout(idleTimer);
-      idleTimer = setTimeout(() => { driftActive = true; }, 3200);
+      idleTimer = setTimeout(() => { if (!exploreOn) driftActive = true; }, 3200);
     };
 
     mount.addEventListener("pointerenter", () => { pointerInZone = true;  });
     mount.addEventListener("pointerleave", () => { pointerInZone = false; });
 
-    // v11 — multi-pointer tracking: one finger = look, two fingers = pinch-fly.
+    // Multi-pointer tracking: one finger = look; Explore uses panorama zoom,
+    // while the legacy non-Explore path keeps its original pinch-flight.
     const _pts = new Map();
     let pinching = false, _pinchD = 0;
     const _pinchDist = () => {
@@ -1305,7 +1321,17 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     mount.addEventListener("pointerup", (e) => {
       _pts.delete(e.pointerId);
       if (pinching) {
-        if (_pts.size < 2) pinching = false;
+        if (_pts.size < 2) {
+          pinching = false;
+          if (gyroOn && exploreOn) rebaseGyroToExploreTarget();
+          if (exploreOn && _pts.size === 1) {
+            const remaining = _pts.values().next().value;
+            dragging = true;
+            dragMoved = true;
+            lastX = downX = remaining.x;
+            lastY = downY = remaining.y;
+          }
+        }
         try { mount.releasePointerCapture(e.pointerId); } catch (_) {}
         return;
       }
@@ -1313,11 +1339,15 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       dragging = false;
       mount.style.cursor = "grab";
       try { mount.releasePointerCapture(e.pointerId); } catch (_) {}
+      if (gyroOn && exploreOn) rebaseGyroToExploreTarget();
       if (!dragMoved) handleClick(e.clientX, e.clientY);
     });
     mount.addEventListener("pointercancel", (e) => {
       _pts.delete(e.pointerId);
-      if (_pts.size < 2) pinching = false;
+      if (_pts.size < 2) {
+        pinching = false;
+        if (gyroOn && exploreOn) rebaseGyroToExploreTarget();
+      }
       dragging = false; mount.style.cursor = "grab";
     });
     mount.addEventListener("pointerleave", () => {
@@ -1331,12 +1361,17 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     const runHover = () => { hoverRaf = 0; if (!dragging) handleHover(hoverX, hoverY); };
     mount.addEventListener("pointermove", (e) => {
       if (_pts.has(e.pointerId)) _pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
-      // v11 — pinch = fly: spread to dolly forward, squeeze to pull back.
+      // A panorama zooms its lens instead of translating the viewer.
       if (pinching) {
         if (_pts.size === 2) {
           const d = _pinchDist();
-          cam.vel += (d - _pinchD) * 0.05;
-          cam.vel = Math.max(-22, Math.min(22, cam.vel));
+          if (exploreOn) {
+            exploreFov = Math.max(EXPLORE_FOV_MIN, Math.min(EXPLORE_FOV_MAX,
+              exploreFov - (d - _pinchD) * 0.085));
+          } else {
+            cam.vel += (d - _pinchD) * 0.05;
+            cam.vel = Math.max(-22, Math.min(22, cam.vel));
+          }
           _pinchD = d;
         }
         return;
@@ -1346,7 +1381,9 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         const dy = e.clientY - lastY;
         lastX = e.clientX; lastY = e.clientY;
         if (Math.abs(e.clientX - downX) + Math.abs(e.clientY - downY) > 6) { if (!dragMoved) fireInteract(); dragMoved = true; }
-        if (!gyroOn) {
+        if (exploreOn) {
+          applyExploreDrag(dx, dy);
+        } else {
           camTarget.yaw   -= dx * 0.0035;
           camTarget.pitch -= dy * 0.0035;
           camTarget.pitch = Math.max(-1.45, Math.min(1.45, camTarget.pitch));
@@ -1396,35 +1433,181 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     }, { passive: false });
     mount.addEventListener("pointerdown", rearmWheel);
 
-    /* ---------- v11 — MOBILE API: explore mode · fly · gyro look ----------
-       Tiny surface for the touch EXPLORE overlay: fly(v) nudges camera
-       velocity (FLY± hold buttons), setExplore toggles touch-action so a
-       one-finger drag rotates the camera instead of scrolling the page,
-       and setGyro maps device-orientation deltas onto the look target —
-       calibrated to the pose at enable time, so "forward" stays wherever
-       you were looking when you switched it on. */
-    let gyroOn = false, _gyroBase = null;
+    /* ---------- MOBILE API: fixed-eye panorama + calibrated gyro ----------
+       DeviceOrientationControls' YXZ basis converts all three device axes and
+       the current screen orientation into a camera quaternion. The first valid
+       sample is aligned to the view already on screen, so enabling the sensor
+       never jumps. frame() then supplies the sole smoothing stage. */
+    let gyroOn = false, gyroReady = false, gyroAnnounced = false;
+    const GYRO_NOISE = THREE.MathUtils.degToRad(0.12);
+    const gyroEuler = new THREE.Euler(0, 0, 0, "YXZ");
+    const gyroOutEuler = new THREE.Euler(0, 0, 0, "YXZ");
+    const gyroSensorQ = new THREE.Quaternion();
+    const gyroAcceptedQ = new THREE.Quaternion();
+    const gyroIncomingQ = new THREE.Quaternion();
+    const gyroOffsetQ = new THREE.Quaternion();
+    const gyroWorldQ = new THREE.Quaternion();
+    const gyroInverseQ = new THREE.Quaternion();
+    const gyroScreenQ = new THREE.Quaternion();
+    const gyroScreenFixQ = new THREE.Quaternion().setFromAxisAngle(
+      new THREE.Vector3(1, 0, 0), -Math.PI / 2
+    );
+    const gyroZ = new THREE.Vector3(0, 0, 1);
+
+    function setExploreTargetFromAngles(yaw, pitch) {
+      exploreEuler.set(
+        Math.max(-1.45, Math.min(1.45, pitch)),
+        yaw,
+        0,
+        "YXZ"
+      );
+      exploreTargetQ.setFromEuler(exploreEuler).normalize();
+    }
+
+    function syncAnglesFromExploreView() {
+      exploreEuler.setFromQuaternion(exploreViewQ, "YXZ");
+      cam.yaw = nearestAngle(cam.yaw, exploreEuler.y);
+      cam.pitch = Math.max(-1.45, Math.min(1.45, exploreEuler.x));
+      camTarget.yaw = cam.yaw;
+      camTarget.pitch = cam.pitch;
+    }
+
+    function screenOrientationRadians() {
+      const angle = window.screen && window.screen.orientation && Number.isFinite(window.screen.orientation.angle)
+        ? window.screen.orientation.angle
+        : (Number(window.orientation) || 0);
+      return THREE.MathUtils.degToRad(angle);
+    }
+
+    function sensorQuaternion(e, out) {
+      if (!Number.isFinite(e.alpha) || !Number.isFinite(e.beta) || !Number.isFinite(e.gamma)) return false;
+      gyroEuler.set(
+        THREE.MathUtils.degToRad(e.beta),
+        THREE.MathUtils.degToRad(e.alpha),
+        -THREE.MathUtils.degToRad(e.gamma),
+        "YXZ"
+      );
+      out.setFromEuler(gyroEuler);
+      out.multiply(gyroScreenFixQ);
+      gyroScreenQ.setFromAxisAngle(gyroZ, -screenOrientationRadians());
+      out.multiply(gyroScreenQ).normalize();
+      return true;
+    }
+
+    function levelExploreTargetFromGyro() {
+      gyroWorldQ.multiplyQuaternions(gyroOffsetQ, gyroSensorQ).normalize();
+      gyroOutEuler.setFromQuaternion(gyroWorldQ, "YXZ");
+      const yaw = nearestAngle(camTarget.yaw, gyroOutEuler.y);
+      const pitch = Math.max(-1.45, Math.min(1.45, gyroOutEuler.x));
+      setExploreTargetFromAngles(yaw, pitch);
+    }
+
+    function rebaseGyroToExploreTarget() {
+      if (!gyroOn || !gyroReady) return;
+      gyroInverseQ.copy(gyroSensorQ).invert();
+      gyroOffsetQ.multiplyQuaternions(exploreTargetQ, gyroInverseQ).normalize();
+      gyroAcceptedQ.copy(gyroSensorQ);
+    }
+
+    function resetGyroCalibration() {
+      // Reframe against what is actually rendered, not a target that may still
+      // be ahead of the eased camera during a fast turn or screen rotation.
+      if (exploreOn) {
+        exploreTargetQ.copy(exploreViewQ);
+        syncAnglesFromExploreView();
+      }
+      gyroReady = false;
+      gyroAcceptedQ.identity();
+    }
+
+    function applyExploreDrag(dx, dy) {
+      exploreEuler.setFromQuaternion(exploreTargetQ, "YXZ");
+      const yaw = nearestAngle(camTarget.yaw, exploreEuler.y) - dx * 0.0035;
+      const pitch = Math.max(-1.45, Math.min(1.45, exploreEuler.x - dy * 0.0035));
+      setExploreTargetFromAngles(yaw, pitch);
+      camTarget.yaw = yaw;
+      camTarget.pitch = pitch;
+      if (gyroOn && gyroReady) rebaseGyroToExploreTarget();
+    }
+
     const onGyro = (e) => {
-      if (!gyroOn || e.alpha == null || e.beta == null) return;
-      if (!_gyroBase) _gyroBase = { a: e.alpha, b: e.beta, yaw: camTarget.yaw, pitch: camTarget.pitch };
-      let da = e.alpha - _gyroBase.a;
-      if (da > 180) da -= 360; else if (da < -180) da += 360;
-      const db = e.beta - _gyroBase.b;
-      camTarget.yaw   = _gyroBase.yaw + da * (Math.PI / 180);
-      camTarget.pitch = Math.max(-1.45, Math.min(1.45, _gyroBase.pitch + db * (Math.PI / 180) * 0.9));
+      if (!gyroOn || !exploreOn || !sensorQuaternion(e, gyroIncomingQ)) return;
+      gyroSensorQ.copy(gyroIncomingQ);
+      if (!gyroReady) {
+        gyroReady = true;
+        gyroAcceptedQ.copy(gyroSensorQ);
+        gyroInverseQ.copy(gyroSensorQ).invert();
+        gyroOffsetQ.multiplyQuaternions(exploreTargetQ, gyroInverseQ).normalize();
+        if (!gyroAnnounced) {
+          gyroAnnounced = true;
+          try { window.dispatchEvent(new CustomEvent("mo:gyroOn")); } catch (_) {}
+        }
+        return;
+      }
+      if (dragging || pinching) return;
+      if (gyroAcceptedQ.angleTo(gyroSensorQ) < GYRO_NOISE) return;
+      gyroAcceptedQ.copy(gyroSensorQ);
+      levelExploreTargetFromGyro();
     };
+    const onGyroFrameChange = () => { if (gyroOn) resetGyroCalibration(); };
+    const onGyroVisibility = () => { if (!document.hidden && gyroOn) resetGyroCalibration(); };
     window.addEventListener("deviceorientation", onGyro, true);
+    window.addEventListener("orientationchange", onGyroFrameChange, { passive: true });
+    if (window.screen && window.screen.orientation && window.screen.orientation.addEventListener) {
+      window.screen.orientation.addEventListener("change", onGyroFrameChange);
+    }
+    document.addEventListener("visibilitychange", onGyroVisibility);
     window.__mo_universe = {
       fly(v) {
         cam.vel = Math.max(-22, Math.min(22, cam.vel + v));
         stopDrift(); fireInteract();
       },
       setExplore(on) {
-        mount.style.touchAction = on ? "none" : "";
-        if (on) { stopDrift(); fireInteract(); }
+        const next = !!on;
+        mount.style.touchAction = next ? "none" : "pan-y pinch-zoom";
+        if (next === exploreOn) return;
+        if (next) {
+          exploreOn = true;
+          clearTimeout(idleTimer);
+          driftActive = false;
+          cam.vel = 0;
+          camRollFX = 0;
+          pdriftGain = PDRIFT.focusDamp;
+          exploreAnchor.copy(cam.pos);
+          exploreFov = Math.max(EXPLORE_FOV_MIN, Math.min(EXPLORE_FOV_MAX, camera.fov));
+          exploreEuler.set(cam.pitch, cam.yaw, 0, "YXZ");
+          exploreViewQ.setFromEuler(exploreEuler).normalize();
+          exploreTargetQ.copy(exploreViewQ);
+          resetGyroCalibration();
+          fireInteract();
+        } else {
+          for (const pointerId of _pts.keys()) {
+            try {
+              if (!mount.hasPointerCapture || mount.hasPointerCapture(pointerId)) {
+                mount.releasePointerCapture(pointerId);
+              }
+            } catch (_) {}
+          }
+          _pts.clear();
+          dragging = false;
+          dragMoved = false;
+          pinching = false;
+          mount.style.cursor = "grab";
+          syncAnglesFromExploreView();
+          exploreOn = false;
+          cam.vel = 0;
+          stopDrift();
+          updateCameraTransform();
+        }
       },
-      setGyro(on) { gyroOn = !!on; _gyroBase = null; },
+      setGyro(on) {
+        gyroOn = !!on;
+        gyroAnnounced = false;
+        resetGyroCalibration();
+      },
       isGyro() { return gyroOn; },
+      isGyroActive() { return gyroOn && gyroReady; },
+      recenterGyro() { if (gyroOn && gyroReady) rebaseGyroToExploreTarget(); },
     };
 
     /* ---------- raycasting ---------- */
@@ -1717,7 +1900,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       // idle attention — after ~30s of stillness the field notices you:
       // the camera turns softly toward the nearest node, a slow ripple
       // crosses the screen, and the field murmurs.
-      if (mode === "drift" && !_idleFired && now - _lastAct > 30000 && !ARR.t0) {
+      if (!exploreOn && mode === "drift" && !_idleFired && now - _lastAct > 30000 && !ARR.t0) {
         _idleFired = true;
         let nearTile = null, nd = Infinity;
         for (const m of tiles) {
@@ -1745,7 +1928,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       }
 
       /* idle drift — only in drift mode */
-      if (!FLOW_RM && driftActive && mode === "drift") {
+      if (!exploreOn && !FLOW_RM && driftActive && mode === "drift") {
         cam.vel += dt * 0.0008;     // tiny accel toward forward drift
         camTarget.yaw += dt * 0.000035;   // v14: halved — the parallax drift now carries the motion
         camTarget.pitch += Math.sin(now * 0.00022) * dt * 0.00003;
@@ -1769,7 +1952,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         const styleMul = cfgF.style === "calm" ? 0.45 : 1;
         const warpMul  = (cfgF.warp != null ? cfgF.warp : 65) / 65;
         let flowTarget = 0, rollTarget = 0;
-        if (_flTransit && !FLOW_RM) {
+        if (!exploreOn && _flTransit && !FLOW_RM) {
           const tt = Math.max(0, Math.min(1, _fl.t || 0));
           const bell = Math.sin(Math.PI * tt);          // ease in and out of the leg
           flowTarget = (3.4 + Math.min(24, _fl.speed || 0) * 0.6) * bell * styleMul * warpMul;
@@ -1781,7 +1964,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         }
         flowSm    += (flowTarget - flowSm)    * (1 - Math.pow(0.90, dt / 16));
         camRollFX += (rollTarget - camRollFX) * (1 - Math.pow(0.93, dt / 16));
-        if (flowSm > 0.02) {
+        if (!exploreOn && flowSm > 0.02) {
           // level flow along the look heading — vertical framing never shifts
           const d = flowSm * dt / 1000;
           _flowDX = -Math.sin(cam.yaw) * d;
@@ -1798,57 +1981,79 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
               m.position.x -= _flowDX; m.position.z -= _flowDZ;
             }
           }
-        } else if (!_flTransit) {
+        } else if (exploreOn || !_flTransit) {
           _flowDX = _flowDY = _flowDZ = 0;
+          if (exploreOn) { flowSm = 0; camRollFX = 0; }
         }
       }
-      if (isArranged) {
+      if (!exploreOn && isArranged) {
         cam.vel *= Math.pow(0.86, dt / 16);
         camTarget.yaw   *= Math.pow(0.92, dt / 16);
         camTarget.pitch *= Math.pow(0.92, dt / 16);
         cam.pos.multiplyScalar(Math.pow(0.94, dt / 16));
       }
 
-      /* damping on velocity */
-      cam.vel *= Math.pow(0.92, dt / 16);
-      // clamp tiny
-      if (Math.abs(cam.vel) < 0.04) cam.vel = 0;
+      if (exploreOn) {
+        // Fixed-eye panorama: orientation is the only moving camera degree of
+        // freedom. Small sensor motion is deliberately calmer than a large turn.
+        cam.vel = 0;
+        camRollFX = 0;
+        cam.pos.copy(exploreAnchor);
+        const orbitAngle = exploreViewQ.angleTo(exploreTargetQ);
+        if (orbitAngle > 0.00001) {
+          const response = THREE.MathUtils.clamp(
+            (orbitAngle - THREE.MathUtils.degToRad(1)) / THREE.MathUtils.degToRad(14), 0, 1
+          );
+          const tau = THREE.MathUtils.lerp(0.11, 0.045, response);
+          exploreViewQ.slerp(exploreTargetQ, 1 - Math.exp(-(dt / 1000) / tau)).normalize();
+        } else {
+          exploreViewQ.copy(exploreTargetQ);
+        }
+        syncAnglesFromExploreView();
+        updateCameraTransform();
+        camera.getWorldDirection(FORWARD);
+      } else {
+        /* damping on velocity */
+        cam.vel *= Math.pow(0.92, dt / 16);
+        // clamp tiny
+        if (Math.abs(cam.vel) < 0.04) cam.vel = 0;
 
-      /* ease camera angles */
-      const k = 1 - Math.pow(0.001, dt / 1000);
-      cam.yaw   += (camTarget.yaw   - cam.yaw)   * k;
-      cam.pitch += (camTarget.pitch - cam.pitch) * k;
-      cam.pitch = Math.max(-1.45, Math.min(1.45, cam.pitch));
+        /* ease camera angles */
+        const k = 1 - Math.pow(0.001, dt / 1000);
+        cam.yaw   += (camTarget.yaw   - cam.yaw)   * k;
+        cam.pitch += (camTarget.pitch - cam.pitch) * k;
+        cam.pitch = Math.max(-1.45, Math.min(1.45, cam.pitch));
 
-      /* advance position along current look direction */
-      updateCameraTransform();
-      camera.getWorldDirection(FORWARD);
-      cam.pos.addScaledVector(FORWARD, cam.vel * dt / 1000);
+        /* advance position along current look direction */
+        updateCameraTransform();
+        camera.getWorldDirection(FORWARD);
+        cam.pos.addScaledVector(FORWARD, cam.vel * dt / 1000);
 
-      /* v14 — parallax drift: slow lateral wander in camera-local space.
-         Damped to PDRIFT.focusDamp whenever a card is focused/hovered or the
-         user is actively driving, so reading a label never feels seasick. */
-      if (PDRIFT.amp > 0 && !FLOW_RM) {
-        const wantGain = (mode === "drift" && driftActive && !dragging && !activeAddr && !hoverObjRef.current)
-          ? 1 : PDRIFT.focusDamp;
-        const gainRate = wantGain < pdriftGain ? 8 : PDRIFT.ease;
-        pdriftGain += (wantGain - pdriftGain) * (1 - Math.exp(-gainRate * dt / 1000));
-        const s = dt / 1000;
-        const wx = (Math.PI * 2) / PDRIFT.px, wy = (Math.PI * 2) / PDRIFT.py;
-        // derivative of sin() → drift velocity, not a spring back to home
-        const vx = Math.cos(now / 1000 * wx) * PDRIFT.amp * pdriftGain;
-        const vy = Math.cos(now / 1000 * wy + 1.7) * PDRIFT.amp * 0.55 * pdriftGain;
-        _pdR.set(1, 0, 0).applyQuaternion(camera.quaternion);
-        _pdU.set(0, 1, 0).applyQuaternion(camera.quaternion);
-        cam.pos.addScaledVector(_pdR, vx * s);
-        cam.pos.addScaledVector(_pdU, vy * s);
+        /* v14 — parallax drift: slow lateral wander in camera-local space.
+           Damped to PDRIFT.focusDamp whenever a card is focused/hovered or the
+           user is actively driving, so reading a label never feels seasick. */
+        if (PDRIFT.amp > 0 && !FLOW_RM) {
+          const wantGain = (mode === "drift" && driftActive && !dragging && !activeAddr && !hoverObjRef.current)
+            ? 1 : PDRIFT.focusDamp;
+          const gainRate = wantGain < pdriftGain ? 8 : PDRIFT.ease;
+          pdriftGain += (wantGain - pdriftGain) * (1 - Math.exp(-gainRate * dt / 1000));
+          const s = dt / 1000;
+          const wx = (Math.PI * 2) / PDRIFT.px, wy = (Math.PI * 2) / PDRIFT.py;
+          // derivative of sin() → drift velocity, not a spring back to home
+          const vx = Math.cos(now / 1000 * wx) * PDRIFT.amp * pdriftGain;
+          const vy = Math.cos(now / 1000 * wy + 1.7) * PDRIFT.amp * 0.55 * pdriftGain;
+          _pdR.set(1, 0, 0).applyQuaternion(camera.quaternion);
+          _pdU.set(0, 1, 0).applyQuaternion(camera.quaternion);
+          cam.pos.addScaledVector(_pdR, vx * s);
+          cam.pos.addScaledVector(_pdU, vy * s);
+        }
+
+        // Re-apply position
+        camera.position.copy(cam.pos);
+
+        // Long-session safety: recentre the world when we've flown far out.
+        if (cam.pos.lengthSq() > REBASE_DIST2) rebaseWorld();
       }
-
-      // Re-apply position
-      camera.position.copy(cam.pos);
-
-      // Long-session safety: recentre the world when we've flown far out.
-      if (cam.pos.lengthSq() > REBASE_DIST2) rebaseWorld();
 
       // dt-corrected easing factor — keeps motion identical at 30/60/120Hz so
       // re-orientation and scaling feel the same (native) regardless of refresh.
@@ -2343,7 +2548,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
           grain: GRADE.grain,
         });
       }
-      const fovT = 58 + vW * 4 + warpNow * 4.5;
+      const fovT = exploreOn ? exploreFov : 58 + vW * 4 + warpNow * 4.5;
       camera.fov += (fovT - camera.fov) * lerpK(0.08);
       if (Math.abs(camera.fov - _lastFov) > 0.02) { camera.updateProjectionMatrix(); _lastFov = camera.fov; }
       if (bokehPass && bokehPass.uniforms) {
@@ -2436,6 +2641,11 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       window.removeEventListener("keydown", onAnyAct);
       window.removeEventListener("scroll", onAnyAct);
       window.removeEventListener("deviceorientation", onGyro, true);
+      window.removeEventListener("orientationchange", onGyroFrameChange);
+      if (window.screen && window.screen.orientation && window.screen.orientation.removeEventListener) {
+        window.screen.orientation.removeEventListener("change", onGyroFrameChange);
+      }
+      document.removeEventListener("visibilitychange", onGyroVisibility);
       delete window.__mo_universe;
       delete window.__mo_arrival_start;
       delete window.__mo_cam;

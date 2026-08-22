@@ -21,6 +21,7 @@ function useCompactT2(bp = 700) {
   return c;
 }
 const IS_TOUCH_T2 = typeof window !== "undefined" && window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
+let gyroRequestT2 = 0;
 
 function FieldGuideT2({ dismissed, touch }) {
   return (
@@ -33,7 +34,7 @@ function FieldGuideT2({ dismissed, touch }) {
             <>
               <span className="fieldHint__cue" data-mo-cursor-mirror data-mo-cursor-opacity=".fieldHint,.fieldHint__inner,.title__stage,.lp"><b>Tap</b> explore</span>
               <span className="fieldHint__sep" />
-              <span className="fieldHint__cue" data-mo-cursor-mirror data-mo-cursor-opacity=".fieldHint,.fieldHint__inner,.title__stage,.lp"><b>Pinch</b> to fly</span>
+              <span className="fieldHint__cue" data-mo-cursor-mirror data-mo-cursor-opacity=".fieldHint,.fieldHint__inner,.title__stage,.lp"><b>Pinch</b> to zoom</span>
               <span className="fieldHint__sep" />
               <span className="fieldHint__cue" data-mo-cursor-mirror data-mo-cursor-opacity=".fieldHint,.fieldHint__inner,.title__stage,.lp"><b>Tap</b> a node</span>
             </>
@@ -53,13 +54,18 @@ function FieldGuideT2({ dismissed, touch }) {
 }
 
 function ExploreOverlayT2({ onClose }) {
-  const [gyro, setGyro] = useT2(false);
+  const [gyro, setGyro] = useT2(() => !!(
+    window.__mo_universe
+    && window.__mo_universe.isGyroActive
+    && window.__mo_universe.isGyroActive()
+  ));
   useT2E(() => {
     document.body.classList.add("mo-explore");
     if (window.__mo_universe) window.__mo_universe.setExplore(true);
     const prevOv = document.documentElement.style.overflow;
     document.documentElement.style.overflow = "hidden";
     return () => {
+      gyroRequestT2 += 1;
       document.body.classList.remove("mo-explore");
       if (window.__mo_universe) {
         window.__mo_universe.setExplore(false);
@@ -80,17 +86,20 @@ function ExploreOverlayT2({ onClose }) {
         <button type="button" className="xpl__close" onClick={onClose}>EXIT ✕</button>
       </div>
       <div className="xpl__hint">
-        {gyro ? "move your phone — look · pinch — fly · tap a node" : "drag — look · pinch — fly · tap a node"}
+        {gyro
+          ? "move phone — look · drag — adjust · pinch — zoom · tap — open"
+          : "drag — look · pinch — zoom · tap — open"}
       </div>
     </div>
   );
 }
 
 function requestGyroInGestureT2() {
+  const requestId = ++gyroRequestT2;
   try {
     const enable = () => {
+      if (requestId !== gyroRequestT2) return;
       if (window.__mo_universe) window.__mo_universe.setGyro(true);
-      try { window.dispatchEvent(new CustomEvent("mo:gyroOn")); } catch (_) {}
     };
     if (window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === "function") {
       DeviceOrientationEvent.requestPermission()
