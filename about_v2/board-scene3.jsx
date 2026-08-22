@@ -648,20 +648,41 @@
     const capBody = mat(0xb08d5a, 0.1, 0.5);
     const capEnd  = mat(0xb7c0cf, 1.0, 0.3);
     const resBody = mat(0x11141a, 0.05, 0.5);
+    // The 78 decorative passives are static for the lifetime of the board.
+    // Rendering each body + two end caps as separate Mesh objects cost 234 draw
+    // calls. Batch identical box/material combinations into InstancedMeshes;
+    // every instance keeps the exact authored transform and material response.
+    const passiveBatches = new Map();
+    const groupMatrix = new THREE.Matrix4();
+    const localMatrix = new THREE.Matrix4();
+    const worldMatrix = new THREE.Matrix4();
+    const queuePassive = (role, w, h, d, material, localX) => {
+      const key = `${role}:${w.toFixed(6)}:${h.toFixed(6)}:${d.toFixed(6)}`;
+      let batch = passiveBatches.get(key);
+      if (!batch) {
+        batch = { geometry: new THREE.BoxGeometry(w, h, d), material, matrices: [] };
+        passiveBatches.set(key, batch);
+      }
+      localMatrix.makeTranslation(localX, h / 2, 0);
+      worldMatrix.multiplyMatrices(groupMatrix, localMatrix);
+      batch.matrices.push(worldMatrix.clone());
+    };
     for (const f of LAYOUT.foot) {
-      const g = new THREE.Group();
       const bl = f.l * 0.92, bw = f.w * 0.95, bh = f.cap ? f.w * 0.75 : 0.42;
-      const body = new THREE.Mesh(new THREE.BoxGeometry(bl * 0.72, bh, bw), f.cap ? capBody : resBody);
-      body.position.y = bh / 2;
-      g.add(body);
-      [-1, 1].forEach(s => {
-        const end = new THREE.Mesh(new THREE.BoxGeometry(bl * 0.16, bh, bw), capEnd);
-        end.position.set(s * bl * 0.43, bh / 2, 0);
-        g.add(end);
-      });
-      g.position.set(f.x, TOP, f.z);
-      if (f.rot) g.rotation.y = Math.PI / 2;
-      group.add(g);
+      groupMatrix.makeRotationY(f.rot ? Math.PI / 2 : 0);
+      groupMatrix.setPosition(f.x, TOP, f.z);
+      queuePassive(f.cap ? "cap-body" : "res-body", bl * 0.72, bh, bw, f.cap ? capBody : resBody, 0);
+      queuePassive("end", bl * 0.16, bh, bw, capEnd, -bl * 0.43);
+      queuePassive("end", bl * 0.16, bh, bw, capEnd,  bl * 0.43);
+    }
+    for (const [key, batch] of passiveBatches) {
+      const instances = new THREE.InstancedMesh(batch.geometry, batch.material, batch.matrices.length);
+      batch.matrices.forEach((matrix, index) => instances.setMatrixAt(index, matrix));
+      instances.instanceMatrix.setUsage(THREE.StaticDrawUsage);
+      instances.instanceMatrix.needsUpdate = true;
+      instances.name = `pcb-passives:${key}`;
+      if (instances.computeBoundingSphere) instances.computeBoundingSphere();
+      group.add(instances);
     }
     for (const p of CPARTS) {
       const g = buildPart(p.k);
@@ -829,7 +850,7 @@
       asmPos2[i*3+1] = asmSca2[i*3+1];
       asmPos2[i*3+2] = asmSca2[i*3+2];
     }
-    asmGeo2.setAttribute("position", new THREE.BufferAttribute(asmPos2, 3));
+    asmGeo2.setAttribute("position", new THREE.BufferAttribute(asmPos2, 3).setUsage(THREE.DynamicDrawUsage));
     const assembly2 = new THREE.Points(asmGeo2, new THREE.PointsMaterial({
       color: 0x00f0c8, size: 1.1, sizeAttenuation: true,
       transparent: true, opacity: 0, depthWrite: false,

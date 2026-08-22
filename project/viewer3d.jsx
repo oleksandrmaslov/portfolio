@@ -23,6 +23,33 @@
      gets a fresh THREE.Group clone — so we never re-download or
      re-parse the same .glb. */
   const _gltfCache = new Map();   // url -> Promise<THREE.Group>
+  const _constrainedDevice = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)
+    || (navigator.deviceMemory && navigator.deviceMemory <= 4)
+    || (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4);
+  const _modelJobLimit = _constrainedDevice ? 2 : 4;
+  const _modelJobs = [];
+  let _activeModelJobs = 0;
+
+  function drainModelJobs() {
+    while (_activeModelJobs < _modelJobLimit && _modelJobs.length) {
+      const job = _modelJobs.shift();
+      _activeModelJobs += 1;
+      Promise.resolve()
+        .then(job.run)
+        .then(job.resolve, job.reject)
+        .finally(() => {
+          _activeModelJobs -= 1;
+          drainModelJobs();
+        });
+    }
+  }
+
+  function scheduleModelJob(run) {
+    return new Promise((resolve, reject) => {
+      _modelJobs.push({ run, resolve, reject });
+      drainModelJobs();
+    });
+  }
 
   /* KTX2 / Basis transcoder — the v3 wafer exports carry KTX2-compressed
      textures (gltfpack -tc). GLTFLoader needs a KTX2Loader wired before it
@@ -34,7 +61,8 @@
     if (_ktx2 !== null) return _ktx2 || null;
     if (!THREE.KTX2Loader) { _ktx2 = false; return null; }
     const k = new THREE.KTX2Loader()
-      .setTranscoderPath("https://unpkg.com/three@0.160.0/examples/jsm/libs/basis/");
+      .setTranscoderPath("https://unpkg.com/three@0.160.0/examples/jsm/libs/basis/")
+      .setWorkerLimit(_constrainedDevice ? 1 : 2);
     let r = null;
     try {
       r = new THREE.WebGLRenderer({ antialias: false, depth: false, stencil: false });
@@ -59,7 +87,7 @@
     if (!LoaderCtor) {
       return Promise.reject(new Error("GLTFLoader not loaded — add it after three.min.js"));
     }
-    const p = new Promise((resolve, reject) => {
+    const p = scheduleModelJob(() => new Promise((resolve, reject) => {
       const loader = new LoaderCtor();
       // Meshopt-compressed GLBs (e.g. wafer.glb, optimized from 16 MB → 2 MB)
       // need the decoder wired in before .load(); uncompressed GLBs ignore it.
@@ -74,8 +102,11 @@
         undefined,
         (err) => reject(err),
       );
-    });
+    }));
     _gltfCache.set(url, p);
+    p.catch(() => {
+      if (_gltfCache.get(url) === p) _gltfCache.delete(url);
+    });
     return p.then((root) => root.clone(true));
   };
 

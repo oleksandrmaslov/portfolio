@@ -32,11 +32,13 @@
     const envInt   = opts.envMapIntensity != null ? opts.envMapIntensity : 1.35;
     const floor    = opts.minLuma != null ? opts.minLuma : 0.04;    // linear; lifts pure black to a readable anodized grey
     const seen = new Set();
+    const clones = new Map();
     root.traverse((o) => {
       if (!o.isMesh || !o.material) return;
       const mats = Array.isArray(o.material) ? o.material : [o.material];
       const out = mats.map((m) => {
         if (!m) return m;
+        if (clones.has(m)) return clones.get(m);
         const mat = m.clone();
         if ("envMapIntensity" in mat) mat.envMapIntensity = envInt;
         // lift a hair off absolute black so the form survives deep shadow
@@ -49,6 +51,7 @@
           }
         }
         mat.needsUpdate = true;
+        clones.set(m, mat);
         seen.add(mat);
         return mat;
       });

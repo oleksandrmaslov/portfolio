@@ -711,6 +711,30 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
   var HAIRLINE = 0x232a3a;
   var BONE = 0xe6e8ee;
   var _gltfCache = new Map();
+  var _constrainedDevice = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || navigator.deviceMemory && navigator.deviceMemory <= 4 || navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4;
+  var _modelJobLimit = _constrainedDevice ? 2 : 4;
+  var _modelJobs = [];
+  var _activeModelJobs = 0;
+  function drainModelJobs() {
+    while (_activeModelJobs < _modelJobLimit && _modelJobs.length) {
+      var job = _modelJobs.shift();
+      _activeModelJobs += 1;
+      Promise.resolve().then(job.run).then(job.resolve, job.reject)["finally"](function () {
+        _activeModelJobs -= 1;
+        drainModelJobs();
+      });
+    }
+  }
+  function scheduleModelJob(run) {
+    return new Promise(function (resolve, reject) {
+      _modelJobs.push({
+        run: run,
+        resolve: resolve,
+        reject: reject
+      });
+      drainModelJobs();
+    });
+  }
   var _ktx2 = null;
   function getKTX2Loader(THREE) {
     if (_ktx2 !== null) return _ktx2 || null;
@@ -718,7 +742,7 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       _ktx2 = false;
       return null;
     }
-    var k = new THREE.KTX2Loader().setTranscoderPath("https://unpkg.com/three@0.160.0/examples/jsm/libs/basis/");
+    var k = new THREE.KTX2Loader().setTranscoderPath("https://unpkg.com/three@0.160.0/examples/jsm/libs/basis/").setWorkerLimit(_constrainedDevice ? 1 : 2);
     var r = null;
     try {
       r = new THREE.WebGLRenderer({
@@ -749,19 +773,24 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     if (!LoaderCtor) {
       return Promise.reject(new Error("GLTFLoader not loaded — add it after three.min.js"));
     }
-    var p = new Promise(function (resolve, reject) {
-      var loader = new LoaderCtor();
-      var Meshopt = THREE.MeshoptDecoder || window.MeshoptDecoder;
-      if (Meshopt && loader.setMeshoptDecoder) loader.setMeshoptDecoder(Meshopt);
-      var ktx2 = getKTX2Loader(THREE);
-      if (ktx2 && loader.setKTX2Loader) loader.setKTX2Loader(ktx2);
-      loader.load(url, function (gltf) {
-        return resolve(gltf.scene);
-      }, undefined, function (err) {
-        return reject(err);
+    var p = scheduleModelJob(function () {
+      return new Promise(function (resolve, reject) {
+        var loader = new LoaderCtor();
+        var Meshopt = THREE.MeshoptDecoder || window.MeshoptDecoder;
+        if (Meshopt && loader.setMeshoptDecoder) loader.setMeshoptDecoder(Meshopt);
+        var ktx2 = getKTX2Loader(THREE);
+        if (ktx2 && loader.setKTX2Loader) loader.setKTX2Loader(ktx2);
+        loader.load(url, function (gltf) {
+          return resolve(gltf.scene);
+        }, undefined, function (err) {
+          return reject(err);
+        });
       });
     });
     _gltfCache.set(url, p);
+    p["catch"](function () {
+      if (_gltfCache.get(url) === p) _gltfCache["delete"](url);
+    });
     return p.then(function (root) {
       return root.clone(true);
     });
@@ -2176,25 +2205,55 @@ function drawGraphic(x, p) {
       }
   }
 }
-function makeAmbientTexture(label, THREE) {
+function makeAmbientAtlas(labels, THREE) {
+  var atlasW = 2048;
+  var atlasH = 512;
+  var sourceW = 128;
+  var cropY = 48;
+  var cropH = 32;
+  var cols = 15;
+  var strideX = 136;
+  var strideY = 42;
   var cc = document.createElement("canvas");
-  cc.width = 128;
-  cc.height = 128;
+  cc.width = atlasW;
+  cc.height = atlasH;
   var xc = cc.getContext("2d");
-  xc.clearRect(0, 0, 128, 128);
-  xc.strokeStyle = "#00f0c8";
-  xc.lineWidth = 2;
-  xc.beginPath();
-  xc.arc(64, 64, 4, 0, Math.PI * 2);
-  xc.stroke();
-  xc.fillStyle = "#5b6478";
-  xc.font = "500 16px 'Geist Mono', monospace";
-  xc.textAlign = "left";
-  xc.textBaseline = "middle";
-  xc.fillText(label, 76, 64);
-  var t = new THREE.CanvasTexture(cc);
-  t.colorSpace = THREE.SRGBColorSpace;
-  return t;
+  var cells = [];
+  labels.forEach(function (label, i) {
+    var col = i % cols;
+    var row = Math.floor(i / cols);
+    var x0 = col * strideX + 4;
+    var y0 = row * strideY + 5;
+    var sourceTop = y0 - cropY;
+    xc.save();
+    xc.beginPath();
+    xc.rect(x0, y0, sourceW, cropH);
+    xc.clip();
+    xc.strokeStyle = "#00f0c8";
+    xc.lineWidth = 2;
+    xc.beginPath();
+    xc.arc(x0 + 64, sourceTop + 64, 4, 0, Math.PI * 2);
+    xc.stroke();
+    xc.fillStyle = "#5b6478";
+    xc.font = "500 16px 'Geist Mono', monospace";
+    xc.textAlign = "left";
+    xc.textBaseline = "middle";
+    xc.fillText(label, x0 + 76, sourceTop + 64);
+    xc.restore();
+    cells.push({
+      u0: x0 / atlasW,
+      v0: 1 - (y0 + cropH) / atlasH,
+      u1: (x0 + sourceW) / atlasW,
+      v1: 1 - y0 / atlasH
+    });
+  });
+  var texture = new THREE.CanvasTexture(cc);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return {
+    texture: texture,
+    cells: cells,
+    cropRatio: cropH / 128
+  };
 }
 var ASCII_CHAR_W = 5.4;
 var ASCII_CHAR_H = 9.5;
@@ -2502,7 +2561,12 @@ function Universe(_ref) {
     var _pdR = new THREE.Vector3(),
       _pdU = new THREE.Vector3();
     var camRollFX = 0;
+    var _qCam = new THREE.Quaternion();
+    var _qYaw = new THREE.Quaternion();
+    var _qPitch = new THREE.Quaternion();
     var _qr = new THREE.Quaternion();
+    var _AXIS_X = new THREE.Vector3(1, 0, 0);
+    var _AXIS_Y = new THREE.Vector3(0, 1, 0);
     var _AXIS_Z = new THREE.Vector3(0, 0, 1);
     function updateCameraTransform() {
       if (exploreOn) {
@@ -2510,15 +2574,14 @@ function Universe(_ref) {
         camera.position.copy(exploreAnchor);
         return;
       }
-      var q = new THREE.Quaternion();
-      var qy = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), cam.yaw);
-      var qp = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), cam.pitch);
-      q.multiplyQuaternions(qy, qp);
+      _qYaw.setFromAxisAngle(_AXIS_Y, cam.yaw);
+      _qPitch.setFromAxisAngle(_AXIS_X, cam.pitch);
+      _qCam.multiplyQuaternions(_qYaw, _qPitch);
       if (Math.abs(camRollFX) > 0.0004) {
         _qr.setFromAxisAngle(_AXIS_Z, camRollFX);
-        q.multiply(_qr);
+        _qCam.multiply(_qr);
       }
-      camera.quaternion.copy(q);
+      camera.quaternion.copy(_qCam);
       camera.position.copy(cam.pos);
     }
     updateCameraTransform();
@@ -2530,7 +2593,7 @@ function Universe(_ref) {
       sPos[i * 3 + 1] = (Math.random() - 0.5) * BOX.y * 2;
       sPos[i * 3 + 2] = (Math.random() - 0.5) * BOX.z * 2;
     }
-    starGeo.setAttribute("position", new THREE.BufferAttribute(sPos, 3));
+    starGeo.setAttribute("position", new THREE.BufferAttribute(sPos, 3).setUsage(THREE.DynamicDrawUsage));
     var stars = new THREE.Points(starGeo, new THREE.PointsMaterial({
       color: 0x5b6478,
       size: 0.06,
@@ -2723,29 +2786,81 @@ function Universe(_ref) {
       return null;
     }
     var ambient = [];
-    var ambientGroup = new THREE.Group();
-    scene.add(ambientGroup);
     var AMB_N = 180;
-    for (var _i6 = 0; _i6 < AMB_N; _i6++) {
-      var id = "0x" + (0x10 + _i6).toString(16).toUpperCase().padStart(2, "0");
-      var tex = makeAmbientTexture(id, THREE);
-      var mat = new THREE.SpriteMaterial({
-        map: tex,
-        transparent: true,
-        opacity: 0.55,
-        depthWrite: false
+    var AMB_BATCH_N = 12;
+    var AMB_SCALE = 1.3;
+    var ambientLabels = Array.from({
+      length: AMB_N
+    }, function (_, i) {
+      return "0x" + (0x10 + i).toString(16).toUpperCase().padStart(2, "0");
+    });
+    var ambientAtlas = makeAmbientAtlas(ambientLabels, THREE);
+    var ambientMat = new THREE.MeshBasicMaterial({
+      map: ambientAtlas.texture,
+      transparent: true,
+      opacity: 1,
+      depthWrite: false,
+      fog: true
+    });
+    ambientMat.onBeforeCompile = function (shader) {
+      shader.vertexShader = "attribute float aAmbientOpacity; varying float vAmbientOpacity;\n" + shader.vertexShader.replace("#include <begin_vertex>", "#include <begin_vertex>\nvAmbientOpacity = aAmbientOpacity;");
+      shader.fragmentShader = "varying float vAmbientOpacity;\n" + shader.fragmentShader.replace("#include <map_fragment>", "#include <map_fragment>\ndiffuseColor.a *= vAmbientOpacity;");
+    };
+    ambientMat.customProgramCacheKey = function () {
+      return "mo-ambient-atlas-v1";
+    };
+    var ambientBatches = [];
+    for (var b = 0; b < AMB_BATCH_N; b++) {
+      var maxVerts = AMB_N * 4;
+      var positions = new Float32Array(maxVerts * 3);
+      var uvs = new Float32Array(maxVerts * 2);
+      var opacity = new Float32Array(maxVerts);
+      var indices = new Uint16Array(AMB_N * 6);
+      for (var _i6 = 0; _i6 < AMB_N; _i6++) {
+        var v = _i6 * 4;
+        var q = _i6 * 6;
+        indices[q] = v;
+        indices[q + 1] = v + 2;
+        indices[q + 2] = v + 1;
+        indices[q + 3] = v + 2;
+        indices[q + 4] = v + 3;
+        indices[q + 5] = v + 1;
+      }
+      var geo = new THREE.BufferGeometry();
+      geo.setIndex(new THREE.BufferAttribute(indices, 1));
+      geo.setAttribute("position", new THREE.BufferAttribute(positions, 3).setUsage(THREE.DynamicDrawUsage));
+      geo.setAttribute("uv", new THREE.BufferAttribute(uvs, 2).setUsage(THREE.DynamicDrawUsage));
+      geo.setAttribute("aAmbientOpacity", new THREE.BufferAttribute(opacity, 1).setUsage(THREE.DynamicDrawUsage));
+      geo.setDrawRange(0, 0);
+      var mesh = new THREE.Mesh(geo, ambientMat);
+      mesh.frustumCulled = false;
+      mesh.visible = false;
+      scene.add(mesh);
+      ambientBatches.push({
+        mesh: mesh,
+        geo: geo,
+        positions: positions,
+        uvs: uvs,
+        opacity: opacity,
+        nodes: [],
+        depthSum: 0
       });
-      var sp = new THREE.Sprite(mat);
-      sp.position.set((Math.random() - 0.5) * BOX.x, (Math.random() - 0.5) * BOX.y, (Math.random() - 0.5) * BOX.z);
-      sp.scale.set(1.3, 1.3, 1);
-      sp.userData = {
-        phase: Math.random() * Math.PI * 2,
-        kind: "ambient"
-      };
-      sp.frustumCulled = false;
-      ambientGroup.add(sp);
-      ambient.push(sp);
     }
+    for (var _i7 = 0; _i7 < AMB_N; _i7++) {
+      ambient.push({
+        position: new THREE.Vector3((Math.random() - 0.5) * BOX.x, (Math.random() - 0.5) * BOX.y, (Math.random() - 0.5) * BOX.z),
+        userData: {
+          phase: Math.random() * Math.PI * 2,
+          kind: "ambient",
+          atlas: ambientAtlas.cells[_i7],
+          opacity: 0.55,
+          depth: 0
+        }
+      });
+    }
+    var AMB_DEPTH_SPAN = Math.hypot(BOX.x, BOX.y, BOX.z) * 0.5 + AMB_SCALE;
+    var ambientRight = new THREE.Vector3();
+    var ambientUp = new THREE.Vector3();
     var ORIGIN_CENTER = new THREE.Vector3(0, 0, -9);
     var ORIGIN_RING_R = 6.2;
     function makeOriginTexture() {
@@ -2757,11 +2872,11 @@ function Universe(_ref) {
       var cx = 128,
         cy = 128;
       g.strokeStyle = "#00f0c8";
-      for (var _i7 = 0; _i7 < 3; _i7++) {
-        g.globalAlpha = 0.9 - _i7 * 0.28;
-        g.lineWidth = 2 - _i7 * 0.4;
+      for (var _i8 = 0; _i8 < 3; _i8++) {
+        g.globalAlpha = 0.9 - _i8 * 0.28;
+        g.lineWidth = 2 - _i8 * 0.4;
         g.beginPath();
-        g.arc(cx, cy, 30 + _i7 * 26, 0, Math.PI * 2);
+        g.arc(cx, cy, 30 + _i8 * 26, 0, Math.PI * 2);
         g.stroke();
       }
       g.globalAlpha = 1;
@@ -2841,34 +2956,34 @@ function Universe(_ref) {
           if (data[(y * cw + x) * 4] > 128) hits.push([x, y]);
         }
       }
-      for (var _i8 = hits.length - 1; _i8 > 0; _i8--) {
-        var k = Math.floor(Math.random() * (_i8 + 1));
-        var t = hits[_i8];
-        hits[_i8] = hits[k];
+      for (var _i9 = hits.length - 1; _i9 > 0; _i9--) {
+        var k = Math.floor(Math.random() * (_i9 + 1));
+        var t = hits[_i9];
+        hits[_i9] = hits[k];
         hits[k] = t;
       }
       var SCALE = 0.024;
       var out = new Float32Array(count * 3);
-      for (var _i9 = 0; _i9 < count; _i9++) {
-        var _h = hits.length ? hits[_i9 % hits.length] : [cw / 2, ch / 2];
+      for (var _i0 = 0; _i0 < count; _i0++) {
+        var _h = hits.length ? hits[_i0 % hits.length] : [cw / 2, ch / 2];
         var jx = (Math.random() - 0.5) * 1.6;
         var jy = (Math.random() - 0.5) * 1.6;
-        out[_i9 * 3 + 0] = ORIGIN_CENTER.x + (_h[0] + jx - cw / 2) * SCALE;
-        out[_i9 * 3 + 1] = ORIGIN_CENTER.y - (_h[1] + jy - ch / 2) * SCALE;
-        out[_i9 * 3 + 2] = ORIGIN_CENTER.z + Math.sin(_i9 * 12.9898) * 0.22;
+        out[_i0 * 3 + 0] = ORIGIN_CENTER.x + (_h[0] + jx - cw / 2) * SCALE;
+        out[_i0 * 3 + 1] = ORIGIN_CENTER.y - (_h[1] + jy - ch / 2) * SCALE;
+        out[_i0 * 3 + 2] = ORIGIN_CENTER.z + Math.sin(_i0 * 12.9898) * 0.22;
       }
       return out;
     }
     var ASM_N = 820;
     var asmTargets = sampleGlyphTargets("0x00", ASM_N);
     var asmLocal = new Float32Array(ASM_N * 3);
-    for (var _i0 = 0; _i0 < ASM_N; _i0++) {
-      asmLocal[_i0 * 3 + 0] = asmTargets[_i0 * 3 + 0] - ORIGIN_CENTER.x;
-      asmLocal[_i0 * 3 + 1] = asmTargets[_i0 * 3 + 1] - ORIGIN_CENTER.y;
-      asmLocal[_i0 * 3 + 2] = asmTargets[_i0 * 3 + 2] - ORIGIN_CENTER.z;
+    for (var _i1 = 0; _i1 < ASM_N; _i1++) {
+      asmLocal[_i1 * 3 + 0] = asmTargets[_i1 * 3 + 0] - ORIGIN_CENTER.x;
+      asmLocal[_i1 * 3 + 1] = asmTargets[_i1 * 3 + 1] - ORIGIN_CENTER.y;
+      asmLocal[_i1 * 3 + 2] = asmTargets[_i1 * 3 + 2] - ORIGIN_CENTER.z;
     }
     var glyphHalfW = 0;
-    for (var _i1 = 0; _i1 < ASM_N; _i1++) glyphHalfW = Math.max(glyphHalfW, Math.abs(asmLocal[_i1 * 3]));
+    for (var _i10 = 0; _i10 < ASM_N; _i10++) glyphHalfW = Math.max(glyphHalfW, Math.abs(asmLocal[_i10 * 3]));
     var glyphFit = 1;
     function fitGlyphToView() {
       var halfW = Math.tan(camera.fov * Math.PI / 360) * Math.abs(ORIGIN_CENTER.z) * camera.aspect;
@@ -2878,15 +2993,15 @@ function Universe(_ref) {
     var asmGeo = new THREE.BufferGeometry();
     var asmPos = new Float32Array(ASM_N * 3);
     var asmHome = new Float32Array(ASM_N * 3);
-    for (var _i10 = 0; _i10 < ASM_N; _i10++) {
+    for (var _i11 = 0; _i11 < ASM_N; _i11++) {
       var x = (Math.random() - 0.5) * BOX.x;
       var y = (Math.random() - 0.5) * BOX.y;
       var z = (Math.random() - 0.5) * BOX.z;
-      asmHome[_i10 * 3 + 0] = asmPos[_i10 * 3 + 0] = x;
-      asmHome[_i10 * 3 + 1] = asmPos[_i10 * 3 + 1] = y;
-      asmHome[_i10 * 3 + 2] = asmPos[_i10 * 3 + 2] = z;
+      asmHome[_i11 * 3 + 0] = asmPos[_i11 * 3 + 0] = x;
+      asmHome[_i11 * 3 + 1] = asmPos[_i11 * 3 + 1] = y;
+      asmHome[_i11 * 3 + 2] = asmPos[_i11 * 3 + 2] = z;
     }
-    asmGeo.setAttribute("position", new THREE.BufferAttribute(asmPos, 3));
+    asmGeo.setAttribute("position", new THREE.BufferAttribute(asmPos, 3).setUsage(THREE.DynamicDrawUsage));
     var assemblyPts = new THREE.Points(asmGeo, new THREE.PointsMaterial({
       color: 0x00f0c8,
       size: 0.1,
@@ -2928,26 +3043,29 @@ function Universe(_ref) {
       vertexShader: "attribute float aT; attribute float aA; varying float vT; varying float vA;\n" + "void main(){ vT = aT; vA = aA; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }",
       fragmentShader: "uniform float uTime; uniform float uFlow; uniform float uInt; uniform vec3 uColor; uniform float uVis;\n" + "varying float vT; varying float vA;\n" + "void main(){\n" + "  float base = 0.10;\n" + "  float pulse = pow(max(0.0, sin((vT*6.2831 - uTime*uFlow*2.0))), 8.0);\n" + "  float a = (base + pulse) * uInt * vA * uVis;\n" + "  gl_FragColor = vec4(uColor, a);\n" + "}"
     });
-    var constGroup = new THREE.Group();
-    constGroup.renderOrder = -2;
-    scene.add(constGroup);
-    var constLines = [];
-    for (var _i11 = 0; _i11 < TOPO_MAX_E; _i11++) {
-      var g = new THREE.BufferGeometry();
-      var pos = new Float32Array(TOPO_SEG * 3);
-      var tt = new Float32Array(TOPO_SEG);
-      var aa = new Float32Array(TOPO_SEG);
-      for (var s = 0; s < TOPO_SEG; s++) tt[s] = s / (TOPO_SEG - 1);
-      g.setAttribute("position", new THREE.BufferAttribute(pos, 3));
-      g.setAttribute("aT", new THREE.BufferAttribute(tt, 1));
-      g.setAttribute("aA", new THREE.BufferAttribute(aa, 1));
-      var line = new THREE.Line(g, constMat);
-      line.frustumCulled = false;
-      line.renderOrder = -2;
-      line.visible = false;
-      constGroup.add(line);
-      constLines.push(line);
+    var topoPos = new Float32Array(TOPO_MAX_E * TOPO_SEG * 3);
+    var topoT = new Float32Array(TOPO_MAX_E * TOPO_SEG);
+    var topoA = new Float32Array(TOPO_MAX_E * TOPO_SEG);
+    var topoIndex = new Uint16Array(TOPO_MAX_E * (TOPO_SEG - 1) * 2);
+    var topoIndexI = 0;
+    for (var e = 0; e < TOPO_MAX_E; e++) {
+      var base = e * TOPO_SEG;
+      for (var s = 0; s < TOPO_SEG; s++) topoT[base + s] = s / (TOPO_SEG - 1);
+      for (var _s = 0; _s < TOPO_SEG - 1; _s++) {
+        topoIndex[topoIndexI++] = base + _s;
+        topoIndex[topoIndexI++] = base + _s + 1;
+      }
     }
+    var constGeo = new THREE.BufferGeometry();
+    constGeo.setIndex(new THREE.BufferAttribute(topoIndex, 1));
+    constGeo.setAttribute("position", new THREE.BufferAttribute(topoPos, 3).setUsage(THREE.DynamicDrawUsage));
+    constGeo.setAttribute("aT", new THREE.BufferAttribute(topoT, 1));
+    constGeo.setAttribute("aA", new THREE.BufferAttribute(topoA, 1).setUsage(THREE.DynamicDrawUsage));
+    var constGroup = new THREE.LineSegments(constGeo, constMat);
+    constGroup.frustumCulled = false;
+    constGroup.renderOrder = -2;
+    constGroup.visible = false;
+    scene.add(constGroup);
     var _topoEdges = [];
     var _topoFrame = 0;
     function updateTopology(dt, mode, focusAddrNow, formP, arrFade) {
@@ -3024,11 +3142,11 @@ function Universe(_ref) {
         }
       }
       var breathe = 1 + _lvlS * 1.2;
-      for (var e = 0; e < TOPO_MAX_E; e++) {
-        var _line = constLines[e];
-        var E = _topoEdges[e];
+      for (var _e = 0; _e < TOPO_MAX_E; _e++) {
+        var E = _topoEdges[_e];
+        var _base = _e * TOPO_SEG;
         if (!E) {
-          _line.visible = false;
+          topoA.fill(0, _base, _base + TOPO_SEG);
           continue;
         }
         var A = E.A.position,
@@ -3036,126 +3154,27 @@ function Universe(_ref) {
         var depthA = (A.x - camera.position.x) * FORWARD.x + (A.y - camera.position.y) * FORWARD.y + (A.z - camera.position.z) * FORWARD.z;
         var depthB = (B.x - camera.position.x) * FORWARD.x + (B.y - camera.position.y) * FORWARD.y + (B.z - camera.position.z) * FORWARD.z;
         if (depthA <= TOPO_CAMERA_GUARD || depthB <= TOPO_CAMERA_GUARD) {
-          _line.visible = false;
+          topoA.fill(0, _base, _base + TOPO_SEG);
           continue;
         }
-        _line.visible = true;
-        var posArr = _line.geometry.attributes.position.array;
-        var aArr = _line.geometry.attributes.aA.array;
-        for (var _s = 0; _s < TOPO_SEG; _s++) {
-          var t = _s / (TOPO_SEG - 1);
-          posArr[_s * 3] = A.x + (B.x - A.x) * t;
-          posArr[_s * 3 + 1] = A.y + (B.y - A.y) * t;
-          posArr[_s * 3 + 2] = A.z + (B.z - A.z) * t;
+        for (var _s2 = 0; _s2 < TOPO_SEG; _s2++) {
+          var t = _s2 / (TOPO_SEG - 1);
+          var p = (_base + _s2) * 3;
+          topoPos[p] = A.x + (B.x - A.x) * t;
+          topoPos[p + 1] = A.y + (B.y - A.y) * t;
+          topoPos[p + 2] = A.z + (B.z - A.z) * t;
         }
         var closeness = Math.pow(Math.max(0, 1 - E.len / TOPO_CUT), 1.4);
         var alpha = closeness * breathe;
         var touches = hovAddr && (E.A.userData.project.addr === hovAddr || E.B.userData.project.addr === hovAddr);
         if (touches) alpha = alpha * 2.4 + 0.5;
         alpha *= Math.min(1, Math.min(E.A.material.opacity, E.B.material.opacity) * 1.4);
-        for (var _s2 = 0; _s2 < TOPO_SEG; _s2++) aArr[_s2] = alpha;
-        _line.geometry.attributes.position.needsUpdate = true;
-        _line.geometry.attributes.aA.needsUpdate = true;
+        topoA.fill(alpha, _base, _base + TOPO_SEG);
       }
+      constGeo.attributes.position.needsUpdate = true;
+      constGeo.attributes.aA.needsUpdate = true;
     }
-    function sampleGlyphLocal(text, count) {
-      var cw = 720,
-        ch = 260;
-      var gc = document.createElement("canvas");
-      gc.width = cw;
-      gc.height = ch;
-      var gx = gc.getContext("2d");
-      gx.fillStyle = "#000";
-      gx.fillRect(0, 0, cw, ch);
-      gx.fillStyle = "#fff";
-      gx.textAlign = "center";
-      gx.textBaseline = "middle";
-      gx.font = "700 210px 'Geist Mono', monospace";
-      gx.fillText(text, cw / 2, ch / 2 + 6);
-      var data = gx.getImageData(0, 0, cw, ch).data;
-      var hits = [];
-      for (var _y = 0; _y < ch; _y += 3) for (var _x = 0; _x < cw; _x += 3) {
-        if (data[(_y * cw + _x) * 4] > 128) hits.push([_x, _y]);
-      }
-      for (var _i14 = hits.length - 1; _i14 > 0; _i14--) {
-        var k = Math.random() * (_i14 + 1) | 0;
-        var t = hits[_i14];
-        hits[_i14] = hits[k];
-        hits[k] = t;
-      }
-      var SC = 0.013;
-      var out = new Float32Array(count * 2);
-      for (var _i15 = 0; _i15 < count; _i15++) {
-        var hpt = hits.length ? hits[_i15 % hits.length] : [cw / 2, ch / 2];
-        out[_i15 * 2] = (hpt[0] + (Math.random() - 0.5) * 2 - cw / 2) * SC;
-        out[_i15 * 2 + 1] = -(hpt[1] + (Math.random() - 0.5) * 2 - ch / 2) * SC;
-      }
-      return out;
-    }
-    var ANAM_N = 440;
-    var ANAM_YAW = 2.35,
-      ANAM_PITCH = 0.14,
-      ANAM_D = 13;
-    var anamDirV = function () {
-      var q = new THREE.Quaternion().multiplyQuaternions(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), ANAM_YAW), new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), ANAM_PITCH));
-      return new THREE.Vector3(0, 0, -1).applyQuaternion(q).normalize();
-    }();
-    var anamGeo = new THREE.BufferGeometry();
-    var anamPos = new Float32Array(ANAM_N * 3);
-    {
-      var g2 = sampleGlyphLocal("0x00", ANAM_N);
-      var up = new THREE.Vector3(0, 1, 0);
-      var right = new THREE.Vector3().crossVectors(anamDirV, up).normalize();
-      var up2 = new THREE.Vector3().crossVectors(right, anamDirV).normalize();
-      var ray = new THREE.Vector3();
-      for (var _i16 = 0; _i16 < ANAM_N; _i16++) {
-        ray.copy(anamDirV).multiplyScalar(ANAM_D).addScaledVector(right, g2[_i16 * 2]).addScaledVector(up2, g2[_i16 * 2 + 1]).normalize();
-        var depth = 6.5 + Math.random() * 15;
-        anamPos[_i16 * 3] = ray.x * depth;
-        anamPos[_i16 * 3 + 1] = ray.y * depth;
-        anamPos[_i16 * 3 + 2] = ray.z * depth;
-      }
-    }
-    anamGeo.setAttribute("position", new THREE.BufferAttribute(anamPos, 3));
-    var anamPts = new THREE.Points(anamGeo, new THREE.PointsMaterial({
-      color: 0x00f0c8,
-      size: 0.085,
-      sizeAttenuation: true,
-      transparent: true,
-      opacity: 0.05,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending
-    }));
-    anamPts.frustumCulled = false;
-    var anamGroup = new THREE.Group();
-    anamGroup.add(anamPts);
-    anamGroup.visible = false;
-    scene.add(anamGroup);
-    var _anamA = 0,
-      _anamHold = 0,
-      _anamLockT = -30000,
-      _anamTrace = 0;
-    function updateAnamorph(now, dt, mode) {
-      anamGroup.position.copy(cam.pos);
-      var align = _camDir.dot(anamDirV);
-      _anamTrace = Math.max(0, Math.min(1, (align - 0.1) / 0.88));
-      var aT = (mode === "drift" ? 1 : 0) * THREE.MathUtils.smoothstep(align, 0.86, 0.995);
-      _anamA += (aT - _anamA) * (1 - Math.pow(0.88, dt / 16));
-      anamPts.material.opacity = (mode === "drift" ? 0.05 : 0.0) + _anamA * 0.85;
-      anamPts.material.size = 0.085 + _anamA * 0.055;
-      window.__mo_anam = {
-        align: _anamTrace,
-        locked: _anamA > 0.9
-      };
-      if (_anamA > 0.88) _anamHold += dt;else _anamHold = 0;
-      if (_anamHold > 480 && now - _anamLockT > 20000) {
-        _anamLockT = now;
-        if (window.__mo_disturb) window.__mo_disturb(window.innerWidth / 2, window.innerHeight / 2, 1.3);
-        try {
-          window.dispatchEvent(new CustomEvent("mo:anamLock"));
-        } catch (_) {}
-      }
-    }
+    var _anamTrace = 0;
     function wrapAroundCamera(obj, box) {
       var dx = obj.position.x - cam.pos.x;
       var dy = obj.position.y - cam.pos.y;
@@ -3588,14 +3607,14 @@ function Universe(_ref) {
     function tileScreenCorners(mesh) {
       var rect = mount.getBoundingClientRect();
       camera.getWorldDirection(camDirTmp);
-      for (var _i17 = 0; _i17 < 4; _i17++) {
-        v3.copy(_tscCorners[_i17]);
+      for (var _i14 = 0; _i14 < 4; _i14++) {
+        v3.copy(_tscCorners[_i14]);
         mesh.localToWorld(v3);
         _tsbCamRel.copy(v3).sub(camera.position);
         if (_tsbCamRel.dot(camDirTmp) <= 0) return null;
         v3.project(camera);
-        _tscOut[_i17].x = (v3.x * 0.5 + 0.5) * rect.width;
-        _tscOut[_i17].y = (-v3.y * 0.5 + 0.5) * rect.height;
+        _tscOut[_i14].x = (v3.x * 0.5 + 0.5) * rect.width;
+        _tscOut[_i14].y = (-v3.y * 0.5 + 0.5) * rect.height;
       }
       return _tscOut;
     }
@@ -3698,10 +3717,10 @@ function Universe(_ref) {
     var REBASE_DIST2 = 600 * 600;
     function shiftBufferAttr(attr, sx, sy, sz) {
       var a = attr.array;
-      for (var _i18 = 0; _i18 < a.length; _i18 += 3) {
-        a[_i18] -= sx;
-        a[_i18 + 1] -= sy;
-        a[_i18 + 2] -= sz;
+      for (var _i15 = 0; _i15 < a.length; _i15 += 3) {
+        a[_i15] -= sx;
+        a[_i15 + 1] -= sy;
+        a[_i15 + 2] -= sz;
       }
       attr.needsUpdate = true;
     }
@@ -3735,10 +3754,10 @@ function Universe(_ref) {
         _step7;
       try {
         for (_iterator7.s(); !(_step7 = _iterator7.n()).done;) {
-          var _sp = _step7.value;
-          _sp.position.x -= sx;
-          _sp.position.y -= sy;
-          _sp.position.z -= sz;
+          var sp = _step7.value;
+          sp.position.x -= sx;
+          sp.position.y -= sy;
+          sp.position.z -= sz;
         }
       } catch (err) {
         _iterator7.e(err);
@@ -3747,42 +3766,42 @@ function Universe(_ref) {
       }
       shiftBufferAttr(stars.geometry.attributes.position, sx, sy, sz);
       var aArr = assemblyPts.geometry.attributes.position.array;
-      for (var _i19 = 0; _i19 < aArr.length; _i19 += 3) {
-        aArr[_i19] -= sx;
-        aArr[_i19 + 1] -= sy;
-        aArr[_i19 + 2] -= sz;
-        asmHome[_i19] -= sx;
-        asmHome[_i19 + 1] -= sy;
-        asmHome[_i19 + 2] -= sz;
+      for (var _i16 = 0; _i16 < aArr.length; _i16 += 3) {
+        aArr[_i16] -= sx;
+        aArr[_i16 + 1] -= sy;
+        aArr[_i16 + 2] -= sz;
+        asmHome[_i16] -= sx;
+        asmHome[_i16 + 1] -= sy;
+        asmHome[_i16 + 2] -= sz;
       }
       _fieldCam.set(0, 0, 0);
       assemblyPts.geometry.attributes.position.needsUpdate = true;
     }
     function wrapAssemblyField(arr, home, box) {
-      for (var _i20 = 0; _i20 < home.length; _i20 += 3) {
-        var dx = home[_i20] - cam.pos.x;
-        var dy = home[_i20 + 1] - cam.pos.y;
-        var dz = home[_i20 + 2] - cam.pos.z;
+      for (var _i17 = 0; _i17 < home.length; _i17 += 3) {
+        var dx = home[_i17] - cam.pos.x;
+        var dy = home[_i17 + 1] - cam.pos.y;
+        var dz = home[_i17 + 2] - cam.pos.z;
         if (dx > box.x / 2) {
-          home[_i20] -= box.x;
-          arr[_i20] -= box.x;
+          home[_i17] -= box.x;
+          arr[_i17] -= box.x;
         } else if (dx < -box.x / 2) {
-          home[_i20] += box.x;
-          arr[_i20] += box.x;
+          home[_i17] += box.x;
+          arr[_i17] += box.x;
         }
         if (dy > box.y / 2) {
-          home[_i20 + 1] -= box.y;
-          arr[_i20 + 1] -= box.y;
+          home[_i17 + 1] -= box.y;
+          arr[_i17 + 1] -= box.y;
         } else if (dy < -box.y / 2) {
-          home[_i20 + 1] += box.y;
-          arr[_i20 + 1] += box.y;
+          home[_i17 + 1] += box.y;
+          arr[_i17 + 1] += box.y;
         }
         if (dz > box.z / 2) {
-          home[_i20 + 2] -= box.z;
-          arr[_i20 + 2] -= box.z;
+          home[_i17 + 2] -= box.z;
+          arr[_i17 + 2] -= box.z;
         } else if (dz < -box.z / 2) {
-          home[_i20 + 2] += box.z;
-          arr[_i20 + 2] += box.z;
+          home[_i17 + 2] += box.z;
+          arr[_i17 + 2] += box.z;
         }
       }
     }
@@ -3897,8 +3916,8 @@ function Universe(_ref) {
         var flowTarget = 0,
           rollTarget = 0;
         if (!exploreOn && _flTransit && !FLOW_RM) {
-          var _tt = Math.max(0, Math.min(1, _fl.t || 0));
-          var bell = Math.sin(Math.PI * _tt);
+          var tt = Math.max(0, Math.min(1, _fl.t || 0));
+          var bell = Math.sin(Math.PI * tt);
           flowTarget = (3.4 + Math.min(24, _fl.speed || 0) * 0.6) * bell * styleMul * warpMul;
           var legRoll = _fl.seg === "toWork" ? 1 : _fl.seg === "toAbout" ? -0.7 : -0.45;
           var legRollMul = window.__mo_fx && window.__mo_fx.legRoll != null ? window.__mo_fx.legRoll : 1;
@@ -3917,9 +3936,9 @@ function Universe(_ref) {
             _step0;
           try {
             for (_iterator0.s(); !(_step0 = _iterator0.n()).done;) {
-              var _sp2 = _step0.value;
-              _sp2.position.x -= _flowDX;
-              _sp2.position.z -= _flowDZ;
+              var sp = _step0.value;
+              sp.position.x -= _flowDX;
+              sp.position.z -= _flowDZ;
             }
           } catch (err) {
             _iterator0.e(err);
@@ -4029,8 +4048,8 @@ function Universe(_ref) {
         _step11;
       try {
         for (_iterator11.s(); !(_step11 = _iterator11.n()).done;) {
-          var _sp4 = _step11.value;
-          wrapAroundCamera(_sp4, BOX);
+          var _sp2 = _step11.value;
+          wrapAroundCamera(_sp2, BOX);
         }
       } catch (err) {
         _iterator11.e(err);
@@ -4049,8 +4068,8 @@ function Universe(_ref) {
           var isModel = !!wire.userData.isModel;
           var forwardDist = isModel ? 1.4 : 0.6;
           _off.copy(_camDir).multiplyScalar(-forwardDist);
-          var modelOffset = isModel ? parent.userData.project.modelOffset || {} : {};
-          _localOff.set(modelOffset.x || 0, isModel ? modelOffset.y || 0 : parent.scale.y * 1.05, modelOffset.z || 0).applyQuaternion(parent.quaternion);
+          var modelOffset = isModel ? parent.userData.project.modelOffset : null;
+          _localOff.set(modelOffset ? modelOffset.x || 0 : 0, isModel ? modelOffset ? modelOffset.y || 0 : 0 : parent.scale.y * 1.05, modelOffset ? modelOffset.z || 0 : 0).applyQuaternion(parent.quaternion);
           wire.position.set(parent.position.x + _off.x + _localOff.x, parent.position.y + _off.y + _localOff.y, parent.position.z + _off.z + _localOff.z);
           if (!FLOW_RM && isModel) {
             wire.rotation.y += dt * 0.00015;
@@ -4070,17 +4089,17 @@ function Universe(_ref) {
               wire.visible = modelOp > 0.02;
               if (modelOp !== wire.userData.lastModelOpacity) {
                 var fadeMaterials = wire.userData.fadeMaterials || [];
-                var _iterator16 = _createForOfIteratorHelper(fadeMaterials),
-                  _step16;
+                var _iterator18 = _createForOfIteratorHelper(fadeMaterials),
+                  _step18;
                 try {
-                  for (_iterator16.s(); !(_step16 = _iterator16.n()).done;) {
-                    var material = _step16.value;
+                  for (_iterator18.s(); !(_step18 = _iterator18.n()).done;) {
+                    var material = _step18.value;
                     material.opacity = modelOp;
                   }
                 } catch (err) {
-                  _iterator16.e(err);
+                  _iterator18.e(err);
                 } finally {
-                  _iterator16.f();
+                  _iterator18.f();
                 }
                 wire.userData.lastModelOpacity = modelOp;
               }
@@ -4143,14 +4162,14 @@ function Universe(_ref) {
             nearIn = THREE.MathUtils.smoothstep(dist, 2.5, 6.0);
             farOut = THREE.MathUtils.smoothstep(dist, 34, 48);
           }
-          var opacity = nearIn * (1 - farOut);
-          var modelOpacityBase = opacity;
-          if (mode === "ambient") opacity *= 0.38;
-          if (mode === "grid") opacity *= 0.92;
-          if (mode === "reel") opacity *= 0.96;
+          var _opacity = nearIn * (1 - farOut);
+          var modelOpacityBase = _opacity;
+          if (mode === "ambient") _opacity *= 0.38;
+          if (mode === "grid") _opacity *= 0.92;
+          if (mode === "reel") _opacity *= 0.96;
           var _isFocused = focusAddrNow && _m3.userData.project.addr === focusAddrNow;
           if (_isFocused) {
-            opacity = Math.min(1, opacity * 1.6 + 0.25);
+            _opacity = Math.min(1, _opacity * 1.6 + 0.25);
             modelOpacityBase = Math.min(1, modelOpacityBase * 1.6 + 0.25);
             _m3.scale.lerp(_vScale.set(1.18, 1.18, 1), frameLerp(0.14, dt));
           } else {
@@ -4158,7 +4177,7 @@ function Universe(_ref) {
           }
           var uD = _m3.userData;
           var opK = frameLerp(0.10, dt);
-          uD.opSm = uD.opSm == null ? opacity : uD.opSm + (opacity - uD.opSm) * opK;
+          uD.opSm = uD.opSm == null ? _opacity : uD.opSm + (_opacity - uD.opSm) * opK;
           uD.mobSm = uD.mobSm == null ? modelOpacityBase : uD.mobSm + (modelOpacityBase - uD.mobSm) * opK;
           _m3.material.opacity = uD.opSm * arrFade;
           uD.modelOpacityBase = uD.mobSm * arrFade;
@@ -4168,27 +4187,129 @@ function Universe(_ref) {
       } finally {
         _iterator13.f();
       }
-      var _iterator14 = _createForOfIteratorHelper(ambient),
+      var _iterator14 = _createForOfIteratorHelper(ambientBatches),
         _step14;
       try {
         for (_iterator14.s(); !(_step14 = _iterator14.n()).done;) {
-          var _sp5 = _step14.value;
-          var phase = _sp5.userData.phase + now * 0.0008;
-          var _dist = _sp5.position.distanceTo(camera.position);
-          var _nearIn = THREE.MathUtils.smoothstep(_dist, 1.5, 5.0);
-          var _ex = Math.abs(_sp5.position.x - camera.position.x) / (BOX.x / 2);
-          var _ey = Math.abs(_sp5.position.y - camera.position.y) / (BOX.y / 2);
-          var _ez = Math.abs(_sp5.position.z - camera.position.z) / (BOX.z / 2);
-          var _farOut = THREE.MathUtils.smoothstep(Math.max(_ex, _ey, _ez), 0.95, 1.0);
-          var _pulse = 0.65 + Math.sin(phase) * 0.20;
-          var aOp = _pulse * _nearIn * (1 - _farOut);
-          if (mode !== "drift") aOp *= 0.35;
-          _sp5.material.opacity = aOp * arrFade;
+          var batch = _step14.value;
+          batch.nodes.length = 0;
+          batch.depthSum = 0;
         }
       } catch (err) {
         _iterator14.e(err);
       } finally {
         _iterator14.f();
+      }
+      ambientRight.set(1, 0, 0).applyQuaternion(camera.quaternion);
+      ambientUp.set(0, 1, 0).applyQuaternion(camera.quaternion);
+      var _iterator15 = _createForOfIteratorHelper(ambient),
+        _step15;
+      try {
+        for (_iterator15.s(); !(_step15 = _iterator15.n()).done;) {
+          var _sp3 = _step15.value;
+          var phase = _sp3.userData.phase + now * 0.0008;
+          var _dist = _sp3.position.distanceTo(camera.position);
+          var _nearIn = THREE.MathUtils.smoothstep(_dist, 1.5, 5.0);
+          var _ex = Math.abs(_sp3.position.x - camera.position.x) / (BOX.x / 2);
+          var _ey = Math.abs(_sp3.position.y - camera.position.y) / (BOX.y / 2);
+          var _ez = Math.abs(_sp3.position.z - camera.position.z) / (BOX.z / 2);
+          var _farOut = THREE.MathUtils.smoothstep(Math.max(_ex, _ey, _ez), 0.95, 1.0);
+          var _pulse = 0.65 + Math.sin(phase) * 0.20;
+          var aOp = _pulse * _nearIn * (1 - _farOut);
+          if (mode !== "drift") aOp *= 0.35;
+          aOp *= arrFade;
+          _sp3.userData.opacity = aOp;
+          var depth = (_sp3.position.x - camera.position.x) * FORWARD.x + (_sp3.position.y - camera.position.y) * FORWARD.y + (_sp3.position.z - camera.position.z) * FORWARD.z;
+          _sp3.userData.depth = depth;
+          if (aOp <= 0.001 || depth <= camera.near) continue;
+          var depthT = Math.max(0, Math.min(0.999999, (depth - camera.near) / AMB_DEPTH_SPAN));
+          var _batch = ambientBatches[Math.floor(depthT * AMB_BATCH_N)];
+          _batch.nodes.push(_sp3);
+          _batch.depthSum += depth;
+        }
+      } catch (err) {
+        _iterator15.e(err);
+      } finally {
+        _iterator15.f();
+      }
+      var halfW = AMB_SCALE * 0.5;
+      var halfH = AMB_SCALE * ambientAtlas.cropRatio * 0.5;
+      var rx = ambientRight.x * halfW,
+        ry = ambientRight.y * halfW,
+        rz = ambientRight.z * halfW;
+      var ux = ambientUp.x * halfH,
+        uy = ambientUp.y * halfH,
+        uz = ambientUp.z * halfH;
+      var _iterator16 = _createForOfIteratorHelper(ambientBatches),
+        _step16;
+      try {
+        for (_iterator16.s(); !(_step16 = _iterator16.n()).done;) {
+          var _batch2 = _step16.value;
+          var count = _batch2.nodes.length;
+          _batch2.mesh.visible = count > 0;
+          _batch2.geo.setDrawRange(0, count * 6);
+          if (!count) continue;
+          _batch2.nodes.sort(function (a, b) {
+            return b.userData.depth - a.userData.depth;
+          });
+          var meanDepth = _batch2.depthSum / count;
+          _batch2.mesh.position.copy(camera.position).addScaledVector(FORWARD, meanDepth);
+          var ox = _batch2.mesh.position.x,
+            oy = _batch2.mesh.position.y,
+            oz = _batch2.mesh.position.z;
+          for (var _i23 = 0; _i23 < count; _i23++) {
+            var _sp4 = _batch2.nodes[_i23];
+            var c = _sp4.userData.atlas;
+            var _x = _sp4.position.x - ox,
+              _y = _sp4.position.y - oy,
+              _z = _sp4.position.z - oz;
+            var p = _i23 * 12;
+            _batch2.positions[p] = _x - rx + ux;
+            _batch2.positions[p + 1] = _y - ry + uy;
+            _batch2.positions[p + 2] = _z - rz + uz;
+            _batch2.positions[p + 3] = _x + rx + ux;
+            _batch2.positions[p + 4] = _y + ry + uy;
+            _batch2.positions[p + 5] = _z + rz + uz;
+            _batch2.positions[p + 6] = _x - rx - ux;
+            _batch2.positions[p + 7] = _y - ry - uy;
+            _batch2.positions[p + 8] = _z - rz - uz;
+            _batch2.positions[p + 9] = _x + rx - ux;
+            _batch2.positions[p + 10] = _y + ry - uy;
+            _batch2.positions[p + 11] = _z + rz - uz;
+            var u = _i23 * 8;
+            _batch2.uvs[u] = c.u0;
+            _batch2.uvs[u + 1] = c.v1;
+            _batch2.uvs[u + 2] = c.u1;
+            _batch2.uvs[u + 3] = c.v1;
+            _batch2.uvs[u + 4] = c.u0;
+            _batch2.uvs[u + 5] = c.v0;
+            _batch2.uvs[u + 6] = c.u1;
+            _batch2.uvs[u + 7] = c.v0;
+            var a = _i23 * 4;
+            _batch2.opacity[a] = _sp4.userData.opacity;
+            _batch2.opacity[a + 1] = _sp4.userData.opacity;
+            _batch2.opacity[a + 2] = _sp4.userData.opacity;
+            _batch2.opacity[a + 3] = _sp4.userData.opacity;
+          }
+          var positionAttr = _batch2.geo.attributes.position;
+          var uvAttr = _batch2.geo.attributes.uv;
+          var opacityAttr = _batch2.geo.attributes.aAmbientOpacity;
+          if (positionAttr.clearUpdateRanges) {
+            positionAttr.clearUpdateRanges();
+            uvAttr.clearUpdateRanges();
+            opacityAttr.clearUpdateRanges();
+            positionAttr.addUpdateRange(0, count * 4 * 3);
+            uvAttr.addUpdateRange(0, count * 4 * 2);
+            opacityAttr.addUpdateRange(0, count * 4);
+          }
+          positionAttr.needsUpdate = true;
+          uvAttr.needsUpdate = true;
+          opacityAttr.needsUpdate = true;
+        }
+      } catch (err) {
+        _iterator16.e(err);
+      } finally {
+        _iterator16.f();
       }
       if (hoverObjRef.current && overlayRef.current) {
         var corners = tileScreenCorners(hoverObjRef.current);
@@ -4215,11 +4336,11 @@ function Universe(_ref) {
           originHub.material.opacity = 0.25 + eP * 0.75;
           var pulse = 1 + Math.sin(now * 0.0025) * 0.04;
           originHub.scale.set(4.2 * pulse, 4.2 * pulse, 1);
-          var _iterator15 = _createForOfIteratorHelper(originLinks),
-            _step15;
+          var _iterator17 = _createForOfIteratorHelper(originLinks),
+            _step17;
           try {
-            for (_iterator15.s(); !(_step15 = _iterator15.n()).done;) {
-              var link = _step15.value;
+            for (_iterator17.s(); !(_step17 = _iterator17.n()).done;) {
+              var link = _step17.value;
               var tile = link.userData.tile;
               var la = link.geometry.attributes.position.array;
               la[0] = ORIGIN_CENTER.x;
@@ -4232,9 +4353,9 @@ function Universe(_ref) {
               link.material.opacity = eP * 0.45;
             }
           } catch (err) {
-            _iterator15.e(err);
+            _iterator17.e(err);
           } finally {
-            _iterator15.f();
+            _iterator17.f();
           }
         }
         var inDive = mode === "dive";
@@ -4265,13 +4386,13 @@ function Universe(_ref) {
         var _fdz = cam.pos.z - _fieldCam.z;
         _fieldCam.copy(cam.pos);
         if ((formP >= 0.0015 || isArranged) && (_fdx || _fdy || _fdz)) {
-          for (var _i21 = 0; _i21 < ASM_N * 3; _i21 += 3) {
-            asmHome[_i21] += _fdx;
-            arr[_i21] += _fdx;
-            asmHome[_i21 + 1] += _fdy;
-            arr[_i21 + 1] += _fdy;
-            asmHome[_i21 + 2] += _fdz;
-            arr[_i21 + 2] += _fdz;
+          for (var _i18 = 0; _i18 < ASM_N * 3; _i18 += 3) {
+            asmHome[_i18] += _fdx;
+            arr[_i18] += _fdx;
+            asmHome[_i18 + 1] += _fdy;
+            arr[_i18 + 1] += _fdy;
+            asmHome[_i18 + 2] += _fdz;
+            arr[_i18 + 2] += _fdz;
           }
         }
         if (_flowDX || _flowDZ) {
@@ -4279,11 +4400,11 @@ function Universe(_ref) {
           if (fw > 0.01) {
             var fx = _flowDX * fw,
               fz = _flowDZ * fw;
-            for (var _i22 = 0; _i22 < ASM_N * 3; _i22 += 3) {
-              asmHome[_i22] -= fx;
-              arr[_i22] -= fx;
-              asmHome[_i22 + 2] -= fz;
-              arr[_i22 + 2] -= fz;
+            for (var _i19 = 0; _i19 < ASM_N * 3; _i19 += 3) {
+              asmHome[_i19] -= fx;
+              arr[_i19] -= fx;
+              asmHome[_i19 + 2] -= fz;
+              arr[_i19 + 2] -= fz;
             }
           }
         }
@@ -4297,8 +4418,8 @@ function Universe(_ref) {
             var ky = cam.pos.y + FORWARD.y * 9;
             var kz = cam.pos.z + FORWARD.z * 9;
             var wobT = now * 0.0022;
-            for (var _i23 = 0; _i23 < ASM_N; _i23++) {
-              var j = _i23 * 3;
+            for (var _i20 = 0; _i20 < ASM_N; _i20++) {
+              var j = _i20 * 3;
               var lx = asmLocal[j] * glyphFit;
               var ly = asmLocal[j + 1] * glyphFit;
               var lz = asmLocal[j + 2] * glyphFit + 0.10 * Math.sin(wobT - lx * 1.5);
@@ -4314,7 +4435,7 @@ function Universe(_ref) {
             }
           } else {
             var kField = frameLerp(0.12, dt);
-            for (var _i24 = 0; _i24 < ASM_N * 3; _i24++) arr[_i24] += (asmHome[_i24] - arr[_i24]) * kField;
+            for (var _i21 = 0; _i21 < ASM_N * 3; _i21++) arr[_i21] += (asmHome[_i21] - arr[_i21]) * kField;
           }
         } else {
           _glyphC.copy(cam.pos).add(ORIGIN_CENTER);
@@ -4326,22 +4447,22 @@ function Universe(_ref) {
           var ca = Math.cos(ang),
             sa = Math.sin(ang);
           var cp = Math.cos(restPitch),
-            _sp3 = Math.sin(restPitch);
+            _sp = Math.sin(restPitch);
           var rAmp = 0.15 * formP;
           var rPhase = now * 0.0019;
           var kForm = frameLerp(0.16 + formP * 0.12, dt);
-          for (var _i25 = 0; _i25 < ASM_N; _i25++) {
-            var _j = _i25 * 3;
+          for (var _i22 = 0; _i22 < ASM_N; _i22++) {
+            var _j = _i22 * 3;
             var _lx = asmLocal[_j] * glyphFit;
             var _ly = asmLocal[_j + 1] * glyphFit;
             var _lz = asmLocal[_j + 2] * glyphFit + rAmp * glyphFit * Math.sin(rPhase - _lx * 1.5);
-            var ly2 = _ly * cp - _lz * _sp3;
-            var lz2 = _ly * _sp3 + _lz * cp;
-            var rx = _lx * ca - lz2 * sa;
-            var rz = _lx * sa + lz2 * ca;
-            var tX = _glyphC.x + rx,
+            var ly2 = _ly * cp - _lz * _sp;
+            var lz2 = _ly * _sp + _lz * cp;
+            var _rx = _lx * ca - lz2 * sa;
+            var _rz = _lx * sa + lz2 * ca;
+            var tX = _glyphC.x + _rx,
               tY = _glyphC.y + ly2,
-              tZ = _glyphC.z + rz;
+              tZ = _glyphC.z + _rz;
             var _desX = asmHome[_j] + (tX - asmHome[_j]) * formP;
             var _desY = asmHome[_j + 1] + (tY - asmHome[_j + 1]) * formP;
             var _desZ = asmHome[_j + 2] + (tZ - asmHome[_j + 2]) * formP;
@@ -4429,29 +4550,29 @@ function Universe(_ref) {
       var attr = points.geometry.attributes.position;
       var arr = attr.array;
       var dirty = false;
-      for (var _i26 = 0; _i26 < arr.length; _i26 += 3) {
-        var dx = arr[_i26 + 0] - cam.pos.x;
-        var dy = arr[_i26 + 1] - cam.pos.y;
-        var dz = arr[_i26 + 2] - cam.pos.z;
+      for (var _i24 = 0; _i24 < arr.length; _i24 += 3) {
+        var dx = arr[_i24 + 0] - cam.pos.x;
+        var dy = arr[_i24 + 1] - cam.pos.y;
+        var dz = arr[_i24 + 2] - cam.pos.z;
         if (dx > box.x / 2) {
-          arr[_i26 + 0] -= box.x;
+          arr[_i24 + 0] -= box.x;
           dirty = true;
         } else if (dx < -box.x / 2) {
-          arr[_i26 + 0] += box.x;
+          arr[_i24 + 0] += box.x;
           dirty = true;
         }
         if (dy > box.y / 2) {
-          arr[_i26 + 1] -= box.y;
+          arr[_i24 + 1] -= box.y;
           dirty = true;
         } else if (dy < -box.y / 2) {
-          arr[_i26 + 1] += box.y;
+          arr[_i24 + 1] += box.y;
           dirty = true;
         }
         if (dz > box.z / 2) {
-          arr[_i26 + 2] -= box.z;
+          arr[_i24 + 2] -= box.z;
           dirty = true;
         } else if (dz < -box.z / 2) {
-          arr[_i26 + 2] += box.z;
+          arr[_i24 + 2] += box.z;
           dirty = true;
         }
       }
@@ -4499,11 +4620,11 @@ function Universe(_ref) {
           (_w$material = w.material) === null || _w$material === void 0 || _w$material.dispose();
         }
       });
-      ambient.forEach(function (s) {
-        var _s$material$map;
-        (_s$material$map = s.material.map) === null || _s$material$map === void 0 || _s$material$map.dispose();
-        s.material.dispose();
+      ambientBatches.forEach(function (batch) {
+        return batch.geo.dispose();
       });
+      ambientMat.dispose();
+      ambientAtlas.texture.dispose();
       starGeo.dispose();
       asmGeo.dispose();
       assemblyPts.material.dispose();
@@ -4513,12 +4634,8 @@ function Universe(_ref) {
         l.geometry.dispose();
         l.material.dispose();
       });
-      constLines.forEach(function (l) {
-        return l.geometry.dispose();
-      });
+      constGeo.dispose();
       constMat.dispose();
-      anamGeo.dispose();
-      anamPts.material.dispose();
       if (renderer.renderLists) renderer.renderLists.dispose();
       if (renderer.forceContextLoss) renderer.forceContextLoss();
       window.removeEventListener("pointermove", onAnyAct);
@@ -6632,49 +6749,83 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     var capBody = mat(0xb08d5a, 0.1, 0.5);
     var capEnd = mat(0xb7c0cf, 1.0, 0.3);
     var resBody = mat(0x11141a, 0.05, 0.5);
+    var passiveBatches = new Map();
+    var groupMatrix = new THREE.Matrix4();
+    var localMatrix = new THREE.Matrix4();
+    var worldMatrix = new THREE.Matrix4();
+    var queuePassive = function queuePassive(role, w, h, d, material, localX) {
+      var key = "".concat(role, ":").concat(w.toFixed(6), ":").concat(h.toFixed(6), ":").concat(d.toFixed(6));
+      var batch = passiveBatches.get(key);
+      if (!batch) {
+        batch = {
+          geometry: new THREE.BoxGeometry(w, h, d),
+          material: material,
+          matrices: []
+        };
+        passiveBatches.set(key, batch);
+      }
+      localMatrix.makeTranslation(localX, h / 2, 0);
+      worldMatrix.multiplyMatrices(groupMatrix, localMatrix);
+      batch.matrices.push(worldMatrix.clone());
+    };
     var _iterator22 = _createForOfIteratorHelper(LAYOUT.foot),
       _step22;
     try {
-      var _loop2 = function _loop2() {
+      for (_iterator22.s(); !(_step22 = _iterator22.n()).done;) {
         var f = _step22.value;
-        var g = new THREE.Group();
         var bl = f.l * 0.92,
           bw = f.w * 0.95,
           bh = f.cap ? f.w * 0.75 : 0.42;
-        var body = new THREE.Mesh(new THREE.BoxGeometry(bl * 0.72, bh, bw), f.cap ? capBody : resBody);
-        body.position.y = bh / 2;
-        g.add(body);
-        [-1, 1].forEach(function (s) {
-          var end = new THREE.Mesh(new THREE.BoxGeometry(bl * 0.16, bh, bw), capEnd);
-          end.position.set(s * bl * 0.43, bh / 2, 0);
-          g.add(end);
-        });
-        g.position.set(f.x, TOP, f.z);
-        if (f.rot) g.rotation.y = Math.PI / 2;
-        group.add(g);
-      };
-      for (_iterator22.s(); !(_step22 = _iterator22.n()).done;) {
-        _loop2();
+        groupMatrix.makeRotationY(f.rot ? Math.PI / 2 : 0);
+        groupMatrix.setPosition(f.x, TOP, f.z);
+        queuePassive(f.cap ? "cap-body" : "res-body", bl * 0.72, bh, bw, f.cap ? capBody : resBody, 0);
+        queuePassive("end", bl * 0.16, bh, bw, capEnd, -bl * 0.43);
+        queuePassive("end", bl * 0.16, bh, bw, capEnd, bl * 0.43);
       }
     } catch (err) {
       _iterator22.e(err);
     } finally {
       _iterator22.f();
     }
-    var _iterator23 = _createForOfIteratorHelper(CPARTS),
+    var _iterator23 = _createForOfIteratorHelper(passiveBatches),
       _step23;
     try {
+      var _loop2 = function _loop2() {
+        var _step23$value = _slicedToArray(_step23.value, 2),
+          key = _step23$value[0],
+          batch = _step23$value[1];
+        var instances = new THREE.InstancedMesh(batch.geometry, batch.material, batch.matrices.length);
+        batch.matrices.forEach(function (matrix, index) {
+          return instances.setMatrixAt(index, matrix);
+        });
+        instances.instanceMatrix.setUsage(THREE.StaticDrawUsage);
+        instances.instanceMatrix.needsUpdate = true;
+        instances.name = "pcb-passives:".concat(key);
+        if (instances.computeBoundingSphere) instances.computeBoundingSphere();
+        group.add(instances);
+      };
       for (_iterator23.s(); !(_step23 = _iterator23.n()).done;) {
-        var p = _step23.value;
+        _loop2();
+      }
+    } catch (err) {
+      _iterator23.e(err);
+    } finally {
+      _iterator23.f();
+    }
+    var _iterator24 = _createForOfIteratorHelper(CPARTS),
+      _step24;
+    try {
+      for (_iterator24.s(); !(_step24 = _iterator24.n()).done;) {
+        var p = _step24.value;
         var g = buildPart(p.k);
         g.position.set(p.x, TOP, p.z);
         if (p.rot) g.rotation.y = Math.PI / 2;
         group.add(g);
       }
     } catch (err) {
-      _iterator23.e(err);
+      _iterator24.e(err);
     } finally {
-      _iterator23.f();
+      _iterator24.f();
     }
   }
   var WAFER_H = {
@@ -6716,17 +6867,17 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       ok = ok.filter(Boolean);
       if (!ok.length) return;
       var holder = new THREE.Group();
-      var _iterator24 = _createForOfIteratorHelper(ok),
-        _step24;
+      var _iterator25 = _createForOfIteratorHelper(ok),
+        _step25;
       try {
-        for (_iterator24.s(); !(_step24 = _iterator24.n()).done;) {
-          var root = _step24.value.root;
+        for (_iterator25.s(); !(_step25 = _iterator25.n()).done;) {
+          var root = _step25.value.root;
           holder.add(root);
         }
       } catch (err) {
-        _iterator24.e(err);
+        _iterator25.e(err);
       } finally {
-        _iterator24.f();
+        _iterator25.f();
       }
       var box = new THREE.Box3().setFromObject(holder);
       var size = new THREE.Vector3();
@@ -6744,13 +6895,13 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
         LONGm = ax(longI);
       var capMean = 0,
         capN = 0;
-      var _iterator25 = _createForOfIteratorHelper(ok),
-        _step25;
+      var _iterator26 = _createForOfIteratorHelper(ok),
+        _step26;
       try {
-        for (_iterator25.s(); !(_step25 = _iterator25.n()).done;) {
-          var _step25$value = _step25.value,
-            f = _step25$value.f,
-            _root = _step25$value.root;
+        for (_iterator26.s(); !(_step26 = _iterator26.n()).done;) {
+          var _step26$value = _step26.value,
+            f = _step26$value.f,
+            _root = _step26$value.root;
           if (!f.startsWith("key_")) continue;
           var b = new THREE.Box3().setFromObject(_root),
             _c = new THREE.Vector3();
@@ -6759,19 +6910,19 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
           capN++;
         }
       } catch (err) {
-        _iterator25.e(err);
+        _iterator26.e(err);
       } finally {
-        _iterator25.f();
+        _iterator26.f();
       }
       if (capN && capMean < 0) UPm.multiplyScalar(-1);
       var base = dims[longI];
-      var _iterator26 = _createForOfIteratorHelper(ok),
-        _step26;
+      var _iterator27 = _createForOfIteratorHelper(ok),
+        _step27;
       try {
-        for (_iterator26.s(); !(_step26 = _iterator26.n()).done;) {
-          var _step26$value = _step26.value,
-            _f = _step26$value.f,
-            _root2 = _step26$value.root;
+        for (_iterator27.s(); !(_step27 = _iterator27.n()).done;) {
+          var _step27$value = _step27.value,
+            _f = _step27$value.f,
+            _root2 = _step27$value.root;
           var kind = _f.startsWith("key_") ? "key" : _f.replace(/_[LR]$/, "");
           var _b2 = new THREE.Box3().setFromObject(_root2),
             _c2 = new THREE.Vector3();
@@ -6794,9 +6945,9 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
           });
         }
       } catch (err) {
-        _iterator26.e(err);
+        _iterator27.e(err);
       } finally {
-        _iterator26.f();
+        _iterator27.f();
       }
       holder.position.copy(centre).multiplyScalar(-1);
       var align = new THREE.Group();
@@ -6940,7 +7091,7 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       asmPos2[_i1 * 3 + 1] = asmSca2[_i1 * 3 + 1];
       asmPos2[_i1 * 3 + 2] = asmSca2[_i1 * 3 + 2];
     }
-    asmGeo2.setAttribute("position", new THREE.BufferAttribute(asmPos2, 3));
+    asmGeo2.setAttribute("position", new THREE.BufferAttribute(asmPos2, 3).setUsage(THREE.DynamicDrawUsage));
     var assembly2 = new THREE.Points(asmGeo2, new THREE.PointsMaterial({
       color: 0x00f0c8,
       size: 1.1,
@@ -7086,30 +7237,30 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
         deviceGroup.visible = ex > 0.02 && waferParts.length > 0;
         if (deviceGroup.visible) {
           var exs = ex < 0.5 ? 2 * ex * ex : 1 - Math.pow(-2 * ex + 2, 2) / 2;
-          var _iterator27 = _createForOfIteratorHelper(waferParts),
-            _step27;
-          try {
-            for (_iterator27.s(); !(_step27 = _iterator27.n()).done;) {
-              var w = _step27.value;
-              w.position.copy(w.userData.vec).multiplyScalar(exs * 0.15);
-            }
-          } catch (err) {
-            _iterator27.e(err);
-          } finally {
-            _iterator27.f();
-          }
-          var op = Math.min(1, ex * 2.5);
-          var _iterator28 = _createForOfIteratorHelper(waferMats),
+          var _iterator28 = _createForOfIteratorHelper(waferParts),
             _step28;
           try {
             for (_iterator28.s(); !(_step28 = _iterator28.n()).done;) {
-              var m = _step28.value;
-              m.opacity = op;
+              var w = _step28.value;
+              w.position.copy(w.userData.vec).multiplyScalar(exs * 0.15);
             }
           } catch (err) {
             _iterator28.e(err);
           } finally {
             _iterator28.f();
+          }
+          var op = Math.min(1, ex * 2.5);
+          var _iterator29 = _createForOfIteratorHelper(waferMats),
+            _step29;
+          try {
+            for (_iterator29.s(); !(_step29 = _iterator29.n()).done;) {
+              var m = _step29.value;
+              m.opacity = op;
+            }
+          } catch (err) {
+            _iterator29.e(err);
+          } finally {
+            _iterator29.f();
           }
           deviceGroup.rotation.y += dt * 0.0004;
         }

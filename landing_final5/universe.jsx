@@ -233,24 +233,58 @@ function drawGraphic(x, p) {
 }
 
 /* ============================================================
-   Ambient node — small canvas sprite
+   Ambient node atlas — the original 128px sprite artwork, cropped only
+   through its transparent top/bottom area and packed into one GPU texture.
    ============================================================ */
-function makeAmbientTexture(label, THREE) {
+function makeAmbientAtlas(labels, THREE) {
+  const atlasW = 2048;
+  const atlasH = 512;
+  const sourceW = 128;
+  const cropY = 48;
+  const cropH = 32;
+  const cols = 15;
+  const strideX = 136;
+  const strideY = 42;
   const cc = document.createElement("canvas");
-  cc.width = 128; cc.height = 128;
+  cc.width = atlasW;
+  cc.height = atlasH;
   const xc = cc.getContext("2d");
-  xc.clearRect(0, 0, 128, 128);
-  xc.strokeStyle = "#00f0c8";
-  xc.lineWidth = 2;
-  xc.beginPath(); xc.arc(64, 64, 4, 0, Math.PI * 2); xc.stroke();
-  xc.fillStyle = "#5b6478";
-  xc.font = "500 16px 'Geist Mono', monospace";
-  xc.textAlign = "left";
-  xc.textBaseline = "middle";
-  xc.fillText(label, 76, 64);
-  const t = new THREE.CanvasTexture(cc);
-  t.colorSpace = THREE.SRGBColorSpace;
-  return t;
+  const cells = [];
+
+  labels.forEach((label, i) => {
+    const col = i % cols;
+    const row = Math.floor(i / cols);
+    const x0 = col * strideX + 4;
+    const y0 = row * strideY + 5;
+    const sourceTop = y0 - cropY;
+
+    xc.save();
+    xc.beginPath();
+    xc.rect(x0, y0, sourceW, cropH);
+    xc.clip();
+    xc.strokeStyle = "#00f0c8";
+    xc.lineWidth = 2;
+    xc.beginPath();
+    xc.arc(x0 + 64, sourceTop + 64, 4, 0, Math.PI * 2);
+    xc.stroke();
+    xc.fillStyle = "#5b6478";
+    xc.font = "500 16px 'Geist Mono', monospace";
+    xc.textAlign = "left";
+    xc.textBaseline = "middle";
+    xc.fillText(label, x0 + 76, sourceTop + 64);
+    xc.restore();
+
+    cells.push({
+      u0: x0 / atlasW,
+      v0: 1 - (y0 + cropH) / atlasH,
+      u1: (x0 + sourceW) / atlasW,
+      v1: 1 - y0 / atlasH,
+    });
+  });
+
+  const texture = new THREE.CanvasTexture(cc);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return { texture, cells, cropRatio: cropH / 128 };
 }
 
 /* ============================================================
@@ -571,7 +605,12 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     const _pdR = new THREE.Vector3(), _pdU = new THREE.Vector3();
     // v13 — transit bank: a soft roll the flight treadmill leans into.
     let camRollFX = 0;
+    const _qCam = new THREE.Quaternion();
+    const _qYaw = new THREE.Quaternion();
+    const _qPitch = new THREE.Quaternion();
     const _qr = new THREE.Quaternion();
+    const _AXIS_X = new THREE.Vector3(1, 0, 0);
+    const _AXIS_Y = new THREE.Vector3(0, 1, 0);
     const _AXIS_Z = new THREE.Vector3(0, 0, 1);
 
     function updateCameraTransform() {
@@ -581,15 +620,14 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         return;
       }
       // Compose orientation
-      const q = new THREE.Quaternion();
-      const qy = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), cam.yaw);
-      const qp = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), cam.pitch);
-      q.multiplyQuaternions(qy, qp);
+      _qYaw.setFromAxisAngle(_AXIS_Y, cam.yaw);
+      _qPitch.setFromAxisAngle(_AXIS_X, cam.pitch);
+      _qCam.multiplyQuaternions(_qYaw, _qPitch);
       if (Math.abs(camRollFX) > 0.0004) {
         _qr.setFromAxisAngle(_AXIS_Z, camRollFX);
-        q.multiply(_qr);
+        _qCam.multiply(_qr);
       }
-      camera.quaternion.copy(q);
+      camera.quaternion.copy(_qCam);
       camera.position.copy(cam.pos);
     }
     updateCameraTransform();
@@ -603,7 +641,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       sPos[i*3+1] = (Math.random() - 0.5) * BOX.y * 2;
       sPos[i*3+2] = (Math.random() - 0.5) * BOX.z * 2;
     }
-    starGeo.setAttribute("position", new THREE.BufferAttribute(sPos, 3));
+    starGeo.setAttribute("position", new THREE.BufferAttribute(sPos, 3).setUsage(THREE.DynamicDrawUsage));
     const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({
       color: 0x5b6478, size: 0.06, sizeAttenuation: true, transparent: true, opacity: 0.7,
     }));
@@ -860,28 +898,90 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       return null; // drift
     }
 
-    /* ---------- ambient nodes — small "0x__" sprites scattered for density ---------- */
+    /* ---------- ambient nodes — one atlas, depth-batched billboards ----------
+       Twelve camera-depth bins retain transparent interleaving with the cards
+       while replacing 180 sprite draws/textures with at most twelve draws and
+       one texture. The atlas crops only pixels that were fully transparent. */
     const ambient = [];
-    const ambientGroup = new THREE.Group();
-    scene.add(ambientGroup);
     const AMB_N = 180;
-    for (let i = 0; i < AMB_N; i++) {
-      const id = "0x" + (0x10 + i).toString(16).toUpperCase().padStart(2, "0");
-      const tex = makeAmbientTexture(id, THREE);
-      const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, opacity: 0.55, depthWrite: false });
-      const sp = new THREE.Sprite(mat);
-      sp.position.set(
-        (Math.random() - 0.5) * BOX.x,
-        (Math.random() - 0.5) * BOX.y,
-        (Math.random() - 0.5) * BOX.z,
-      );
-      // small square-ish icon — matches v2 feel
-      sp.scale.set(1.3, 1.3, 1);
-      sp.userData = { phase: Math.random() * Math.PI * 2, kind: "ambient" };
-      sp.frustumCulled = false;   // wraps around the camera — never cull it out
-      ambientGroup.add(sp);
-      ambient.push(sp);
+    const AMB_BATCH_N = 12;
+    const AMB_SCALE = 1.3;
+    const ambientLabels = Array.from({ length: AMB_N }, (_, i) => (
+      "0x" + (0x10 + i).toString(16).toUpperCase().padStart(2, "0")
+    ));
+    const ambientAtlas = makeAmbientAtlas(ambientLabels, THREE);
+    const ambientMat = new THREE.MeshBasicMaterial({
+      map: ambientAtlas.texture,
+      transparent: true,
+      opacity: 1,
+      depthWrite: false,
+      fog: true,
+    });
+    ambientMat.onBeforeCompile = (shader) => {
+      shader.vertexShader =
+        "attribute float aAmbientOpacity; varying float vAmbientOpacity;\n" +
+        shader.vertexShader.replace(
+          "#include <begin_vertex>",
+          "#include <begin_vertex>\nvAmbientOpacity = aAmbientOpacity;",
+        );
+      shader.fragmentShader =
+        "varying float vAmbientOpacity;\n" +
+        shader.fragmentShader.replace(
+          "#include <map_fragment>",
+          "#include <map_fragment>\ndiffuseColor.a *= vAmbientOpacity;",
+        );
+    };
+    ambientMat.customProgramCacheKey = () => "mo-ambient-atlas-v1";
+
+    const ambientBatches = [];
+    for (let b = 0; b < AMB_BATCH_N; b++) {
+      const maxVerts = AMB_N * 4;
+      const positions = new Float32Array(maxVerts * 3);
+      const uvs = new Float32Array(maxVerts * 2);
+      const opacity = new Float32Array(maxVerts);
+      const indices = new Uint16Array(AMB_N * 6);
+      for (let i = 0; i < AMB_N; i++) {
+        const v = i * 4;
+        const q = i * 6;
+        indices[q] = v;
+        indices[q + 1] = v + 2;
+        indices[q + 2] = v + 1;
+        indices[q + 3] = v + 2;
+        indices[q + 4] = v + 3;
+        indices[q + 5] = v + 1;
+      }
+      const geo = new THREE.BufferGeometry();
+      geo.setIndex(new THREE.BufferAttribute(indices, 1));
+      geo.setAttribute("position", new THREE.BufferAttribute(positions, 3).setUsage(THREE.DynamicDrawUsage));
+      geo.setAttribute("uv", new THREE.BufferAttribute(uvs, 2).setUsage(THREE.DynamicDrawUsage));
+      geo.setAttribute("aAmbientOpacity", new THREE.BufferAttribute(opacity, 1).setUsage(THREE.DynamicDrawUsage));
+      geo.setDrawRange(0, 0);
+      const mesh = new THREE.Mesh(geo, ambientMat);
+      mesh.frustumCulled = false;
+      mesh.visible = false;
+      scene.add(mesh);
+      ambientBatches.push({ mesh, geo, positions, uvs, opacity, nodes: [], depthSum: 0 });
     }
+
+    for (let i = 0; i < AMB_N; i++) {
+      ambient.push({
+        position: new THREE.Vector3(
+          (Math.random() - 0.5) * BOX.x,
+          (Math.random() - 0.5) * BOX.y,
+          (Math.random() - 0.5) * BOX.z,
+        ),
+        userData: {
+          phase: Math.random() * Math.PI * 2,
+          kind: "ambient",
+          atlas: ambientAtlas.cells[i],
+          opacity: 0.55,
+          depth: 0,
+        },
+      });
+    }
+    const AMB_DEPTH_SPAN = Math.hypot(BOX.x, BOX.y, BOX.z) * 0.5 + AMB_SCALE;
+    const ambientRight = new THREE.Vector3();
+    const ambientUp = new THREE.Vector3();
 
     /* ---------- ORIGIN hub — node 0x00 (the self) ----------
        A special, larger node that only matters in `origin` mode. Every
@@ -1028,7 +1128,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       asmHome[i*3+1] = asmPos[i*3+1] = y;
       asmHome[i*3+2] = asmPos[i*3+2] = z;
     }
-    asmGeo.setAttribute("position", new THREE.BufferAttribute(asmPos, 3));
+    asmGeo.setAttribute("position", new THREE.BufferAttribute(asmPos, 3).setUsage(THREE.DynamicDrawUsage));
     // The teal signal field. Drifts/wraps around the camera like any star; on
     // the ORIGIN beat it peels out of the field to FORM "0x00", then melts back.
     const assemblyPts = new THREE.Points(asmGeo, new THREE.PointsMaterial({
@@ -1078,27 +1178,32 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         "  gl_FragColor = vec4(uColor, a);\n" +
         "}",
     });
-    const constGroup = new THREE.Group();
-    constGroup.renderOrder = -2;
-    scene.add(constGroup);
-    // Reusable pool of line objects — the graph rebuilds into these in place.
-    const constLines = [];
-    for (let i = 0; i < TOPO_MAX_E; i++) {
-      const g = new THREE.BufferGeometry();
-      const pos = new Float32Array(TOPO_SEG * 3);
-      const tt  = new Float32Array(TOPO_SEG);
-      const aa  = new Float32Array(TOPO_SEG);
-      for (let s = 0; s < TOPO_SEG; s++) tt[s] = s / (TOPO_SEG - 1);
-      g.setAttribute("position", new THREE.BufferAttribute(pos, 3));
-      g.setAttribute("aT", new THREE.BufferAttribute(tt, 1));
-      g.setAttribute("aA", new THREE.BufferAttribute(aa, 1));
-      const line = new THREE.Line(g, constMat);
-      line.frustumCulled = false;
-      line.renderOrder = -2;
-      line.visible = false;
-      constGroup.add(line);
-      constLines.push(line);
+    // All signal edges share one line-segment buffer. Each edge keeps the same
+    // 24 pulse samples; the index simply connects adjacent pairs, collapsing
+    // up to 26 submissions into one appearance-equivalent draw.
+    const topoPos = new Float32Array(TOPO_MAX_E * TOPO_SEG * 3);
+    const topoT = new Float32Array(TOPO_MAX_E * TOPO_SEG);
+    const topoA = new Float32Array(TOPO_MAX_E * TOPO_SEG);
+    const topoIndex = new Uint16Array(TOPO_MAX_E * (TOPO_SEG - 1) * 2);
+    let topoIndexI = 0;
+    for (let e = 0; e < TOPO_MAX_E; e++) {
+      const base = e * TOPO_SEG;
+      for (let s = 0; s < TOPO_SEG; s++) topoT[base + s] = s / (TOPO_SEG - 1);
+      for (let s = 0; s < TOPO_SEG - 1; s++) {
+        topoIndex[topoIndexI++] = base + s;
+        topoIndex[topoIndexI++] = base + s + 1;
+      }
     }
+    const constGeo = new THREE.BufferGeometry();
+    constGeo.setIndex(new THREE.BufferAttribute(topoIndex, 1));
+    constGeo.setAttribute("position", new THREE.BufferAttribute(topoPos, 3).setUsage(THREE.DynamicDrawUsage));
+    constGeo.setAttribute("aT", new THREE.BufferAttribute(topoT, 1));
+    constGeo.setAttribute("aA", new THREE.BufferAttribute(topoA, 1).setUsage(THREE.DynamicDrawUsage));
+    const constGroup = new THREE.LineSegments(constGeo, constMat);
+    constGroup.frustumCulled = false;
+    constGroup.renderOrder = -2;
+    constGroup.visible = false;
+    scene.add(constGroup);
     const _topoEdges = [];          // rebuilt periodically: { A, B, ai, bi, len }
     let _topoFrame = 0;
 
@@ -1143,9 +1248,12 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       // travelling pulse over a faint base glow.
       const breathe = 1 + _lvlS * 1.2;
       for (let e = 0; e < TOPO_MAX_E; e++) {
-        const line = constLines[e];
         const E = _topoEdges[e];
-        if (!E) { line.visible = false; continue; }
+        const base = e * TOPO_SEG;
+        if (!E) {
+          topoA.fill(0, base, base + TOPO_SEG);
+          continue;
+        }
         const A = E.A.position, B = E.B.position;
         // A link with endpoints on opposite sides of the camera is clipped at
         // the near plane into a viewport-spanning streak. It is not a readable
@@ -1158,130 +1266,30 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
           + (B.y - camera.position.y) * FORWARD.y
           + (B.z - camera.position.z) * FORWARD.z;
         if (depthA <= TOPO_CAMERA_GUARD || depthB <= TOPO_CAMERA_GUARD) {
-          line.visible = false;
+          topoA.fill(0, base, base + TOPO_SEG);
           continue;
         }
-        line.visible = true;
-        const posArr = line.geometry.attributes.position.array;
-        const aArr   = line.geometry.attributes.aA.array;
         for (let s = 0; s < TOPO_SEG; s++) {
           const t = s / (TOPO_SEG - 1);
-          posArr[s*3]   = A.x + (B.x - A.x) * t;
-          posArr[s*3+1] = A.y + (B.y - A.y) * t;
-          posArr[s*3+2] = A.z + (B.z - A.z) * t;
+          const p = (base + s) * 3;
+          topoPos[p] = A.x + (B.x - A.x) * t;
+          topoPos[p + 1] = A.y + (B.y - A.y) * t;
+          topoPos[p + 2] = A.z + (B.z - A.z) * t;
         }
         const closeness = Math.pow(Math.max(0, 1 - E.len / TOPO_CUT), 1.4);
         let alpha = closeness * breathe;
         const touches = hovAddr && (E.A.userData.project.addr === hovAddr || E.B.userData.project.addr === hovAddr);
         if (touches) alpha = alpha * 2.4 + 0.5;
         alpha *= Math.min(1, Math.min(E.A.material.opacity, E.B.material.opacity) * 1.4);
-        for (let s = 0; s < TOPO_SEG; s++) aArr[s] = alpha;
-        line.geometry.attributes.position.needsUpdate = true;
-        line.geometry.attributes.aA.needsUpdate = true;
+        topoA.fill(alpha, base, base + TOPO_SEG);
       }
+      constGeo.attributes.position.needsUpdate = true;
+      constGeo.attributes.aA.needsUpdate = true;
     }
 
-    /* ============================================================
-       v10 — ANAMORPHIC 0x00
-       "I am 0x00, scattered everywhere." A cloud of shards hangs in
-       camera-local space at random depths along rays toward a hidden view
-       direction. From almost every angle it reads as stray dust — but turn
-       to face the secret bearing and the shards collapse into a crisp
-       "0x00". The TRACE readout in the HUD is the hot/cold radar; holding
-       the alignment fires a lock event (sound + ripple).
-       ============================================================ */
-    function sampleGlyphLocal(text, count) {
-      const cw = 720, ch = 260;
-      const gc = document.createElement("canvas");
-      gc.width = cw; gc.height = ch;
-      const gx = gc.getContext("2d");
-      gx.fillStyle = "#000"; gx.fillRect(0, 0, cw, ch);
-      gx.fillStyle = "#fff";
-      gx.textAlign = "center"; gx.textBaseline = "middle";
-      gx.font = "700 210px 'Geist Mono', monospace";
-      gx.fillText(text, cw / 2, ch / 2 + 6);
-      const data = gx.getImageData(0, 0, cw, ch).data;
-      const hits = [];
-      for (let y = 0; y < ch; y += 3) for (let x = 0; x < cw; x += 3) {
-        if (data[(y * cw + x) * 4] > 128) hits.push([x, y]);
-      }
-      for (let i = hits.length - 1; i > 0; i--) {
-        const k = (Math.random() * (i + 1)) | 0;
-        const t = hits[i]; hits[i] = hits[k]; hits[k] = t;
-      }
-      const SC = 0.013;
-      const out = new Float32Array(count * 2);
-      for (let i = 0; i < count; i++) {
-        const hpt = hits.length ? hits[i % hits.length] : [cw / 2, ch / 2];
-        out[i*2]   = (hpt[0] + (Math.random() - 0.5) * 2 - cw / 2) * SC;
-        out[i*2+1] = -(hpt[1] + (Math.random() - 0.5) * 2 - ch / 2) * SC;
-      }
-      return out;
-    }
-    const ANAM_N = 440;
-    const ANAM_YAW = 2.35, ANAM_PITCH = 0.14, ANAM_D = 13;
-    const anamDirV = (() => {
-      const q = new THREE.Quaternion().multiplyQuaternions(
-        new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), ANAM_YAW),
-        new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), ANAM_PITCH),
-      );
-      return new THREE.Vector3(0, 0, -1).applyQuaternion(q).normalize();
-    })();
-    const anamGeo = new THREE.BufferGeometry();
-    const anamPos = new Float32Array(ANAM_N * 3);
-    {
-      const g2 = sampleGlyphLocal("0x00", ANAM_N);
-      const up = new THREE.Vector3(0, 1, 0);
-      const right = new THREE.Vector3().crossVectors(anamDirV, up).normalize();
-      const up2 = new THREE.Vector3().crossVectors(right, anamDirV).normalize();
-      const ray = new THREE.Vector3();
-      for (let i = 0; i < ANAM_N; i++) {
-        ray.copy(anamDirV).multiplyScalar(ANAM_D)
-          .addScaledVector(right, g2[i*2])
-          .addScaledVector(up2, g2[i*2+1])
-          .normalize();
-        const depth = 6.5 + Math.random() * 15;
-        anamPos[i*3]   = ray.x * depth;
-        anamPos[i*3+1] = ray.y * depth;
-        anamPos[i*3+2] = ray.z * depth;
-      }
-    }
-    anamGeo.setAttribute("position", new THREE.BufferAttribute(anamPos, 3));
-    const anamPts = new THREE.Points(anamGeo, new THREE.PointsMaterial({
-      color: 0x00f0c8, size: 0.085, sizeAttenuation: true,
-      transparent: true, opacity: 0.05, depthWrite: false,
-      blending: THREE.AdditiveBlending,
-    }));
-    anamPts.frustumCulled = false;
-    const anamGroup = new THREE.Group();
-    anamGroup.add(anamPts);
-    // v10.1 — RETIRED per design review: the camera-locked shard glyph read as
-    // "floating on top" rather than living in the universe. The layer stays
-    // built (cheap, invisible) so the bearing hunt can return later in a
-    // world-anchored form.
-    anamGroup.visible = false;
-    scene.add(anamGroup);
-    let _anamA = 0, _anamHold = 0, _anamLockT = -30000, _anamTrace = 0;
-
-    function updateAnamorph(now, dt, mode) {
-      anamGroup.position.copy(cam.pos);
-      const align = _camDir.dot(anamDirV);
-      // radar value for the HUD (gradient as you turn toward the bearing)
-      _anamTrace = Math.max(0, Math.min(1, (align - 0.1) / 0.88));
-      // shards only resolve near-perfect alignment, and only in free drift
-      const aT = (mode === "drift" ? 1 : 0) * THREE.MathUtils.smoothstep(align, 0.86, 0.995);
-      _anamA += (aT - _anamA) * (1 - Math.pow(0.88, dt / 16));
-      anamPts.material.opacity = (mode === "drift" ? 0.05 : 0.0) + _anamA * 0.85;
-      anamPts.material.size = 0.085 + _anamA * 0.055;
-      window.__mo_anam = { align: _anamTrace, locked: _anamA > 0.9 };
-      // LOCK — hold the bearing ~0.5s, 20s cooldown
-      if (_anamA > 0.88) _anamHold += dt; else _anamHold = 0;
-      if (_anamHold > 480 && now - _anamLockT > 20000) {
-        _anamLockT = now;
-        if (window.__mo_disturb) window.__mo_disturb(window.innerWidth / 2, window.innerHeight / 2, 1.3);
-        try { window.dispatchEvent(new CustomEvent("mo:anamLock")); } catch (_) {}
-      }
-    }
+    // Retired anamorphic layer removed. The HUD field remains at its previous
+    // inactive value so no display/state contract changes.
+    const _anamTrace = 0;
 
     /* ---------- wrap helper — keep object within [-half, +half] BOX around camera ---------- */
     function wrapAroundCamera(obj, box) {
@@ -2120,11 +2128,11 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         _off.copy(_camDir).multiplyScalar(-forwardDist);
         // Card-local offset: models can be nudged to their visual centre;
         // wireframes stay just above the card art.
-        const modelOffset = isModel ? (parent.userData.project.modelOffset || {}) : {};
+        const modelOffset = isModel ? parent.userData.project.modelOffset : null;
         _localOff.set(
-          modelOffset.x || 0,
-          isModel ? (modelOffset.y || 0) : parent.scale.y * 1.05,
-          modelOffset.z || 0,
+          modelOffset ? (modelOffset.x || 0) : 0,
+          isModel ? (modelOffset ? (modelOffset.y || 0) : 0) : parent.scale.y * 1.05,
+          modelOffset ? (modelOffset.z || 0) : 0,
         ).applyQuaternion(parent.quaternion);
         wire.position.set(
           parent.position.x + _off.x + _localOff.x,
@@ -2289,7 +2297,14 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         uD.modelOpacityBase = uD.mobSm * arrFade;
       }
 
-      /* ambient pulse */
+      /* ambient pulse + depth-batch rebuild. The nodes keep their original
+         world positions, scale, pulse and wrap fade; only submission changes. */
+      for (const batch of ambientBatches) {
+        batch.nodes.length = 0;
+        batch.depthSum = 0;
+      }
+      ambientRight.set(1, 0, 0).applyQuaternion(camera.quaternion);
+      ambientUp.set(0, 1, 0).applyQuaternion(camera.quaternion);
       for (const sp of ambient) {
         const phase = sp.userData.phase + now * 0.0008;
         const dist  = sp.position.distanceTo(camera.position);
@@ -2303,7 +2318,80 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         const pulse  = 0.65 + Math.sin(phase) * 0.20;
         let aOp = pulse * nearIn * (1 - farOut);
         if (mode !== "drift") aOp *= 0.35;
-        sp.material.opacity = aOp * arrFade;
+        aOp *= arrFade;
+        sp.userData.opacity = aOp;
+
+        const depth = (sp.position.x - camera.position.x) * FORWARD.x
+          + (sp.position.y - camera.position.y) * FORWARD.y
+          + (sp.position.z - camera.position.z) * FORWARD.z;
+        sp.userData.depth = depth;
+        if (aOp <= 0.001 || depth <= camera.near) continue;
+        const depthT = Math.max(0, Math.min(0.999999, (depth - camera.near) / AMB_DEPTH_SPAN));
+        const batch = ambientBatches[Math.floor(depthT * AMB_BATCH_N)];
+        batch.nodes.push(sp);
+        batch.depthSum += depth;
+      }
+
+      const halfW = AMB_SCALE * 0.5;
+      const halfH = AMB_SCALE * ambientAtlas.cropRatio * 0.5;
+      const rx = ambientRight.x * halfW, ry = ambientRight.y * halfW, rz = ambientRight.z * halfW;
+      const ux = ambientUp.x * halfH, uy = ambientUp.y * halfH, uz = ambientUp.z * halfH;
+      for (const batch of ambientBatches) {
+        const count = batch.nodes.length;
+        batch.mesh.visible = count > 0;
+        batch.geo.setDrawRange(0, count * 6);
+        if (!count) continue;
+
+        batch.nodes.sort((a, b) => b.userData.depth - a.userData.depth);
+        const meanDepth = batch.depthSum / count;
+        batch.mesh.position.copy(camera.position).addScaledVector(FORWARD, meanDepth);
+        const ox = batch.mesh.position.x, oy = batch.mesh.position.y, oz = batch.mesh.position.z;
+
+        for (let i = 0; i < count; i++) {
+          const sp = batch.nodes[i];
+          const c = sp.userData.atlas;
+          const x = sp.position.x - ox, y = sp.position.y - oy, z = sp.position.z - oz;
+          const p = i * 12;
+          // top-left, top-right, bottom-left, bottom-right
+          batch.positions[p] = x - rx + ux;
+          batch.positions[p + 1] = y - ry + uy;
+          batch.positions[p + 2] = z - rz + uz;
+          batch.positions[p + 3] = x + rx + ux;
+          batch.positions[p + 4] = y + ry + uy;
+          batch.positions[p + 5] = z + rz + uz;
+          batch.positions[p + 6] = x - rx - ux;
+          batch.positions[p + 7] = y - ry - uy;
+          batch.positions[p + 8] = z - rz - uz;
+          batch.positions[p + 9] = x + rx - ux;
+          batch.positions[p + 10] = y + ry - uy;
+          batch.positions[p + 11] = z + rz - uz;
+
+          const u = i * 8;
+          batch.uvs[u] = c.u0;     batch.uvs[u + 1] = c.v1;
+          batch.uvs[u + 2] = c.u1; batch.uvs[u + 3] = c.v1;
+          batch.uvs[u + 4] = c.u0; batch.uvs[u + 5] = c.v0;
+          batch.uvs[u + 6] = c.u1; batch.uvs[u + 7] = c.v0;
+
+          const a = i * 4;
+          batch.opacity[a] = sp.userData.opacity;
+          batch.opacity[a + 1] = sp.userData.opacity;
+          batch.opacity[a + 2] = sp.userData.opacity;
+          batch.opacity[a + 3] = sp.userData.opacity;
+        }
+        const positionAttr = batch.geo.attributes.position;
+        const uvAttr = batch.geo.attributes.uv;
+        const opacityAttr = batch.geo.attributes.aAmbientOpacity;
+        if (positionAttr.clearUpdateRanges) {
+          positionAttr.clearUpdateRanges();
+          uvAttr.clearUpdateRanges();
+          opacityAttr.clearUpdateRanges();
+          positionAttr.addUpdateRange(0, count * 4 * 3);
+          uvAttr.addUpdateRange(0, count * 4 * 2);
+          opacityAttr.addUpdateRange(0, count * 4);
+        }
+        positionAttr.needsUpdate = true;
+        uvAttr.needsUpdate = true;
+        opacityAttr.needsUpdate = true;
       }
 
       /* HUD frame tracking — the overlay is sized to the hovered card's
@@ -2654,13 +2742,14 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
           w.material?.dispose();
         }
       });
-      ambient.forEach(s => { s.material.map?.dispose(); s.material.dispose(); });
+      ambientBatches.forEach(batch => batch.geo.dispose());
+      ambientMat.dispose();
+      ambientAtlas.texture.dispose();
       starGeo.dispose();
       asmGeo.dispose(); assemblyPts.material.dispose();
       originHub.material.map?.dispose(); originHub.material.dispose();
       originLinks.forEach(l => { l.geometry.dispose(); l.material.dispose(); });
-      constLines.forEach(l => l.geometry.dispose()); constMat.dispose();
-      anamGeo.dispose(); anamPts.material.dispose();
+      constGeo.dispose(); constMat.dispose();
       if (renderer.renderLists) renderer.renderLists.dispose();
       if (renderer.forceContextLoss) renderer.forceContextLoss();
       window.removeEventListener("pointermove", onAnyAct);
