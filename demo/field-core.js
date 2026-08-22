@@ -2,12 +2,12 @@
    M.O. SYSTEM — FIELD CORE  ·  shared 0x00 Carrier Field scaffold
    ------------------------------------------------------------
    The common substrate every per-project demo sound palette sits
-   on. Extracted from demo/demo-sound.js; Wafer's production palette
+   on. Extracted from demo/wafer-sound.js; Wafer's production palette
    keeps its own tuned copy.
 
      window.makeFieldCore({ ratio })  →  core
 
-   ratio = the node's just-intonation sideband (carrier-field-v10):
+   ratio = the node's just-intonation sideband (app/landing/audio/carrier-field.js):
    0x02 = 5/4 · 0x03 = 4/3 · 0x04 = 3/2 … Accent pings default to
    the node's shade so every demo rings consonant with the field.
 

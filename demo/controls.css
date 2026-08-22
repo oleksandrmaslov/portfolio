@@ -1,0 +1,179 @@
+/* ============================================================
+   M.O. SYSTEM — DEMO HUD EXTRAS (shared by the non-wafer demos)
+   Adds to demo/base.css (loaded after it). Same language:
+   mono micro K/V, hairline plates, signal accents. The .hvd2-*
+   pieces are rail widgets the wafer console didn't need:
+   firmware switch caps, battery bar + addressable LED dots,
+   a morse readout line, curve-toy bits.
+   ============================================================ */
+
+/* ---- firmware switch caps (press & hold aware) ---- */
+.hvd2-swRow { display: flex; gap: var(--s-3); }
+
+/* taller rails (steppers, emotion bars) must never eclipse the
+   top-right STOP / sound controls on short viewports: cap the rail
+   to the space between the top controls and the bottom hint, and
+   let it scroll internally. Top controls also win the z-order. */
+.hvd__topRight { z-index: 7; }
+.hvd__rail {
+  max-height: calc(100vh - 170px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--hairline) transparent;
+}
+.hvd__rail::-webkit-scrollbar { width: 4px; }
+.hvd__rail::-webkit-scrollbar-thumb { background: var(--hairline); }
+
+.hvd2-sw {
+  flex: 1;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: var(--s-4) var(--s-3);
+  font-family: var(--ff-mono); font-size: 10px; letter-spacing: var(--tr-caps);
+  text-transform: uppercase;
+  border: 1px solid var(--hairline); color: var(--bone);
+  background: rgba(13, 17, 26, 0.85); cursor: pointer;
+  user-select: none; -webkit-user-select: none; touch-action: none;
+  transition: border-color var(--d-fast), background var(--d-fast), transform 60ms;
+}
+.hvd2-sw:hover { border-color: var(--signal); }
+.hvd2-sw.is-down { transform: translateY(1px); border-color: var(--signal); background: var(--signal-ghost); }
+.hvd2-sw__k { color: var(--signal); }
+.hvd2-sw__hint { color: var(--ghost); font-size: 9px; letter-spacing: 0.06em; text-transform: none; }
+
+/* ---- battery ---- */
+.hvd2-batt { display: flex; flex-direction: column; gap: var(--s-3); }
+.hvd2-batt__bar { position: relative; height: 4px; background: var(--hairline); }
+.hvd2-batt__fill { position: absolute; inset: 0 auto 0 0; background: var(--signal); transition: width 300ms var(--e-out), background 300ms; }
+.hvd2-batt__fill.is-low { background: #ff5a3c; }
+.hvd2-leds { display: flex; gap: var(--s-3); align-items: center; }
+.hvd2-led {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #101622; border: 1px solid var(--hairline);
+  transition: background 120ms, box-shadow 120ms;
+}
+.hvd2-led.is-g { background: #2dd24a; border-color: #2dd24a; box-shadow: 0 0 6px rgba(45, 210, 74, 0.7); }
+.hvd2-led.is-r { background: #ff2a1e; border-color: #ff2a1e; box-shadow: 0 0 6px rgba(255, 42, 30, 0.7); }
+
+/* ---- morse / status line (sits in the hvd__type slot) ---- */
+.hvd2-morse { display: inline-flex; gap: var(--s-4); align-items: baseline; font-family: var(--ff-mono); }
+.hvd2-morse__seq { letter-spacing: 0.22em; color: var(--ghost); }
+.hvd2-morse__seq b { color: #ff5a3c; font-weight: 500; text-shadow: 0 0 8px rgba(255, 60, 40, 0.6); }
+
+/* ---- 2D stage demos (PointAccel) ---- */
+.hvd2-canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; cursor: crosshair; }
+
+/* ---- pointaccel: param steppers ---- */
+.hvd2-step {
+  display: flex; align-items: center; gap: var(--s-3);
+  font-family: var(--ff-mono); font-size: 10px;
+  padding: 2px 0;
+}
+.hvd2-step__k { flex: 1; color: var(--ghost); letter-spacing: 0.04em; }
+.hvd2-step__btn {
+  width: 22px; height: 20px;
+  display: grid; place-items: center;
+  background: rgba(13, 17, 26, 0.85); color: var(--bone);
+  border: 1px solid var(--hairline); cursor: pointer;
+  font: inherit; line-height: 1;
+  transition: border-color var(--d-fast), color var(--d-fast);
+}
+.hvd2-step__btn:hover { border-color: var(--signal); color: var(--signal); }
+.hvd2-step__v { width: 44px; text-align: center; color: var(--bone); }
+
+/* ---- pointaccel: devicetree overlay ---- */
+.hvd2-dt {
+  display: flex; flex-direction: column; gap: var(--s-4);
+  width: min(92vw, 560px);
+  border: 1px solid var(--hairline);
+  background: rgba(7, 9, 14, 0.97);
+  padding: var(--s-5);
+}
+.hvd2-dt__head {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--s-4);
+  font-family: var(--ff-mono); font-size: 10px; letter-spacing: var(--tr-caps);
+  color: var(--ghost); text-transform: uppercase;
+}
+.hvd2-dt__pre {
+  margin: 0; padding: var(--s-4);
+  font-family: var(--ff-mono); font-size: 11px; line-height: 1.7;
+  color: var(--signal);
+  background: #04060a; border: 1px solid var(--hairline);
+  overflow-x: auto; white-space: pre;
+}
+
+/* ---- kerfur: emotion bars ---- */
+.hvd2-vars { display: flex; flex-direction: column; gap: var(--s-3); }
+.hvd2-var { display: flex; align-items: center; gap: var(--s-3); font-family: var(--ff-mono); font-size: 10px; }
+.hvd2-var__k { width: 44px; color: var(--ghost); letter-spacing: var(--tr-caps); }
+.hvd2-var__bar { position: relative; flex: 1; height: 3px; background: var(--hairline); }
+.hvd2-var__fill { position: absolute; inset: 0 auto 0 0; background: var(--signal); transition: width 260ms var(--e-out); }
+.hvd2-var__fill.is-warn { background: #ff5a3c; }
+.hvd2-var__v { width: 20px; text-align: right; color: var(--bone); }
+
+/* ---- kerfur: fullscreen OLED inspect ---- */
+.hvd-kf-inspect {
+  position: absolute; inset: 0; z-index: 4;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: var(--s-5);
+  background: rgba(4, 6, 10, 0.92);
+  opacity: 0; pointer-events: none;
+  transition: opacity 320ms var(--e-out);
+}
+.hvd-kf-inspect.is-open { opacity: 1; pointer-events: auto; }
+.hvd-kf-inspect__frame {
+  position: relative;
+  width: min(86vw, 132vh, 880px);
+  aspect-ratio: 2 / 1;
+  border: 1px solid var(--hairline);
+  background: #000;
+  box-shadow: 0 0 80px rgba(0, 240, 200, 0.07), inset 0 0 60px rgba(0, 0, 0, 0.8);
+}
+.hvd-kf-inspect__cvs {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  image-rendering: pixelated; cursor: crosshair; touch-action: none;
+  filter: drop-shadow(0 0 6px rgba(190, 235, 255, 0.35));
+}
+.hvd-kf-inspect__grid {
+  position: absolute; inset: 0; pointer-events: none;
+  background:
+    repeating-linear-gradient(0deg, transparent 0, transparent calc(100% / 64 - 1px), rgba(0, 0, 0, 0.38) calc(100% / 64 - 1px), rgba(0, 0, 0, 0.38) calc(100% / 64)),
+    repeating-linear-gradient(90deg, transparent 0, transparent calc(100% / 128 - 1px), rgba(0, 0, 0, 0.38) calc(100% / 128 - 1px), rgba(0, 0, 0, 0.38) calc(100% / 128));
+}
+.hvd-kf-inspect__cap {
+  font-family: var(--ff-mono); font-size: 10px; letter-spacing: var(--tr-caps);
+  color: var(--ghost); text-transform: uppercase; text-align: center;
+  padding: 0 var(--s-6);
+}
+
+/* color swatch seg */
+.hvd-seg--white .hvd-seg__dot { background: #f2f5ff; }
+.hvd-seg--red .hvd-seg__dot { background: #ff2a1e; }
+
+/* ---- phone: rail is a horizontal scroll toolbar (set in base.css) ---- */
+@media (max-width: 900px) {
+  /* each firmware section keeps a comfortable tap width in the strip */
+  .hvd2-swRow { gap: var(--s-3); }
+  .hvd2-sw { min-width: 120px; padding: var(--s-3) var(--s-4); }
+  /* keep the firmware-pattern hints on mobile — the page hint + bottom
+     hint are hidden here, so these caps are the only instructions left */
+  .hvd2-sw__hint { display: block; font-size: 8px; line-height: 1.3; max-width: 108px; }
+  .hvd2-batt { min-width: 150px; }
+  .hvd2-leds { gap: 5px; }
+  .hvd2-led { width: 10px; height: 10px; }     /* bigger touch-legible dots */
+  /* the morse readout sits below the top HUD, never under the thumb strip */
+  .hvd2-morse__seq { font-size: 13px; letter-spacing: 0.26em; }
+  /* kerfur: bars get a fixed strip width; inspect leaves room for the toolbar */
+  .hvd2-vars { min-width: 190px; }
+  .hvd-kf-inspect { justify-content: flex-start; padding-top: 18vh; }
+  .hvd-kf-inspect__frame { width: 94vw; }
+  /* pointaccel: steppers keep tap-size in the strip */
+  .hvd2-step { min-width: 210px; }
+  .hvd2-step__btn { width: 30px; height: 28px; }
+  .hvd2-dt { width: 94vw; }
+}
+
+/* very small phones — let the switch caps breathe two-up */
+@media (max-width: 460px) {
+  .hvd2-sw { min-width: 84px; }
+  .hvd2-sw__k { font-size: 9px; }
+}

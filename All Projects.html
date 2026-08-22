@@ -12,13 +12,13 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap" />
 
   <!-- Tokens + shared system -->
-  <link rel="stylesheet" href="system/tokens.css" />
-  <link rel="stylesheet" href="system/layout.css" />
-  <link rel="stylesheet" href="system/extras.css" />
-  <link rel="stylesheet" href="landing/manifest.css" />
+  <link rel="stylesheet" href="app/shared/styles/tokens.css" />
+  <link rel="stylesheet" href="app/shared/styles/layout.css" />
+  <link rel="stylesheet" href="app/shared/styles/components.css" />
+  <link rel="stylesheet" href="app/projects/index/styles.css" />
   <!-- Shared shipping cursor and ASCII RAMP scrollbar -->
-  <link rel="stylesheet" href="system/cursor.css?v=20260822-2" />
-  <link rel="stylesheet" href="system/scrollbar.css" />
+  <link rel="stylesheet" href="app/shared/styles/pointer.css?v=20260822-2" />
+  <link rel="stylesheet" href="app/shared/styles/scrollbar.css" />
 </head>
 <body>
   <div id="root"></div>
@@ -29,7 +29,7 @@
   <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 
   <!-- Shared core (boot, fib grid, cursor) -->
-  <script type="text/babel" data-presets="env,react" src="system/core.jsx"></script>
+  <script type="text/babel" data-presets="env,react" src="app/shared/core.jsx"></script>
 
   <!-- KeyButton — reused from landing -->
   <script type="text/babel" data-presets="env,react">
@@ -61,7 +61,7 @@
   </script>
 
   <!-- The node dataset — SINGLE SOURCE OF TRUTH, shared with the landing -->
-  <script src="landing_final5/projects-data.js"></script>
+  <script src="app/data/projects.js"></script>
   <script>
     /* Adapt MO_PROJECTS into the manifest row shape. The manifest is a table,
        so it only needs the text columns — no models, no poses. */
@@ -79,9 +79,9 @@
   </script>
 
   <!-- Manifest page -->
-  <script type="text/babel" data-presets="env,react" src="landing/manifest.jsx"></script>
+  <script type="text/babel" data-presets="env,react" src="app/projects/index/app.jsx"></script>
 
   <!-- ASCII RAMP scrollbar -->
-  <script src="landing_final/landing-scrollbar.js"></script>
+  <script src="app/shared/scrollbar.js"></script>
 </body>
 </html>

@@ -13,7 +13,7 @@
        pressSw, releaseSw, setHover, setBeam, setLeds,
        update, onPartLand, partCount }
 
-   Swap-in path for the real GLB later (FUSION-EXPORT-GUIDE.md):
+   Swap-in path for the production GLB (docs/model-export.md):
    keep this API, replace the geometry construction only.
    ============================================================ */
 (function () {

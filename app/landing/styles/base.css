@@ -1,0 +1,725 @@
+/* ============================================================
+   M.O. SYSTEM — Landing base styles
+   ============================================================ */
+
+body { overflow-x: clip; }
+
+/* ============================================================
+   WAFER FLIGHT OVERLAY — fly into node 0x01 → Wafer
+   ============================================================ */
+.wf {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.wf--on { opacity: 1; visibility: visible; }
+.wf--dissolve .wf__mount { opacity: 0; transition: opacity 700ms var(--e-out); }
+.wf--dissolve .wf__veil { opacity: 0; transition: opacity 700ms var(--e-out); }
+.wf--dissolve .wf__tag { opacity: 0; transition: opacity 400ms var(--e-out); }
+.wf__veil {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 50% 50%, rgba(0,240,200,0.06) 0%, transparent 58%),
+    var(--void);
+  opacity: 0;
+  transition: opacity 460ms var(--e-out);
+}
+.wf--on .wf__veil { opacity: 1; }
+.wf__mount { position: absolute; inset: 0; }
+.wf__mount canvas { display: block; width: 100%; height: 100%; }
+.wf__tag {
+  position: absolute;
+  bottom: var(--s-7);
+  left: var(--s-8);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-4);
+  font-family: var(--ff-mono);
+  font-size: var(--fs-micro);
+  letter-spacing: var(--tr-caps);
+  text-transform: uppercase;
+  color: var(--ghost);
+  opacity: 0;
+}
+.wf--on .wf__tag { animation: wfTag 900ms var(--e-out) 200ms both; }
+@keyframes wfTag {
+  0% { opacity: 0; transform: translateY(8px); }
+  30% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+.wf__tagDot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--signal); box-shadow: 0 0 8px var(--signal);
+  animation: pulse 1.4s var(--e-in-out) infinite;
+}
+.wf__tagSep { width: 16px; height: 1px; background: var(--hairline); }
+.wf__tagName { color: var(--signal); }
+
+/* fly-out when navigating to a project page */
+body.landing-exit .lp { animation: lpFlyOut 380ms var(--e-in-out) forwards; }
+body.landing-exit .lp-shell { opacity: 0; transition: opacity 280ms var(--e-out); }
+body.landing-exit .universeBg {
+  filter: blur(6px) brightness(1.4);
+  transform: scale(1.08);
+  transition: filter 420ms var(--e-out), transform 420ms var(--e-out);
+}
+@keyframes lpFlyOut {
+  from { opacity: 1; transform: scale(1); }
+  to   { opacity: 0; transform: scale(1.06); }
+}
+
+/* ============================================================
+   UNIVERSE BG — single, persistent, fixed behind everything.
+   The whole site lives on top of the same 3D field.
+   ============================================================ */
+.universeBg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: auto;
+  transition: filter var(--d-slow) var(--e-out),
+              opacity var(--d-slow) var(--e-out);
+}
+.universeBg .universe { position: absolute; inset: 0; }
+
+/* mode-specific visual treatment */
+.universeBg--drift   { filter: none;                       }
+.universeBg--grid    { filter: saturate(1.1);              }
+.universeBg--ambient { filter: blur(2px) saturate(0.65); opacity: 0.55; }
+
+/* universe HUD lives under content (zindex 4) but above bg (0).
+   Hide on all sections — we have section-specific framing (title corners, etc.).
+   `!important` to defeat the hudIn animation's `forwards` keyframe. */
+.universeBg .universe__hud,
+.universeBg .universe__reticle {
+  opacity: 0 !important;
+  animation: none !important;
+  pointer-events: none;
+}
+
+.lp {
+  position: relative;
+  z-index: 1;
+  padding-top: 0;
+  /* empty areas of .lp pass through to the fixed universe background.
+     Interactive children (sections, links, rows) opt back in to pointer events. */
+  pointer-events: none;
+}
+.lp > * { pointer-events: auto; }
+
+.lp-shell {
+  /* NOTE: do not set `position` here — .shell is already position: fixed
+     in app/shared/styles/layout.css and overriding it would un-pin the header. */
+  isolation: isolate;
+  background: linear-gradient(rgba(4,6,13,0.85), transparent);
+}
+/* Progressive blur (Apple-style): a stack of 7 layers, each masked to a
+   slice of the height with soft overlapping edges. Each layer's blur
+   strength doubles, and slices overlap so no single mask edge is visible. */
+.lp-shell__blur {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: calc(100% + 16px);
+  pointer-events: none;
+  z-index: -1;
+}
+.lp-shell__blur > div {
+  position: absolute;
+  inset: 0;
+}
+.lp-shell__blur > div:nth-child(1) {
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 12.5%, transparent 25%);
+          mask-image: linear-gradient(to bottom, #000 0%, #000 12.5%, transparent 25%);
+}
+.lp-shell__blur > div:nth-child(2) {
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 12.5%, #000 25%, transparent 37.5%);
+          mask-image: linear-gradient(to bottom, transparent 0%, #000 12.5%, #000 25%, transparent 37.5%);
+}
+.lp-shell__blur > div:nth-child(3) {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 12.5%, #000 25%, #000 37.5%, transparent 50%);
+          mask-image: linear-gradient(to bottom, transparent 12.5%, #000 25%, #000 37.5%, transparent 50%);
+}
+.lp-shell__blur > div:nth-child(4) {
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 25%, #000 37.5%, #000 50%, transparent 62.5%);
+          mask-image: linear-gradient(to bottom, transparent 25%, #000 37.5%, #000 50%, transparent 62.5%);
+}
+.lp-shell__blur > div:nth-child(5) {
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 37.5%, #000 50%, #000 62.5%, transparent 75%);
+          mask-image: linear-gradient(to bottom, transparent 37.5%, #000 50%, #000 62.5%, transparent 75%);
+}
+.lp-shell__blur > div:nth-child(6) {
+  backdrop-filter: blur(1px);
+  -webkit-backdrop-filter: blur(1px);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 50%, #000 62.5%, #000 75%, transparent 87.5%);
+          mask-image: linear-gradient(to bottom, transparent 50%, #000 62.5%, #000 75%, transparent 87.5%);
+}
+.lp-shell__blur > div:nth-child(7) {
+  backdrop-filter: blur(0.5px);
+  -webkit-backdrop-filter: blur(0.5px);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 62.5%, #000 75%, #000 87.5%, transparent 100%);
+          mask-image: linear-gradient(to bottom, transparent 62.5%, #000 75%, #000 87.5%, transparent 100%);
+}
+.lp-shell .shell__nav a.is-active {
+  color: var(--signal);
+  text-shadow: 0 0 12px var(--signal-glow);
+}
+
+/* ============================================================
+   TITLE SCREEN — minimalist framed viewport
+   The corner reticles mark a discoverable interactive area; pointer
+   shields outside the frame absorb mouse events so the universe is
+   only reachable INSIDE the frame.
+   ============================================================ */
+:root {
+  /* tighter top inset so the rail sits close to the edge; bigger side/bottom
+     so the ASCII has room to breathe. */
+  --title-inset: clamp(24px, 4vw, 55px);
+}
+
+.lp-title {
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+  pointer-events: none;
+}
+.lp-title > * { pointer-events: auto; }
+
+/* shield strips — perimeter blockers, transparent visually */
+.title__shield {
+  position: absolute;
+  pointer-events: auto;
+  z-index: 2;
+}
+.title__shield--top   { top: 0; left: 0; right: 0; height: var(--title-inset); }
+.title__shield--bot   { bottom: 0; left: 0; right: 0; height: var(--title-inset); }
+.title__shield--left  { top: var(--title-inset); bottom: var(--title-inset); left: 0;   width: var(--title-inset); }
+.title__shield--right { top: var(--title-inset); bottom: var(--title-inset); right: 0;  width: var(--title-inset); }
+
+/* ===== FRAME — corner reticles ===== */
+.title__frame {
+  position: absolute;
+  inset: var(--title-inset);
+  pointer-events: none;
+}
+.title__corner {
+  position: absolute;
+  width: 18px; height: 18px;
+  border: 1px solid var(--signal);
+  opacity: 0.7;
+}
+.title__corner--tl { top: 0; left: 0;     border-right: 0; border-bottom: 0; }
+.title__corner--tr { top: 0; right: 0;    border-left:  0; border-bottom: 0; }
+.title__corner--bl { bottom: 0; left: 0;  border-right: 0; border-top:    0; }
+.title__corner--br { bottom: 0; right: 0; border-left:  0; border-top:    0; }
+
+/* ===== ASCII M.O. — bottom-left, original styling restored ===== */
+.title__wordmark {
+  position: absolute;
+  bottom: calc(var(--title-inset) + var(--s-5));
+  left:   calc(var(--title-inset) + var(--s-5));
+  right:  calc(var(--title-inset) + 240px);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  pointer-events: auto;
+  max-width: 62vw;
+}
+/* ASCII base styling — matches the original hero ASCII exactly */
+.title__wordmark .asciiHero {
+  font-family: var(--ff-mono);
+  font-size: clamp(6px, 0.68vw, 24px);
+  line-height: 1.0;
+  letter-spacing: 0;
+  color: var(--ash);
+  white-space: pre;
+  margin: 0;
+  user-select: none;
+  text-shadow: 0 0 18px rgba(4, 6, 13, 0.9);
+  mix-blend-mode: screen;
+  opacity: 0.78;
+  width: 100%;
+}
+.title__wordmark .asciiHero i {
+  color: var(--signal);
+  font-style: normal;
+  text-shadow: 0 0 14px var(--signal-glow);
+}
+/* junction nodes — the hot cores of the letterform lattice */
+.title__wordmark .asciiHero b {
+  color: #eafffa;
+  font-weight: 600;
+  text-shadow: 0 0 10px var(--signal), 0 0 24px var(--signal-glow);
+}
+.title__wordmarkSub {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-4);
+  font-family: var(--ff-mono);
+  font-size: var(--fs-micro);
+  letter-spacing: var(--tr-caps);
+  text-transform: uppercase;
+  color: var(--ghost);
+  padding-top: var(--s-4);
+  border-top: 1px solid var(--hairline);
+}
+.title__wordmarkSubBullet {
+  color: var(--signal);
+  margin-right: var(--s-3);
+}
+.title__wordmarkSubSep { color: var(--shadow); }
+
+/* ============================================================
+   TITLE · VARIANT 1 (CONSOLE) — center field-guide + Continue cue
+   The guide is the OBVIOUS coachmark; it dismisses on first real
+   universe interaction (mo:universeInteract → .is-touched).
+   ============================================================ */
+
+/* ---- identity stamp · top-left (replaces the dense top rail) ---- */
+.title__idTop {
+  position: absolute;
+  top: 92px;
+  left: calc(var(--title-inset) + var(--s-5));
+  z-index: 3;
+  display: flex; flex-direction: column; gap: var(--s-3);
+}
+.title__idName {
+  font-family: var(--ff-mono); font-size: var(--fs-meta);
+  letter-spacing: var(--tr-caps); text-transform: uppercase; color: var(--bone);
+  display: inline-flex; align-items: center;
+}
+.title__idBullet { color: var(--signal); margin-right: var(--s-4); font-size: 10px; }
+.title__idRole {
+  font-family: var(--ff-mono); font-size: var(--fs-micro);
+  letter-spacing: var(--tr-caps); text-transform: uppercase; color: var(--ghost);
+  padding-left: calc(10px + var(--s-4));
+}
+
+/* ---- FIELD GUIDE — center coachmark ----
+   The OUTER .fieldHint owns positioning (translate-centering) and the
+   dismiss (opacity/transform/filter). The INNER wrapper owns the
+   cinematic rise+blur entrance. They are deliberately separated: the
+   cinRise animation has `forwards` fill, so if it ran on the SAME
+   element it would permanently clobber the centering transform AND
+   lock opacity:1 (defeating the dismiss). Keeping the animation on the
+   inner element leaves the outer's transform/opacity free. */
+.fieldHint {
+  position: absolute;
+  left: 50%; top: 46%;
+  transform: translate(-50%, -50%);
+  z-index: 3;
+  pointer-events: none;
+  text-align: center;
+  transition: opacity 0.6s var(--e-out), transform 0.7s var(--e-out), filter 0.6s var(--e-out);
+}
+.fieldHint__inner {
+  display: flex; flex-direction: column; align-items: center; gap: var(--s-6);
+}
+.fieldHint.is-dismissed {
+  opacity: 0;
+  transform: translate(-50%, calc(-50% - 10px)) scale(0.96);
+  filter: blur(3px);
+  pointer-events: none;
+}
+.fieldHint__ring { position: relative; width: 64px; height: 64px; }
+.fieldHint__ring::before,
+.fieldHint__ring::after {
+  content: ""; position: absolute; inset: 0; margin: auto;
+  width: 64px; height: 64px; border-radius: 50%;
+  border: 1px solid var(--signal);
+}
+.fieldHint__ring::after { animation: titleRingPulse 2.4s var(--e-out) infinite; }
+.fieldHint__ring::before { opacity: 0.25; }
+.fieldHint__ring .dot {
+  position: absolute; inset: 0; margin: auto;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--signal); box-shadow: 0 0 14px var(--signal);
+}
+.fieldHint__ring .cross { position: absolute; inset: 0; }
+.fieldHint__ring .cross::before,
+.fieldHint__ring .cross::after { content: ""; position: absolute; background: var(--signal-glow); }
+.fieldHint__ring .cross::before { left: 50%; top: -14px; width: 1px; height: 14px; transform: translateX(-50%); }
+.fieldHint__ring .cross::after  { left: 50%; bottom: -14px; width: 1px; height: 14px; transform: translateX(-50%); }
+@keyframes titleRingPulse {
+  0%   { transform: scale(1);   opacity: 0.9; }
+  70%  { transform: scale(2.4); opacity: 0; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+.fieldHint__lede {
+  font-family: var(--ff-mono); font-size: 11px; letter-spacing: var(--tr-caps);
+  text-transform: uppercase; color: var(--ash);
+  display: inline-flex; align-items: center; gap: var(--s-4);
+}
+.fieldHint__cues { display: flex; align-items: center; gap: var(--s-5); flex-wrap: nowrap; justify-content: center; }
+.fieldHint__cue {
+  display: inline-flex; align-items: center; gap: var(--s-4);
+  font-family: var(--ff-mono); font-size: var(--fs-body);
+  letter-spacing: 0.01em; color: var(--ash); white-space: nowrap;
+}
+.fieldHint__cue b { color: var(--bone); font-weight: 600; }
+.fieldHint__sep { width: 1px; height: 22px; background: var(--hairline); }
+
+/* ---- control cluster · bottom-right (Continue + PROCEED) ---- */
+.title__ctl {
+  position: absolute;
+  bottom: calc(var(--title-inset) + var(--s-5));
+  right:  calc(var(--title-inset) + var(--s-5));
+  z-index: 3;
+  display: flex; flex-direction: column; align-items: flex-end; gap: var(--s-4);
+  pointer-events: auto;
+}
+.title__proceedRow { display: inline-flex; align-items: center; gap: var(--s-6); }
+.title__proceedRow .key { transform: scale(1.25); transform-origin: bottom right; }
+.title__proceedCap {
+  font-family: var(--ff-mono); font-size: 10px; letter-spacing: var(--tr-caps);
+  text-transform: uppercase; color: var(--ghost);
+}
+.scrollcue {
+  display: inline-flex; align-items: center; gap: var(--s-4);
+  font-family: var(--ff-mono); font-size: var(--fs-meta);
+  letter-spacing: var(--tr-caps); text-transform: uppercase; color: var(--signal);
+}
+.scrollcue__txt { text-align: right; line-height: 1.3; }
+.scrollcue__chev {
+  display: inline-flex; flex-direction: column; align-items: center; gap: 1px;
+  animation: titleBob 1.8s var(--e-in-out) infinite;
+}
+.scrollcue__chev span {
+  width: 8px; height: 8px;
+  border-right: 1.5px solid var(--signal);
+  border-bottom: 1.5px solid var(--signal);
+  transform: rotate(45deg); opacity: 0.9;
+}
+.scrollcue__chev span:nth-child(2) { opacity: 0.45; margin-top: -4px; }
+@keyframes titleBob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(4px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .scrollcue__chev, .fieldHint__ring::after { animation: none; }
+}
+
+/* When the field has been touched, quiet the Continue cue chevron too — the
+   visitor has clearly figured out the controls. */
+.lp-title.is-touched .scrollcue { color: var(--signal-dim); }
+
+@media (max-width: 860px) {
+  .fieldHint__cues { flex-direction: column; gap: var(--s-4); }
+  .fieldHint__sep { display: none; }
+  .title__idTop { top: 80px; }
+}
+
+/* ============================================================
+   SECTIONS — shared
+   Fibonacci-aligned 33-column system: rails at 1, 2, 4, 7, 12, 20 / 33.
+   Content sits inside [21.21% .. 100%] for asymmetric editorial layout.
+   ============================================================ */
+.lp-section {
+  position: relative;
+  padding: var(--s-10) var(--s-7) var(--s-9);
+  max-width: var(--w-canvas);
+  margin: 0 auto;
+  z-index: 1;
+}
+
+/* ============================================================
+   UNIVERSE — WebGL infinite project gallery
+   ============================================================ */
+.universe {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 50% 40%, rgba(0,240,200,0.04) 0%, transparent 55%),
+    radial-gradient(ellipse at 80% 80%, rgba(255,91,59,0.025) 0%, transparent 50%),
+    var(--void);
+}
+.universe__mount {
+  position: absolute;
+  inset: 0;
+  touch-action: pan-y pinch-zoom;
+}
+body.mo-explore .universe__mount { touch-action: none; }
+.universe__mount canvas { display: block; }
+
+/* corner reticles — small + asymmetric */
+.universe__reticle {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  transition: opacity var(--d-base) var(--e-out);
+}
+.universe__reticle span {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border: 1px solid var(--signal);
+  opacity: 0.55;
+}
+.universe__reticle span:nth-child(1) { top: 84px;    left: var(--s-7);  border-right: 0; border-bottom: 0; }
+.universe__reticle span:nth-child(2) { top: 84px;    right: var(--s-7); border-left:  0; border-bottom: 0; }
+.universe__reticle span:nth-child(3) { bottom: 30vh; left: var(--s-7);  border-right: 0; border-top:    0; }
+.universe__reticle span:nth-child(4) { bottom: 30vh; right: var(--s-7); border-left:  0; border-top:    0; }
+
+/* HUD */
+.universe__hud {
+  position: absolute;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-family: var(--ff-mono);
+  font-size: var(--fs-micro);
+  letter-spacing: var(--tr-caps);
+  text-transform: uppercase;
+  pointer-events: none;
+  opacity: 0;
+  animation: hudIn 700ms var(--e-out) 700ms forwards;
+  transition: opacity var(--d-base) var(--e-out);
+}
+@keyframes hudIn { to { opacity: 1; } }
+.universe__hud--bl { bottom: 6vh; left:  var(--s-7); }
+.universe__hud--br { bottom: 6vh; right: var(--s-7); align-items: flex-end; }
+.universe__hudRow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-4);
+}
+.universe__hudKey { color: var(--ghost); }
+.universe__hudVal {
+  color: var(--signal);
+  font-variant-numeric: tabular-nums;
+}
+.universe__hud--br .universe__hudRow { flex-direction: row-reverse; }
+.universe__hud--br .universe__hudKey { color: var(--ghost); }
+.universe__hud--br .universe__hudVal { color: var(--bone); }
+
+/* ============================================================
+   Universe hover inspector — "lock-on" targeting frame
+   The card face already shows all its data (addr, name, sub, stack,
+   OPEN), so the hover adds NO text — it's a pure reticle that hugs
+   the card's true projected (rotated) shape. An SVG overlay covers
+   the universe mount; the frame loop writes the 4 corner positions
+   imperatively via __updateHUD, so it tracks the card exactly with
+   no axis-aligned box, no clamping, and no per-frame jitter.
+   ============================================================ */
+.uhud {
+  position: absolute;
+  inset: 0;                         /* covers the universe mount */
+  z-index: 6;
+  pointer-events: none;
+  overflow: visible;
+}
+.uhud__svg {
+  position: absolute;
+  inset: 0;
+  width: 100%; height: 100%;
+  overflow: visible;
+}
+
+/* lock-in: the whole reticle fades + settles when it jumps to a new card */
+.uhud__lock {
+  animation: hudLockIn 240ms var(--e-out) both;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+@keyframes hudLockIn {
+  from { opacity: 0; transform: scale(1.06); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* faint full outline of the card quad */
+.uhud__outline {
+  fill: none;
+  stroke: var(--signal);
+  stroke-width: 1;
+  opacity: 0.22;
+}
+
+/* the four corner brackets — bright signal, glowing */
+.uhud__bk {
+  fill: none;
+  stroke: var(--signal);
+  stroke-width: 1.5;
+  stroke-linecap: square;
+  stroke-linejoin: miter;
+  filter: drop-shadow(0 0 5px var(--signal-glow));
+}
+
+/* small upright LOCK tab pinned to the top-left corner */
+.uhud__tab {
+  position: absolute;
+  left: 0; top: 0;
+  transform: translate(-1px, calc(-100% - 7px));
+  display: flex; align-items: center; gap: 6px;
+  padding: 3px 8px;
+  background: var(--void);
+  border: 1px solid var(--signal-glow);
+  box-shadow: 0 0 16px -6px var(--signal-glow);
+  font-family: var(--ff-mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  color: var(--signal);
+  white-space: nowrap;
+  animation: hudTabIn 260ms var(--e-out) 60ms both;
+}
+@keyframes hudTabIn {
+  from { opacity: 0; transform: translate(-1px, calc(-100% - 1px)); }
+  to   { opacity: 1; transform: translate(-1px, calc(-100% - 7px)); }
+}
+.uhud__tabDot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--signal); box-shadow: 0 0 8px var(--signal);
+  animation: hudPulse 1.6s var(--e-in-out) infinite;
+}
+@keyframes hudPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .uhud__lock, .uhud__tab, .uhud__tabDot { animation: none !important; opacity: 1 !important; transform: none !important; }
+  .uhud__tab { transform: translate(-1px, calc(-100% - 7px)) !important; }
+}
+
+/* responsive */
+@media (max-width: 800px) {
+  .title__wordmark { bottom: calc(var(--title-inset) + var(--s-5)); left: calc(var(--title-inset) + var(--s-5)); }
+  .universe__reticle span { display: none; }
+}
+@media (max-width: 600px) {
+  .title__wordmark { right: calc(var(--title-inset) + 100px); }
+}
+
+/* ============================================================
+   EXPLORE MODE · mobile universe window
+   The overlay is pointer-transparent (touches fall through to the
+   universe mount); only its buttons take events. Page scroll is locked
+   by the component while it's open.
+   ============================================================ */
+.xpl {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+}
+.xpl__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: calc(env(safe-area-inset-top, 0px) + 16px) 16px 0;
+}
+.xpl__tag {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: var(--ff-mono); font-size: var(--fs-micro);
+  letter-spacing: var(--tr-caps); text-transform: uppercase;
+  color: var(--ash);
+}
+.xpl__dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--signal); box-shadow: 0 0 10px var(--signal-glow);
+  animation: xplPulse 2s ease-in-out infinite;
+}
+@keyframes xplPulse { 50% { opacity: 0.35; } }
+@media (prefers-reduced-motion: reduce) { .xpl__dot { animation: none; } }
+.xpl__close {
+  pointer-events: auto;
+  font-family: var(--ff-mono); font-size: 11px; letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--bone);
+  background: rgba(7, 10, 18, 0.72);
+  border: 1px solid var(--hairline);
+  padding: 12px 18px;
+  min-height: 44px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  cursor: pointer;
+}
+.xpl__close:active { background: var(--signal-ghost); color: var(--signal); }
+.xpl__hint {
+  margin-top: auto;
+  align-self: center;
+  font-family: var(--ff-mono); font-size: 10px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--ghost);
+  padding: 8px 14px;
+  border: 1px solid var(--hairline);
+  background: rgba(7, 10, 18, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  margin-bottom: calc(env(safe-area-inset-bottom, 0px) + 20px);
+  text-align: center;
+}
+/* explore mode strips the title chrome — the field owns the screen */
+body.mo-explore .title__shield,
+body.mo-explore .fieldHint,
+body.mo-explore .title__wordmark,
+body.mo-explore .title__ctl,
+body.mo-explore .title__idTop,
+body.mo-explore .lp-shell {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 300ms var(--e-out);
+}
+
+/* ============================================================
+   MOBILE LAYOUT
+   ============================================================ */
+@media (max-width: 700px) {
+  /* the corner HUDs read as desktop chrome (DRAG/WHEEL/CLICK verbs);
+     the explore overlay carries its own touch cues */
+  .universe__hud { display: none; }
+
+  /* control cluster: two keycaps fit, the Continue chevron stack doesn't */
+  .title__proceedRow { gap: var(--s-4); }
+  .title__proceedRow .scrollcue { display: none; }
+  .title__proceedRow .key { transform: scale(1.05); }
+
+  /* wordmark sits ABOVE the control cluster instead of beside it —
+     230px of ASCII + two keycaps don't share 390px */
+  .title__wordmark {
+    bottom: calc(var(--title-inset) + 108px);
+    right: auto;
+  }
+
+  /* shell header: drop the clock + sound label, tighten the nav */
+  .lp-shell .shell__status > span:not(.shell__dot) { display: none; }
+  .lp-shell .shell__status .volBtn { display: inline-flex; }
+  .lp-shell .shell__status .volBtn > span { display: none; }
+  .lp-shell .shell__nav { gap: 12px; }
+
+  /* (showAllGate mobile rules live in landing-scroll.css — cascade order) */
+}
+
+/* ============================================================
+   WIDE-SCREEN PASS — fluid type ramp
+   Above 1720px the fixed Fibonacci ramp starts to feel like a
+   postage stamp. Re-express every step in vw (values equal the
+   px ramp exactly AT 1720px, then scale proportionally) so the
+   page reads the same at 27" and at 40".
+   ============================================================ */
+@media (min-width: 1720px) {
+  :root {
+    --fs-micro:   0.64vw;
+    --fs-meta:    0.76vw;
+    --fs-body:    0.93vw;
+    --fs-lead:    1.22vw;
+    --fs-h4:      1.63vw;
+    --fs-h3:      2.44vw;
+    --fs-h2:      3.72vw;
+    --fs-h1:      5.58vw;
+    --fs-display: 8.37vw;
+    --fs-hero:    12.8vw;
+  }
+}

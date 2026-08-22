@@ -1,0 +1,148 @@
+/* Landing shell, sound control, and keycaps. */
+.shell {
+  position: fixed;
+  inset: 0 0 auto 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--s-6) var(--s-7);
+  z-index: 50;
+  font-family: var(--ff-mono);
+  font-size: var(--fs-meta);
+  letter-spacing: var(--tr-mono);
+  background: linear-gradient(var(--void), transparent);
+  pointer-events: none;
+}
+.shell > * { pointer-events: auto; }
+.shell__brand { color: var(--bone); font-weight: 500; }
+.shell__nav { display: flex; gap: var(--s-6); }
+.shell__nav a { color: var(--ash); transition: color var(--d-fast); }
+.shell__nav a:hover { color: var(--bone); }
+.shell__status { display: flex; align-items: center; gap: var(--s-4); color: var(--ash); }
+.shell__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--signal);
+  box-shadow: 0 0 12px var(--signal-glow);
+  animation: pulse 2.2s var(--e-in-out) infinite;
+}
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.4); opacity: 0.55; }
+}
+
+.volBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  padding: 0 0 0 var(--s-4);
+  border-left: 1px solid var(--hairline);
+  margin-left: var(--s-3);
+  font-family: var(--ff-mono);
+  font-size: var(--fs-micro);
+  letter-spacing: var(--tr-caps);
+  text-transform: uppercase;
+  color: var(--ghost);
+  transition: color var(--d-fast);
+}
+.volBtn:hover,
+.volBtn.is-on { color: var(--signal); }
+.volBtn__wave { display: block; overflow: visible; opacity: 0.85; transition: opacity var(--d-fast); }
+.volBtn.is-off .volBtn__wave { opacity: 0.5; }
+.volBtn:hover .volBtn__wave { opacity: 1; }
+
+.key {
+  position: relative;
+  display: inline-block;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--bone);
+  font: inherit;
+  cursor: pointer;
+  perspective: 600px;
+}
+.key__cap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 96px;
+  height: 64px;
+  padding: 10px 16px;
+  background: linear-gradient(180deg, #131724 0%, #0a0e16 100%);
+  border: 1px solid #2a3144;
+  border-top-color: #3a4256;
+  border-bottom-color: #161c2a;
+  border-radius: 6px 6px 8px 8px;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.06),
+    inset 0 -1px 0 rgba(0,0,0,0.5),
+    0 4px 0 #0a0e16,
+    0 6px 8px rgba(0,0,0,0.5);
+  transition: transform var(--d-tap) var(--e-out), box-shadow var(--d-tap) var(--e-out);
+}
+.key__legendTop {
+  position: absolute;
+  top: 6px;
+  left: 10px;
+  font-family: var(--ff-mono);
+  font-size: 10px;
+  color: var(--ghost);
+  letter-spacing: 0.04em;
+  transition: color var(--d-fast), text-shadow var(--d-fast);
+}
+.key__label {
+  font-family: var(--ff-mono);
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--bone);
+}
+.key__shadow {
+  position: absolute;
+  inset: auto 0 -8px 0;
+  height: 8px;
+  background: var(--void);
+  border-radius: 4px;
+  filter: blur(4px);
+  opacity: 0.6;
+  z-index: -1;
+}
+.key:hover .key__cap { border-color: var(--trace); border-top-color: #4a5266; }
+.key:hover .key__legendTop { color: var(--ash); }
+.key--down .key__cap {
+  transform: translateY(4px);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.04),
+    inset 0 -1px 0 rgba(0,0,0,0.5),
+    0 0 0 #0a0e16,
+    0 2px 4px rgba(0,0,0,0.5);
+}
+.key--lit .key__legendTop {
+  color: var(--signal);
+  text-shadow: 0 0 8px var(--signal);
+}
+.key--lit .key__label {
+  color: var(--signal);
+  text-shadow: 0 0 12px var(--signal-glow);
+}
+.key--lit .key__cap {
+  border-color: var(--signal);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.06),
+    inset 0 0 30px rgba(0,240,200,0.08),
+    0 4px 0 #0a0e16,
+    0 0 24px rgba(0,240,200,0.25);
+}
+.key--primary .key__cap {
+  background: linear-gradient(180deg, #0a3a32 0%, #062420 100%);
+  border-color: var(--signal-dim);
+}
+.key--primary .key__label,
+.key--primary .key__legendTop { color: var(--signal); }

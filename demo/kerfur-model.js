@@ -5,7 +5,7 @@
    ~139 × 142 × 101 mm): rounded body, two ear bumps, recessed
    front glass with the LIVE 128×64 face engine as an emissive
    texture (0.96" OLED proportions), USB-C notch, seam line.
-   Swap path: FUSION-EXPORT-GUIDE.md GLB replaces the shell;
+   Swap path: the docs/model-export.md GLB replaces the shell;
    the face plane + rig API stay.
 
    window.makeKerfurBody(THREE, { mini }) → {

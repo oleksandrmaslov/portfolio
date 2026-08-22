@@ -1,0 +1,104 @@
+/* ============================================================
+   M.O. SYSTEM — ASCII PHOTO FIGURE styles
+   Layers over the project photo-holder styles.
+   ============================================================ */
+
+.ascii-fig {
+  max-width: 860px;
+  width: 100%;
+  transition: border-color var(--d-base) var(--e-out);
+}
+.ascii-fig.is-probing { border-color: var(--signal-dim); }
+
+/* chrome: add live mode + grid readouts on the right */
+.ascii-fig .ph__chrome {
+  grid-template-columns: auto auto auto 1fr auto;
+}
+.ascii-fig__mode {
+  color: var(--signal);
+  text-shadow: 0 0 6px var(--signal-glow);
+  white-space: nowrap;
+}
+.ascii-fig__grid {
+  text-align: right;
+  color: var(--ghost);
+  white-space: nowrap;
+}
+
+/* stage — landscape sensor framing for the board photos */
+.ascii-fig__stage {
+  aspect-ratio: 3 / 2;
+  cursor: crosshair;
+  background: var(--space);
+}
+.ascii-fig.is-converted .ascii-fig__stage { cursor: pointer; }
+.ascii-fig__cv {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* reticle accent brightens while probing */
+.ascii-fig.is-probing .ph__phCorner { opacity: 1; }
+
+/* bottom hint pill */
+.ascii-fig__hint {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-4);
+  padding: var(--s-3) var(--s-5);
+  background: rgba(4, 6, 13, 0.62);
+  border: 1px solid var(--hairline);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  font-family: var(--ff-mono);
+  font-size: 10px;
+  letter-spacing: var(--tr-caps);
+  text-transform: uppercase;
+  color: var(--ash);
+  white-space: pre;
+  pointer-events: none;
+  opacity: 0.85;
+  transition: opacity var(--d-base) var(--e-out);
+}
+.ascii-fig.is-probing .ascii-fig__hint,
+.ascii-fig.is-converted .ascii-fig__hint { opacity: 1; color: var(--signal); border-color: var(--signal-dim); }
+
+/* loading shimmer */
+.ascii-fig__load {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: var(--ff-mono);
+  font-size: var(--fs-micro);
+  letter-spacing: var(--tr-caps);
+  text-transform: uppercase;
+  color: var(--ghost);
+  animation: asciiFigPulse 1.4s var(--e-in-out) infinite;
+}
+@keyframes asciiFigPulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
+.ascii-fig.is-ready .ascii-fig__load { display: none; }
+
+/* caption FPS tag */
+.ascii-fig .ph__cap { grid-template-columns: 28px 1fr auto; }
+.ascii-fig__fps {
+  font-family: var(--ff-mono);
+  font-size: 10px;
+  letter-spacing: var(--tr-caps);
+  color: var(--ghost);
+  align-self: center;
+}
+
+@media (max-width: 700px) {
+  .ascii-fig { max-width: none; }
+  .ascii-fig__stage { aspect-ratio: 4 / 3; }
+  .ascii-fig .ph__chrome { grid-template-columns: auto 1fr auto; }
+  .ascii-fig__mode { display: none; }
+  .ascii-fig__hint { bottom: 10px; font-size: 9px; padding: 6px 10px; }
+}

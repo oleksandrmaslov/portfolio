@@ -11,11 +11,11 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap" />
 
-  <link rel="stylesheet" href="system/tokens.css" />
-  <link rel="stylesheet" href="system/layout.css" />
-  <link rel="stylesheet" href="system/sections.css" />
-  <link rel="stylesheet" href="system/extras.css" />
-  <link rel="stylesheet" href="system/cursor.css?v=20260822-2" />
+  <link rel="stylesheet" href="app/shared/styles/tokens.css" />
+  <link rel="stylesheet" href="app/shared/styles/layout.css" />
+  <link rel="stylesheet" href="app/design-system/styles.css" />
+  <link rel="stylesheet" href="app/shared/styles/components.css" />
+  <link rel="stylesheet" href="app/shared/styles/pointer.css?v=20260822-2" />
 </head>
 <body>
   <div id="root"></div>
@@ -28,10 +28,10 @@
   <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 
-  <script type="text/babel" data-presets="env,react" src="system/core.jsx"></script>
-  <script type="text/babel" data-presets="env,react" src="system/bus3d.jsx"></script>
-  <script type="text/babel" data-presets="env,react" src="system/sections.jsx"></script>
-  <script type="text/babel" data-presets="env,react" src="system/sections2.jsx"></script>
-  <script type="text/babel" data-presets="env,react" src="system/app.jsx"></script>
+  <script type="text/babel" data-presets="env,react" src="app/shared/core.jsx"></script>
+  <script type="text/babel" data-presets="env,react" src="app/design-system/event-bus.jsx"></script>
+  <script type="text/babel" data-presets="env,react" src="app/design-system/foundations.jsx"></script>
+  <script type="text/babel" data-presets="env,react" src="app/design-system/patterns.jsx"></script>
+  <script type="text/babel" data-presets="env,react" src="app/design-system/app.jsx"></script>
 </body>
 </html>

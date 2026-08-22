@@ -10,15 +10,15 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap" />
 
-  <link rel="stylesheet" href="system/tokens.css" />
-  <link rel="stylesheet" href="system/layout.css" />
-  <link rel="stylesheet" href="system/extras.css" />
-  <link rel="stylesheet" href="project/page.css" />
-  <link rel="stylesheet" href="project_v2/page2.css" />
-  <link rel="stylesheet" href="demo/demo.css" />
-  <link rel="stylesheet" href="lab/ascii-photo/ascii-figure.css" />
-  <link rel="stylesheet" href="system/cursor.css?v=20260822-2" />
-  <link rel="stylesheet" href="system/scrollbar.css" />
+  <link rel="stylesheet" href="app/shared/styles/tokens.css" />
+  <link rel="stylesheet" href="app/shared/styles/layout.css" />
+  <link rel="stylesheet" href="app/shared/styles/components.css" />
+  <link rel="stylesheet" href="app/projects/styles/base.css" />
+  <link rel="stylesheet" href="app/projects/styles/case-study.css" />
+  <link rel="stylesheet" href="demo/base.css" />
+  <link rel="stylesheet" href="app/projects/components/ascii-photo.css" />
+  <link rel="stylesheet" href="app/shared/styles/pointer.css?v=20260822-2" />
+  <link rel="stylesheet" href="app/shared/styles/scrollbar.css" />
 </head>
 <body>
   <div id="root"></div>
@@ -48,20 +48,20 @@
   <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 
   <!-- Shared system (FibGrid, Boot, Cursor) -->
-  <script type="text/babel" data-presets="env,react" src="system/core.jsx"></script>
+  <script type="text/babel" data-presets="env,react" src="app/shared/core.jsx"></script>
 
 
 
   <!-- ASCII photo reveal-lens (lab engine + React figure wrapper) -->
-  <script src="lab/ascii-photo/ascii-photo.js"></script>
+  <script src="app/projects/components/ascii-photo.js"></script>
 
   <!-- Project pieces -->
-  <script type="text/babel" data-presets="env,react" src="project/data.jsx"></script>
-  <script type="text/babel" data-presets="env,react" src="project/viewer3d.jsx"></script>
-  <script src="project_v3/solid-materials.js"></script>
-  <script type="text/babel" data-presets="env,react" src="project_v3/hero-rig.jsx"></script>
-  <script type="text/babel" data-presets="env,react" src="project_v2/tweaks-panel.jsx"></script>
-  <script type="text/babel" data-presets="env,react" src="lab/ascii-photo/ascii-figure.jsx"></script>
+  <script type="text/babel" data-presets="env,react" src="app/projects/data.jsx"></script>
+  <script type="text/babel" data-presets="env,react" src="app/projects/rendering/model-viewer.jsx"></script>
+  <script src="app/projects/rendering/solid-materials.js"></script>
+  <script type="text/babel" data-presets="env,react" src="app/projects/rendering/solid-hero-rig.jsx"></script>
+  <script type="text/babel" data-presets="env,react" src="app/projects/components/tweak-panel.jsx"></script>
+  <script type="text/babel" data-presets="env,react" src="app/projects/components/ascii-photo.jsx"></script>
 
 
   <!-- Page config — everything project-specific lives here -->
@@ -99,11 +99,11 @@
     };
   </script>
 
-  <!-- Page core (generalized v2 template) -->
-  <script src="system/cursor-distortion.js"></script>
-  <script type="text/babel" data-presets="env,react" src="project_v2/page-core.jsx"></script>
+  <!-- Shared project page and pointer effects -->
+  <script src="app/shared/pointer-effects.js"></script>
+  <script type="text/babel" data-presets="env,react" src="app/projects/pages/standard-page.jsx"></script>
 
-  <!-- ASCII RAMP scrollbar (shared w/ Landing v11) -->
-  <script src="landing_final/landing-scrollbar.js"></script>
+  <!-- Shared ASCII RAMP scrollbar -->
+  <script src="app/shared/scrollbar.js"></script>
 </body>
 </html>

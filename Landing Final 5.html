@@ -8,7 +8,7 @@
   <meta name="theme-color" content="#05060a" />
   <link rel="icon" href="data:," />
 
-  <!-- FINAL 5 entry scene. It is the only render-critical style on purpose. -->
+  <!-- Landing entry scene. It is the only render-critical style on purpose. -->
   <style>
     html.mo-origin-on,
     html.mo-origin-on body { overflow: hidden; background: #05060a; }
@@ -105,7 +105,7 @@
       #mo-pl * { transition-duration: 80ms !important; }
     }
   </style>
-  <link rel="stylesheet" href="system/cursor.css?v=20260822-2" />
+  <link rel="stylesheet" href="app/shared/styles/pointer.css?v=20260822-2" />
   <script>
     document.documentElement.classList.add("mo-origin-on");
     window.__mo_origin_watchdog = setTimeout(function () {
@@ -127,40 +127,40 @@
   <link rel="stylesheet" media="print" data-app-style href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
 
   <!-- Tokens + shared system -->
-  <link rel="stylesheet" media="print" data-app-style href="system/tokens.css" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
-  <link rel="stylesheet" media="print" data-app-style href="landing_final5/chrome.css" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
-  <link rel="stylesheet" media="print" data-app-style href="landing_final/landing.css" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
-  <link rel="stylesheet" media="print" data-app-style href="landing_final/origin.css" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
-  <link rel="stylesheet" media="print" data-app-style href="landing_final/board-flight.css" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
-  <link rel="stylesheet" media="print" data-app-style href="landing_final/landing-scroll.css" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
-  <link rel="stylesheet" media="print" data-app-style href="landing_final/cinematic.css" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
-  <link rel="stylesheet" media="print" data-app-style href="system/scrollbar.css" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
-  <link rel="stylesheet" media="print" data-app-style href="landing_final/v10.css" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
-  <!-- FINAL 5 presentation layer: sticky stages fade on the compositor. -->
-  <link rel="stylesheet" media="print" data-app-style href="landing_final5/flight.css" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
-  <link rel="stylesheet" media="print" data-app-style href="landing_final/wide.css" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
-  <link rel="stylesheet" media="print" data-app-style href="landing_final5/title.css" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
+  <link rel="stylesheet" media="print" data-app-style href="app/shared/styles/tokens.css" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
+  <link rel="stylesheet" media="print" data-app-style href="app/landing/styles/shell.css" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
+  <link rel="stylesheet" media="print" data-app-style href="app/landing/styles/base.css" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
+  <link rel="stylesheet" media="print" data-app-style href="app/landing/styles/origin.css" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
+  <link rel="stylesheet" media="print" data-app-style href="app/landing/styles/board-flight.css" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
+  <link rel="stylesheet" media="print" data-app-style href="app/landing/styles/work-reel.css" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
+  <link rel="stylesheet" media="print" data-app-style href="app/landing/styles/cinematic.css" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
+  <link rel="stylesheet" media="print" data-app-style href="app/shared/styles/scrollbar.css" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
+  <link rel="stylesheet" media="print" data-app-style href="app/landing/styles/universe-hud.css" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
+  <!-- Landing presentation layer: sticky stages fade on the compositor. -->
+  <link rel="stylesheet" media="print" data-app-style href="app/landing/styles/scroll-flight.css" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
+  <link rel="stylesheet" media="print" data-app-style href="app/landing/styles/wide.css" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
+  <link rel="stylesheet" media="print" data-app-style href="app/landing/styles/title.css" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
   <noscript>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap" />
-    <link rel="stylesheet" href="system/tokens.css" />
-    <link rel="stylesheet" href="landing_final5/chrome.css" />
-    <link rel="stylesheet" href="landing_final/landing.css" />
-    <link rel="stylesheet" href="landing_final/origin.css" />
-    <link rel="stylesheet" href="landing_final/board-flight.css" />
-    <link rel="stylesheet" href="landing_final/landing-scroll.css" />
-    <link rel="stylesheet" href="landing_final/cinematic.css" />
-    <link rel="stylesheet" href="system/scrollbar.css" />
-    <link rel="stylesheet" href="landing_final/v10.css" />
-    <link rel="stylesheet" href="landing_final5/flight.css" />
-    <link rel="stylesheet" href="landing_final/wide.css" />
-    <link rel="stylesheet" href="landing_final5/title.css" />
+    <link rel="stylesheet" href="app/shared/styles/tokens.css" />
+    <link rel="stylesheet" href="app/landing/styles/shell.css" />
+    <link rel="stylesheet" href="app/landing/styles/base.css" />
+    <link rel="stylesheet" href="app/landing/styles/origin.css" />
+    <link rel="stylesheet" href="app/landing/styles/board-flight.css" />
+    <link rel="stylesheet" href="app/landing/styles/work-reel.css" />
+    <link rel="stylesheet" href="app/landing/styles/cinematic.css" />
+    <link rel="stylesheet" href="app/shared/styles/scrollbar.css" />
+    <link rel="stylesheet" href="app/landing/styles/universe-hud.css" />
+    <link rel="stylesheet" href="app/landing/styles/scroll-flight.css" />
+    <link rel="stylesheet" href="app/landing/styles/wide.css" />
+    <link rel="stylesheet" href="app/landing/styles/title.css" />
   </noscript>
 
-  <!-- Warm the Wafer v3 handoff target so the cross-page seam has no boot gap. -->
+  <!-- Warm the Wafer handoff target so the cross-page seam has no boot gap. -->
   <link rel="prefetch" href="Wafer v3.html" as="document" />
-  <link rel="prefetch" href="project_v3/page2.jsx" as="fetch" crossorigin="anonymous" />
-  <link rel="prefetch" href="project_v3/hero-rig.jsx" as="fetch" crossorigin="anonymous" />
-  <link rel="prefetch" href="project_v2/page2.css" as="style" />
+  <link rel="prefetch" href="app/projects/pages/wafer-page.jsx" as="fetch" crossorigin="anonymous" />
+  <link rel="prefetch" href="app/projects/rendering/solid-hero-rig.jsx" as="fetch" crossorigin="anonymous" />
+  <link rel="prefetch" href="app/projects/styles/case-study.css" as="style" />
   <link rel="prefetch" href="models/wafer_demo.glb" as="fetch" crossorigin="anonymous" />
 </head>
 <body>
@@ -176,7 +176,7 @@
   </div>
   <noscript><style>#mo-pl{display:none!important}</style></noscript>
   <div id="root" inert aria-hidden="true"></div>
-  <script src="landing_final5/preloader.js"></script>
+  <script src="app/landing/preloader.js"></script>
 
   <!-- Three.js (ESM) + GLTFLoader, exposed on window.THREE for the
        precompiled classic runtime below. -->
@@ -206,31 +206,31 @@
     window.dispatchEvent(new Event("mo:three-ready"));
   </script>
 
-  <!-- React + precompiled Final 5 runtime -->
+  <!-- React + precompiled landing runtime -->
   <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" integrity="sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" integrity="sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1" crossorigin="anonymous"></script>
 
   <!-- Shared project registry -->
-  <script src="landing_final5/projects-data.js"></script>
+  <script src="app/data/projects.js"></script>
 
   <!-- Sound engine + MOSound shell adapter -->
-  <script src="landing_final/carrier-field-v10.js"></script>
-  <script src="carrier-field/mo-sound.js"></script>
+  <script src="app/landing/audio/carrier-field.js"></script>
+  <script src="app/landing/audio/sound-controller.js"></script>
   <!-- Solid materials (plain JS, defined before the rig/cards run) -->
-  <script src="project_v3/solid-materials.js"></script>
-  <script src="system/cursor-distortion.js"></script>
-  <script src="landing_final5/runtime.js?v=c2ac6e197224"></script>
+  <script src="app/projects/rendering/solid-materials.js"></script>
+  <script src="app/shared/pointer-effects.js"></script>
+  <script src="app/landing/runtime.js?v=c0f2063c5301"></script>
 
   <!-- Cinematic layer -->
-  <script src="landing_final/cinematic.js"></script>
+  <script src="app/landing/controllers/cinematic.js"></script>
 
   <!-- Continuous flight — master scroll timeline · unified HUD · doppler wind -->
-  <script src="landing_final5/flight.js"></script>
+  <script src="app/landing/controllers/scroll-flight.js"></script>
 
   <!-- ASCII RAMP scrollbar -->
-  <script src="landing_final/landing-scrollbar.js"></script>
+  <script src="app/shared/scrollbar.js"></script>
 
   <!-- Sound score -->
-  <script src="landing_final/score.js"></script>
+  <script src="app/landing/audio/score.js"></script>
 </body>
 </html>

@@ -7,7 +7,7 @@
      assets/face/kerfur_faces.json   (recipes, anchors, timing)
      assets/face/[parts]/*.svg       (the real 1-bit part art)
 
-   …the same files tools/face_codegen.py compiles into
+   …the same files tools/face/generate-assets.py compiles into
    kerfur_face_assets.c for the SSD1306. Pipeline mirrors
    src/ui/face_runtime.c: expression base → reaction rebase →
    blink profile → look solver → micro-animations → effects →
@@ -43,7 +43,7 @@
     let anchors = null;
 
     /* ---------- load: JSON + rasterize every SVG via the codegen's
-       deterministic polygon pipeline (port of tools/face_codegen.py
+       deterministic polygon pipeline (port of tools/face/generate-assets.py
        _bitmap_from_svg_primitives). The SVGs carry fill="none", so
        browser <img> rasterization yields BLANK sprites — the firmware
        pipeline ignores fill and point-samples path polygons instead:
@@ -191,7 +191,7 @@
     let dirty = true;
     let lastDraw = 0;
 
-    /* blink scheduler (legacy profiles) */
+    /* blink scheduler (profile-specific timing) */
     let blink = { closing: false, t0: 0, dur: 220, next: 1800 + Math.random() * 2500 };
     function scheduleBlink(now, profile) {
       const sleepy = profile === "blink_legacy_sleepy";
