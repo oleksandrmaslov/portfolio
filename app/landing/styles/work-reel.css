@@ -79,7 +79,7 @@
 }
 .lp-workReel__titleNum {
   font-family: var(--ff-mono);
-  font-size: 11px;
+  font-size: var(--fs-micro);
   letter-spacing: var(--tr-caps);
   color: var(--signal);
   align-self: flex-start;
@@ -92,9 +92,9 @@
 }
 .lp-workReel__title {
   font-family: var(--ff-display);
-  font-size: clamp(72px, 10vw, 168px);    /* 1.6× smaller */
-  line-height: 0.86;
-  letter-spacing: -0.045em;
+  font-size: var(--fs-d1-nowrap);    /* 1.6× smaller */
+  line-height: var(--lh-flush);
+  letter-spacing: var(--tr-tightest);
   font-weight: 400;
   color: var(--bone);
   margin: 0;
@@ -112,7 +112,7 @@
   gap: 10px;
   align-self: flex-start;
   font-family: var(--ff-mono);
-  font-size: 12px;
+  font-size: var(--fs-small);
   letter-spacing: var(--tr-caps);
   text-transform: uppercase;
   color: var(--ghost);
@@ -180,7 +180,7 @@
   flex-wrap: nowrap;
   white-space: nowrap;
   font-family: var(--ff-mono);
-  font-size: 10px;
+  font-size: var(--fs-nano);
   letter-spacing: var(--tr-caps);
   text-transform: uppercase;
   color: var(--ghost);
@@ -193,9 +193,9 @@
 .rcard__name {
   font-family: var(--ff-display);
   font-weight: 400;
-  font-size: clamp(22px, 2.4vw, 30px);
+  font-size: var(--fs-d5-card);
   line-height: 1;
-  letter-spacing: -0.025em;
+  letter-spacing: var(--tr-display);
   color: var(--bone);
   margin: 0;
   white-space: nowrap;
@@ -211,7 +211,7 @@
 
 .rcard__sub {
   font-family: var(--ff-display);
-  font-size: 12px;
+  font-size: var(--fs-small);
   color: var(--ash);
   margin-top: 3px;
   white-space: nowrap;
@@ -222,7 +222,7 @@
 .rcard__open {
   display: inline-flex; align-items: center; gap: 10px;
   font-family: var(--ff-mono);
-  font-size: 10px;
+  font-size: var(--fs-nano);
   letter-spacing: var(--tr-caps);
   text-transform: uppercase;
   color: var(--ash);
@@ -230,7 +230,7 @@
 }
 .rcard:hover .rcard__open,
 .rcard--locked .rcard__open { color: var(--signal); }
-.rcard__open--forming { color: var(--ghost, #5b6478) !important; letter-spacing: 0.14em; }
+.rcard__open--forming { color: var(--ghost, #5b6478) !important; letter-spacing: var(--tr-caps); }
 .rcard:focus-visible { outline: 1.5px solid var(--signal, #00f0c8); outline-offset: 4px; }
 .rcard__arr { transition: transform var(--d-base) var(--e-out); }
 .rcard:hover .rcard__arr,
@@ -281,7 +281,7 @@
 .showAllGate__body { min-width: 0; }
 .showAllGate__overline {
   font-family: var(--ff-mono);
-  font-size: 10px;
+  font-size: var(--fs-nano);
   letter-spacing: var(--tr-caps);
   text-transform: uppercase;
   color: var(--signal);
@@ -289,9 +289,9 @@
 }
 .showAllGate__name {
   font-family: var(--ff-display);
-  font-size: clamp(24px, 2.8vw, 34px);
-  line-height: 0.98;
-  letter-spacing: -0.03em;
+  font-size: var(--fs-d5);
+  line-height: var(--lh-solid);
+  letter-spacing: var(--tr-display);
   font-weight: 400;
   color: var(--bone);
   margin: 0;
@@ -303,8 +303,8 @@
 }
 .showAllGate__sub {
   font-family: var(--ff-display);
-  font-size: 12px;
-  line-height: 1.45;
+  font-size: var(--fs-small);
+  line-height: var(--lh-mono);
   color: var(--ash);
   margin-top: 6px;
   max-width: 42ch;
@@ -352,7 +352,7 @@
   gap: 8px;
   padding: 3px 0;
   font-family: var(--ff-mono);
-  font-size: 9px;
+  font-size: var(--fs-nano);
   letter-spacing: var(--tr-caps);
   text-transform: uppercase;
   color: var(--ghost);
@@ -394,6 +394,7 @@
   .rcard { width: 64vw; }
   .lp-workReel__slot { flex: 0 0 70vw; padding: 0 18px; }
   .lp-workReel__slot--title { flex: 0 0 80vw; padding-left: 32px; }
+  /* Breakpoint refits of the nowrap --fs-d1-nowrap title, not ramp drift. */
   .lp-workReel__title { font-size: clamp(56px, 10vw, 120px); }
 }
 @media (max-width: 700px) {
@@ -462,19 +463,19 @@
   align-items: flex-start;
   padding: 22px 26px 0;
   font-family: var(--ff-mono);
-  font-size: 11px;
-  letter-spacing: 0.06em;
+  font-size: var(--fs-micro);
+  letter-spacing: var(--tr-wider);
 }
 .uNode__headL { display: flex; flex-direction: column; gap: 3px; }
 .uNode__id {
   display: inline-flex; align-items: center; gap: 7px;
-  color: #5b6478; text-transform: uppercase;
+  color: var(--ghost); text-transform: uppercase;
 }
 .uNode__sq { width: 6px; height: 6px; background: var(--signal); box-shadow: 0 0 7px var(--signal); }
-.uNode__year { color: #9aa3b3; padding-left: 13px; text-transform: uppercase; }
+.uNode__year { color: var(--ash); padding-left: 13px; text-transform: uppercase; }
 .uNode__headR {
   display: flex; flex-direction: column; gap: 3px;
-  text-align: right; color: #5b6478;
+  text-align: right; color: var(--ghost);
 }
 
 /* the model field — dotted graph; the board canvas is clipped into this rect */
@@ -493,22 +494,22 @@
   padding: 0 26px 26px;
 }
 .uNode__name {
-  font-family: var(--ff-display, 'Geist', sans-serif);
-  font-size: clamp(34px, 4.4vw, 52px);
-  line-height: 0.92; letter-spacing: -0.03em;
-  font-weight: 400; color: #e6e8ee; margin: 0;
+  font-family: var(--ff-display);
+  font-size: var(--fs-d4-node);
+  line-height: var(--lh-tight); letter-spacing: var(--tr-display);
+  font-weight: 400; color: var(--bone); margin: 0;
 }
 .uNode__name em { font-style: normal; color: var(--signal); }
 .uNode__sub {
   font-family: var(--ff-mono);
-  font-size: 11.5px; line-height: 1.45; letter-spacing: 0.02em;
-  color: #9aa3b3; text-wrap: pretty;
+  font-size: var(--fs-meta); line-height: var(--lh-mono); letter-spacing: var(--tr-mono);
+  color: var(--ash); text-wrap: pretty;
 }
 .uNode__cue {
   display: flex; align-items: center; gap: 9px;
   margin-top: 3px;
   font-family: var(--ff-mono);
-  font-size: 9.5px; letter-spacing: var(--tr-caps);
+  font-size: var(--fs-nano); letter-spacing: var(--tr-caps);
   text-transform: uppercase; color: var(--ghost);
 }
 .uNode__cueLine { width: 24px; height: 1px; background: var(--signal); }

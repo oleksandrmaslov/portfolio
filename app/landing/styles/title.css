@@ -26,8 +26,11 @@
   border: 1px solid var(--signal);
   color: var(--bone);
   background: var(--void);
-  font: 500 10px/1 "Geist Mono", ui-monospace, monospace;
-  letter-spacing: .12em;
+  font-family: var(--ff-mono);
+  font-size: var(--fs-nano);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: var(--tr-caps);
   text-transform: uppercase;
   transform: translate(-50%, calc(-100% - 24px));
   transition: transform 160ms cubic-bezier(.23, 1, .32, 1);
@@ -99,10 +102,10 @@ body.mo-yield .lp-title .scrollcue { animation: moYieldPulse 700ms var(--e-out) 
 }
 .lp-title .title__baseline .title__wordmarkSub {
   border-top: 0; padding-top: 0;
-  font-size: 10px; line-height: 1;
+  font-size: var(--fs-nano); line-height: 1;
   opacity: 1; transform: none;
 }
-.lp-title .title__baseline .title__proceedCap { font-size: 10px; line-height: 1; }
+.lp-title .title__baseline .title__proceedCap { font-size: var(--fs-nano); line-height: 1; }
 
 /* scroll-dissolve — the row exits with the b-stagger, like the old sub */
 .lp-title .title__stage .title__baseline {

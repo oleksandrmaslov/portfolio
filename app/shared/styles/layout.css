@@ -15,7 +15,7 @@
 .boot__inner {
   width: min(680px, 92vw);
   white-space: pre-wrap;
-  line-height: 1.7;
+  line-height: var(--lh-loose);
 }
 .boot__line { display: block; }
 .boot__line.ok::before    { content: "[ \00a0OK\00a0 ]"; color: var(--signal); margin-right: var(--s-4); }
@@ -137,7 +137,7 @@
   max-width: var(--w-reading);
   color: var(--ash);
   font-size: var(--fs-lead);
-  line-height: 1.5;
+  line-height: var(--lh-text);
   letter-spacing: var(--tr-body);
 }
 .section__meta {
@@ -161,9 +161,9 @@
 }
 .hero__title {
   font-family: var(--ff-display);
-  font-size: clamp(72px, 11vw, 200px);
-  line-height: 0.88;
-  letter-spacing: -0.04em;
+  font-size: var(--fs-d1);
+  line-height: var(--lh-flush);
+  letter-spacing: var(--tr-tighter);
   font-weight: 400;
   color: var(--bone);
   margin-bottom: var(--s-6);
@@ -187,7 +187,7 @@
   font-size: var(--fs-lead);
   color: var(--ash);
   max-width: 52ch;
-  line-height: 1.5;
+  line-height: var(--lh-text);
 }
 .hero__metaCol { display: flex; flex-direction: column; gap: var(--s-5); align-items: flex-start; }
 .hero__metaRow {

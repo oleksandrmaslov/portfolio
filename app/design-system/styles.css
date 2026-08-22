@@ -27,7 +27,7 @@
   font-family: var(--ff-display);
   font-size: var(--fs-body);
   color: var(--bone);
-  letter-spacing: -0.005em;
+  letter-spacing: var(--tr-body);
 }
 .swatch__row {
   display: flex;
@@ -42,7 +42,7 @@
   font-size: var(--fs-micro);
   color: var(--ash);
   margin-top: var(--s-3);
-  line-height: 1.5;
+  line-height: var(--lh-text);
 }
 .swatch__copy {
   position: absolute;
@@ -79,7 +79,7 @@
 }
 .typeRow__sample {
   color: var(--bone);
-  line-height: 0.95;
+  line-height: var(--lh-solid);
   letter-spacing: var(--tr-display);
   font-weight: 400;
   overflow: hidden;
@@ -92,7 +92,7 @@
   color: var(--ash);
   text-align: right;
   letter-spacing: var(--tr-mono);
-  line-height: 1.6;
+  line-height: var(--lh-text);
 }
 
 .typeFamilies {
@@ -111,12 +111,12 @@
 .family__name {
   font-size: var(--fs-h3);
   line-height: 1;
-  letter-spacing: -0.02em;
+  letter-spacing: var(--tr-head);
   margin-bottom: var(--s-5);
 }
 .family__meta { font-family: var(--ff-mono); font-size: var(--fs-micro); color: var(--ghost); display: flex; justify-content: space-between; margin-bottom: var(--s-5); }
-.family__sample { font-size: var(--fs-lead); color: var(--ash); line-height: 1.4; min-height: 80px; }
-.family__chars { margin-top: var(--s-5); font-size: var(--fs-meta); color: var(--ash); letter-spacing: 0.04em; }
+.family__sample { font-size: var(--fs-lead); color: var(--ash); line-height: var(--lh-mono); min-height: 80px; }
+.family__chars { margin-top: var(--s-5); font-size: var(--fs-meta); color: var(--ash); letter-spacing: var(--tr-wide); }
 
 /* ============================================================
    FIBONACCI SPACING VISUALIZATION
@@ -238,8 +238,8 @@
   padding: var(--s-5);
 }
 .dur__name { font-family: var(--ff-mono); font-size: var(--fs-meta); color: var(--bone); }
-.dur__val  { font-family: var(--ff-serif); font-style: italic; font-size: 42px; color: var(--signal); margin: var(--s-4) 0; font-feature-settings: "lnum","tnum"; }
-.dur__use  { font-family: var(--ff-mono); font-size: var(--fs-micro); color: var(--ghost); line-height: 1.6; }
+.dur__val  { font-family: var(--ff-serif); font-style: italic; font-size: var(--fs-h3); color: var(--signal); margin: var(--s-4) 0; font-feature-settings: "lnum","tnum"; }
+.dur__use  { font-family: var(--ff-mono); font-size: var(--fs-micro); color: var(--ghost); line-height: var(--lh-text); }
 
 /* ============================================================
    COMPONENTS SECTION — buttons, links, node card
@@ -379,7 +379,7 @@
 .node__desc {
   color: var(--ash);
   font-size: var(--fs-meta);
-  line-height: 1.55;
+  line-height: var(--lh-text);
   max-width: 48ch;
 }
 .node__foot {
@@ -444,10 +444,10 @@
   top: 130%; left: 50%;
   transform: translateX(-50%);
   font-family: var(--ff-mono);
-  font-size: 9px;
+  font-size: var(--fs-nano);
   color: var(--bone);
   white-space: nowrap;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--tr-wide);
 }
 .cursor.hot .cursor__ring { transform: scale(1.6); border-color: var(--signal); }
 .cursor.hot .cursor__center { background: var(--signal); }
@@ -474,7 +474,7 @@
   font-family: var(--ff-display);
   font-size: var(--fs-lead);
   color: var(--bone);
-  line-height: 1.5;
+  line-height: var(--lh-text);
   margin-bottom: var(--s-5);
 }
 .voiceCol .bad p { color: var(--shadow); text-decoration: line-through; text-decoration-color: var(--pulse); }
@@ -512,9 +512,9 @@
 }
 .footer__big {
   font-family: var(--ff-display);
-  font-size: clamp(48px, 8vw, 144px);
-  line-height: 0.9;
-  letter-spacing: -0.04em;
+  font-size: var(--fs-d2);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--tr-tighter);
   color: var(--bone);
   grid-column: 1 / -1;
   margin-bottom: var(--s-7);
@@ -537,4 +537,15 @@
   .lexicon__row > * { border-bottom: none; padding: var(--s-3) 0; }
   .shell__nav { display: none; }
   .cursor { display: none; }
+}
+
+/* group heading inside the type specimen */
+.typeGroup {
+  font-family: var(--ff-mono);
+  font-size: var(--fs-micro);
+  font-weight: 500;
+  letter-spacing: var(--tr-caps);
+  text-transform: uppercase;
+  color: var(--ghost);
+  margin: var(--s-8) 0 var(--s-5);
 }

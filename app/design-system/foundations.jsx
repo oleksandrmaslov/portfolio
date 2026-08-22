@@ -118,35 +118,44 @@ function ColorSection() {
 /* ============================================================
    TYPOGRAPHY
    ============================================================ */
-const TYPE_SCALE = [
-  { name: "hero",    val: 220, fam: "Geist",        weight: 400, tracking: "-0.04em", text: "Wafer" },
-  { name: "display", val: 144, fam: "Geist",        weight: 400, tracking: "-0.03em", text: "Maslov Oleksandr" },
-  { name: "h1",      val: 96,  fam: "Geist",        weight: 400, tracking: "-0.03em", text: "Selected projects" },
-  { name: "h2",      val: 64,  fam: "Geist",        weight: 400, tracking: "-0.02em", text: "Embedded systems" },
-  { name: "h3",      val: 42,  fam: "Geist",        weight: 500, tracking: "-0.02em", text: "Kerfur · embedded pet" },
-  { name: "h4",      val: 28,  fam: "Geist",        weight: 500, tracking: "-0.01em", text: "BLE peripheral · ANCS" },
-  { name: "lead",    val: 21,  fam: "Geist",        weight: 400, tracking: "-0.005em",text: "Event-driven firmware on nRF52840" },
-  { name: "body",    val: 16,  fam: "Geist",        weight: 400, tracking: "-0.005em",text: "Smooth pointer acceleration for trackpads" },
-  { name: "meta",    val: 13,  fam: "Geist Mono",   weight: 500, tracking: "0.01em",  text: "v0.1.0 · 21.07.2026 · MUC" },
-  { name: "micro",   val: 11,  fam: "Geist Mono",   weight: 500, tracking: "0.12em",  text: "STATUS · ONLINE · CHANNEL 03" },
+const TYPE_DISPLAY = [
+  { name: "d1", clamp: "clamp(72px, 12vw, 200px)",  render: 118, tr: "--tr-tightest", text: "Wafer" },
+  { name: "d2", clamp: "clamp(56px, 8.5vw, 144px)", render: 92,  tr: "--tr-tighter",  text: "Maslov Oleksandr" },
+  { name: "d3", clamp: "clamp(40px, 5.8vw, 80px)",  render: 68,  tr: "--tr-display",  text: "Selected projects" },
+  { name: "d4", clamp: "clamp(29px, 3.4vw, 52px)",  render: 46,  tr: "--tr-display",  text: "Embedded systems" },
+  { name: "d5", clamp: "clamp(21px, 2.5vw, 34px)",  render: 32,  tr: "--tr-head",     text: "Kerfur · embedded pet" },
+  { name: "d6", clamp: "clamp(19px, 2.2vw, 30px)",  render: 26,  tr: "--tr-body",     text: "Event-driven firmware on nRF52840" },
+  { name: "d7", clamp: "clamp(14px, 1.15vw, 17px)", render: 17,  tr: "--tr-body",     text: "Smooth pointer acceleration for trackpads" },
+];
+
+const TYPE_STATIC = [
+  { name: "h2",    rem: "4rem",      px: 64, fam: "Geist",      weight: 400, tr: "--tr-head",  text: "Embedded systems" },
+  { name: "h3",    rem: "2.625rem",  px: 42, fam: "Geist",      weight: 500, tr: "--tr-head",  text: "Kerfur · embedded pet" },
+  { name: "h4",    rem: "1.75rem",   px: 28, fam: "Geist",      weight: 500, tr: "--tr-tight", text: "BLE peripheral · ANCS" },
+  { name: "lead",  rem: "1.3125rem", px: 21, fam: "Geist",      weight: 400, tr: "--tr-body",  text: "Event-driven firmware on nRF52840" },
+  { name: "body",  rem: "1rem",      px: 16, fam: "Geist",      weight: 400, tr: "--tr-body",  text: "Smooth pointer acceleration for trackpads" },
+  { name: "meta",  rem: "0.8125rem", px: 13, fam: "Geist Mono", weight: 500, tr: "--tr-mono",  text: "v0.1.0 · 21.07.2026 · MUC" },
+  { name: "small", rem: "0.75rem",   px: 12, fam: "Geist Mono", weight: 400, tr: "--tr-mono",  text: "36-key split · 4-8 mm aluminium case" },
+  { name: "micro", rem: "0.6875rem", px: 11, fam: "Geist Mono", weight: 500, tr: "--tr-caps",  text: "STATUS · ONLINE · CHANNEL 03" },
+  { name: "nano",  rem: "0.625rem",  px: 10, fam: "Geist Mono", weight: 500, tr: "--tr-caps",  text: "HUD KEY · 0X01 · LIVE" },
 ];
 
 function TypeSection() {
   return (
     <Section num="02" title="Typography" id="type"
-      lede="A neutral, mechanical-feeling Geist carries the message. Geist Mono speaks the data. Instrument Serif Italic, used sparingly, marks pull-quotes and Fibonacci numerals — the only place the system permits ornament."
-      meta={<>3 families · 10 sizes · Fibonacci ramp</>}>
+      lede="A neutral, mechanical-feeling Geist carries the message. Geist Mono speaks the data. Instrument Serif Italic, used sparingly, marks pull-quotes and numerals — the only place the system permits ornament."
+      meta={<>3 families · 7 fluid rungs · 9 static rungs</>}>
       <div className="typeFamilies">
         <div className="family">
-          <div className="family__meta"><span>01 / DISPLAY</span><span>variable</span></div>
+          <div className="family__meta"><span>01 / DISPLAY</span><span>400 · 500 · 600</span></div>
           <div className="family__name" style={{fontFamily: "var(--ff-display)"}}>Geist</div>
-          <div className="family__sample" style={{fontFamily: "var(--ff-display)"}}>The Wafer is a 36-key ultrathin split keyboard. 4–8 mm aluminium case, magnetic mechanism.</div>
+          <div className="family__sample" style={{fontFamily: "var(--ff-display)"}}>The Wafer is a 36-key ultrathin split keyboard. 4-8 mm aluminium case, magnetic mechanism.</div>
           <div className="family__chars t-mono">AaBbCc · 0123456789 · &amp;@#</div>
         </div>
         <div className="family">
-          <div className="family__meta"><span>02 / TECHNICAL</span><span>variable</span></div>
+          <div className="family__meta"><span>02 / TECHNICAL</span><span>400 · 500 · 600</span></div>
           <div className="family__name" style={{fontFamily: "var(--ff-mono)"}}>Geist Mono</div>
-          <div className="family__sample t-mono" style={{fontSize: 15}}>{`// kerfur — event bus
+          <div className="family__sample t-mono" style={{fontSize: "var(--fs-meta)"}}>{`// kerfur — event bus
 bus_post(EV_TILT, &(tilt_t){ .ax=12, .ay=-4 });
 // → behavior engine consumes`}</div>
           <div className="family__chars t-mono">AaBb · 01l1 · {`{[<>]}`} · ::-&gt;</div>
@@ -154,24 +163,46 @@ bus_post(EV_TILT, &(tilt_t){ .ax=12, .ay=-4 });
         <div className="family">
           <div className="family__meta"><span>03 / EDITORIAL</span><span>italic only</span></div>
           <div className="family__name t-serif">Instrument</div>
-          <div className="family__sample t-serif" style={{fontSize: 22}}>"the system is the message" — used for pull-quotes and Fibonacci numerals</div>
-          <div className="family__chars t-serif" style={{fontSize: 18}}>1 · 2 · 3 · 5 · 8 · 13 · 21 · 34 · 55</div>
+          <div className="family__sample t-serif" style={{fontSize: "var(--fs-lead)"}}>"the system is the message" — used for pull-quotes and numerals</div>
+          <div className="family__chars t-serif">1 · 2 · 3 · 5 · 8 · 13 · 21 · 34 · 55</div>
         </div>
       </div>
 
+      <h3 className="typeGroup">Fluid display ramp — one scale for every route</h3>
       <div className="typeStack">
-        {TYPE_SCALE.map(t => (
+        {TYPE_DISPLAY.map(t => (
           <div key={t.name} className="typeRow">
             <div className="typeRow__label">{t.name}</div>
             <div className="typeRow__sample" style={{
-              fontSize: Math.min(t.val, 120),
-              fontFamily: t.fam.includes("Mono") ? "var(--ff-mono)" : "var(--ff-display)",
-              fontWeight: t.weight,
-              letterSpacing: t.tracking,
+              fontSize: t.render,
+              fontFamily: "var(--ff-display)",
+              fontWeight: 400,
+              letterSpacing: `var(${t.tr})`,
             }}>{t.text}</div>
             <div className="typeRow__spec">
-              {t.val}px / {t.weight} / {t.tracking}<br />
-              {t.fam}
+              --fs-{t.name}<br />
+              {t.clamp}<br />
+              {t.tr}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <h3 className="typeGroup">Static ramp — rem, so browser text size applies</h3>
+      <div className="typeStack">
+        {TYPE_STATIC.map(t => (
+          <div key={t.name} className="typeRow">
+            <div className="typeRow__label">{t.name}</div>
+            <div className="typeRow__sample" style={{
+              fontSize: `var(--fs-${t.name})`,
+              fontFamily: t.fam.includes("Mono") ? "var(--ff-mono)" : "var(--ff-display)",
+              fontWeight: t.weight,
+              letterSpacing: `var(${t.tr})`,
+            }}>{t.text}</div>
+            <div className="typeRow__spec">
+              --fs-{t.name}<br />
+              {t.rem} · {t.px}px · {t.weight}<br />
+              {t.tr}
             </div>
           </div>
         ))}

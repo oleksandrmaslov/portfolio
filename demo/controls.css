@@ -28,7 +28,7 @@
   flex: 1;
   display: flex; flex-direction: column; align-items: center; gap: 3px;
   padding: var(--s-4) var(--s-3);
-  font-family: var(--ff-mono); font-size: 10px; letter-spacing: var(--tr-caps);
+  font-family: var(--ff-mono); font-size: var(--fs-nano); letter-spacing: var(--tr-caps);
   text-transform: uppercase;
   border: 1px solid var(--hairline); color: var(--bone);
   background: rgba(13, 17, 26, 0.85); cursor: pointer;
@@ -38,7 +38,7 @@
 .hvd2-sw:hover { border-color: var(--signal); }
 .hvd2-sw.is-down { transform: translateY(1px); border-color: var(--signal); background: var(--signal-ghost); }
 .hvd2-sw__k { color: var(--signal); }
-.hvd2-sw__hint { color: var(--ghost); font-size: 9px; letter-spacing: 0.06em; text-transform: none; }
+.hvd2-sw__hint { color: var(--ghost); font-size: var(--fs-nano); letter-spacing: var(--tr-wider); text-transform: none; }
 
 /* ---- battery ---- */
 .hvd2-batt { display: flex; flex-direction: column; gap: var(--s-3); }
@@ -56,7 +56,7 @@
 
 /* ---- morse / status line (sits in the hvd__type slot) ---- */
 .hvd2-morse { display: inline-flex; gap: var(--s-4); align-items: baseline; font-family: var(--ff-mono); }
-.hvd2-morse__seq { letter-spacing: 0.22em; color: var(--ghost); }
+.hvd2-morse__seq { letter-spacing: var(--tr-widest); color: var(--ghost); }
 .hvd2-morse__seq b { color: #ff5a3c; font-weight: 500; text-shadow: 0 0 8px rgba(255, 60, 40, 0.6); }
 
 /* ---- 2D stage demos (PointAccel) ---- */
@@ -65,10 +65,10 @@
 /* ---- pointaccel: param steppers ---- */
 .hvd2-step {
   display: flex; align-items: center; gap: var(--s-3);
-  font-family: var(--ff-mono); font-size: 10px;
+  font-family: var(--ff-mono); font-size: var(--fs-nano);
   padding: 2px 0;
 }
-.hvd2-step__k { flex: 1; color: var(--ghost); letter-spacing: 0.04em; }
+.hvd2-step__k { flex: 1; color: var(--ghost); letter-spacing: var(--tr-wide); }
 .hvd2-step__btn {
   width: 22px; height: 20px;
   display: grid; place-items: center;
@@ -90,12 +90,12 @@
 }
 .hvd2-dt__head {
   display: flex; align-items: center; justify-content: space-between; gap: var(--s-4);
-  font-family: var(--ff-mono); font-size: 10px; letter-spacing: var(--tr-caps);
+  font-family: var(--ff-mono); font-size: var(--fs-nano); letter-spacing: var(--tr-caps);
   color: var(--ghost); text-transform: uppercase;
 }
 .hvd2-dt__pre {
   margin: 0; padding: var(--s-4);
-  font-family: var(--ff-mono); font-size: 11px; line-height: 1.7;
+  font-family: var(--ff-mono); font-size: var(--fs-micro); line-height: var(--lh-loose);
   color: var(--signal);
   background: #04060a; border: 1px solid var(--hairline);
   overflow-x: auto; white-space: pre;
@@ -103,7 +103,7 @@
 
 /* ---- kerfur: emotion bars ---- */
 .hvd2-vars { display: flex; flex-direction: column; gap: var(--s-3); }
-.hvd2-var { display: flex; align-items: center; gap: var(--s-3); font-family: var(--ff-mono); font-size: 10px; }
+.hvd2-var { display: flex; align-items: center; gap: var(--s-3); font-family: var(--ff-mono); font-size: var(--fs-nano); }
 .hvd2-var__k { width: 44px; color: var(--ghost); letter-spacing: var(--tr-caps); }
 .hvd2-var__bar { position: relative; flex: 1; height: 3px; background: var(--hairline); }
 .hvd2-var__fill { position: absolute; inset: 0 auto 0 0; background: var(--signal); transition: width 260ms var(--e-out); }
@@ -140,7 +140,7 @@
     repeating-linear-gradient(90deg, transparent 0, transparent calc(100% / 128 - 1px), rgba(0, 0, 0, 0.38) calc(100% / 128 - 1px), rgba(0, 0, 0, 0.38) calc(100% / 128));
 }
 .hvd-kf-inspect__cap {
-  font-family: var(--ff-mono); font-size: 10px; letter-spacing: var(--tr-caps);
+  font-family: var(--ff-mono); font-size: var(--fs-nano); letter-spacing: var(--tr-caps);
   color: var(--ghost); text-transform: uppercase; text-align: center;
   padding: 0 var(--s-6);
 }
@@ -156,12 +156,12 @@
   .hvd2-sw { min-width: 120px; padding: var(--s-3) var(--s-4); }
   /* keep the firmware-pattern hints on mobile — the page hint + bottom
      hint are hidden here, so these caps are the only instructions left */
-  .hvd2-sw__hint { display: block; font-size: 8px; line-height: 1.3; max-width: 108px; }
+  .hvd2-sw__hint { display: block; font-size: var(--fs-nano); line-height: var(--lh-compact); max-width: 108px; }
   .hvd2-batt { min-width: 150px; }
   .hvd2-leds { gap: 5px; }
   .hvd2-led { width: 10px; height: 10px; }     /* bigger touch-legible dots */
   /* the morse readout sits below the top HUD, never under the thumb strip */
-  .hvd2-morse__seq { font-size: 13px; letter-spacing: 0.26em; }
+  .hvd2-morse__seq { font-size: var(--fs-meta); letter-spacing: var(--tr-widest); }
   /* kerfur: bars get a fixed strip width; inspect leaves room for the toolbar */
   .hvd2-vars { min-width: 190px; }
   .hvd-kf-inspect { justify-content: flex-start; padding-top: 18vh; }
@@ -175,5 +175,5 @@
 /* very small phones — let the switch caps breathe two-up */
 @media (max-width: 460px) {
   .hvd2-sw { min-width: 84px; }
-  .hvd2-sw__k { font-size: 9px; }
+  .hvd2-sw__k { font-size: var(--fs-nano); }
 }

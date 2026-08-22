@@ -58,7 +58,7 @@
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   font-family: var(--ff-mono);
-  font-size: 10px;
+  font-size: var(--fs-nano);
   letter-spacing: var(--tr-caps);
   text-transform: uppercase;
   color: var(--ash);
@@ -89,7 +89,7 @@
 .ascii-fig .ph__cap { grid-template-columns: 28px 1fr auto; }
 .ascii-fig__fps {
   font-family: var(--ff-mono);
-  font-size: 10px;
+  font-size: var(--fs-nano);
   letter-spacing: var(--tr-caps);
   color: var(--ghost);
   align-self: center;
@@ -100,5 +100,5 @@
   .ascii-fig__stage { aspect-ratio: 4 / 3; }
   .ascii-fig .ph__chrome { grid-template-columns: auto 1fr auto; }
   .ascii-fig__mode { display: none; }
-  .ascii-fig__hint { bottom: 10px; font-size: 9px; padding: 6px 10px; }
+  .ascii-fig__hint { bottom: 10px; font-size: var(--fs-nano); padding: 6px 10px; }
 }

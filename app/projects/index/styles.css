@@ -63,7 +63,7 @@
 
 .m-hero__title {
   font-family: var(--ff-mono);
-  font-size: clamp(56px, 9vw, 144px);
+  font-size: var(--fs-d2);
   font-weight: 500;
   line-height: var(--lh-tight);
   letter-spacing: var(--tr-head);
@@ -78,7 +78,7 @@
 .m-hero__titleSep {
   color: var(--ghost);
   margin: 0 0.02em;
-  font-weight: 300;
+  font-weight: 400;
 }
 
 .m-hero__sub {
@@ -95,7 +95,7 @@
   padding: 1px 6px;
   margin: 0 2px;
   font-family: var(--ff-mono);
-  font-size: 11px;
+  font-size: var(--fs-micro);
   color: var(--bone);
   background: var(--carbon);
   border: 1px solid var(--hairline);
@@ -199,7 +199,7 @@
   color: var(--bone);
   font-family: var(--ff-mono);
   font-size: var(--fs-lead);
-  letter-spacing: -0.01em;
+  letter-spacing: var(--tr-tight);
   padding: 6px 0;
   outline: none;
   caret-color: var(--signal);
@@ -234,7 +234,7 @@
 /* --- pills --- */
 .m-pill {
   font-family: var(--ff-mono);
-  font-size: 10px;
+  font-size: var(--fs-nano);
   letter-spacing: var(--tr-mono);
   text-transform: uppercase;
   padding: 5px 10px;
@@ -304,7 +304,7 @@
 
 .m-manifest__head {
   font-family: var(--ff-mono);
-  font-size: 10px;
+  font-size: var(--fs-nano);
   letter-spacing: var(--tr-caps);
   text-transform: uppercase;
   color: var(--ghost);
@@ -378,7 +378,7 @@
 .m-row--focus .m-row__addrText { color: var(--signal); }
 
 .m-state {
-  font-size: 10px;
+  font-size: var(--fs-nano);
   letter-spacing: var(--tr-mono);
   text-transform: uppercase;
 }
@@ -396,7 +396,7 @@
   font-size: var(--fs-meta);
   font-weight: 500;
   color: var(--bone);
-  letter-spacing: -0.005em;
+  letter-spacing: var(--tr-body);
 }
 .m-row__fams {
   display: flex;
@@ -405,7 +405,7 @@
 }
 .m-row__fam {
   font-family: var(--ff-mono);
-  font-size: 8px;
+  font-size: var(--fs-nano);
   letter-spacing: var(--tr-caps);
   text-transform: uppercase;
   padding: 1px 5px;
@@ -421,16 +421,16 @@
 
 .m-col-sub,
 .m-col-stack {
-  font-size: 11px;
+  font-size: var(--fs-micro);
   color: var(--ash);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--tr-wide);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .m-col-year {
-  font-size: 11px;
+  font-size: var(--fs-micro);
   color: var(--ghost);
 }
 .m-col-open {
@@ -440,7 +440,7 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 10px;
+  font-size: var(--fs-nano);
   letter-spacing: var(--tr-mono);
   text-transform: uppercase;
   color: var(--signal);

@@ -241,8 +241,10 @@ body.landing-exit .universeBg {
 /* ASCII base styling — matches the original hero ASCII exactly */
 .title__wordmark .asciiHero {
   font-family: var(--ff-mono);
+  /* Generative ASCII grid, not a ramp rung: the cell size is solved to
+     fill the wordmark box, so it is deliberately off-scale. */
   font-size: clamp(6px, 0.68vw, 24px);
-  line-height: 1.0;
+  line-height: 1;
   letter-spacing: 0;
   color: var(--ash);
   white-space: pre;
@@ -301,7 +303,7 @@ body.landing-exit .universeBg {
   letter-spacing: var(--tr-caps); text-transform: uppercase; color: var(--bone);
   display: inline-flex; align-items: center;
 }
-.title__idBullet { color: var(--signal); margin-right: var(--s-4); font-size: 10px; }
+.title__idBullet { color: var(--signal); margin-right: var(--s-4); font-size: var(--fs-nano); }
 .title__idRole {
   font-family: var(--ff-mono); font-size: var(--fs-micro);
   letter-spacing: var(--tr-caps); text-transform: uppercase; color: var(--ghost);
@@ -359,7 +361,7 @@ body.landing-exit .universeBg {
   100% { transform: scale(2.4); opacity: 0; }
 }
 .fieldHint__lede {
-  font-family: var(--ff-mono); font-size: 11px; letter-spacing: var(--tr-caps);
+  font-family: var(--ff-mono); font-size: var(--fs-micro); letter-spacing: var(--tr-caps);
   text-transform: uppercase; color: var(--ash);
   display: inline-flex; align-items: center; gap: var(--s-4);
 }
@@ -367,7 +369,7 @@ body.landing-exit .universeBg {
 .fieldHint__cue {
   display: inline-flex; align-items: center; gap: var(--s-4);
   font-family: var(--ff-mono); font-size: var(--fs-body);
-  letter-spacing: 0.01em; color: var(--ash); white-space: nowrap;
+  letter-spacing: var(--tr-mono); color: var(--ash); white-space: nowrap;
 }
 .fieldHint__cue b { color: var(--bone); font-weight: 600; }
 .fieldHint__sep { width: 1px; height: 22px; background: var(--hairline); }
@@ -384,7 +386,7 @@ body.landing-exit .universeBg {
 .title__proceedRow { display: inline-flex; align-items: center; gap: var(--s-6); }
 .title__proceedRow .key { transform: scale(1.25); transform-origin: bottom right; }
 .title__proceedCap {
-  font-family: var(--ff-mono); font-size: 10px; letter-spacing: var(--tr-caps);
+  font-family: var(--ff-mono); font-size: var(--fs-nano); letter-spacing: var(--tr-caps);
   text-transform: uppercase; color: var(--ghost);
 }
 .scrollcue {
@@ -392,7 +394,7 @@ body.landing-exit .universeBg {
   font-family: var(--ff-mono); font-size: var(--fs-meta);
   letter-spacing: var(--tr-caps); text-transform: uppercase; color: var(--signal);
 }
-.scrollcue__txt { text-align: right; line-height: 1.3; }
+.scrollcue__txt { text-align: right; line-height: var(--lh-compact); }
 .scrollcue__chev {
   display: inline-flex; flex-direction: column; align-items: center; gap: 1px;
   animation: titleBob 1.8s var(--e-in-out) infinite;
@@ -570,8 +572,8 @@ body.mo-explore .universe__mount { touch-action: none; }
   border: 1px solid var(--signal-glow);
   box-shadow: 0 0 16px -6px var(--signal-glow);
   font-family: var(--ff-mono);
-  font-size: 9px;
-  letter-spacing: 0.16em;
+  font-size: var(--fs-nano);
+  letter-spacing: var(--tr-caps-xl);
   color: var(--signal);
   white-space: nowrap;
   animation: hudTabIn 260ms var(--e-out) 60ms both;
@@ -636,7 +638,7 @@ body.mo-explore .universe__mount { touch-action: none; }
 @media (prefers-reduced-motion: reduce) { .xpl__dot { animation: none; } }
 .xpl__close {
   pointer-events: auto;
-  font-family: var(--ff-mono); font-size: 11px; letter-spacing: 0.12em;
+  font-family: var(--ff-mono); font-size: var(--fs-micro); letter-spacing: var(--tr-caps);
   text-transform: uppercase;
   color: var(--bone);
   background: rgba(7, 10, 18, 0.72);
@@ -651,7 +653,7 @@ body.mo-explore .universe__mount { touch-action: none; }
 .xpl__hint {
   margin-top: auto;
   align-self: center;
-  font-family: var(--ff-mono); font-size: 10px; letter-spacing: 0.14em;
+  font-family: var(--ff-mono); font-size: var(--fs-nano); letter-spacing: var(--tr-caps);
   text-transform: uppercase; color: var(--ghost);
   padding: 8px 14px;
   border: 1px solid var(--hairline);

@@ -45,6 +45,53 @@ from `app/data/projects.js`. The project route ring and canonical case-study
 records live in `app/projects/data.jsx`. Keep the two registries aligned; do not
 introduce page-local route overrides.
 
+## Design system
+
+`app/shared/styles/tokens.css` is the single source of truth for type, color,
+spacing and motion on every route. Do not introduce a page-local ramp; every
+public page loads this file first and draws from it.
+
+Typography is 43 tokens in four groups, none of them dead:
+
+- **Static ramp** (`--fs-nano` 10px through `--fs-h2` 64px) is declared in
+  `rem`, so the browser's own text-size setting scales it. Keep it that way;
+  reverting to px silently drops WCAG 1.4.4 support. `--fs-nano` is the hard
+  floor: nothing renders smaller, and no interactive control renders below
+  `--fs-micro`.
+- **Fluid display ramp** (`--fs-d1` through `--fs-d7`) carries every headline
+  on every route. Four suffixed rungs (`--fs-d1-nowrap`, `--fs-d2-stack`,
+  `--fs-d4-node`, `--fs-d5-card`) are pinned to a hard layout constraint such
+  as `white-space: nowrap` or a fixed panel width. Re-tune those only with a
+  browser open.
+- **Leading** (`--lh-crush` 0.84 through `--lh-loose` 1.70) and **tracking**
+  (`--tr-tightest` -0.045em through `--tr-widest` 0.24em) are complete scales.
+  Snap to the nearest rung rather than adding a one-off decimal.
+
+The only deliberate off-ramp font sizes are the generative ASCII wordmark grid
+in `app/landing/styles/base.css`, five per-breakpoint refits inside media
+queries, and two arrow glyph sizes on the project pages. Each carries a comment
+saying so. Anything else with a literal `font-size`, `letter-spacing` or
+`line-height` is drift.
+
+Above 1720 px, `app/landing/styles/wide.css` re-expresses the label band and
+the landing's own sizes proportionally. Every value there is a `clamp()` with a
+ceiling at the 2560 px equivalent, so type stops growing on ultrawide instead of
+scaling without limit. Keep new ultrawide sizes bounded the same way.
+
+`app/shared/styles/key.css` is the single definition of the `.key` keycap and
+is loaded by every route. It was previously duplicated declaration-for-
+declaration in `shell.css` and `components.css`; do not re-inline it.
+
+All ten public pages request an identical font set: Geist 400/500/600, Geist
+Mono 400/500/600, and Instrument Serif italic only. Every `--ff-serif` call site
+pairs with `font-style: italic`, so the roman cut is deliberately not requested.
+Adding a family to one page only is what caused Iskra to ship Space Grotesk and
+DM Mono that nothing ever used.
+
+`Design System.html` renders the live specimen from these tokens. When the ramp
+changes, update `app/design-system/foundations.jsx` in the same commit so the
+reference surface does not describe a system the site no longer has.
+
 ## Shared pointer effects
 
 `app/shared/styles/pointer.css` is the single square-reticle stylesheet.

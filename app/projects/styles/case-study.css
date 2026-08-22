@@ -153,9 +153,9 @@ body.hv-exit .pp-shell { opacity: 0; transition: opacity 300ms var(--e-out); }
 
 .hv__name {
   font-family: var(--ff-display);
-  font-size: clamp(80px, 13vw, 200px);
-  line-height: 0.84;
-  letter-spacing: -0.05em;
+  font-size: var(--fs-d1);
+  line-height: var(--lh-crush);
+  letter-spacing: var(--tr-tightest);
   font-weight: 400;
   color: var(--bone);
   margin: 0;
@@ -163,11 +163,11 @@ body.hv-exit .pp-shell { opacity: 0; transition: opacity 300ms var(--e-out); }
 .hv__name em { font-family: var(--ff-serif); font-style: italic; color: var(--signal); }
 .hv__tagline {
   font-family: var(--ff-display);
-  font-size: clamp(19px, 2.2vw, 30px);
+  font-size: var(--fs-d6);
   color: var(--ash);
   max-width: 26ch;
-  line-height: 1.25;
-  letter-spacing: -0.01em;
+  line-height: var(--lh-compact);
+  letter-spacing: var(--tr-tight);
 }
 
 .hv__metric {
@@ -179,13 +179,13 @@ body.hv-exit .pp-shell { opacity: 0; transition: opacity 300ms var(--e-out); }
   border-bottom: 1px solid var(--hairline);
 }
 .hv__metricCol { display: flex; flex-direction: column; gap: var(--s-3); padding-left: var(--s-4); border-left: 2px solid var(--signal); }
-.hv__metricVal { font-family: var(--ff-serif); font-style: italic; font-size: clamp(34px, 4vw, 60px); line-height: 1; color: var(--bone); letter-spacing: -0.02em; }
+.hv__metricVal { font-family: var(--ff-serif); font-style: italic; font-size: var(--fs-d4); line-height: 1; color: var(--bone); letter-spacing: var(--tr-head); }
 .hv__metricKey { font-family: var(--ff-mono); font-size: var(--fs-micro); letter-spacing: var(--tr-caps); text-transform: uppercase; color: var(--ghost); }
 
 .hv__meta { display: flex; flex-wrap: wrap; gap: var(--s-6) var(--s-7); }
 .hv__metaCol { display: flex; flex-direction: column; gap: var(--s-3); }
 .hv__metaK { font-family: var(--ff-mono); font-size: var(--fs-micro); letter-spacing: var(--tr-caps); text-transform: uppercase; color: var(--ghost); }
-.hv__metaV { font-family: var(--ff-display); font-size: var(--fs-meta); color: var(--bone); line-height: 1.4; }
+.hv__metaV { font-family: var(--ff-display); font-size: var(--fs-meta); color: var(--bone); line-height: var(--lh-mono); }
 
 .hv__scrollCue {
   position: absolute;
@@ -306,7 +306,7 @@ body.hv-inspecting .hv-inspect { opacity: 1; }
 .hv-btn {
   display: inline-flex; align-items: center; gap: var(--s-3);
   padding: var(--s-3) var(--s-5);
-  font-family: var(--ff-mono); font-size: 10px; letter-spacing: var(--tr-caps); text-transform: uppercase;
+  font-family: var(--ff-mono); font-size: var(--fs-nano); letter-spacing: var(--tr-caps); text-transform: uppercase;
   border: 1px solid var(--hairline); color: var(--ash);
   background: transparent; cursor: pointer;
   transition: border-color var(--d-fast), color var(--d-fast), background var(--d-fast);
@@ -322,7 +322,7 @@ body.hv-inspecting .hv-inspect { opacity: 1; }
   display: inline-flex; align-items: center; gap: var(--s-3);
   padding: var(--s-3) var(--s-5);
   background: rgba(4, 6, 13, 0.7); border: 1px solid var(--signal);
-  font-family: var(--ff-mono); font-size: 10px; letter-spacing: var(--tr-caps); text-transform: uppercase; color: var(--signal);
+  font-family: var(--ff-mono); font-size: var(--fs-nano); letter-spacing: var(--tr-caps); text-transform: uppercase; color: var(--signal);
   cursor: pointer;
 }
 .hv-inspect__close:hover { background: var(--signal-ghost); }
@@ -338,6 +338,7 @@ body.hv-inspecting .hv-inspect { opacity: 1; }
   /* constrain the title to the viewport so it stacks instead of
      overflowing off the left edge (was max-width:none + centered) */
   .hv__title { width: 100%; max-width: 100%; min-width: 0; margin-top: 40vh; gap: var(--s-5); align-items: flex-start; }
+  /* Breakpoint refit of a --fs-d1 element, not ramp drift. */
   .hv__name { font-size: clamp(46px, 15vw, 96px); overflow-wrap: break-word; }
   .hv__tagline { max-width: 34ch; }
   .hv__frame { inset: 76px var(--s-6) 110px; }
@@ -369,7 +370,7 @@ body.hv-inspecting .hv-inspect { opacity: 1; }
   .hv__title { margin-top: 34vh; }
   .hv__meta { gap: var(--s-5); }
   .hv__metricVal { font-size: clamp(28px, 9vw, 40px); }
-  .hv__overline { font-size: 10px; flex-wrap: wrap; }
+  .hv__overline { font-size: var(--fs-nano); flex-wrap: wrap; }
   /* full-bleed keycap CTA reads better than a tiny corner chip */
   .hv-demo { left: var(--s-5); right: var(--s-5); align-items: stretch; }
   .hv-demo .key { width: 100%; }

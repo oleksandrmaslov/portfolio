@@ -16,8 +16,8 @@
   align-items: center;
   gap: 10px;
   font-family: var(--ff-mono, monospace);
-  font-size: 11px;
-  letter-spacing: 0.22em;
+  font-size: var(--fs-micro);
+  letter-spacing: var(--tr-widest);
   text-transform: uppercase;
   color: var(--signal, #00f0c8);
   opacity: 0;

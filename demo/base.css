@@ -83,7 +83,7 @@ body.hv-demoing .hv-stage { opacity: 0 !important; transition: opacity 420ms var
   display: inline-flex; align-items: center; gap: var(--s-3);
   padding: var(--s-3) var(--s-5);
   background: rgba(4, 6, 13, 0.7); border: 1px solid var(--signal);
-  font-family: var(--ff-mono); font-size: 10px; letter-spacing: var(--tr-caps);
+  font-family: var(--ff-mono); font-size: var(--fs-nano); letter-spacing: var(--tr-caps);
   text-transform: uppercase; color: var(--signal); cursor: pointer;
 }
 .hvd__close:hover { background: var(--signal-ghost); }
@@ -93,7 +93,7 @@ body.hv-demoing .hv-stage { opacity: 0 !important; transition: opacity 420ms var
 .hvd-btn {
   display: inline-flex; align-items: center; gap: var(--s-3);
   padding: var(--s-3) var(--s-5);
-  font-family: var(--ff-mono); font-size: 10px; letter-spacing: var(--tr-caps); text-transform: uppercase;
+  font-family: var(--ff-mono); font-size: var(--fs-nano); letter-spacing: var(--tr-caps); text-transform: uppercase;
   border: 1px solid var(--hairline); color: var(--ash);
   background: rgba(7, 9, 15, 0.7); cursor: pointer;
   transition: border-color var(--d-fast), color var(--d-fast), background var(--d-fast);
@@ -134,7 +134,7 @@ body.hv-demoing .hv-stage { opacity: 0 !important; transition: opacity 420ms var
   position: absolute; bottom: var(--s-8); left: 50%; transform: translateX(-50%);
   display: inline-flex; align-items: center; gap: var(--s-4);
   font-family: var(--ff-mono); font-size: var(--fs-meta);
-  letter-spacing: 0.04em; color: var(--ghost);
+  letter-spacing: var(--tr-wide); color: var(--ghost);
   pointer-events: none; white-space: pre;
   max-width: min(58vw, 700px);
   animation: hvdFadeIn 480ms var(--e-out) both;
@@ -178,7 +178,7 @@ body.hv-demoing .hv-stage { opacity: 0 !important; transition: opacity 420ms var
   display: flex; align-items: center; gap: var(--s-4);
   padding: var(--s-4) var(--s-5);
   border-bottom: 1px solid var(--hairline);
-  font-family: var(--ff-mono); font-size: 10px;
+  font-family: var(--ff-mono); font-size: var(--fs-nano);
   letter-spacing: var(--tr-caps); text-transform: uppercase; color: var(--ash);
 }
 .hvd__railDot { width: 6px; height: 6px; border-radius: 50%; background: var(--signal); box-shadow: 0 0 8px var(--signal); }
@@ -190,11 +190,11 @@ body.hv-demoing .hv-stage { opacity: 0 !important; transition: opacity 420ms var
 .hvd__railSec + .hvd__railSec { border-top: 1px solid var(--hairline); }
 .hvd__railRow { display: flex; align-items: baseline; justify-content: space-between; }
 .hvd__railK {
-  font-family: var(--ff-mono); font-size: 10px; letter-spacing: var(--tr-caps);
+  font-family: var(--ff-mono); font-size: var(--fs-nano); letter-spacing: var(--tr-caps);
   text-transform: uppercase; color: var(--ghost);
 }
 .hvd__railV {
-  font-family: var(--ff-mono); font-size: 10px; letter-spacing: var(--tr-caps);
+  font-family: var(--ff-mono); font-size: var(--fs-nano); letter-spacing: var(--tr-caps);
   color: var(--signal);
 }
 
@@ -205,7 +205,7 @@ body.hv-demoing .hv-stage { opacity: 0 !important; transition: opacity 420ms var
   display: inline-flex; align-items: center; justify-content: center; gap: var(--s-3);
   flex: 1;
   padding: var(--s-3) var(--s-4);
-  font-family: var(--ff-mono); font-size: 10px; letter-spacing: var(--tr-caps); text-transform: uppercase;
+  font-family: var(--ff-mono); font-size: var(--fs-nano); letter-spacing: var(--tr-caps); text-transform: uppercase;
   border: 1px solid var(--hairline); color: var(--ash);
   background: transparent; cursor: pointer;
   transition: border-color var(--d-fast), color var(--d-fast), background var(--d-fast);
@@ -242,7 +242,7 @@ body.hv-demoing .hv-stage { opacity: 0 !important; transition: opacity 420ms var
 
 .hvd__hint {
   position: absolute; bottom: var(--s-4); left: 50%; transform: translateX(-50%);
-  font-family: var(--ff-mono); font-size: 10px;
+  font-family: var(--ff-mono); font-size: var(--fs-nano);
   letter-spacing: var(--tr-caps); text-transform: uppercase; color: var(--shadow);
   pointer-events: none; white-space: nowrap;
   animation: hvdFadeIn 520ms var(--e-out) both;

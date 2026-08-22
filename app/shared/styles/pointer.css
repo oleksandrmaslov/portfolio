@@ -91,10 +91,10 @@ html.custom-cursor .cursor__coords {
   left: 0;
   transform: none;
   font-family: var(--ff-mono, ui-monospace, monospace);
-  font-size: 9px;
+  font-size: var(--fs-nano);
   color: var(--ghost, #657083);
   white-space: nowrap;
-  letter-spacing: 0.1em;
+  letter-spacing: var(--tr-caps);
   text-align: left;
   text-transform: uppercase;
 }

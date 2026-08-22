@@ -1,0 +1,117 @@
+/* ============================================================
+   M.O. SYSTEM — Key button
+   Keycap with depress + LED legend.
+
+   Single source of truth for the .key component. It was previously
+   duplicated declaration-for-declaration in app/landing/styles/shell.css
+   (landing) and app/shared/styles/components.css (project routes), which
+   gave one component two definitions that could drift apart. Every route
+   now loads this file instead.
+
+   Materials are component-scoped custom properties so the keycap reads as
+   one physical object rather than five loose hex values.
+   ============================================================ */
+.key {
+  --key-face-hi:  var(--carbon-2);  /* moulded cap, top of the gradient */
+  --key-face-lo:  #0a0e16;          /* cap base + hard drop */
+  --key-edge:     #2a3144;          /* cap side wall */
+  --key-bevel-hi: #4a5266;          /* lit top bevel on hover */
+  --key-bevel-lo: #161c2a;          /* shaded bottom bevel */
+
+  position: relative;
+  display: inline-block;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--bone);
+  font: inherit;
+  cursor: pointer;
+  perspective: 600px;
+}
+.key__cap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 96px;
+  height: 64px;
+  padding: 10px 16px;
+  background: linear-gradient(180deg, var(--key-face-hi) 0%, var(--key-face-lo) 100%);
+  border: 1px solid var(--key-edge);
+  border-top-color: var(--shadow);
+  border-bottom-color: var(--key-bevel-lo);
+  border-radius: 6px 6px 8px 8px;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.06),
+    inset 0 -1px 0 rgba(0,0,0,0.5),
+    0 4px 0 var(--key-face-lo),
+    0 6px 8px rgba(0,0,0,0.5);
+  transition: transform var(--d-tap) var(--e-out), box-shadow var(--d-tap) var(--e-out);
+}
+.key__legendTop {
+  position: absolute;
+  top: 6px;
+  left: 10px;
+  font-family: var(--ff-mono);
+  font-size: var(--fs-nano);
+  color: var(--ghost);
+  letter-spacing: var(--tr-wide);
+  transition: color var(--d-fast), text-shadow var(--d-fast);
+}
+.key__label {
+  font-family: var(--ff-mono);
+  font-size: var(--fs-meta);
+  letter-spacing: var(--tr-wide);
+  text-transform: uppercase;
+  color: var(--bone);
+}
+.key__shadow {
+  position: absolute;
+  inset: auto 0 -8px 0;
+  height: 8px;
+  background: var(--void);
+  border-radius: 4px;
+  filter: blur(4px);
+  opacity: 0.6;
+  z-index: -1;
+}
+
+.key:hover .key__cap {
+  border-color: var(--trace);
+  border-top-color: var(--key-bevel-hi);
+}
+.key:hover .key__legendTop { color: var(--ash); }
+
+.key--down .key__cap {
+  transform: translateY(4px);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.04),
+    inset 0 -1px 0 rgba(0,0,0,0.5),
+    0 0 0 var(--key-face-lo),
+    0 2px 4px rgba(0,0,0,0.5);
+}
+
+.key--lit .key__legendTop {
+  color: var(--signal);
+  text-shadow: 0 0 8px var(--signal);
+}
+.key--lit .key__label {
+  color: var(--signal);
+  text-shadow: 0 0 12px var(--signal-glow);
+}
+.key--lit .key__cap {
+  border-color: var(--signal);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.06),
+    inset 0 0 30px rgba(0,240,200,0.08),
+    0 4px 0 var(--key-face-lo),
+    0 0 24px rgba(0,240,200,0.25);
+}
+
+.key--primary .key__cap {
+  background: linear-gradient(180deg, #0a3a32 0%, #062420 100%);
+  border-color: var(--signal-dim);
+}
+.key--primary .key__label,
+.key--primary .key__legendTop { color: var(--signal); }

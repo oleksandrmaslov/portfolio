@@ -17,7 +17,7 @@
   /* ---------- COLOR / TEXT ---------- */
   --bone:       #e6e8ee;   /* primary text */
   --ash:        #9aa3b3;   /* secondary text */
-  --ghost:      #5b6478;   /* tertiary / meta */
+  --ghost:      #7a8499;   /* tertiary / meta - 5.39:1 on --void, WCAG AA */
   --shadow:     #3a4256;   /* disabled / faint */
 
   /* ---------- COLOR / SIGNAL ----------
@@ -35,36 +35,83 @@
   /* ---------- TYPOGRAPHY ----------
      Geist        — neutral, mechanical-feeling display + body
      Geist Mono   — technical / data / labels
-     Instrument Serif Italic — editorial accent (numerals, pull-quotes) */
+     Instrument Serif Italic — editorial accent (numerals, pull-quotes)
+
+     Only the italic cut of Instrument Serif is loaded. Every call site in
+     the repo pairs --ff-serif with font-style: italic; the roman cut has
+     no role and is deliberately absent from the font request. */
   --ff-display: "Geist", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   --ff-mono:    "Geist Mono", "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
   --ff-serif:   "Instrument Serif", "Iowan Old Style", "Times New Roman", serif;
 
-  /* Fibonacci-influenced type ramp.
-     base 16 → 21 → 34 → 55 → 89 → 144  (Fibonacci)
-     soft transitions added where needed */
-  --fs-micro:   11px;
-  --fs-meta:    13px;
-  --fs-body:    16px;
-  --fs-lead:    21px;
-  --fs-h4:      28px;
-  --fs-h3:      42px;
-  --fs-h2:      64px;
-  --fs-h1:      96px;
-  --fs-display: 144px;
-  --fs-hero:    220px;
+  /* ---- STATIC RAMP ----
+     The 10 → 13 band carries uppercase mono metadata, HUD keys, captions
+     and nav. 10px is the hard floor: nothing on the site renders smaller,
+     and no interactive control renders below --fs-micro.
 
-  --lh-tight:   0.92;
-  --lh-snug:    1.05;
-  --lh-text:    1.55;
-  --lh-mono:    1.45;
+     Expressed in rem so the browser's own text-size setting scales them.
+     16px root = 1rem; the comment on each line is the default rendering. */
+  --fs-nano:    0.625rem;   /* 10px · micro label · HUD key · uppercase mono */
+  --fs-micro:   0.6875rem;  /* 11px · small label · smallest interactive control */
+  --fs-small:   0.75rem;    /* 12px · card sub · readout */
+  --fs-meta:    0.8125rem;  /* 13px · meta · nav · caption */
+  --fs-body:    1rem;       /* 16px */
+  --fs-lead:    1.3125rem;  /* 21px */
+  --fs-h4:      1.75rem;    /* 28px */
+  --fs-h3:      2.625rem;   /* 42px */
+  --fs-h2:      4rem;       /* 64px */
 
-  /* tracking — tight headlines, open caps */
+  /* ---- FLUID DISPLAY RAMP ----
+     One ramp for every page. Replaces the former static --fs-h1 /
+     --fs-display / --fs-hero (which no element ever rendered) and the 22
+     bespoke clamps that the landing, the case-study pages, the project
+     index and the design-system page had each invented separately.
+     Display hierarchy is now editable in one place.
+
+     Rungs with a -nowrap / -stack / -card suffix are pinned to a hard
+     layout constraint and must be re-checked in-browser if retuned. */
+  --fs-d1:  clamp(72px,  12vw, 200px);  /* page hero name */
+  --fs-d2:  clamp(56px, 8.5vw, 144px);  /* section hero */
+  --fs-d3:  clamp(40px, 5.8vw,  80px);  /* major section heading */
+  --fs-d4:  clamp(29px, 3.4vw,  52px);  /* heading · metric value */
+  --fs-d5:  clamp(21px, 2.5vw,  34px);  /* subheading · card name */
+  --fs-d6:  clamp(19px, 2.2vw,  30px);  /* lede */
+  --fs-d7:  clamp(14px, 1.15vw, 17px);  /* body lede */
+
+  --fs-d1-nowrap: clamp(72px, 10vw, 168px);  /* fitted: work-reel title is nowrap */
+  --fs-d2-stack:  clamp(36px, 4.9vw, 118px); /* fitted: origin multi-line statement */
+  --fs-d4-node:   clamp(34px, 4.4vw,  52px); /* fitted: universe HUD panel, fixed padding */
+  --fs-d5-card:   clamp(22px, 2.4vw,  30px); /* fitted: reel card fixed width */
+
+  /* ---- LINE HEIGHT ----
+     A leading scale rather than a set of one-off decimals. The site
+     previously shipped 12 unitless values across the two bands; these eight
+     rungs cover the same range with the largest snap under 0.05. */
+  --lh-crush:   0.84;   /* oversized stacked display */
+  --lh-flush:   0.88;   /* display headline */
+  --lh-tight:   0.92;   /* display with descenders */
+  --lh-solid:   0.96;   /* short heading */
+  --lh-compact: 1.30;   /* dense multi-line label */
+  --lh-mono:    1.45;   /* mono readout */
+  --lh-text:    1.55;   /* body copy */
+  --lh-loose:   1.70;   /* airy body · footnote */
+
+  /* ---- TRACKING ----
+     Tight through the display band, open through the uppercase mono band.
+     Replaces 14 loose em values; largest snap is 0.02em, which is a fifth
+     of a pixel at label size. */
+  --tr-tightest: -0.045em;  /* largest display */
+  --tr-tighter:  -0.035em;
   --tr-display:  -0.03em;
   --tr-head:     -0.02em;
+  --tr-tight:    -0.01em;
   --tr-body:     -0.005em;
-  --tr-caps:      0.12em;
   --tr-mono:      0.01em;
+  --tr-wide:      0.04em;   /* keycap legend · small caps */
+  --tr-wider:     0.06em;
+  --tr-caps:      0.12em;   /* uppercase mono label — the workhorse */
+  --tr-caps-xl:   0.16em;
+  --tr-widest:    0.24em;   /* spaced display caps */
 
   /* ---------- SPACING — pure Fibonacci scale ----------
      Every spacing decision picks from this scale. No off-grid values. */
