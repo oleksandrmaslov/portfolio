@@ -14,10 +14,22 @@ correctly under the GitHub Pages project subpath. The other public pages are:
 - `Kerfur v2.html`
 - `Iskra v3.html`
 - `Tactical Flashlight v2.html`
+- `Venovisor.html`
 - `Wafer Studio.html`
 - `Split HID Display v2.html`
 - `ZMK-PointAccel v2.html`
+- `ZMK Soft Off Plus.html`
+- `Sightseeing.html`
+- `Silent Depth.html`
+- `Brionel Catalogue.html`
 - `Design System.html`
+
+Every node in the registry now has a page, so the project ring runs
+`0x01 → 0x02 → … → 0x0C → 0x01` with no gaps. The five routes added on
+2026-08-22 (Venovisor, ZMK Soft Off Plus, Sightseeing, Silent Depth, Brionel
+Catalogue) are scaffolds: their chrome is real, their case-study copy is
+marked `[ ... ]` pending. Fill the placeholders in `app/projects/data.jsx`;
+do not delete the routes to "clean up".
 
 `Design System.html` is a deployed reference surface. `face-test.html` is a
 local test surface and is explicitly excluded from deployment. Internal folders

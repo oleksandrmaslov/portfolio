@@ -31,6 +31,7 @@
       tags: ["Hardware", "ZMK", "Zephyr", "Product Design"],
       model: mdl({
         ready: true, src: "models/wafer_demo.glb", proxy: null,
+        rigFit: 4.0,   // matches this project's page hero
         rigPose: { x: -0.92, y: 0, z: 0 },
         cardPose: { scale: 1, yaw: 0, pitch: 0, offsetY: 0, fit: 2.9, pose: { x: -1.15, y: 0, z: 0 } },
         handoffPose: Object.assign({}, HANDOFF_DEFAULTS),
@@ -44,7 +45,7 @@
       statement: "A networked embedded companion inspired by Voices of the Void.",
       short: "Networked embedded companion",
       tags: ["Hardware", "Zephyr", "BLE", "Open Source"],
-      model: mdl({}),
+      model: mdl({ rigFit: 3.4 }),
     },
     {
       addr: "0x03", slug: "iskra", name: "Iskra",
@@ -55,6 +56,7 @@
       tags: ["Firmware", "Desktop", "Volunteer", "Open Source"],
       model: mdl({
         ready: true, src: "models/iskra-mark.glb", proxy: null,
+        rigFit: 2.1,   // matches this project's page hero
         rigPose: { x: -0.2, y: 0, z: 0 },
         cardPose: { scale: 1, yaw: 0.4, pitch: 0.12, offsetY: 0, fit: 1.05 },
       }),
@@ -68,6 +70,7 @@
       tags: ["Hardware", "Firmware", "Volunteer"],
       model: mdl({
         ready: true, src: "models/tactical_flashlight.glb", proxy: null,
+        rigFit: 4.0,   // matches this project's page hero
         rigPose: { x: 0, y: 0, z: 1.5708 },
         cardPose: { scale: 1, yaw: 0.6, pitch: 0.1, offsetY: 0, fit: 1.25, pose: { x: 0, y: 0, z: 1.5708 } },
         assignMaterial: { color: 0x4b5a32, metalness: 0.28, roughness: 0.62 },
@@ -76,11 +79,11 @@
     {
       addr: "0x05", slug: "venovisor", name: "Venovisor",
       nodeClass: "WEARABLE EXPERIMENT", state: "FORMING", featured: false,
-      file: null,
+      file: "Venovisor.html",
       statement: "A compact wearable interface exploring low-power information at eye level.",
       short: "Wearable eye-level interface",
       tags: ["Hardware", "Volunteer", "Displays"],
-      model: mdl({}),
+      model: mdl({ rigFit: 2.6 }),   // node-shell proxy until a GLB lands
     },
     {
       addr: "0x06", slug: "wafer-studio", name: "Wafer Studio",
@@ -91,6 +94,7 @@
       tags: ["Software", "ZMK", "Tooling"],
       model: mdl({
         ready: true, src: "models/wafer-mark.glb", proxy: null,
+        rigFit: 2.1,   // matches this project's page hero
         rigPose: { x: -0.2, y: 0, z: 0 },
         cardPose: { scale: 1, yaw: 0.35, pitch: 0.1, offsetY: 0, fit: 1.05 },
       }),
@@ -104,6 +108,7 @@
       tags: ["ZMK", "Zephyr", "Displays"],
       model: mdl({
         ready: true, src: "models/keyboard-display.opt.glb", proxy: null,
+        rigFit: 2.8,   // matches this project's page hero
         rigPose: { x: -0.08, y: -0.24, z: 0 },
         cardPose: { scale: 1, yaw: 0, pitch: 0, offsetY: 0, fit: 1.60, pose: { x: -0.08, y: -0.24, z: 0 } },
       }),
@@ -117,6 +122,7 @@
       tags: ["ZMK", "Zephyr", "Open Source"],
       model: mdl({
         ready: true, src: "models/zmk-mark.glb", proxy: null,
+        rigFit: 2.1,   // matches this project's page hero
         rigPose: { x: -0.2, y: 0, z: 0 },
         cardPose: { scale: 1, yaw: 0.35, pitch: 0.1, offsetY: 0, fit: 1.05 },
       }),
@@ -124,12 +130,13 @@
     {
       addr: "0x09", slug: "zmk-soft-off-plus", name: "ZMK Soft Off Plus",
       nodeClass: "FIRMWARE MODULE", state: "ACTIVE", featured: false,
-      file: null,
+      file: "ZMK Soft Off Plus.html",
       statement: "Reliable shutdown and wake behaviour for wireless split keyboards.",
       short: "Shutdown + wake firmware module",
       tags: ["ZMK", "Zephyr", "Power"],
       model: mdl({
         ready: true, src: "models/soft-off-keycap.opt.glb", proxy: null,
+        rigFit: 2.0,   // matches this project\'s page hero
         rigPose: { x: -0.18, y: 0.38, z: 0 },
         cardPose: { scale: 1, yaw: 0, pitch: 0, offsetY: 0, fit: 1.0, pose: { x: -0.18, y: 0.38, z: 0 } },
       }),
@@ -137,12 +144,13 @@
     {
       addr: "0x0A", slug: "sightseeing-inc", name: "Sightseeing.inc",
       nodeClass: "INTERFACE STUDY", state: "ARCHIVED", featured: false,
-      file: null,
+      file: "Sightseeing.html",
       statement: "An adaptive city exploration and route-building application.",
       short: "Adaptive city exploration app",
       tags: ["Design"],
       model: mdl({
         ready: true, src: "models/sightseeing-mark.glb", proxy: null,
+        rigFit: 2.1,   // matches this project\'s page hero
         rigPose: { x: -0.2, y: 0, z: 0 },
         cardPose: { scale: 1, yaw: 0.35, pitch: 0.1, offsetY: 0, fit: 1.05 },
       }),
@@ -150,12 +158,13 @@
     {
       addr: "0x0B", slug: "silent-depth", name: "Silent Depth",
       nodeClass: "VISUAL STUDY", state: "ARCHIVED", featured: false,
-      file: null,
+      file: "Silent Depth.html",
       statement: "A visual study of gaze, silence and invisible human connection.",
       short: "Study of gaze and silence",
       tags: ["Visual", "Study"],
       model: mdl({
         ready: true, src: "models/silent-depth-mark.glb", proxy: null,
+        rigFit: 2.1,   // matches this project\'s page hero
         rigPose: { x: -0.2, y: 0, z: 0 },
         cardPose: { scale: 1, yaw: 0.35, pitch: 0.1, offsetY: 0, fit: 1.05 },
       }),
@@ -163,12 +172,13 @@
     {
       addr: "0x0C", slug: "brionel-catalogue", name: "Brionel Product Catalogue",
       nodeClass: "CLIENT WORK", state: "ARCHIVED", featured: false,
-      file: null,
+      file: "Brionel Catalogue.html",
       statement: "A scalable editorial system created for a catalogue of more than 70 products.",
       short: "Editorial system · 70+ products",
       tags: ["Design", "Editorial", "Client"],
       model: mdl({
         ready: true, src: "models/brionel-mark.glb", proxy: null,
+        rigFit: 2.1,   // matches this project\'s page hero
         rigPose: { x: -0.2, y: 0, z: 0 },
         cardPose: { scale: 1, yaw: 0.35, pitch: 0.1, offsetY: 0, fit: 1.05 },
       }),

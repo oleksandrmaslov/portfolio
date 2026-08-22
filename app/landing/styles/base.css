@@ -29,7 +29,17 @@ body { overflow-x: clip; }
   transition: opacity 460ms var(--e-out);
 }
 .wf--on .wf__veil { opacity: 1; }
-.wf__mount { position: absolute; inset: 0; }
+.wf__mount { position: absolute; inset: 0; opacity: 1; transition: opacity 160ms var(--e-out); }
+
+/* HANDOFF HOLD — the rig is mounted and already drawing, but the reader still
+   has to see the card it is about to lift out of. While .wf--hold is set the
+   veil and the mount stay unpainted, so the live universe (and the tile
+   carrying the model) remains on screen. Releasing the hold crossfades the
+   mount in over that same tile and only then fades the universe under it. */
+.wf--on.wf--hold .wf__veil { opacity: 0; }
+/* Snap out on the way in (transition: none) so the empty mount never sits over
+   the card for a frame, then let the base rule fade it back in on release. */
+.wf--on.wf--hold .wf__mount { opacity: 0; transition: none; }
 .wf__mount canvas { display: block; width: 100%; height: 100%; }
 .wf__tag {
   position: absolute;

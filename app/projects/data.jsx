@@ -52,7 +52,7 @@ const PROJECT_DATA = {
       { kind: "CASE PDF", label: "case-file · 8 pages · pending", href: "#" },
       { kind: "ZMK PR",  label: "battery-voltage · merged",       href: "#" },
     ],
-    prev: "0x08",
+    prev: "0x0C",
     next: "0x02",
   },
 
@@ -150,7 +150,7 @@ const PROJECT_DATA = {
       { kind: "DOCS",       label: "usage · presets",                     href: "#" },
     ],
     prev: "0x07",
-    next: "0x01",
+    next: "0x09",
   },
 
   /* =========================================================
@@ -197,7 +197,7 @@ const PROJECT_DATA = {
       { kind: "PROJECT", label: "Energy for Ukraine", href: "https://energyforukraine.de/" },
     ],
     prev: "0x03",
-    next: "0x06",
+    next: "0x05",
   },
 };
 
@@ -303,7 +303,7 @@ PROJECT_DATA["0x06"] = {
     { kind: "DESKTOP", label: "download · macOS · Linux · Windows", href: "https://oleksandrmaslov.github.io/wafer-studio/download.html" },
     { kind: "UPSTREAM", label: "zmkfirmware/zmk-studio · protocol", href: "https://github.com/zmkfirmware/zmk-studio" },
   ],
-  prev: "0x04",
+  prev: "0x05",
   next: "0x07",
 };
 
@@ -360,6 +360,241 @@ PROJECT_DATA["0x07"] = {
   link: { label: "VIEW ON GITHUB", href: "https://github.com/oleksandrmaslov/zmk-split-hid-display", hint: "ZMK MODULE · SOURCE" },
   prev: "0x06",
   next: "0x08",
+};
+
+/* =========================================================
+   0x05 · VENOVISOR
+   ---------------------------------------------------------
+   SCAFFOLD - copy pending. Every [ ... ] is a placeholder waiting
+   on real material; nothing here is invented. The chrome fields
+   (name, tagline, overline, stack) carry over from the shared
+   registry in app/data/projects.js.
+   ========================================================= */
+PROJECT_DATA["0x05"] = {
+  addr: "0x05",
+  slug: "venovisor",
+  file: "Venovisor.html",
+  name: "Venovisor",
+  tagline: "Wearable eye-level interface",
+  overline: "WEARABLE EXPERIMENT · HARDWARE · DISPLAYS",
+  year: "[ year ]",
+  place: "[ place ]",
+  role: "[ role ]",
+  stack: ["Hardware", "Volunteer", "Displays"],
+  primitive: "slab",
+  model: null,           // no GLB yet - the page draws the same node-shell proxy the universe shows
+  demoSize: { d: 48, w: 32, h: 10 },   // [ real dimensions pending ]
+  metrics: [
+    { value: "TBD", unit: "[ headline number ]" },
+    { value: "TBD", unit: "[ scale or scope ]" },
+    { value: "TBD", unit: "[ outcome ]" },
+  ],
+  intro:
+    "[ writing pending · A compact wearable interface exploring low-power information at eye level. · this paragraph wants the one-screen " +
+    "version: what it is, who it was for, and the single decision that shaped it ]",
+  sections: [
+    { kind: "stub", h: "Why",
+      body: "[ writing pending · the problem in one paragraph · what existed before and why it did not hold ]" },
+    { kind: "stub", h: "How it works",
+      body: "[ writing pending · the mechanism · the one design decision worth explaining ]" },
+    { kind: "photo", caption: "[ photo pending · venovisor ]" },
+    { kind: "stub", h: "What it cost",
+      body: "[ writing pending · the hard part · what was cut and why ]" },
+    { kind: "stub", h: "Where it stands",
+      body: "[ writing pending · current state · what would come next ]" },
+    { kind: "photo", caption: "[ photo pending · venovisor ]" },
+  ],
+  links: [],             // [ artifacts pending: repo, release, live URL, writeup ]
+  prev: "0x04",
+  next: "0x06",
+};
+
+/* =========================================================
+   0x09 · ZMK SOFT OFF PLUS
+   ---------------------------------------------------------
+   SCAFFOLD - copy pending. Every [ ... ] is a placeholder waiting
+   on real material; nothing here is invented. The chrome fields
+   (name, tagline, overline, stack) carry over from the shared
+   registry in app/data/projects.js.
+   ========================================================= */
+PROJECT_DATA["0x09"] = {
+  addr: "0x09",
+  slug: "zmk-soft-off-plus",
+  file: "ZMK Soft Off Plus.html",
+  name: "ZMK Soft Off Plus",
+  tagline: "Shutdown and wake firmware module",
+  overline: "FIRMWARE MODULE · ZMK · POWER",
+  year: "[ year ]",
+  place: "[ place ]",
+  role: "[ role ]",
+  stack: ["ZMK", "Zephyr", "Power"],
+  primitive: "slab",
+  model: "models/soft-off-keycap.opt.glb",
+  demoSize: { d: 18, w: 18, h: 9 },   // [ real dimensions pending ]
+  metrics: [
+    { value: "TBD", unit: "[ headline number ]" },
+    { value: "TBD", unit: "[ scale or scope ]" },
+    { value: "TBD", unit: "[ outcome ]" },
+  ],
+  intro:
+    "[ writing pending · Reliable shutdown and wake behaviour for wireless split keyboards. · this paragraph wants the one-screen " +
+    "version: what it is, who it was for, and the single decision that shaped it ]",
+  sections: [
+    { kind: "stub", h: "Why",
+      body: "[ writing pending · the problem in one paragraph · what existed before and why it did not hold ]" },
+    { kind: "stub", h: "How it works",
+      body: "[ writing pending · the mechanism · the one design decision worth explaining ]" },
+    { kind: "photo", caption: "[ photo pending · zmk-soft-off-plus ]" },
+    { kind: "stub", h: "What it cost",
+      body: "[ writing pending · the hard part · what was cut and why ]" },
+    { kind: "stub", h: "Where it stands",
+      body: "[ writing pending · current state · what would come next ]" },
+    { kind: "photo", caption: "[ photo pending · zmk-soft-off-plus ]" },
+  ],
+  links: [],             // [ artifacts pending: repo, release, live URL, writeup ]
+  prev: "0x08",
+  next: "0x0A",
+};
+
+/* =========================================================
+   0x0A · SIGHTSEEING.INC
+   ---------------------------------------------------------
+   SCAFFOLD - copy pending. Every [ ... ] is a placeholder waiting
+   on real material; nothing here is invented. The chrome fields
+   (name, tagline, overline, stack) carry over from the shared
+   registry in app/data/projects.js.
+   ========================================================= */
+PROJECT_DATA["0x0A"] = {
+  addr: "0x0A",
+  slug: "sightseeing-inc",
+  file: "Sightseeing.html",
+  name: "Sightseeing.inc",
+  tagline: "Adaptive city exploration app",
+  overline: "INTERFACE STUDY · DESIGN",
+  year: "[ year ]",
+  place: "[ place ]",
+  role: "[ role ]",
+  stack: ["Design"],
+  primitive: "slab",
+  model: "models/sightseeing-mark.glb",
+  demoSize: { d: 64, w: 64, h: 6 },   // [ real dimensions pending ]
+  metrics: [
+    { value: "TBD", unit: "[ headline number ]" },
+    { value: "TBD", unit: "[ scale or scope ]" },
+    { value: "TBD", unit: "[ outcome ]" },
+  ],
+  intro:
+    "[ writing pending · An adaptive city exploration and route-building application. · this paragraph wants the one-screen " +
+    "version: what it is, who it was for, and the single decision that shaped it ]",
+  sections: [
+    { kind: "stub", h: "Why",
+      body: "[ writing pending · the problem in one paragraph · what existed before and why it did not hold ]" },
+    { kind: "stub", h: "How it works",
+      body: "[ writing pending · the mechanism · the one design decision worth explaining ]" },
+    { kind: "photo", caption: "[ photo pending · sightseeing-inc ]" },
+    { kind: "stub", h: "What it cost",
+      body: "[ writing pending · the hard part · what was cut and why ]" },
+    { kind: "stub", h: "Where it stands",
+      body: "[ writing pending · current state · what would come next ]" },
+    { kind: "photo", caption: "[ photo pending · sightseeing-inc ]" },
+  ],
+  links: [],             // [ artifacts pending: repo, release, live URL, writeup ]
+  prev: "0x09",
+  next: "0x0B",
+};
+
+/* =========================================================
+   0x0B · SILENT DEPTH
+   ---------------------------------------------------------
+   SCAFFOLD - copy pending. Every [ ... ] is a placeholder waiting
+   on real material; nothing here is invented. The chrome fields
+   (name, tagline, overline, stack) carry over from the shared
+   registry in app/data/projects.js.
+   ========================================================= */
+PROJECT_DATA["0x0B"] = {
+  addr: "0x0B",
+  slug: "silent-depth",
+  file: "Silent Depth.html",
+  name: "Silent Depth",
+  tagline: "Study of gaze and silence",
+  overline: "VISUAL STUDY · DESIGN",
+  year: "[ year ]",
+  place: "[ place ]",
+  role: "[ role ]",
+  stack: ["Visual", "Study"],
+  primitive: "slab",
+  model: "models/silent-depth-mark.glb",
+  demoSize: { d: 64, w: 64, h: 6 },   // [ real dimensions pending ]
+  metrics: [
+    { value: "TBD", unit: "[ headline number ]" },
+    { value: "TBD", unit: "[ scale or scope ]" },
+    { value: "TBD", unit: "[ outcome ]" },
+  ],
+  intro:
+    "[ writing pending · A visual study of gaze, silence and invisible human connection. · this paragraph wants the one-screen " +
+    "version: what it is, who it was for, and the single decision that shaped it ]",
+  sections: [
+    { kind: "stub", h: "Why",
+      body: "[ writing pending · the problem in one paragraph · what existed before and why it did not hold ]" },
+    { kind: "stub", h: "How it works",
+      body: "[ writing pending · the mechanism · the one design decision worth explaining ]" },
+    { kind: "photo", caption: "[ photo pending · silent-depth ]" },
+    { kind: "stub", h: "What it cost",
+      body: "[ writing pending · the hard part · what was cut and why ]" },
+    { kind: "stub", h: "Where it stands",
+      body: "[ writing pending · current state · what would come next ]" },
+    { kind: "photo", caption: "[ photo pending · silent-depth ]" },
+  ],
+  links: [],             // [ artifacts pending: repo, release, live URL, writeup ]
+  prev: "0x0A",
+  next: "0x0C",
+};
+
+/* =========================================================
+   0x0C · BRIONEL PRODUCT CATALOGUE
+   ---------------------------------------------------------
+   SCAFFOLD - copy pending. Every [ ... ] is a placeholder waiting
+   on real material; nothing here is invented. The chrome fields
+   (name, tagline, overline, stack) carry over from the shared
+   registry in app/data/projects.js.
+   ========================================================= */
+PROJECT_DATA["0x0C"] = {
+  addr: "0x0C",
+  slug: "brionel-catalogue",
+  file: "Brionel Catalogue.html",
+  name: "Brionel Product Catalogue",
+  tagline: "Editorial system · 70+ products",
+  overline: "CLIENT WORK · EDITORIAL · DESIGN",
+  year: "[ year ]",
+  place: "[ place ]",
+  role: "[ role ]",
+  stack: ["Design", "Editorial", "Client"],
+  primitive: "slab",
+  model: "models/brionel-mark.glb",
+  demoSize: { d: 64, w: 64, h: 6 },   // [ real dimensions pending ]
+  metrics: [
+    { value: "TBD", unit: "[ headline number ]" },
+    { value: "TBD", unit: "[ scale or scope ]" },
+    { value: "TBD", unit: "[ outcome ]" },
+  ],
+  intro:
+    "[ writing pending · A scalable editorial system created for a catalogue of more than 70 products. · this paragraph wants the one-screen " +
+    "version: what it is, who it was for, and the single decision that shaped it ]",
+  sections: [
+    { kind: "stub", h: "Why",
+      body: "[ writing pending · the problem in one paragraph · what existed before and why it did not hold ]" },
+    { kind: "stub", h: "How it works",
+      body: "[ writing pending · the mechanism · the one design decision worth explaining ]" },
+    { kind: "photo", caption: "[ photo pending · brionel-catalogue ]" },
+    { kind: "stub", h: "What it cost",
+      body: "[ writing pending · the hard part · what was cut and why ]" },
+    { kind: "stub", h: "Where it stands",
+      body: "[ writing pending · current state · what would come next ]" },
+    { kind: "photo", caption: "[ photo pending · brionel-catalogue ]" },
+  ],
+  links: [],             // [ artifacts pending: repo, release, live URL, writeup ]
+  prev: "0x0B",
+  next: "0x01",
 };
 
 window.PROJECT_DATA = PROJECT_DATA;

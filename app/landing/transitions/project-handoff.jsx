@@ -27,6 +27,19 @@ const { useState: useNH, useEffect: useNHE, useRef: useNHR } = React;
 
 const NH_DEFAULTS = { duration: 1200, spinSpeed: 0.0039, scale: 0.92, restX: 0.46, offsetY: 0 };
 const NH_REDUCED = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+/* The rig is built on click: a fresh WebGLRenderer, an env prefilter and a GLB
+   fetch. Measured cold on a laptop that was 380ms to construct and ~1.2s to
+   the first drawn frame. Starting the travel at click time therefore ran the
+   whole flight behind an opaque veil and popped the model in as it ended.
+   The flight now waits for the rig to have actually PAINTED the model, capped
+   so a slow model never holds the reader on the landing. Painted, not merely
+   loaded: rig.ready flips when the GLB is in the scene, but the first render
+   that includes it still compiles its shader program, and that compile was
+   measured at up to 2.5s while the universe renderer was also live. Releasing
+   on `ready` therefore handed the travel a single stalled frame. Waiting one
+   more frame puts the compile inside the hold, where the card is still on
+   screen, and lets the travel run on a warm program. */
+const NH_HOLD_MAX = 900;
 
 function nhClearStale() {
   for (const k of ["mo_node_arrive", "mo_node_yaw", "mo_node_return", "mo_node_return_addr", "mo_node_return_target"]) sessionStorage.removeItem(k);
@@ -42,6 +55,7 @@ function NodeHandoff() {
   const mountRef = useNHR(null);
   const [mode, setMode] = useNH(returningRef.current ? "return" : "idle"); // idle | forward | return
   const [hud, setHud] = useNH({ addr: "", name: "" });
+  const [holding, setHolding] = useNH(false);   // rig mounted, travel not started yet
   const rigRef = useNHR(null);
   const rafRef = useNHR(0);
 
@@ -83,9 +97,12 @@ function NodeHandoff() {
       const wfEl = document.querySelector(".wf");
       if (wfEl) wfEl.classList.remove("wf--dissolve");
       setHud({ addr: project.addr, name: project.name.toUpperCase() });
+      setHolding(true);          // veil + mount stay transparent while we wait
       setMode("forward");
-      fadeUniverse(0, 620);
       document.body.classList.add("wf-flying");
+      // NOTE: the universe is deliberately NOT faded yet. The card the reader
+      // clicked has to stay on screen until the rig can draw, otherwise there
+      // is nothing for the model to lift out of.
 
       requestAnimationFrame(() => {
         const rig = buildRig(project);
@@ -104,33 +121,92 @@ function NodeHandoff() {
           sessionStorage.setItem("mo_node_arrive", "1");
           window.location.href = project.file;
         };
-        if (!rig) { setTimeout(go, 200); return; }
+        if (!rig) { setHolding(false); setTimeout(go, 200); return; }   // no rig: don't strand the hold
 
         const vw = window.innerWidth, vh = window.innerHeight;
         const REST = { fracX: hp.restX, scale: hp.scale, offY: hp.offsetY };
-        if (NH_REDUCED) {
-          rig.snapToLayout(REST.fracX, REST.scale, REST.offY);      // no travel, no spin
-        } else if (originRect && originRect.w) {
-          const cx = originRect.x + originRect.w / 2;
-          const cy = originRect.y + originRect.h / 2;
-          const startScale = Math.max(0.12, Math.min(0.6, originRect.h / (0.54 * vh)));
+
+        /* A rect is only a usable origin if it still overlaps the viewport.
+           A reel card scrolled out of the sticky stage, or a universe tile
+           swung past the lens, yields coordinates far outside the screen, and
+           startFromScreen would happily launch the model in from off-canvas. */
+        const usableOrigin = !!originRect && originRect.w > 1 && originRect.h > 1 &&
+          originRect.x + originRect.w > 0 && originRect.y + originRect.h > 0 &&
+          originRect.x < vw && originRect.y < vh;
+
+        const travels = !NH_REDUCED && usableOrigin;
+        if (travels) {
+          const cx = Math.max(0, Math.min(vw, originRect.x + originRect.w / 2));
+          const cy = Math.max(0, Math.min(vh, originRect.y + originRect.h / 2));
+          /* Size the rig so the model keeps the on-screen height it already had
+             on the card. The rig frames its model to `rigFit` world units at
+             scale 1 and its frustum is `frustumH` world units tall at the model
+             plane, so a screen fraction f needs scale = f * frustumH / rigFit.
+             The old constant (rect height / 0.54vh) had nothing to do with
+             model size, which is why a mark tuned to read small on its card
+             arrived in the flight at roughly twice the size. */
+          const R = window.WAFER_RIG || { fov: 38, camZ: 5.4, modelFit: 4.0 };
+          const frustumH = 2 * R.camZ * Math.tan((R.fov * Math.PI / 180) / 2);
+          const rigFit = (project.model && project.model.rigFit) || R.modelFit || 4.0;
+          /* Never start larger than the hero size the flight lands on. When the
+             origin is the model's own box this rarely binds; when we fall back
+             to the card quad it does, and it is what stops a small mark from
+             arriving at full card height. */
+          const startScale = Math.max(0.06, Math.min(REST.scale, (originRect.h / vh) * frustumH / rigFit));
           rig.startFromScreen(cx, cy, vw, vh, startScale);
           rig.setEaseRate(0.052);
-          requestAnimationFrame(() => rig.setLayout(REST.fracX, REST.scale, REST.offY));
         } else {
-          rig.snapToLayout(REST.fracX, REST.scale, REST.offY);
+          rig.snapToLayout(REST.fracX, REST.scale, REST.offY);      // no travel, no spin
         }
 
-        let last = performance.now();
+        /* One clock for the whole flight: the render loop. Timers are throttled
+           hard while a tab is occluded and the first build frames are heavy
+           enough to starve them anyway, which is how the travel used to get
+           its last frame and nothing else. Driving hold, travel and navigation
+           off rAF keeps every phase in step with what is actually drawn. */
+        const t0 = performance.now();
+        let last = t0;
         let navigated = false;
+        let released = false;
+        let releasedAt = 0;
         const dur = NH_REDUCED ? 420 : hp.duration;
-        const fire = () => { if (navigated) return; navigated = true; clearTimeout(navTimer); go(); };
-        const navTimer = setTimeout(fire, dur);
+        const fire = () => { if (navigated) return; navigated = true; clearTimeout(failsafe); go(); };
+
+        /* Release = the model is drawable at the card. Only now do we cover the
+           universe and start the travel, so the reader sees the whole move
+           instead of its final frame. */
+        const release = (now) => {
+          if (released) return;
+          released = true;
+          releasedAt = now;
+          setHolding(false);
+          fadeUniverse(0, 420);
+          if (travels) rig.setLayout(REST.fracX, REST.scale, REST.offY);
+        };
+
+        // If rAF stops entirely (tab hidden mid-flight) still reach the page.
+        const failsafe = setTimeout(fire, NH_HOLD_MAX + dur + 1200);
+
+        let paintedFrames = 0;      // frames drawn with the model in the scene
+        let travelFrames = 0;       // frames drawn since the travel began
+
         const loop = (now) => {
           const dt = now - last; last = now;
           if (!NH_REDUCED) rig.nudgeYaw(Math.min(50, dt) * hp.spinSpeed);
           rig.update(dt);
           rig.render();
+
+          if (rig.ready) paintedFrames++;
+          else if (released) paintedFrames++;          // proxy nodes never flip ready
+          if (!released && (paintedFrames >= 2 || now - t0 >= NH_HOLD_MAX)) release(now);
+          if (released) travelFrames++;
+
+          /* Leave for the page on time, but never before the travel has had
+             real frames to show. On a cold GPU the wall clock runs out while
+             the first frames are still compiling, which is what made the model
+             look like it teleported. The failsafe timer above is the backstop
+             if frames stop arriving altogether. */
+          if (released && now - releasedAt >= dur && travelFrames >= 10) { fire(); return; }
           if (!navigated) rafRef.current = requestAnimationFrame(loop);
         };
         rafRef.current = requestAnimationFrame(loop);
@@ -157,6 +233,7 @@ function NodeHandoff() {
     }
     const hp = Object.assign({}, NH_DEFAULTS, (project.model && project.model.handoffPose) || {});
     setHud({ addr: project.addr, name: project.name.toUpperCase() });
+    setHolding(false);
     setMode("return");
     fadeUniverse(0, 0);
     document.body.classList.add("wf-flying");
@@ -234,7 +311,7 @@ function NodeHandoff() {
   }, []);
 
   return (
-    <div className={"wf " + (mode !== "idle" ? "wf--on" : "")} aria-hidden="true">
+    <div className={"wf " + (mode !== "idle" ? "wf--on " : "") + (holding ? "wf--hold" : "")} aria-hidden="true">
       <div className="wf__veil"></div>
       <div className="wf__mount" ref={mountRef}></div>
       <div className="wf__tag">

@@ -3470,6 +3470,17 @@ function Universe(_ref) {
     }
     document.addEventListener("visibilitychange", onGyroVisibility);
     window.__mo_universe = {
+      tileBounds: function tileBounds(addr) {
+        if (!addr) return null;
+        var mb = modelViewportBounds(addr);
+        if (onScreenBox(mb)) return mb;
+        var m = tiles.find(function (t) {
+          return t.userData && t.userData.project && t.userData.project.addr === addr;
+        });
+        if (!m || !m.visible) return null;
+        var b = tileViewportBounds(m);
+        return onScreenBox(b) ? b : null;
+      },
       fly: function fly(v) {
         cam.vel = Math.max(-22, Math.min(22, cam.vel + v));
         stopDrift();
@@ -3588,6 +3599,54 @@ function Universe(_ref) {
         h: maxY - minY
       };
     }
+    function tileViewportBounds(mesh) {
+      var b = tileScreenBounds(mesh);
+      if (!b) return null;
+      var rect = mount.getBoundingClientRect();
+      return {
+        x: b.x + rect.left,
+        y: b.y + rect.top,
+        w: b.w,
+        h: b.h
+      };
+    }
+    function onScreenBox(b) {
+      return !!b && b.w >= 8 && b.h >= 8 && b.x + b.w > 0 && b.y + b.h > 0 && b.x < window.innerWidth && b.y < window.innerHeight;
+    }
+    var _mvbBox = new THREE.Box3();
+    function modelViewportBounds(addr) {
+      var holder = tileWires.find(function (o) {
+        return o.userData && o.userData.isModel && o.userData.addr === addr && o.userData.loaded && o.visible;
+      });
+      if (!holder) return null;
+      _mvbBox.setFromObject(holder);
+      if (_mvbBox.isEmpty()) return null;
+      var rect = mount.getBoundingClientRect();
+      camera.getWorldDirection(camDirTmp);
+      var minX = Infinity,
+        minY = Infinity,
+        maxX = -Infinity,
+        maxY = -Infinity;
+      for (var _i14 = 0; _i14 < 8; _i14++) {
+        v3.set(_i14 & 1 ? _mvbBox.max.x : _mvbBox.min.x, _i14 & 2 ? _mvbBox.max.y : _mvbBox.min.y, _i14 & 4 ? _mvbBox.max.z : _mvbBox.min.z);
+        _tsbCamRel.copy(v3).sub(camera.position);
+        if (_tsbCamRel.dot(camDirTmp) <= 0) return null;
+        v3.project(camera);
+        var sx = (v3.x * 0.5 + 0.5) * rect.width + rect.left;
+        var sy = (-v3.y * 0.5 + 0.5) * rect.height + rect.top;
+        if (sx < minX) minX = sx;
+        if (sx > maxX) maxX = sx;
+        if (sy < minY) minY = sy;
+        if (sy > maxY) maxY = sy;
+      }
+      return {
+        x: minX,
+        y: minY,
+        w: maxX - minX,
+        h: maxY - minY,
+        isModel: true
+      };
+    }
     var _tscCorners = [new THREE.Vector3(-_tsbHW, _tsbHH, 0), new THREE.Vector3(_tsbHW, _tsbHH, 0), new THREE.Vector3(_tsbHW, -_tsbHH, 0), new THREE.Vector3(-_tsbHW, -_tsbHH, 0)];
     var _tscOut = [{
       x: 0,
@@ -3605,14 +3664,14 @@ function Universe(_ref) {
     function tileScreenCorners(mesh) {
       var rect = mount.getBoundingClientRect();
       camera.getWorldDirection(camDirTmp);
-      for (var _i14 = 0; _i14 < 4; _i14++) {
-        v3.copy(_tscCorners[_i14]);
+      for (var _i15 = 0; _i15 < 4; _i15++) {
+        v3.copy(_tscCorners[_i15]);
         mesh.localToWorld(v3);
         _tsbCamRel.copy(v3).sub(camera.position);
         if (_tsbCamRel.dot(camDirTmp) <= 0) return null;
         v3.project(camera);
-        _tscOut[_i14].x = (v3.x * 0.5 + 0.5) * rect.width;
-        _tscOut[_i14].y = (-v3.y * 0.5 + 0.5) * rect.height;
+        _tscOut[_i15].x = (v3.x * 0.5 + 0.5) * rect.width;
+        _tscOut[_i15].y = (-v3.y * 0.5 + 0.5) * rect.height;
       }
       return _tscOut;
     }
@@ -3657,7 +3716,8 @@ function Universe(_ref) {
       camTarget.pitch = Math.max(-1.45, Math.min(1.45, pitch));
       if (p.file) {
         cam.vel = Math.max(cam.vel, 6);
-        var originRect = tileScreenBounds(m);
+        var _mb = modelViewportBounds(p.addr);
+        var originRect = onScreenBox(_mb) ? _mb : tileViewportBounds(m);
         navigateToProject(p, originRect);
         return;
       }
@@ -3715,10 +3775,10 @@ function Universe(_ref) {
     var REBASE_DIST2 = 600 * 600;
     function shiftBufferAttr(attr, sx, sy, sz) {
       var a = attr.array;
-      for (var _i15 = 0; _i15 < a.length; _i15 += 3) {
-        a[_i15] -= sx;
-        a[_i15 + 1] -= sy;
-        a[_i15 + 2] -= sz;
+      for (var _i16 = 0; _i16 < a.length; _i16 += 3) {
+        a[_i16] -= sx;
+        a[_i16 + 1] -= sy;
+        a[_i16 + 2] -= sz;
       }
       attr.needsUpdate = true;
     }
@@ -3764,42 +3824,42 @@ function Universe(_ref) {
       }
       shiftBufferAttr(stars.geometry.attributes.position, sx, sy, sz);
       var aArr = assemblyPts.geometry.attributes.position.array;
-      for (var _i16 = 0; _i16 < aArr.length; _i16 += 3) {
-        aArr[_i16] -= sx;
-        aArr[_i16 + 1] -= sy;
-        aArr[_i16 + 2] -= sz;
-        asmHome[_i16] -= sx;
-        asmHome[_i16 + 1] -= sy;
-        asmHome[_i16 + 2] -= sz;
+      for (var _i17 = 0; _i17 < aArr.length; _i17 += 3) {
+        aArr[_i17] -= sx;
+        aArr[_i17 + 1] -= sy;
+        aArr[_i17 + 2] -= sz;
+        asmHome[_i17] -= sx;
+        asmHome[_i17 + 1] -= sy;
+        asmHome[_i17 + 2] -= sz;
       }
       _fieldCam.set(0, 0, 0);
       assemblyPts.geometry.attributes.position.needsUpdate = true;
     }
     function wrapAssemblyField(arr, home, box) {
-      for (var _i17 = 0; _i17 < home.length; _i17 += 3) {
-        var dx = home[_i17] - cam.pos.x;
-        var dy = home[_i17 + 1] - cam.pos.y;
-        var dz = home[_i17 + 2] - cam.pos.z;
+      for (var _i18 = 0; _i18 < home.length; _i18 += 3) {
+        var dx = home[_i18] - cam.pos.x;
+        var dy = home[_i18 + 1] - cam.pos.y;
+        var dz = home[_i18 + 2] - cam.pos.z;
         if (dx > box.x / 2) {
-          home[_i17] -= box.x;
-          arr[_i17] -= box.x;
+          home[_i18] -= box.x;
+          arr[_i18] -= box.x;
         } else if (dx < -box.x / 2) {
-          home[_i17] += box.x;
-          arr[_i17] += box.x;
+          home[_i18] += box.x;
+          arr[_i18] += box.x;
         }
         if (dy > box.y / 2) {
-          home[_i17 + 1] -= box.y;
-          arr[_i17 + 1] -= box.y;
+          home[_i18 + 1] -= box.y;
+          arr[_i18 + 1] -= box.y;
         } else if (dy < -box.y / 2) {
-          home[_i17 + 1] += box.y;
-          arr[_i17 + 1] += box.y;
+          home[_i18 + 1] += box.y;
+          arr[_i18 + 1] += box.y;
         }
         if (dz > box.z / 2) {
-          home[_i17 + 2] -= box.z;
-          arr[_i17 + 2] -= box.z;
+          home[_i18 + 2] -= box.z;
+          arr[_i18 + 2] -= box.z;
         } else if (dz < -box.z / 2) {
-          home[_i17 + 2] += box.z;
-          arr[_i17 + 2] += box.z;
+          home[_i18 + 2] += box.z;
+          arr[_i18 + 2] += box.z;
         }
       }
     }
@@ -4255,13 +4315,13 @@ function Universe(_ref) {
           var ox = _batch2.mesh.position.x,
             oy = _batch2.mesh.position.y,
             oz = _batch2.mesh.position.z;
-          for (var _i23 = 0; _i23 < count; _i23++) {
-            var _sp4 = _batch2.nodes[_i23];
+          for (var _i24 = 0; _i24 < count; _i24++) {
+            var _sp4 = _batch2.nodes[_i24];
             var c = _sp4.userData.atlas;
             var _x = _sp4.position.x - ox,
               _y = _sp4.position.y - oy,
               _z = _sp4.position.z - oz;
-            var p = _i23 * 12;
+            var p = _i24 * 12;
             _batch2.positions[p] = _x - rx + ux;
             _batch2.positions[p + 1] = _y - ry + uy;
             _batch2.positions[p + 2] = _z - rz + uz;
@@ -4274,7 +4334,7 @@ function Universe(_ref) {
             _batch2.positions[p + 9] = _x + rx - ux;
             _batch2.positions[p + 10] = _y + ry - uy;
             _batch2.positions[p + 11] = _z + rz - uz;
-            var u = _i23 * 8;
+            var u = _i24 * 8;
             _batch2.uvs[u] = c.u0;
             _batch2.uvs[u + 1] = c.v1;
             _batch2.uvs[u + 2] = c.u1;
@@ -4283,7 +4343,7 @@ function Universe(_ref) {
             _batch2.uvs[u + 5] = c.v0;
             _batch2.uvs[u + 6] = c.u1;
             _batch2.uvs[u + 7] = c.v0;
-            var a = _i23 * 4;
+            var a = _i24 * 4;
             _batch2.opacity[a] = _sp4.userData.opacity;
             _batch2.opacity[a + 1] = _sp4.userData.opacity;
             _batch2.opacity[a + 2] = _sp4.userData.opacity;
@@ -4384,13 +4444,13 @@ function Universe(_ref) {
         var _fdz = cam.pos.z - _fieldCam.z;
         _fieldCam.copy(cam.pos);
         if ((formP >= 0.0015 || isArranged) && (_fdx || _fdy || _fdz)) {
-          for (var _i18 = 0; _i18 < ASM_N * 3; _i18 += 3) {
-            asmHome[_i18] += _fdx;
-            arr[_i18] += _fdx;
-            asmHome[_i18 + 1] += _fdy;
-            arr[_i18 + 1] += _fdy;
-            asmHome[_i18 + 2] += _fdz;
-            arr[_i18 + 2] += _fdz;
+          for (var _i19 = 0; _i19 < ASM_N * 3; _i19 += 3) {
+            asmHome[_i19] += _fdx;
+            arr[_i19] += _fdx;
+            asmHome[_i19 + 1] += _fdy;
+            arr[_i19 + 1] += _fdy;
+            asmHome[_i19 + 2] += _fdz;
+            arr[_i19 + 2] += _fdz;
           }
         }
         if (_flowDX || _flowDZ) {
@@ -4398,11 +4458,11 @@ function Universe(_ref) {
           if (fw > 0.01) {
             var fx = _flowDX * fw,
               fz = _flowDZ * fw;
-            for (var _i19 = 0; _i19 < ASM_N * 3; _i19 += 3) {
-              asmHome[_i19] -= fx;
-              arr[_i19] -= fx;
-              asmHome[_i19 + 2] -= fz;
-              arr[_i19 + 2] -= fz;
+            for (var _i20 = 0; _i20 < ASM_N * 3; _i20 += 3) {
+              asmHome[_i20] -= fx;
+              arr[_i20] -= fx;
+              asmHome[_i20 + 2] -= fz;
+              arr[_i20 + 2] -= fz;
             }
           }
         }
@@ -4416,8 +4476,8 @@ function Universe(_ref) {
             var ky = cam.pos.y + FORWARD.y * 9;
             var kz = cam.pos.z + FORWARD.z * 9;
             var wobT = now * 0.0022;
-            for (var _i20 = 0; _i20 < ASM_N; _i20++) {
-              var j = _i20 * 3;
+            for (var _i21 = 0; _i21 < ASM_N; _i21++) {
+              var j = _i21 * 3;
               var lx = asmLocal[j] * glyphFit;
               var ly = asmLocal[j + 1] * glyphFit;
               var lz = asmLocal[j + 2] * glyphFit + 0.10 * Math.sin(wobT - lx * 1.5);
@@ -4433,7 +4493,7 @@ function Universe(_ref) {
             }
           } else {
             var kField = frameLerp(0.12, dt);
-            for (var _i21 = 0; _i21 < ASM_N * 3; _i21++) arr[_i21] += (asmHome[_i21] - arr[_i21]) * kField;
+            for (var _i22 = 0; _i22 < ASM_N * 3; _i22++) arr[_i22] += (asmHome[_i22] - arr[_i22]) * kField;
           }
         } else {
           _glyphC.copy(cam.pos).add(ORIGIN_CENTER);
@@ -4449,8 +4509,8 @@ function Universe(_ref) {
           var rAmp = 0.15 * formP;
           var rPhase = now * 0.0019;
           var kForm = frameLerp(0.16 + formP * 0.12, dt);
-          for (var _i22 = 0; _i22 < ASM_N; _i22++) {
-            var _j = _i22 * 3;
+          for (var _i23 = 0; _i23 < ASM_N; _i23++) {
+            var _j = _i23 * 3;
             var _lx = asmLocal[_j] * glyphFit;
             var _ly = asmLocal[_j + 1] * glyphFit;
             var _lz = asmLocal[_j + 2] * glyphFit + rAmp * glyphFit * Math.sin(rPhase - _lx * 1.5);
@@ -4547,29 +4607,29 @@ function Universe(_ref) {
       var attr = points.geometry.attributes.position;
       var arr = attr.array;
       var dirty = false;
-      for (var _i24 = 0; _i24 < arr.length; _i24 += 3) {
-        var dx = arr[_i24 + 0] - cam.pos.x;
-        var dy = arr[_i24 + 1] - cam.pos.y;
-        var dz = arr[_i24 + 2] - cam.pos.z;
+      for (var _i25 = 0; _i25 < arr.length; _i25 += 3) {
+        var dx = arr[_i25 + 0] - cam.pos.x;
+        var dy = arr[_i25 + 1] - cam.pos.y;
+        var dz = arr[_i25 + 2] - cam.pos.z;
         if (dx > box.x / 2) {
-          arr[_i24 + 0] -= box.x;
+          arr[_i25 + 0] -= box.x;
           dirty = true;
         } else if (dx < -box.x / 2) {
-          arr[_i24 + 0] += box.x;
+          arr[_i25 + 0] += box.x;
           dirty = true;
         }
         if (dy > box.y / 2) {
-          arr[_i24 + 1] -= box.y;
+          arr[_i25 + 1] -= box.y;
           dirty = true;
         } else if (dy < -box.y / 2) {
-          arr[_i24 + 1] += box.y;
+          arr[_i25 + 1] += box.y;
           dirty = true;
         }
         if (dz > box.z / 2) {
-          arr[_i24 + 2] -= box.z;
+          arr[_i25 + 2] -= box.z;
           dirty = true;
         } else if (dz < -box.z / 2) {
-          arr[_i24 + 2] += box.z;
+          arr[_i25 + 2] += box.z;
           dirty = true;
         }
       }
@@ -4743,6 +4803,7 @@ var NH_DEFAULTS = {
   offsetY: 0
 };
 var NH_REDUCED = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+var NH_HOLD_MAX = 900;
 function nhClearStale() {
   for (var _i = 0, _arr = ["mo_node_arrive", "mo_node_yaw", "mo_node_return", "mo_node_return_addr", "mo_node_return_target"]; _i < _arr.length; _i++) {
     var k = _arr[_i];
@@ -4770,6 +4831,10 @@ function NodeHandoff() {
     _useNH4 = _slicedToArray(_useNH3, 2),
     hud = _useNH4[0],
     setHud = _useNH4[1];
+  var _useNH5 = useNH(false),
+    _useNH6 = _slicedToArray(_useNH5, 2),
+    holding = _useNH6[0],
+    setHolding = _useNH6[1];
   var rigRef = useNHR(null);
   var rafRef = useNHR(0);
   useNHE(function () {
@@ -4828,8 +4893,8 @@ function NodeHandoff() {
         addr: project.addr,
         name: project.name.toUpperCase()
       });
+      setHolding(true);
       setMode("forward");
-      fadeUniverse(0, 620);
       document.body.classList.add("wf-flying");
       requestAnimationFrame(function () {
         var rig = buildRig(project);
@@ -4853,6 +4918,7 @@ function NodeHandoff() {
           window.location.href = project.file;
         };
         if (!rig) {
+          setHolding(false);
           setTimeout(go, 200);
           return;
         }
@@ -4863,36 +4929,60 @@ function NodeHandoff() {
           scale: hp.scale,
           offY: hp.offsetY
         };
-        if (NH_REDUCED) {
-          rig.snapToLayout(REST.fracX, REST.scale, REST.offY);
-        } else if (originRect && originRect.w) {
-          var cx = originRect.x + originRect.w / 2;
-          var cy = originRect.y + originRect.h / 2;
-          var startScale = Math.max(0.12, Math.min(0.6, originRect.h / (0.54 * vh)));
+        var usableOrigin = !!originRect && originRect.w > 1 && originRect.h > 1 && originRect.x + originRect.w > 0 && originRect.y + originRect.h > 0 && originRect.x < vw && originRect.y < vh;
+        var travels = !NH_REDUCED && usableOrigin;
+        if (travels) {
+          var cx = Math.max(0, Math.min(vw, originRect.x + originRect.w / 2));
+          var cy = Math.max(0, Math.min(vh, originRect.y + originRect.h / 2));
+          var R = window.WAFER_RIG || {
+            fov: 38,
+            camZ: 5.4,
+            modelFit: 4.0
+          };
+          var frustumH = 2 * R.camZ * Math.tan(R.fov * Math.PI / 180 / 2);
+          var rigFit = project.model && project.model.rigFit || R.modelFit || 4.0;
+          var startScale = Math.max(0.06, Math.min(REST.scale, originRect.h / vh * frustumH / rigFit));
           rig.startFromScreen(cx, cy, vw, vh, startScale);
           rig.setEaseRate(0.052);
-          requestAnimationFrame(function () {
-            return rig.setLayout(REST.fracX, REST.scale, REST.offY);
-          });
         } else {
           rig.snapToLayout(REST.fracX, REST.scale, REST.offY);
         }
-        var last = performance.now();
+        var t0 = performance.now();
+        var last = t0;
         var navigated = false;
+        var released = false;
+        var releasedAt = 0;
         var dur = NH_REDUCED ? 420 : hp.duration;
         var fire = function fire() {
           if (navigated) return;
           navigated = true;
-          clearTimeout(navTimer);
+          clearTimeout(failsafe);
           go();
         };
-        var navTimer = setTimeout(fire, dur);
+        var release = function release(now) {
+          if (released) return;
+          released = true;
+          releasedAt = now;
+          setHolding(false);
+          fadeUniverse(0, 420);
+          if (travels) rig.setLayout(REST.fracX, REST.scale, REST.offY);
+        };
+        var failsafe = setTimeout(fire, NH_HOLD_MAX + dur + 1200);
+        var paintedFrames = 0;
+        var travelFrames = 0;
         var _loop = function loop(now) {
           var dt = now - last;
           last = now;
           if (!NH_REDUCED) rig.nudgeYaw(Math.min(50, dt) * hp.spinSpeed);
           rig.update(dt);
           rig.render();
+          if (rig.ready) paintedFrames++;else if (released) paintedFrames++;
+          if (!released && (paintedFrames >= 2 || now - t0 >= NH_HOLD_MAX)) release(now);
+          if (released) travelFrames++;
+          if (released && now - releasedAt >= dur && travelFrames >= 10) {
+            fire();
+            return;
+          }
           if (!navigated) rafRef.current = requestAnimationFrame(_loop);
         };
         rafRef.current = requestAnimationFrame(_loop);
@@ -4922,6 +5012,7 @@ function NodeHandoff() {
       addr: project.addr,
       name: project.name.toUpperCase()
     });
+    setHolding(false);
     setMode("return");
     fadeUniverse(0, 0);
     document.body.classList.add("wf-flying");
@@ -5015,7 +5106,7 @@ function NodeHandoff() {
     };
   }, []);
   return React.createElement("div", {
-    className: "wf " + (mode !== "idle" ? "wf--on" : ""),
+    className: "wf " + (mode !== "idle" ? "wf--on " : "") + (holding ? "wf--hold" : ""),
     "aria-hidden": "true"
   }, React.createElement("div", {
     className: "wf__veil"
@@ -8867,13 +8958,24 @@ function NodeCard(_ref2) {
   var openNode = function openNode() {
     if (!hasPage) return;
     var project = work;
-    var rect = cardRef.current ? cardRef.current.getBoundingClientRect() : null;
-    var originRect = rect ? {
-      x: rect.left,
-      y: rect.top,
-      w: rect.width,
-      h: rect.height
-    } : null;
+    var originRect = null;
+    var uni = window.__mo_universe;
+    if (uni && typeof uni.tileBounds === "function") {
+      try {
+        originRect = uni.tileBounds(work.addr);
+      } catch (_) {
+        originRect = null;
+      }
+    }
+    if (!originRect) {
+      var rect = cardRef.current ? cardRef.current.getBoundingClientRect() : null;
+      originRect = rect ? {
+        x: rect.left,
+        y: rect.top,
+        w: rect.width,
+        h: rect.height
+      } : null;
+    }
     window.dispatchEvent(new CustomEvent("mo:nodeFlight", {
       detail: {
         project: project,

@@ -1575,6 +1575,24 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     }
     document.addEventListener("visibilitychange", onGyroVisibility);
     window.__mo_universe = {
+      /* Screen box of the tile carrying this project, in viewport space, or
+         null when it is hidden or behind the camera. The work reel uses this
+         so the handoff lifts out of the card that is already showing the
+         model rather than out of its caption bar. */
+      tileBounds(addr) {
+        if (!addr) return null;
+        // The model itself is the better origin: it is the thing that flies,
+        // and its projected height is what the handoff sizes the rig from.
+        // Models float above their cards, so a card near the top of the
+        // viewport can have its model entirely off screen - fall back to the
+        // card quad there rather than handing back coordinates nobody can see.
+        const mb = modelViewportBounds(addr);
+        if (onScreenBox(mb)) return mb;
+        const m = tiles.find(t => t.userData && t.userData.project && t.userData.project.addr === addr);
+        if (!m || !m.visible) return null;
+        const b = tileViewportBounds(m);
+        return onScreenBox(b) ? b : null;
+      },
       fly(v) {
         cam.vel = Math.max(-22, Math.min(22, cam.vel + v));
         stopDrift(); fireInteract();
@@ -1672,6 +1690,59 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       return { x: minX, y: minY, w: maxX - minX, h: maxY - minY };
     }
 
+    /* Same box in VIEWPORT (client) space. tileScreenBounds stays mount-local
+       because the hover HUD is positioned inside the mount, but anything
+       outside this component - the node handoff in particular - needs client
+       coordinates, so the mount offset has to be added back. */
+    function tileViewportBounds(mesh) {
+      const b = tileScreenBounds(mesh);
+      if (!b) return null;
+      const rect = mount.getBoundingClientRect();
+      return { x: b.x + rect.left, y: b.y + rect.top, w: b.w, h: b.h };
+    }
+
+    /* Projected box of the MODEL on a tile, in viewport space. The handoff
+       needs this rather than the card quad: it sizes the flying rig so the
+       model keeps the on-screen height it already had, and the card is much
+       taller than the object sitting on it. */
+    /* A box is only worth handing out as a flight origin if the reader can
+       actually see it. */
+    function onScreenBox(b) {
+      return !!b && b.w >= 8 && b.h >= 8 &&
+        b.x + b.w > 0 && b.y + b.h > 0 &&
+        b.x < window.innerWidth && b.y < window.innerHeight;
+    }
+
+    const _mvbBox = new THREE.Box3();
+    function modelViewportBounds(addr) {
+      const holder = tileWires.find(o =>
+        o.userData && o.userData.isModel && o.userData.addr === addr &&
+        o.userData.loaded && o.visible);
+      if (!holder) return null;
+      _mvbBox.setFromObject(holder);
+      if (_mvbBox.isEmpty()) return null;
+      const rect = mount.getBoundingClientRect();
+      camera.getWorldDirection(camDirTmp);
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      for (let i = 0; i < 8; i++) {
+        v3.set(
+          (i & 1) ? _mvbBox.max.x : _mvbBox.min.x,
+          (i & 2) ? _mvbBox.max.y : _mvbBox.min.y,
+          (i & 4) ? _mvbBox.max.z : _mvbBox.min.z,
+        );
+        _tsbCamRel.copy(v3).sub(camera.position);
+        if (_tsbCamRel.dot(camDirTmp) <= 0) return null;   // corner behind the lens
+        v3.project(camera);
+        const sx = ( v3.x * 0.5 + 0.5) * rect.width  + rect.left;
+        const sy = (-v3.y * 0.5 + 0.5) * rect.height + rect.top;
+        if (sx < minX) minX = sx;
+        if (sx > maxX) maxX = sx;
+        if (sy < minY) minY = sy;
+        if (sy > maxY) maxY = sy;
+      }
+      return { x: minX, y: minY, w: maxX - minX, h: maxY - minY, isModel: true };
+    }
+
     /* ---------- screen-space tile CORNERS (perimeter order) ----------
        Returns the 4 projected corners of the tilted card quad in mount-local
        px — TL, TR, BR, BL clockwise — so the HUD can hug the card's true
@@ -1741,7 +1812,9 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       // If this project has its own page, fly to it.
       if (p.file) {
         cam.vel = Math.max(cam.vel, 6);   // small forward dolly = "clicking into"
-        const originRect = tileScreenBounds(m);   // where the card sits on screen NOW
+        // where the model sits on screen NOW (card quad only as a fallback)
+        const _mb = modelViewportBounds(p.addr);
+        const originRect = onScreenBox(_mb) ? _mb : tileViewportBounds(m);
         navigateToProject(p, originRect);
         return;
       }

@@ -261,8 +261,19 @@ function NodeCard({ work, i, total, absD, locked, focused, onFocus }) {
   const openNode = () => {
     if (!hasPage) return;                                 // RECORD FORMING — stays visual
     const project = work;
-    const rect = cardRef.current ? cardRef.current.getBoundingClientRect() : null;
-    const originRect = rect ? { x: rect.left, y: rect.top, w: rect.width, h: rect.height } : null;
+    // The reel card is a caption bar; the model the reader is looking at sits
+    // in the universe tile roughly a screen-third above it. Fly out of that
+    // tile so the rig lifts off the card that is actually showing the model,
+    // and fall back to the caption bar when the tile is off-screen.
+    let originRect = null;
+    const uni = window.__mo_universe;
+    if (uni && typeof uni.tileBounds === "function") {
+      try { originRect = uni.tileBounds(work.addr); } catch (_) { originRect = null; }
+    }
+    if (!originRect) {
+      const rect = cardRef.current ? cardRef.current.getBoundingClientRect() : null;
+      originRect = rect ? { x: rect.left, y: rect.top, w: rect.width, h: rect.height } : null;
+    }
     window.dispatchEvent(new CustomEvent("mo:nodeFlight", { detail: { project, originRect, origin: "work" } }));
   };
   const onKey = (e) => {

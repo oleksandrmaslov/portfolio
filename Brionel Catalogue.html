@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ZMK PointAccel — Maslov Oleksandr</title>
-  <meta name="description" content="ZMK PointAccel · project case file · Maslov Oleksandr · open-source pointer acceleration input processor · live curve demo." />
+  <title>Brionel Product Catalogue — Maslov Oleksandr</title>
+  <meta name="description" content="Brionel Product Catalogue · project case file · a scalable editorial system for a catalogue of more than 70 products." />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -17,7 +17,6 @@
   <link rel="stylesheet" href="app/projects/styles/base.css" />
   <link rel="stylesheet" href="app/projects/styles/case-study.css" />
   <link rel="stylesheet" href="demo/base.css" />
-  <link rel="stylesheet" href="demo/controls.css" />
   <link rel="stylesheet" href="app/projects/components/ascii-photo.css" />
   <link rel="stylesheet" href="app/shared/styles/pointer.css?v=20260822-2" />
   <link rel="stylesheet" href="app/shared/styles/scrollbar.css" />
@@ -25,7 +24,28 @@
 <body>
   <div id="root"></div>
 
-  <!-- Three.js (ESM) exposed on window.THREE for the Babel scripts below -->
+  <!-- SEAM BRIDGE — arriving from the landing node flight: paint the captured
+       final frame instantly so the model never blinks out during boot. -->
+  <script>
+    (function () {
+      try {
+        if (sessionStorage.getItem("mo_node_arrive") !== "1") return;
+        if (sessionStorage.getItem("mo_node_addr") !== "0x0C") return;
+        var img = sessionStorage.getItem("mo_node_seam");
+        if (!img) return;
+        var d = document.createElement("div");
+        d.id = "mo-seam";
+        d.style.cssText = "position:fixed;inset:0;z-index:60;background:#04060d center center / cover no-repeat;transition:opacity .55s cubic-bezier(0.16,1,0.3,1);pointer-events:none;";
+        d.style.backgroundImage = "url(" + img + ")";
+        d.appendChild(Object.assign(document.createElement("div"), {
+          className: "mo-seam__tag",
+          textContent: "BRIONEL PRODUCT CATALOGUE"
+        }));
+        document.body.appendChild(d);
+      } catch (e) {}
+    })();
+  </script>
+
   <script type="importmap">
   {
     "imports": {
@@ -39,85 +59,54 @@
     import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
     import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
     import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
-    window.THREE = Object.assign({}, THREE, { GLTFLoader, MeshoptDecoder, RoomEnvironment });
+    import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
+    import { KTX2Loader } from "three/addons/loaders/KTX2Loader.js";
+    window.THREE = Object.assign({}, THREE, { GLTFLoader, MeshoptDecoder, RoomEnvironment, RoundedBoxGeometry, KTX2Loader });
+    window.dispatchEvent(new Event("three-ready"));
   </script>
 
-  <!-- React + Babel -->
   <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" integrity="sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" integrity="sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 
-  <!-- Shared interface foundation (FibGrid, Boot, Cursor) -->
   <script type="text/babel" data-presets="env,react" src="app/shared/core.jsx"></script>
 
-  <!-- PLAY DEMO · field core + glide-grain palette + firmware-port controller -->
-  <script src="demo/field-core.js"></script>
-  <script src="demo/accel-sound.js"></script>
-  <script src="demo/accel-demo.js"></script>
-
-  <!-- ASCII photo reveal lens -->
+  <!-- ASCII photo reveal-lens -->
   <script src="app/projects/components/ascii-photo.js"></script>
 
-  <!-- Project pieces -->
+  <!-- Solid-material tuning for production GLBs -->
+  <script src="app/projects/rendering/solid-materials.js"></script>
+
+  <!-- Project rendering and shared components -->
   <script type="text/babel" data-presets="env,react" src="app/projects/data.jsx"></script>
   <script type="text/babel" data-presets="env,react" src="app/projects/rendering/model-viewer.jsx"></script>
-  <script type="text/babel" data-presets="env,react" src="app/projects/rendering/basic-hero-rig.jsx"></script>
+  <script type="text/babel" data-presets="env,react" src="app/projects/rendering/solid-hero-rig.jsx"></script>
   <script type="text/babel" data-presets="env,react" src="app/projects/components/tweak-panel.jsx"></script>
   <script type="text/babel" data-presets="env,react" src="app/projects/components/ascii-photo.jsx"></script>
-  <script type="text/babel" data-presets="env,react" src="demo/accel-hud.jsx"></script>
 
   <!-- Page config — everything project-specific lives here -->
   <script type="text/babel" data-presets="env,react">
     window.PAGE_CONFIG = {
-      addr: "0x08",
-      docTitle: "ZMK PointAccel — Maslov Oleksandr",
+      addr: "0x0C",
+      docTitle: "Brionel Product Catalogue — Maslov Oleksandr",
       hero: {
-        /* The same mark the universe card carries. The handoff flies
-           models/zmk-mark.glb in from the reel, so the page has to land on that
-           object: the procedural acceleration-curve ribbon that used to sit
-           here swapped the model out mid-transition. rigFit for 0x08 in
-           app/data/projects.js mirrors the modelFit below - keep them equal. */
-        model: "models/zmk-mark.glb",
-        matcap: false,
-        modelFit: 2.1,
+        model: "models/brionel-mark.glb",
+        modelFit: 2.1,   // keep equal to rigFit for 0x0C in app/data/projects.js
         pose: { x: -0.2, y: 0, z: 0 },
       },
-      demo: {
-        layerName: "AccelDemoLayer",
-        hint: "YOUR CURSOR · THE CURVE · DT EMIT",
-        label: "PLAY DEMO",
+      heroLayout: {
+        desktop: { fracX: 0.46, scale: 0.78, offY: 0.22 },
+        tablet:  { fracX: 0.26, scale: 0.66, offY: 0.30 },
+        mobile:  { fracX: 0,    scale: 0.50, offY: 1.05 },
       },
-      tweakDefaults: /*EDITMODE-BEGIN*/{
-        "direction": "cinematic",
-        "hud": "full",
-        "soundLevel": 0.8,
-        "cpiScale": 2
-      }/*EDITMODE-END*/,
-      renderTweaks: (t, set) => (
-        <>
-          <TweakSection label="Demo" />
-          <TweakRadio label="Direction" value={t.direction}
-                      options={["cinematic", "sandbox"]}
-                      onChange={(v) => set("direction", v)} />
-          <TweakRadio label="HUD density" value={t.hud}
-                      options={["full", "minimal"]}
-                      onChange={(v) => set("hud", v)} />
-          <TweakSection label="Input sim" />
-          <TweakSlider label="CPI scale" value={t.cpiScale} min={1} max={4} step={0.5}
-                       onChange={(v) => set("cpiScale", v)} />
-          <TweakSection label="Sound" />
-          <TweakSlider label="Field level" value={t.soundLevel} min={0} max={1} step={0.05}
-                       onChange={(v) => set("soundLevel", v)} />
-        </>
-      ),
+      // link: { label, href, hint }   // [ pending: add when there is an artifact to open ]
     };
   </script>
 
-  <!-- Shared pointer effects and standard project page -->
+  <!-- Project page with the generic node-handoff protocol -->
   <script src="app/shared/pointer-effects.js"></script>
-  <script type="text/babel" data-presets="env,react" src="app/projects/pages/standard-page.jsx"></script>
+  <script type="text/babel" data-presets="env,react" src="app/projects/pages/handoff-page.jsx"></script>
 
-  <!-- Shared ASCII ramp scrollbar -->
   <script src="app/shared/scrollbar.js"></script>
 </body>
 </html>
