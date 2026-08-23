@@ -446,7 +446,9 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       if (_pmrem) _pmrem.dispose();
     }
     { const _k = new THREE.DirectionalLight(0xffffff, 1.6); _k.position.set(2.4, 3.2, 2.6); scene.add(_k);
-      const _r = new THREE.PointLight(0x00f0c8, 1.6, 26); _r.position.set(-3, 1.6, -2); scene.add(_r); }
+      // Range scales with TILE_BOX: at 26 this reached the whole field when the
+      // cards sat 7-11u out, and left the far half of a 11-17u spread unlit.
+      const _r = new THREE.PointLight(0x00f0c8, 1.6, 36); _r.position.set(-3, 1.6, -2); scene.add(_r); }
 
     /* ============================================================
        UNIVERSE RENDERING PATH — post-processing composer
@@ -687,7 +689,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     // velocity weight (written by cinematic.js) → FOV + aberration kick
     let _lastFov = 58;
     // Smoothed rack-focus distance.
-    let _focusS = 13.0;
+    let _focusS = GRADE.focus;   // seed from the grade, not a second literal
     // ARRIVAL overture — void → the field condenses into "0x00" → pulse → scatter
     const ARR = { t0: 0, dur: 2600, burst: false };
     const _arrR = new THREE.Vector3(), _arrU = new THREE.Vector3(), _arrUP = new THREE.Vector3(0, 1, 0);
@@ -857,6 +859,64 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     const GREET_COS = Math.cos(26 * Math.PI / 180);
     const GREET_CLEAR_R = 21;        // past this, a card is too far back to eclipse
     const _placeV = new THREE.Vector3();
+    const _placeN = new THREE.Vector3();
+
+    /* ============================================================
+       driftHome — the ONE definition of where a card lives in free drift.
+       ------------------------------------------------------------
+       Used at mount to compose the opening view, and again by scatterTiles()
+       every time an arranged beat hands the field back to drift. These were
+       two separate formulas until now, which is why scrolling origin → title
+       re-assembled the cards into the pre-refactor coordinates: the return
+       path still had the pole-collapsing latitude, the small BOX and no
+       greeting card, so Wafer went back overhead and the field snapped shut
+       to its old radius. If a third caller ever needs a drift position, it
+       calls this. It does not get its own copy.
+
+       Returns a CAMERA-RELATIVE offset. At mount the camera is at the origin,
+       so the two uses agree by construction.
+       ============================================================ */
+    function driftHome(i, out, jitter) {
+      if (i === 0) {
+        // THE FIRST NODE GREETS YOU. Placed in front on purpose rather than
+        // left to wherever the spiral drops it: a visitor who arrives to empty
+        // space has no reason to believe there is anything to find. Yawed to
+        // face wherever the camera is actually looking, so a return to the
+        // title greets you the same way the first arrival did. Registry order
+        // decides who this is — app/data/projects.js puts Wafer first.
+        out.copy(GREET_POS);
+        return jitter ? out.applyAxisAngle(_AXIS_Y, cam.yaw) : out;
+      }
+      /* LATITUDE BAND. `1 - (i / (N-1)) * 2` runs latitude +1 → -1, which
+         collapses `radial` to 0 and parks the first and last cards exactly
+         overhead and underfoot — the two directions nobody looks. The band is
+         compressed to ±FIELD_LAT instead: same even spread, roughly ±24° of
+         elevation, minus the two positions that were never findable. */
+      const n = Math.max(1, projects.length);
+      const yN = FIELD_LAT * (1 - ((i + 0.5) / n) * 2);
+      const radial = Math.sqrt(1 - yN * yN);
+      // Mount is deterministic so the opening view is composed; a return is
+      // jittered so the field does not snap back to an identical arrangement.
+      const r = jitter ? 0.55 + 0.30 * Math.random()
+                       : 0.55 + 0.30 * ((i * 13 % 100) / 100);
+      let th = i * goldenAngle + (jitter ? (Math.random() - 0.5) * 1.5 : 0);
+      /* KEEP THE GREETING CONE CLEAR. Placing the first node in front only
+         works if nothing stands in front of it, and the spiral drops a card
+         near the view axis every time. Anything inside the cone and near
+         enough to occlude walks around the ring until it is clear — a rule,
+         not a tuned phase offset, so adding a project cannot re-break it. */
+      for (let guard = 0; guard < 12; guard++) {
+        out.set(
+          Math.cos(th) * radial * TILE_BOX.x * r * 0.55,
+          yN * TILE_BOX.y * r * 0.6,
+          Math.sin(th) * radial * TILE_BOX.z * r * 0.55,
+        );
+        _placeN.copy(out).normalize();
+        if (out.length() > GREET_CLEAR_R || _placeN.dot(GREET_DIR) < GREET_COS) break;
+        th += 0.62;
+      }
+      return out;
+    }
     const N = projects.length;
     projects.forEach((p, i) => {
       const tex = makeTileTexture(p, THREE);
@@ -867,53 +927,8 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       const geo = new THREE.PlaneGeometry(TILE_W, TILE_H);
       const mesh = new THREE.Mesh(geo, mat);
 
-      /* INITIAL PLACEMENT — a Fibonacci spread, but never at the poles.
-         `1 - (i / (N-1)) * 2` runs the latitude from +1 to -1, which puts
-         index 0 exactly overhead and index N-1 exactly underfoot: radial
-         collapses to 0, so both land dead on the camera's vertical axis
-         where nobody who looks around the horizon will ever find them.
-         Wafer was the one directly above your head.
-
-         The band is compressed to ±FIELD_LAT instead. The spiral keeps its
-         even spread and the field still reads as a sphere — roughly ±24° of
-         elevation once BOX's proportions are applied — it just stops using
-         the two positions a visitor never looks at. The half-step on i keeps
-         the first and last cards off the band edges too. */
-      const yN = FIELD_LAT * (1 - ((i + 0.5) / Math.max(1, N)) * 2);
-      const radial = Math.sqrt(1 - yN * yN);
-      const theta = i * goldenAngle;
-      const r = 0.55 + 0.30 * ((i * 13 % 100) / 100);
-      if (i === 0) {
-        /* THE FIRST NODE GREETS YOU. The camera starts at the origin looking
-           down −Z, so this one is placed there on purpose rather than left to
-           wherever the spiral drops it: a visitor who arrives to empty space
-           has no reason to believe there is anything to find. Up and to the
-           right of centre keeps it clear of the wordmark, the control cluster
-           and the field guide, and ~13u out sits on the DoF focus plane so it
-           lands sharp. Registry order decides who this is —
-           app/data/projects.js puts Wafer first. */
-        mesh.position.copy(GREET_POS);
-      } else {
-        /* KEEP THE GREETING CONE CLEAR. Placing the first node in front only
-           works if nothing else is standing there — the spiral drops a card
-           near −Z every time, and a nearer one eclipses the card the whole
-           arrangement exists to show. Any card that lands inside the cone AND
-           close enough to occlude walks around the ring until it is clear.
-           A rule rather than a tuned phase offset, so adding a project cannot
-           quietly re-break it. */
-        let th = theta;
-        for (let guard = 0; guard < 12; guard++) {
-          _placeV.set(
-            Math.cos(th) * radial * TILE_BOX.x * r * 0.55,
-            yN * TILE_BOX.y * r * 0.6,
-            Math.sin(th) * radial * TILE_BOX.z * r * 0.55,
-          );
-          const far = _placeV.length() > GREET_CLEAR_R;
-          if (far || _placeV.clone().normalize().dot(GREET_DIR) < GREET_COS) break;
-          th += 0.62;
-        }
-        mesh.position.copy(_placeV);
-      }
+      // Opening view — see driftHome, the single definition of a drift position.
+      mesh.position.copy(driftHome(i, _placeV, false));
 
       mesh.userData = { project: p, texture: tex, kind: "tile", index: i,
         // each card gets a small persistent rotational offset for personality
@@ -1121,16 +1136,12 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         );
       }
       if (mode === "ambient") {
-        // slow Fibonacci sphere shell ~12u radius — drift around it
-        const yN = 1 - (i / Math.max(1, projects.length - 1)) * 2;
-        const radial = Math.sqrt(1 - yN * yN);
-        const theta = i * goldenAngle + t * 0.00006;
-        const R = 13;
-        return target.set(
-          Math.cos(theta) * radial * R,
-          yN * R * 0.6,
-          Math.sin(theta) * radial * R - 4,
-        );
+        // A slow shell to drift around. Unreachable from the current landing —
+        // app.jsx only ever emits reel / origin / drift — but it kept the last
+        // copy of the pole-collapsing spiral, so it goes through scatter() like
+        // every other cleared-field placement rather than sitting here as a
+        // trap for whoever wires this mode back up.
+        return scatter(i, 13, 8, -4, 3);
       }
       return null; // drift
     }
@@ -1389,7 +1400,11 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
        between cards. Brightens on hover/focus; breathes with audio level.
        ============================================================ */
     const TOPO_MAX_E = 26;
-    const TOPO_CUT = 13;                                // max link length (world units)
+    // Max link length. Tied to the card box: at a flat 13 this was tuned to
+    // the pre-TILE_BOX spread, and once the cards moved out to 11-17u the
+    // typical nearest-neighbour distance passed it — the graph dropped most
+    // of its edges and faded what was left to nothing.
+    const TOPO_CUT = TILE_BOX.x * 0.5;                  // max link length (world units)
     const TOPO_SEG = 24;                                // segments per edge (smooth pulse gradient)
     const TOPO_CAMERA_GUARD = Math.max(camera.near * 4, 1.2);
     const constUniforms = {
@@ -2181,21 +2196,15 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     // un-formed scatter stays in NEAR space around the viewer (see frame loop).
     const _fieldCam = new THREE.Vector3();
     function scatterTiles() {
-      // Pick a fresh random spot per tile (centred on camera) and store it as a
-      // drift target. The tile keeps its current position; the drift-mode loop
-      // lerps toward this target so leaving grid/ambient looks smooth either
-      // direction, instead of snapping + fading in.
+      // Hand the field back to free drift. The tile keeps its current position
+      // and the drift loop lerps it to this target, so leaving an arranged beat
+      // reads as the cards flying home rather than snapping and fading in.
+      // driftHome is the SAME function that composed the opening view — that is
+      // the whole point, and it is why returning to the title now rebuilds the
+      // arrangement you arrived on instead of the pre-refactor one.
       for (const m of tiles) {
-        const yN = 1 - (m.userData.index / Math.max(1, projects.length - 1)) * 2;
-        const radial = Math.sqrt(1 - yN * yN);
-        // jitter the theta each scatter so it doesn't always come back the same way
-        const theta = m.userData.index * goldenAngle + (Math.random() - 0.5) * 1.5;
-        const r = 0.55 + 0.30 * Math.random();
-        m.userData.driftTarget = new THREE.Vector3(
-          cam.pos.x + Math.cos(theta) * radial * BOX.x * r * 0.55,
-          cam.pos.y + yN * BOX.y * r * 0.6 + (Math.random() - 0.5) * 4,
-          cam.pos.z + Math.sin(theta) * radial * BOX.z * r * 0.55,
-        );
+        const v = driftHome(m.userData.index, new THREE.Vector3(), true);
+        m.userData.driftTarget = v.add(cam.pos);
       }
     }
 
@@ -2564,8 +2573,9 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
           nearIn  = THREE.MathUtils.smoothstep(dist, 2.5, 6.0);
           farOut  = THREE.MathUtils.smoothstep(dist, 20, 32);
         } else {
-          // origin — tiles arrange on a ring (~16–26u) that sits OUTSIDE the wrap
-          // box, so a box-edge fade would wrongly treat them as past the boundary
+          // origin — tiles arrange on a ring (~16–26u). Part of that ring is now
+          // INSIDE the wrap box (TILE_BOX half-depth 18.2), so a box-edge fade
+          // would read arranged tiles as mid-wrap
           // and hide them. Push the spherical far-fade out past the ring so the
           // cards stay solid and readable; fog still lends gentle depth.
           nearIn  = THREE.MathUtils.smoothstep(dist, 2.5, 6.0);

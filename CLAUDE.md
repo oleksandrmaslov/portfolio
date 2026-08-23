@@ -398,6 +398,18 @@ other card landing inside a 26° cone around that direction and nearer than
 `GREET_CLEAR_R` walks around the ring until it is clear. That is a rule and not
 a tuned phase offset on purpose: adding a project must not quietly re-break it.
 
+**`driftHome(i, out, jitter)` is the only definition of a free-drift
+position.** It runs once per tile at mount to compose the opening view, and
+again inside `scatterTiles()` every time an arranged beat hands the field back
+to drift. Those were two separate formulas, and the return path still carried
+the pole-collapsing latitude, the small `BOX` and no greeting card — so
+scrolling origin → title silently rebuilt the pre-refactor arrangement and put
+Wafer back overhead. `jitter` is the only difference between the callers: mount
+is deterministic so the first view is composed, a return is randomised so the
+field does not snap back identical, and the greeting card is yawed to wherever
+the camera is actually looking. A third caller calls this; it does not get a
+copy.
+
 **The cards get a bigger box than the dust.** `TILE_BOX` is `BOX * 1.4`, and
 tiles place, wrap and edge-fade against it while the ambient debris, the star
 parallax and the assembly cloud keep the tight `BOX`. At `BOX` the nearest
@@ -420,6 +432,17 @@ That version let neighbours line up: `0x08` sat directly behind `0x07` in **all
 four** beats. Per-node offsets were the wrong instinct — a formula that can pair
 any two nodes needs fixing once, not patching per node and per beat. If a new
 arrangement is added, give it a `scatter` call rather than a fifth copy.
+
+Constants tuned to the old, tighter spread have to move out with it, and this
+is the class of thing to re-check whenever the field is rescaled. Already
+moved: `GRADE.focus` (cards would sit off the focus plane), `TOPO_CUT` (the
+constellation's max link length — at a flat 13 it fell below the new
+nearest-neighbour distance, so the graph dropped most of its edges and faded
+the rest to nothing; it is derived from `TILE_BOX` now), and the teal rim
+`PointLight` range. Scene fog stays at 22→38 on purpose: it is shared with the
+ambient debris and the star parallax, which still live in the small `BOX`, so
+it is not the cards' constant to retune — drifting cards now reach it, which
+reads as depth.
 
 ## Models and live demos
 

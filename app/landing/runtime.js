@@ -2360,7 +2360,7 @@ function Universe(_ref) {
       var _k = new THREE.DirectionalLight(0xffffff, 1.6);
       _k.position.set(2.4, 3.2, 2.6);
       scene.add(_k);
-      var _r = new THREE.PointLight(0x00f0c8, 1.6, 26);
+      var _r = new THREE.PointLight(0x00f0c8, 1.6, 36);
       _r.position.set(-3, 1.6, -2);
       scene.add(_r);
     }
@@ -2491,7 +2491,7 @@ function Universe(_ref) {
     }
     var _lvlS = 0;
     var _lastFov = 58;
-    var _focusS = 13.0;
+    var _focusS = GRADE.focus;
     var ARR = {
       t0: 0,
       dur: 2600,
@@ -2641,6 +2641,25 @@ function Universe(_ref) {
     var GREET_COS = Math.cos(26 * Math.PI / 180);
     var GREET_CLEAR_R = 21;
     var _placeV = new THREE.Vector3();
+    var _placeN = new THREE.Vector3();
+    function driftHome(i, out, jitter) {
+      if (i === 0) {
+        out.copy(GREET_POS);
+        return jitter ? out.applyAxisAngle(_AXIS_Y, cam.yaw) : out;
+      }
+      var n = Math.max(1, projects.length);
+      var yN = FIELD_LAT * (1 - (i + 0.5) / n * 2);
+      var radial = Math.sqrt(1 - yN * yN);
+      var r = jitter ? 0.55 + 0.30 * Math.random() : 0.55 + 0.30 * (i * 13 % 100 / 100);
+      var th = i * goldenAngle + (jitter ? (Math.random() - 0.5) * 1.5 : 0);
+      for (var guard = 0; guard < 12; guard++) {
+        out.set(Math.cos(th) * radial * TILE_BOX.x * r * 0.55, yN * TILE_BOX.y * r * 0.6, Math.sin(th) * radial * TILE_BOX.z * r * 0.55);
+        _placeN.copy(out).normalize();
+        if (out.length() > GREET_CLEAR_R || _placeN.dot(GREET_DIR) < GREET_COS) break;
+        th += 0.62;
+      }
+      return out;
+    }
     var N = projects.length;
     projects.forEach(function (p, i) {
       var tex = makeTileTexture(p, THREE);
@@ -2653,22 +2672,7 @@ function Universe(_ref) {
       });
       var geo = new THREE.PlaneGeometry(TILE_W, TILE_H);
       var mesh = new THREE.Mesh(geo, mat);
-      var yN = FIELD_LAT * (1 - (i + 0.5) / Math.max(1, N) * 2);
-      var radial = Math.sqrt(1 - yN * yN);
-      var theta = i * goldenAngle;
-      var r = 0.55 + 0.30 * (i * 13 % 100 / 100);
-      if (i === 0) {
-        mesh.position.copy(GREET_POS);
-      } else {
-        var th = theta;
-        for (var guard = 0; guard < 12; guard++) {
-          _placeV.set(Math.cos(th) * radial * TILE_BOX.x * r * 0.55, yN * TILE_BOX.y * r * 0.6, Math.sin(th) * radial * TILE_BOX.z * r * 0.55);
-          var far = _placeV.length() > GREET_CLEAR_R;
-          if (far || _placeV.clone().normalize().dot(GREET_DIR) < GREET_COS) break;
-          th += 0.62;
-        }
-        mesh.position.copy(_placeV);
-      }
+      mesh.position.copy(driftHome(i, _placeV, false));
       mesh.userData = {
         project: p,
         texture: tex,
@@ -2812,11 +2816,7 @@ function Universe(_ref) {
         return target.set((col - (GRID_COLS - 1) / 2) * GRID_SPACING_X, ((GRID_ROWS - 1) / 2 - row) * GRID_SPACING_Y, GRID_Z);
       }
       if (mode === "ambient") {
-        var yN = 1 - i / Math.max(1, projects.length - 1) * 2;
-        var radial = Math.sqrt(1 - yN * yN);
-        var theta = i * goldenAngle + t * 0.00006;
-        var _R = 13;
-        return target.set(Math.cos(theta) * radial * _R, yN * _R * 0.6, Math.sin(theta) * radial * _R - 4);
+        return scatter(i, 13, 8, -4, 3);
       }
       return null;
     }
@@ -3050,7 +3050,7 @@ function Universe(_ref) {
     assemblyPts.frustumCulled = false;
     scene.add(assemblyGroup);
     var TOPO_MAX_E = 26;
-    var TOPO_CUT = 13;
+    var TOPO_CUT = TILE_BOX.x * 0.5;
     var TOPO_SEG = 24;
     var TOPO_CAMERA_GUARD = Math.max(camera.near * 4, 1.2);
     var constUniforms = {
@@ -3911,11 +3911,8 @@ function Universe(_ref) {
       try {
         for (_iterator8.s(); !(_step8 = _iterator8.n()).done;) {
           var m = _step8.value;
-          var yN = 1 - m.userData.index / Math.max(1, projects.length - 1) * 2;
-          var radial = Math.sqrt(1 - yN * yN);
-          var theta = m.userData.index * goldenAngle + (Math.random() - 0.5) * 1.5;
-          var r = 0.55 + 0.30 * Math.random();
-          m.userData.driftTarget = new THREE.Vector3(cam.pos.x + Math.cos(theta) * radial * BOX.x * r * 0.55, cam.pos.y + yN * BOX.y * r * 0.6 + (Math.random() - 0.5) * 4, cam.pos.z + Math.sin(theta) * radial * BOX.z * r * 0.55);
+          var _v = driftHome(m.userData.index, new THREE.Vector3(), true);
+          m.userData.driftTarget = _v.add(cam.pos);
         }
       } catch (err) {
         _iterator8.e(err);
