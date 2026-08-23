@@ -812,6 +812,154 @@ PROJECT_DATA["0x0C"] = {
   ],
   links: [],             // [ artifacts pending: repo, release, live URL, writeup ]
   prev: "0x0B",
+  next: "0x0D",
+};
+
+/* =========================================================
+   0x0D · BULGARIA 2026
+   ---------------------------------------------------------
+   Written record with real figures. The seven photos are crops
+   of two full-page captures of bulgaria2026.com plus one hero
+   viewport shot; the full pages are the working sources under
+   studies/media/bulgaria_2026/_source/, so a figure that needs
+   different bounds is RE-CUT rather than re-shot.
+
+   TONE is measured, not guessed. Mean luminance against the 140
+   threshold: forum-hero 166, networking-hero 161, application
+   142, generator 211 → light. programme 39, wheel 39, pricing 58
+   are the ink sections (#0A1724) and must stay dark. Re-measure
+   if a crop moves; the lens punches a hole through a light plate
+   that is not marked.
+
+   AUTHORSHIP — see CLAUDE.md. There is no conversion-uplift or
+   revenue claim for this project, the Worker is not audited, the
+   self-presentation tool is a deterministic text composer and
+   not AI, and the prize wheel visualises a fund whose real draw
+   happens live at the event. Do not soften those while editing.
+   ========================================================= */
+PROJECT_DATA["0x0D"] = {
+  addr: "0x0D",
+  slug: "bulgaria-2026",
+  file: "Bulgaria 2026.html",
+  name: "Bulgaria 2026",
+  tagline: "One event, twelve ways in",
+  overline: "PRODUCT WEB · EDITORIAL DESIGN · GROWTH INFRASTRUCTURE",
+  year: "08 / 2026",
+  place: "Remote → Bulgaria",
+  role: "Product design · frontend · conversion architecture · CRM integration",
+  stack: ["React", "Vite", "Cloudflare Workers", "Airtable", "GitHub Pages"],
+  primitive: "slab",
+  model: "models/bulgaria-mark.glb",
+  metrics: [
+    { value: "2",  unit: "conversion journeys" },
+    { value: "12", unit: "partner entry points" },
+    { value: "30", unit: "day attribution window" },
+  ],
+  intro:
+    "Bulgaria 2026 began as an existing Lovable-generated event page and became the " +
+    "infrastructure around a real international launch. The content was worth keeping. The " +
+    "operational layer did not exist yet. It is now two linked conversion experiences under one " +
+    "editorial system — a September forum and a business-networking morning — sharing " +
+    "partner-aware referral links, first- and last-touch attribution, a native application flow, " +
+    "a Cloudflare Worker that keeps the Airtable credentials off the client, and a Telegram " +
+    "fallback for when the lead endpoint is not there. The website is the visible layer. The case " +
+    "is the system underneath it.",
+  sections: [
+    { kind: "stub", h: "The first version already existed",
+      body: "The project did not start with a blank file. A generated reference page already carried the " +
+            "event, the people, the offer and the travel story, which makes the useful question harder " +
+            "than it looks: what is actually worth rebuilding when a page already works? Not everything, " +
+            "and not because I wanted to write it myself. The content could stay and the visual language " +
+            "could be replaced, but the operational layer — attribution, forms, partner ownership, a " +
+            "privacy boundary and a CRM path — had no architecture at all. That is the part I built. " +
+            "Starting material is not the same thing as product architecture." },
+    { kind: "photo", src: "public/media/bulgaria-2026/forum-hero.webp", ratio: "1500 / 1219", tone: "light",
+      caption: "forum hero · sea glass · cobalt · duotone coast" },
+    { kind: "stub", h: "One event, two products",
+      body: "The site is two public experiences, not one page with a second tab. The forum page has to " +
+            "explain a six-day business-and-travel context, the 12 September programme, the experts, and " +
+            "the difference between a one-day ticket and a full hotel package. The 6 September " +
+            "business-networking page behaves more like a lab: a short self-assessment, a " +
+            "self-presentation composer, a three-hour programme and a prize-pool wheel. They share one " +
+            "visual language and one lead pipeline and keep entirely different reasons to convert. Shared " +
+            "infrastructure does not require identical experiences." },
+    { kind: "photo", src: "public/media/bulgaria-2026/networking-hero.webp", ratio: "1500 / 844", tone: "light",
+      caption: "networking hero · 6 september · besarabia, pomorie" },
+    { kind: "stub", h: "Twelve partners, one source of truth",
+      body: "Speakers and partners were promoting the event to their own audiences, and the obvious " +
+            "answer — a landing page each — creates a maintenance problem on day one: every price change, " +
+            "copy edit and form fix acquires twelve sources of truth. So the site keeps one canonical " +
+            "page and makes the URL partner-aware instead. Twelve allow-listed slugs arrive as a ref " +
+            "parameter, and the page validates the slug rather than accepting arbitrary referral text. " +
+            "The event owner keeps one site; the partner keeps their attribution." },
+    { kind: "stub", h: "First touch and last touch are different questions",
+      body: "A referral click is easy to capture. What happens when the same person returns three days " +
+            "later through somebody else’s link is the actual question. The browser record keeps both: " +
+            "first and last referral, first and last campaign, first and last landing, timestamps and the " +
+            "current path, over a thirty-day window. The latest valid referral takes the credit while the " +
+            "first stays available as history, which is a more useful answer than overwriting a single " +
+            "stored value. Only attribution is persisted — no name, no Telegram handle, no email, no " +
+            "phone and no comment ever reaches browser storage — and persistence is consent-aware, so " +
+            "blocked storage degrades to page-local attribution instead of pretending it succeeded. It is " +
+            "deterministic first/last-touch attribution for allow-listed links, not identity resolution " +
+            "across devices." },
+    { kind: "stub", h: "The client reports the referral. The server decides whether to believe it.",
+      body: "Anything in a browser can be edited, so the Worker does not accept the credited referral or " +
+            "the partner name from the client. It rebuilds credit from the same allow-list — the " +
+            "validated last referral, falling back to the validated first — and looks the partner name up " +
+            "server-side. Editing a hidden field in devtools cannot assign somebody else’s lead to your " +
+            "name. It is a small boundary and it sets the rule the rest of the pipeline follows: " +
+            "attribution can start on the client, authority ends on the server." },
+    { kind: "stub", h: "A static site still needs a backend boundary",
+      body: "GitHub Pages is useful precisely because it is static, and it is the wrong place for an " +
+            "Airtable token. The form posts to a Cloudflare Worker that checks origin, caps body size, " +
+            "validates the JSON shape, reads the honeypot, runs the optional Turnstile path and " +
+            "re-validates the referral before mapping allow-listed values into an explicit Airtable " +
+            "record. The record is built from field IDs rather than column names, so renaming a column " +
+            "does not silently break the write. These are the controls that exist; the repository is not " +
+            "a third-party security audit and does not say otherwise." },
+    { kind: "stub", h: "The failure path has to convert too",
+      body: "Most forms are written as submit, then success. A real one survives a missing endpoint, a " +
+            "dead network, a timeout, a non-2xx, a blocked popup and an unavailable CRM. When the lead " +
+            "endpoint fails here, the visitor’s entered fields stay where they are and the site composes " +
+            "a pre-filled Telegram message to the organiser; if the new window is blocked, the same " +
+            "message is offered as an ordinary link. Two conversion paths, and the failing one still lets " +
+            "the visitor finish the job." },
+    { kind: "photo", src: "public/media/bulgaria-2026/application-form.webp", ratio: "1500 / 1039", tone: "light",
+      caption: "application · short form · one screen" },
+    { kind: "stub", h: "Interaction that does not overclaim",
+      body: "The networking page turns its own subject into the interaction. A three-question score asks " +
+            "what currently happens after an event rather than scoring a personality. The " +
+            "self-presentation tool composes a first draft from four fields and calls it a draft — it is " +
+            "a deterministic text composer, not an AI writing a brand position. The prize wheel " +
+            "visualises which bonuses are in the fund and states plainly that the real draw happens live " +
+            "at the event. Interaction should raise curiosity without lying about what the interaction " +
+            "means. The wheel also reads prefers-reduced-motion and resolves without the spin, which is " +
+            "the contract the rest of the site keeps: motion adds orientation, it never gates content." },
+    { kind: "photo", src: "public/media/bulgaria-2026/networking-generator.webp", ratio: "1500 / 1370", tone: "light",
+      caption: "self-presentation composer · four fields · draft out" },
+    { kind: "photo", src: "public/media/bulgaria-2026/networking-wheel.webp", ratio: "1500 / 1086",
+      caption: "prize pool · the wheel shows the fund" },
+    { kind: "stub", h: "Black Sea Modernist Atlas",
+      body: "The direction was to look like an event in a place rather than an event template. Five " +
+            "colours — atlas ink, mineral paper, paper dim, cobalt and sea glass — with Sofia Sans " +
+            "Condensed carrying display and Manrope carrying interface. Twelve-column grid, zero radius, " +
+            "lines instead of drop shadows, documentary crops, asymmetric framing, and cobalt used " +
+            "selectively rather than as a brand wash. It rules out card grids, glassmorphism, pill " +
+            "interfaces and compulsory parallax. The goal was never minimalism; it was editorial " +
+            "specificity. The same thinking set the content order: the programme sits above the speaker " +
+            "roster, because somebody arriving cold needs to know what happens before they are shown who " +
+            "is famous, and the two prices are presented as different things rather than tiers — " +
+            "admission and a coffee break is not a small version of a multi-day package with a hotel." },
+    { kind: "photo", src: "public/media/bulgaria-2026/forum-programme.webp", ratio: "1500 / 1464",
+      caption: "12 september · programme above the speaker wall" },
+    { kind: "photo", src: "public/media/bulgaria-2026/forum-pricing.webp", ratio: "1500 / 1039",
+      caption: "event entry · travel package · 25 € · 700 €" },
+  ],
+  links: [
+    { kind: "LIVE", label: "bulgaria2026.com", href: "https://bulgaria2026.com/" },
+  ],
+  prev: "0x0C",
   next: "0x01",
 };
 

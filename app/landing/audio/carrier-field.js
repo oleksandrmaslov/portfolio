@@ -31,12 +31,22 @@
   const SUB = F0 / 2;         // 49 Hz felt sub-octave (headphones)
   const MAX_VOICES = 16;      // hard transient polyphony cap
 
-  // 12 just-intonation sidebands, one per node 0x01..0x0C.
-  // All consonant w/ the carrier → any chord of them rings clean.
+  // One just-intonation sideband per node IN THE FIELD. All consonant w/ the
+  // carrier → any chord of them rings clean. The lattice is built in sixes:
+  // 0x08 onward is 0x01 onward an octave up (9/8→9/4, 5/4→5/2, 4/3→8/3,
+  // 3/2→3/1, 5/3→10/3), so a new node continues the pattern rather than
+  // picking a ratio.
+  //
+  // 0x0B (Silent Depth) left the field and handed its 3/1 rung to 0x0D
+  // (Bulgaria 2026), which keeps the lattice exactly twelve tones and keeps
+  // the reward arpeggio below on its authored intervals. A node with no entry
+  // here falls out of the field silently, so add one whenever the field grows
+  // — and check reward()'s `seq`, which is the one place that indexes RATIOS
+  // without a guard.
   const RATIOS = {
     "0x01": 9 / 8,  "0x02": 5 / 4,  "0x03": 4 / 3,  "0x04": 3 / 2,
     "0x05": 5 / 3,  "0x06": 15 / 8, "0x07": 2 / 1,  "0x08": 9 / 4,
-    "0x09": 5 / 2,  "0x0A": 8 / 3,  "0x0B": 3 / 1,  "0x0C": 10 / 3,
+    "0x09": 5 / 2,  "0x0A": 8 / 3,  "0x0D": 3 / 1,  "0x0C": 10 / 3,
   };
   const ADDRS = Object.keys(RATIOS);
 
@@ -496,7 +506,7 @@
     function reward() {
       if (!started) return;
       const t = now(ctx);
-      const seq = ["0x04", "0x07", "0x0B", "0x0C"];          // 3/2 · 2/1 · 3/1 · 10/3 — open + bright
+      const seq = ["0x04", "0x07", "0x0D", "0x0C"];          // 3/2 · 2/1 · 3/1 · 10/3 — open + bright
       const steps = [0, 130, 210, 340];                      // ~Fibonacci spacing (ms)
       seq.forEach((a, i) => setTimeout(() => bell(F0 * RATIOS[a], 0.14, 2.6, (i - 1.5) * 0.4, 0.75), steps[i]));
       carrierBus.gain.cancelScheduledValues(t);

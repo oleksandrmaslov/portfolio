@@ -195,7 +195,7 @@ function Work({ onHoverWork }) {
                     <div className="showAllGate__overline" data-mo-cursor-mirror data-mo-cursor-opacity=".showAllGate,.lp-workReel__sticky,.lp">04 / END · PASSAGE</div>
                     <h3 className="showAllGate__name" data-mo-cursor-mirror data-mo-cursor-opacity=".showAllGate,.lp-workReel__sticky,.lp">Open the universe<em>.</em></h3>
                     <div className="showAllGate__sub" data-mo-cursor-mirror data-mo-cursor-opacity=".showAllGate,.lp-workReel__sticky,.lp">
-                      12 nodes — products, systems, modules and studies. Enter the full field. ESC returns here.
+                      {(window.MO_PROJECTS || []).length} nodes — products, systems, modules and studies. Enter the full field. ESC returns here.
                     </div>
                   </div>
                   <div className="showAllGate__key">

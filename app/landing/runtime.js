@@ -1999,7 +1999,9 @@ window.__mo_fx = Object.assign({
   legRoll: 0.4,
   wheelYield: 420
 }, window.__mo_fx || {});
-var PROJECTS = (window.MO_PROJECTS || []).map(function (p) {
+var PROJECTS = (window.MO_PROJECTS || []).filter(function (p) {
+  return p.universe !== false;
+}).map(function (p) {
   var m = p.model || {};
   var cp = m.cardPose || {};
   return {
@@ -8972,7 +8974,7 @@ function Work(_ref) {
       className: "showAllGate__sub",
       "data-mo-cursor-mirror": true,
       "data-mo-cursor-opacity": ".showAllGate,.lp-workReel__sticky,.lp"
-    }, "12 nodes \u2014 products, systems, modules and studies. Enter the full field. ESC returns here.")), React.createElement("div", {
+    }, (window.MO_PROJECTS || []).length, " nodes \u2014 products, systems, modules and studies. Enter the full field. ESC returns here.")), React.createElement("div", {
       className: "showAllGate__key"
     }, React.createElement(KeyButton, {
       legend: React.createElement("span", {

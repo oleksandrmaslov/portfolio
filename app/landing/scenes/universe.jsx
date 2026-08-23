@@ -11,12 +11,21 @@
 
 /* app/data/projects.js (window.MO_PROJECTS) is the single project source and
    is adapted into the universe tile shape here. The field stays empty if the
-   data file fails to load, with a console warning below. */
+   data file fails to load, with a console warning below.
+
+   `universe: false` on a record keeps it OUT of the field while leaving
+   everything else about it intact — its route still serves, All Projects still
+   lists it (that page builds its own row list from MO_PROJECTS inline, not
+   from this one), and it keeps its slot in the project ring so the page stays
+   reachable by prev/next. Use it to retire something from the headline field
+   without deleting a public URL. */
 // The landing owns these tuning defaults. Keeping them beside their consumers
 // avoids a page-level override racing the shared cursor module during boot.
 window.__mo_fx = Object.assign({ legRoll: 0.4, wheelYield: 420 }, window.__mo_fx || {});
 
-const PROJECTS = (window.MO_PROJECTS || []).map((p) => {
+const PROJECTS = (window.MO_PROJECTS || [])
+  .filter((p) => p.universe !== false)
+  .map((p) => {
   const m = p.model || {};
   const cp = m.cardPose || {};
   return {
@@ -1021,7 +1030,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
           target.set(Math.cos(th) * 20, yN * 11, -25 + Math.sin(th) * 5);
         }
         if (g > 0.001) {
-          // CAROUSEL — the 12 nodes dock into a slow cylindrical carousel
+          // CAROUSEL — every node docks into a slow cylindrical carousel
           // around the passage: the front cards sweep close past the lens
           // (big, crisp), the far side recedes into the blurred deep field.
           // Entry is a spiral — the swirl unwinds as each comet docks into
@@ -1376,7 +1385,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     function updateTopology(dt, mode, focusAddrNow, formP, arrFade) {
       const fx = window.__mo_fx.topology != null ? window.__mo_fx.topology : 1;
       // During the reel's final "Open the universe" gather, the network
-      // IGNITES — 12 nodes in one disc, every edge alive.
+      // IGNITES — every node in one disc, every edge alive.
       const gatherG = mode === "reel" ? Math.max(0, Math.min(1, ((window.__mo_reel || {}).pos || 0) - MO_FEATURED.length)) : 0;
       const modeVis = mode === "drift" ? 1 : mode === "reel" ? 0.6 + gatherG * 0.9 : mode === "grid" ? 0.5 : 0;
       const vis = fx * modeVis * (1 - formP) * arrFade;
@@ -1386,7 +1395,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       constGroup.visible = true;
       const hovAddr = (hoverObjRef.current && hoverObjRef.current.userData.project.addr) || focusAddrNow;
 
-      // rebuild the nearest-neighbour graph every 3rd frame (12 nodes — cheap)
+      // rebuild the nearest-neighbour graph every 3rd frame (a dozen nodes — cheap)
       if (_topoFrame++ % 3 === 0) {
         _topoEdges.length = 0;
         const live = [];

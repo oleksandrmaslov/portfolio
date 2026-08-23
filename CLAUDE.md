@@ -22,10 +22,40 @@ correctly under the GitHub Pages project subpath. The other public pages are:
 - `Sightseeing.html`
 - `Silent Depth.html`
 - `Brionel Catalogue.html`
+- `Bulgaria 2026.html`
 - `Design System.html`
 
-Every node in the registry now has a page, so the project ring runs
-`0x01 → 0x02 → … → 0x0C → 0x01` with no gaps. The five routes added on
+Every node in the registry has a page, so the project ring runs
+`0x01 → 0x02 → … → 0x0C → 0x0D → 0x01` with no gaps. `0x0D` (Bulgaria 2026)
+was added on 2026-08-23 as a written record with pending figures. Bulgaria 2026
+is deliberately **not** in `MO_FEATURED_ADDRS` — the landing reel stays at
+four.
+
+`Silent Depth` (`0x0B`) carries `universe: false`, the one opt-out in the
+registry. `app/landing/scenes/universe.jsx` filters on it when it builds the
+tile list, so the node draws no tile and joins no constellation link, and its
+record carries **no `model` block** — `mdl()` exists to build a universe tile
+and its 3D overlay, and this node has neither. The All Projects row reads only
+the text columns, so nothing is missing there.
+
+What survives is deliberate: `Silent Depth.html` still serves and still loads
+`models/silent-depth-mark.glb` as its own hero from its `PAGE_CONFIG`, All
+Projects still lists it (that page builds its row list from `MO_PROJECTS`
+inline, so it never sees the filter), and it holds its ring slot between `0x0A`
+and `0x0C` so prev/next still reach it. The GLB is therefore live, not dead
+weight. Its seam-bridge script was removed: that paints the captured final
+frame of a landing node flight, and a flight can only start from a tile.
+
+This is the supported way to retire a node from the headline field without
+deleting a public URL — do not "finish the job" by removing the record, the
+route or the model it still renders.
+
+Retiring a node also vacates its audio rung. `app/landing/audio/carrier-field.js`
+holds one just-intonation sideband per node **in the field**, and `0x0B` handed
+its `3/1` to `0x0D` (Bulgaria 2026) so the lattice stays exactly twelve tones.
+Keep that map one-to-one with the field: `reward()`'s `seq` is the only place
+that indexes `RATIOS` without a guard, so a stale address there becomes a `NaN`
+frequency rather than a silent voice. The five routes added on
 2026-08-22 (Venovisor, ZMK Soft Off Plus, Sightseeing, Silent Depth, Brionel
 Catalogue) are scaffolds: their chrome is real, their case-study copy is
 marked `[ ... ]` pending. Fill the placeholders in `app/projects/data.jsx`;
@@ -139,6 +169,21 @@ The encoder is `ffmpeg-static`, installed under `tools/media/node_modules` by
 system PATH. The build script falls back to copying clips verbatim if it is
 missing, and says so.
 
+Bulgaria 2026's figures are browser captures of `bulgaria2026.com`, not
+photographs. Two full-page captures and one hero viewport shot are the working
+sources in `studies/media/bulgaria_2026/_source/`; the seven files beside them
+are crops taken from those pages, so a figure that needs different bounds is
+**re-cut, never re-shot**. Full-page captures land at the repo root by default
+and the deploy rsyncs everything except `.git/ .github/ .agents/ _site/
+face-test.html tools/ studies/ *.md` — so a 10 MB screenshot left in the root
+ships to production. Move sources into `studies/` first.
+
+Its `tone` values are measured, not guessed. Mean luminance against the 140
+threshold: forum-hero 166, networking-hero 161, application 143, generator 211
+carry `tone: "light"`; programme 39, wheel 39 and pricing 58 are the ink
+sections (`#0A1724`) and must stay dark. Re-measure when a crop moves — the
+lens punches a hole through an unmarked light plate.
+
 `python tools/media/fetch-blueprint.py` pulls the Wafer build-journal images
 from blueprint.hackclub.com and re-encodes them into `public/media/wafer/` with
 a `journal-` prefix. It prints the exact `ratio` string for each file, ready to
@@ -209,6 +254,18 @@ claim, and the shipped copy follows it. Do not soften these while editing:
   source/artifact separation, per-person revocation, fail-closed) over the word
   secure, and do not call it production ready while its own roadmap keeps
   acceptance gates open.
+- **Bulgaria 2026.** Scope is the rebuild — editorial system, two conversion
+  journeys, referral attribution, the Worker lead boundary and the CRM path. The
+  starting point was a generated reference page whose content was kept; say so.
+  There is no A/B test, so no conversion-uplift claim exists, and ticket price is
+  not website revenue. Describe the Worker's implemented controls rather than
+  calling it secure or audited. The referral layer is deterministic first/last
+  touch over allow-listed links, not cross-device identity resolution. The
+  self-presentation tool is a deterministic text composer — do not call it AI
+  unless an AI service is actually added. The prize wheel visualises the fund;
+  the real draw happens live. "~3 days" is a project-timeline statement about the
+  first production-shaped build, not a development benchmark. Image rights are a
+  launch gate: a local asset is not a licensed one.
 
 ## Shared pointer effects
 
@@ -293,7 +350,18 @@ full-canvas resolve every frame and nothing else.
 
 Place shared GLBs in `models/`, then update the matching record in
 `app/data/projects.js` and `app/projects/data.jsx`. Nodes without a finished
-model deliberately retain their proxy representation.
+model deliberately retain their proxy representation — Kerfur and Venovisor are
+the two left.
+
+Run every incoming GLB through `npx gltfpack -i <in>.glb -o models/<slug>-mark.glb -c`
+before wiring it up. `-c` is meshopt compression, which
+`app/projects/rendering/model-viewer.jsx` already decodes by installing
+`MeshoptDecoder` on the loader, and it is why the shipped marks are a fraction
+of their source size — the Bulgaria badge went 121 KB → 17 KB with its three
+meshes, three materials and its clearcoat/emissive extensions intact. The
+packed file declares `KHR_mesh_quantization` and `EXT_meshopt_compression` as
+*required*, so a route that forgets the decoder fails to load the model
+outright rather than degrading.
 
 The shipping project pages load live experiences from `demo/`, sometimes
 through project-page components rather than an obvious direct HTML tag. Keep

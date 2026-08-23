@@ -160,16 +160,20 @@
     {
       addr: "0x0B", slug: "silent-depth", name: "Silent Depth",
       nodeClass: "VISUAL STUDY", state: "ARCHIVED", featured: false,
+      // Out of the universe field, kept everywhere else: the page still
+      // serves, All Projects still lists it, and it holds its ring slot
+      // between 0x0A and 0x0C so prev/next still reach it. See the note on
+      // `universe: false` in app/landing/scenes/universe.jsx.
+      //
+      // No `model` block: mdl() exists to build a universe tile and its 3D
+      // overlay, and this node has neither. The All Projects row reads only
+      // the text columns. The GLB itself is still live — it is the hero of
+      // Silent Depth.html, which loads it from its own PAGE_CONFIG.
+      universe: false,
       file: "Silent Depth.html",
       statement: "A visual study of gaze, silence and invisible human connection.",
       short: "Study of gaze and silence",
       tags: ["Visual", "Study"],
-      model: mdl({
-        ready: true, src: "models/silent-depth-mark.glb", proxy: null,
-        rigFit: 2.1,   // matches this project\'s page hero
-        rigPose: { x: -0.2, y: 0, z: 0 },
-        cardPose: { scale: 1, yaw: 0.35, pitch: 0.1, offsetY: 0, fit: 1.05 },
-      }),
     },
     {
       addr: "0x0C", slug: "brionel-catalogue", name: "Brionel Product Catalogue",
@@ -181,6 +185,24 @@
       model: mdl({
         ready: true, src: "models/brionel-mark.glb", proxy: null,
         rigFit: 2.1,   // matches this project\'s page hero
+        rigPose: { x: -0.2, y: 0, z: 0 },
+        cardPose: { scale: 1, yaw: 0.35, pitch: 0.1, offsetY: 0, fit: 1.05 },
+      }),
+    },
+    {
+      addr: "0x0D", slug: "bulgaria-2026", name: "Bulgaria 2026",
+      nodeClass: "PRODUCT WEB", state: "ACTIVE", featured: false,
+      file: "Bulgaria 2026.html",
+      // Scope is the rebuild: editorial system, two conversion journeys,
+      // referral attribution, the Worker lead boundary and the CRM path. The
+      // event itself is not this project. No conversion-uplift or revenue
+      // claim exists; see app/projects/data.jsx and CLAUDE.md.
+      statement: "An event website rebuilt as a small distribution system: two conversion journeys, twelve partner entry points, one source of truth.",
+      short: "Event platform · referral attribution",
+      tags: ["Product Web", "React", "Growth Systems"],
+      model: mdl({
+        ready: true, src: "models/bulgaria-mark.glb", proxy: null,
+        rigFit: 2.1,   // matches this project's page hero
         rigPose: { x: -0.2, y: 0, z: 0 },
         cardPose: { scale: 1, yaw: 0.35, pitch: 0.1, offsetY: 0, fit: 1.05 },
       }),

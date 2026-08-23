@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Silent Depth — Maslov Oleksandr</title>
-  <meta name="description" content="Silent Depth · project case file · a visual study of gaze, silence and invisible human connection." />
+  <title>Bulgaria 2026 — Maslov Oleksandr</title>
+  <meta name="description" content="Bulgaria 2026 · project case file · an event website rebuilt as a small distribution system: two conversion journeys, twelve partner entry points, one source of truth." />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -24,13 +24,27 @@
 <body>
   <div id="root"></div>
 
-  <!-- No seam bridge. That script paints the captured final frame of a landing
-       node flight, and the flight only starts from a universe tile — 0x0B has
-       none (`universe: false`, app/data/projects.js), so `mo_node_arrive` is
-       never set for it and the branch was unreachable. This page is reached
-       from All Projects or the project ring, both of which are ordinary
-       navigations. Restore it from any sibling route if the node ever returns
-       to the field. -->
+  <!-- SEAM BRIDGE — arriving from the landing node flight: paint the captured
+       final frame instantly so the model never blinks out during boot. -->
+  <script>
+    (function () {
+      try {
+        if (sessionStorage.getItem("mo_node_arrive") !== "1") return;
+        if (sessionStorage.getItem("mo_node_addr") !== "0x0D") return;
+        var img = sessionStorage.getItem("mo_node_seam");
+        if (!img) return;
+        var d = document.createElement("div");
+        d.id = "mo-seam";
+        d.style.cssText = "position:fixed;inset:0;z-index:60;background:#04060d center center / cover no-repeat;transition:opacity .55s cubic-bezier(0.16,1,0.3,1);pointer-events:none;";
+        d.style.backgroundImage = "url(" + img + ")";
+        d.appendChild(Object.assign(document.createElement("div"), {
+          className: "mo-seam__tag",
+          textContent: "BULGARIA 2026"
+        }));
+        document.body.appendChild(d);
+      } catch (e) {}
+    })();
+  </script>
 
   <script type="importmap">
   {
@@ -67,25 +81,29 @@
   <script type="text/babel" data-presets="env,react" src="app/projects/data.jsx"></script>
   <script type="text/babel" data-presets="env,react" src="app/projects/rendering/model-viewer.jsx"></script>
   <script type="text/babel" data-presets="env,react" src="app/projects/rendering/solid-hero-rig.jsx"></script>
+  <!-- node-shell proxy for nodes without a finished GLB -->
+  <script type="text/babel" data-presets="env,react" src="app/projects/rendering/project-handoff-rig.jsx"></script>
   <script type="text/babel" data-presets="env,react" src="app/projects/components/tweak-panel.jsx"></script>
   <script type="text/babel" data-presets="env,react" src="app/projects/components/ascii-photo.jsx"></script>
 
   <!-- Page config — everything project-specific lives here -->
   <script type="text/babel" data-presets="env,react">
     window.PAGE_CONFIG = {
-      addr: "0x0B",
-      docTitle: "Silent Depth — Maslov Oleksandr",
+      addr: "0x0D",
+      docTitle: "Bulgaria 2026 — Maslov Oleksandr",
       hero: {
-        model: "models/silent-depth-mark.glb",
-        modelFit: 2.1,   // keep equal to rigFit for 0x0B in app/data/projects.js
-        pose: { x: -0.2, y: 0, z: 0 },
+        /* Packed with `gltfpack -c`, so it needs the meshopt decoder that
+           model-viewer.jsx already installs on the loader. */
+        model: "models/bulgaria-mark.glb",
+        modelFit: 2.1,   // keep equal to rigFit for 0x0D in app/data/projects.js
+        pose: { x: -0.35, y: 0, z: 0 },
       },
       heroLayout: {
         desktop: { fracX: 0.46, scale: 0.78, offY: 0.22 },
         tablet:  { fracX: 0.26, scale: 0.66, offY: 0.30 },
         mobile:  { fracX: 0,    scale: 0.50, offY: 1.05 },
       },
-      // link: { label, href, hint }   // [ pending: add when there is an artifact to open ]
+      link: { label: "OPEN SITE", href: "https://bulgaria2026.com/", hint: "bulgaria2026.com" },
     };
   </script>
 

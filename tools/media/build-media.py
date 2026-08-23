@@ -39,6 +39,20 @@ PHOTOS = {
         ("wafer/final_photos/ADCB7626-7225-49B1-8A26-B39CEEDE1591.jpeg", "magnets-steel"),
         ("wafer/final_photos/247C37C1-66B4-434C-ADB9-725A015F3932.jpeg", "both-halves"),
     ],
+    # Bulgaria 2026 is a website, so its "stills" are browser captures of
+    # bulgaria2026.com rather than photographs. The two full-page captures and
+    # the hero viewport shot live in bulgaria_2026/_source/; the files below
+    # are the crops taken from them. Re-cut rather than re-shooting if a figure
+    # needs different bounds — the sources are the full pages.
+    "bulgaria-2026": [
+        ("bulgaria_2026/forum-hero.png",           "forum-hero"),
+        ("bulgaria_2026/networking-hero.png",      "networking-hero"),
+        ("bulgaria_2026/application-form.png",     "application-form"),
+        ("bulgaria_2026/networking-generator.png", "networking-generator"),
+        ("bulgaria_2026/networking-wheel.png",     "networking-wheel"),
+        ("bulgaria_2026/forum-programme.png",      "forum-programme"),
+        ("bulgaria_2026/forum-pricing.png",        "forum-pricing"),
+    ],
     "ci-clop": [
         ("ci_clop/board_and_bringup/photo_363@26-01-2026_10-01-52.jpg", "board-bringup"),
         ("ci_clop/old_interface/photo_218@18-09-2025_04-27-01.jpg", "previous-light"),

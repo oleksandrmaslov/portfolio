@@ -30,6 +30,7 @@ const M_FAMILY_BY_ADDR = {
   "0x0A": ["DESIGN"],
   "0x0B": ["DESIGN"],
   "0x0C": ["DESIGN"],
+  "0x0D": ["WEB", "DESIGN"],
 };
 const mFamColor = (f) => (M_FAMILY_DEFS.find(d => d.id === f) || {}).color || "var(--signal)";
 const mFams     = (p) => M_FAMILY_BY_ADDR[p.addr] || [];
