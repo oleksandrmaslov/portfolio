@@ -33,22 +33,31 @@ four.
 
 `Silent Depth` (`0x0B`) carries `universe: false`, the one opt-out in the
 registry. `app/landing/scenes/universe.jsx` filters on it when it builds the
-tile list, so the node draws no tile and joins no constellation link, and its
-record carries **no `model` block** — `mdl()` exists to build a universe tile
-and its 3D overlay, and this node has neither. The All Projects row reads only
-the text columns, so nothing is missing there.
+tile list, so the node draws no tile and joins no constellation link.
 
-What survives is deliberate: `Silent Depth.html` still serves and still loads
+**`universe: false` governs the drifting tile. It does not govern the model,
+and the two must not be conflated.** The reverse handoff in
+`app/landing/transitions/project-handoff.jsx` resolves the leaving node through
+`MO_PROJECT_BY_ADDR` — the unfiltered map — and passes `project.model`
+straight to `makeNodeRig()`. Strip the `model` block from a node that still has
+a page and `buildRig()` returns null, the reverse flight takes its silent
+fallback, and leaving that page hard-cuts to the landing instead of flying the
+mark home. Every node with a route keeps its model, in the field or not.
+
+The forward flight is safe to leave behind: it only starts from a `mo:nodeFlight`
+event, which comes from a universe tile or a reel card, so a node with neither
+can never arrive by flight. `Silent Depth.html` therefore has no seam-bridge
+script, and that is correct.
+
+The rest survives untouched: the page serves, it renders
 `models/silent-depth-mark.glb` as its own hero from its `PAGE_CONFIG`, All
-Projects still lists it (that page builds its row list from `MO_PROJECTS`
-inline, so it never sees the filter), and it holds its ring slot between `0x0A`
-and `0x0C` so prev/next still reach it. The GLB is therefore live, not dead
-weight. Its seam-bridge script was removed: that paints the captured final
-frame of a landing node flight, and a flight can only start from a tile.
+Projects lists it (that page builds its row list from `MO_PROJECTS` inline, so
+it never sees the filter), and it holds its ring slot between `0x0A` and `0x0C`
+so prev/next still reach it.
 
 This is the supported way to retire a node from the headline field without
 deleting a public URL — do not "finish the job" by removing the record, the
-route or the model it still renders.
+route or the model.
 
 Retiring a node also vacates its audio rung. `app/landing/audio/carrier-field.js`
 holds one just-intonation sideband per node **in the field**, and `0x0B` handed

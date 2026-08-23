@@ -165,15 +165,25 @@
       // between 0x0A and 0x0C so prev/next still reach it. See the note on
       // `universe: false` in app/landing/scenes/universe.jsx.
       //
-      // No `model` block: mdl() exists to build a universe tile and its 3D
-      // overlay, and this node has neither. The All Projects row reads only
-      // the text columns. The GLB itself is still live — it is the hero of
-      // Silent Depth.html, which loads it from its own PAGE_CONFIG.
+      // THE MODEL BLOCK IS LOAD-BEARING and must not be removed with the
+      // tile. The return handoff in app/landing/transitions/project-handoff.jsx
+      // resolves the leaving node through MO_PROJECT_BY_ADDR — not through the
+      // filtered field list — and hands `project.model` straight to
+      // makeNodeRig(). Without it buildRig() returns null, the reverse flight
+      // bails to its fallback, and leaving Silent Depth.html hard-cuts to the
+      // landing instead of flying the mark back. `universe: false` governs the
+      // drifting tile; the model governs the transition. They are separate.
       universe: false,
       file: "Silent Depth.html",
       statement: "A visual study of gaze, silence and invisible human connection.",
       short: "Study of gaze and silence",
       tags: ["Visual", "Study"],
+      model: mdl({
+        ready: true, src: "models/silent-depth-mark.glb", proxy: null,
+        rigFit: 2.1,   // matches this project's page hero
+        rigPose: { x: -0.2, y: 0, z: 0 },
+        cardPose: { scale: 1, yaw: 0.35, pitch: 0.1, offsetY: 0, fit: 1.05 },
+      }),
     },
     {
       addr: "0x0C", slug: "brionel-catalogue", name: "Brionel Product Catalogue",
