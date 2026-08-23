@@ -292,6 +292,7 @@ function NodeCard({ work, i, total, absD, locked, focused, onFocus }) {
         (focused ? "rcard--focused" : "")
       }
       data-addr={work.addr}
+      {...(hasPage ? { "data-hot": "" } : {})}
       data-screen-label={(i + 2).toString().padStart(2, "0") + " " + work.name}
       onMouseEnter={() => onFocus && onFocus(work.addr)}
       onMouseLeave={() => onFocus && onFocus(null)}

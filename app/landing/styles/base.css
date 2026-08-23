@@ -244,8 +244,15 @@ body.landing-exit .universeBg {
   right:  calc(var(--title-inset) + 240px);
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   gap: var(--s-4);
-  pointer-events: auto;
+  /* This box is far wider than the glyph grid inside it, and the title stage
+     is otherwise pointer-transparent so the visitor can keep flying the
+     universe. Catching the pointer here put an invisible dead patch across
+     the bottom of the hero where a drag did nothing. The ASCII now reads the
+     pointer from a window listener instead, so it lights up without ever
+     taking an event off the field behind it. */
+  pointer-events: none;
   max-width: 62vw;
 }
 /* ASCII base styling — matches the original hero ASCII exactly */
@@ -263,7 +270,15 @@ body.landing-exit .universeBg {
   text-shadow: 0 0 18px rgba(4, 6, 13, 0.9);
   mix-blend-mode: screen;
   opacity: 0.78;
-  width: 100%;
+  /* The box must be the art. `width: 100%` made it as wide as the wordmark
+     column while `white-space: pre` kept the glyph grid at its own natural
+     width, so the element's rect and the columns it draws disagreed — and the
+     component maps the pointer through that rect. Hugging the content makes
+     rect and grid the same thing, which is what puts the cursor bubble under
+     the actual cursor. */
+  width: max-content;
+  /* The exit affordance lives on the art itself — see title.css. */
+  pointer-events: auto;
 }
 .title__wordmark .asciiHero i {
   color: var(--signal);

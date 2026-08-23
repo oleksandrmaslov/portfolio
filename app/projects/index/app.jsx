@@ -260,6 +260,7 @@ function ManifestApp() {
                   onMouseEnter={() => setFocus(p.addr)}
                   onFocus={() => setFocus(p.addr)}
                   onClick={() => openProject(p)}
+                  {...(hasPage ? { "data-hot": "" } : {})}
                   tabIndex={hasPage ? 0 : -1}
                 >
                   <span className="m-col-addr">

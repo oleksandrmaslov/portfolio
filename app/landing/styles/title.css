@@ -78,10 +78,24 @@ body:not(.fl-titleGone) .bf-foot *,
 body:not(.fl-titleGone) .bf-ch__card,
 .bf-ch:not(.is-on) .bf-ch__card { pointer-events: none !important; }
 
-/* THE M.O. IS THE EXIT. The wordmark alone blocks the field, so a wheel over
-   the biggest thing on screen scrolls the page instead of flying the camera —
-   everything else inside the frame stays discoverable. */
-.lp-title .title__stage .title__wordmark { pointer-events: auto; }
+/* THE M.O. IS THE EXIT. A wheel over the wordmark scrolls the page instead of
+   flying the camera — everything else inside the frame stays discoverable.
+   The hit box is the <pre>, NOT its column: the column runs to
+   `right: tc-x + max(240px, 14vw)` for layout, so blocking on it put a wide
+   invisible slab across the bottom of the hero where a drag did nothing. The
+   <pre> is `width: max-content` (base.css), so this is exactly the ASCII you
+   can see. The wordmark's cursor bubble does not depend on this — it reads the
+   pointer from a window listener and lights up either way. */
+.lp-title .title__stage .title__wordmark { pointer-events: none; }
+/* The two states that retire the title's controls — the exit engaging
+   (`fl-titleDim`, scroll-flight.css) and the explore overlay (`mo-explore`,
+   base.css) — have to retire this with them. Their `none` sits on the wordmark
+   column, so an unconditional `auto` down here would out-specify it and leave
+   an invisible wheel trap behind after the title is gone. `fl-titleGone` needs
+   no clause: it hides the whole stage. */
+body:not(.fl-titleDim):not(.mo-explore) .lp-title .title__stage .title__wordmark .asciiHero {
+  pointer-events: auto;
+}
 .lp-title .title__idTop { pointer-events: none; }
 
 /* wheel handed back to the page mid-gesture — the Continue cue acknowledges it */

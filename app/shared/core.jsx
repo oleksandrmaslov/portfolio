@@ -68,7 +68,7 @@ function Boot({ onDone }) {
           </span>
         )}
       </div>
-      <div className="boot__skip" onClick={skip}>skip ↵</div>
+      <div className="boot__skip" data-hot onClick={skip}>skip ↵</div>
     </div>
   );
 }
@@ -132,19 +132,34 @@ function Cursor() {
     document.documentElement.classList.add("custom-cursor");
     const node = ref.current;
 
-    // Two decoupled jobs on mousemove:
+    // Two decoupled jobs on pointer movement:
     //   1. position + live pixel readout  → written DIRECTLY to the DOM once
     //      per display frame, so high-rate mice cannot flood style/text writes.
     //   2. hover-target detection (elementFromPoint + .closest tree-walks) →
     //      this is the genuinely expensive part, so it's time-throttled and the
     //      mode state only updates when it actually changes.
-    let px = 0, py = 0, lastMode = "idle", lastProbe = 0, raf = 0;
-    const HOT = "button, a, .node, .swatch, .curve, .family, .compBlock, .t-link, [data-hot]";
+    let px = 0, py = 0, lastMode = "idle", lastProbe = 0, raf = 0, live = false;
+    const root = document.documentElement;
 
+    // Anything that opens, submits or toggles reads as OPEN. This is tested
+    // FIRST so a link laid over a draggable surface still reports itself as a
+    // link instead of inheriting that surface's affordance — the board-flight
+    // footer and the event bus both sit inside one. Things that are clickable
+    // without being an anchor or a button carry `data-hot`.
+    const HOT = "a[href], button, summary, [role='link'], [role='button'], [role='tab'], "
+      + "[data-hot], .key, .node, .swatch, .curve, .family, .compBlock, .t-link";
+    const PROBE = ".photoTile, .ascii-fig__cv";   // surfaces you inspect
+    const GRAB  = ".bus3d, .universeBg";          // surfaces you drag
+
+    // Pointer events report sub-pixel coordinates (fractional DPR, high-res
+    // mice), where the old mousemove path handed back whole numbers. The
+    // readout is a PIXEL readout, so it rounds; px/py stay fractional for the
+    // transform, which is what keeps the reticle smooth on a HiDPI screen.
     const writeCoords = () => {
       const c = coordRef.current;
       if (c) c.textContent =
-        String(px).padStart(4, "0") + " / " + String(py).padStart(4, "0");
+        String(Math.round(px)).padStart(4, "0") + " / " +
+        String(Math.round(py)).padStart(4, "0");
     };
 
     const probe = (now) => {
@@ -153,11 +168,20 @@ function Cursor() {
       const el = document.elementFromPoint(px, py);
       let next = "idle";
       if (el) {
-        if (el.closest(".bus3d") || el.closest(".universeBg")) next = "grab";
-        else if (el.closest(".photoTile"))  next = "probe";
-        else if (el.closest(HOT))           next = "hot";
+        if      (el.closest(HOT))   next = "hot";
+        else if (el.closest(PROBE)) next = "probe";
+        else if (el.closest(GRAB))  next = "grab";
       }
       if (next !== lastMode) { lastMode = next; setMode(next); }
+    };
+
+    const setLive = (on) => {
+      if (live === on) return;
+      live = on;
+      root.classList.toggle("mo-cursor-live", on);
+      // Coming back from off-window with a stale "open" ring would announce a
+      // link the pointer may no longer be over.
+      if (!on && lastMode !== "idle") { lastMode = "idle"; setMode("idle"); }
     };
 
     const flushMove = now => {
@@ -168,16 +192,35 @@ function Cursor() {
       probe(now);
     };
 
-    const onMove = e => {
+    // Every event that carries a real coordinate reveals the reticle: moving,
+    // pressing and scrolling all prove where the pointer is. Touch never does —
+    // the coarse-pointer query hides the reticle anyway, and a synthetic move
+    // would otherwise strand it mid-screen after a tap.
+    const track = e => {
+      if (e.pointerType === "touch") return;
       px = e.clientX; py = e.clientY;
+      setLive(true);
       if (!raf) raf = requestAnimationFrame(flushMove);
     };
+    // relatedTarget === null on a bubbled mouseout is the pointer leaving the
+    // window entirely, as opposed to crossing between two elements inside it.
+    const onOut  = e => { if (!e.relatedTarget) setLive(false); };
+    const onBlur = () => setLive(false);
 
-    window.addEventListener("mousemove", onMove, { passive: true });
+    window.addEventListener("pointermove", track, { passive: true });
+    window.addEventListener("pointerdown", track, { passive: true });
+    window.addEventListener("wheel", track, { passive: true });
+    document.addEventListener("mouseout", onOut);
+    window.addEventListener("blur", onBlur);
     return () => {
-      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("pointermove", track);
+      window.removeEventListener("pointerdown", track);
+      window.removeEventListener("wheel", track);
+      document.removeEventListener("mouseout", onOut);
+      window.removeEventListener("blur", onBlur);
       if (raf) cancelAnimationFrame(raf);
-      document.documentElement.classList.remove("custom-cursor");
+      root.classList.remove("custom-cursor");
+      root.classList.remove("mo-cursor-live");
     };
   }, []);
 

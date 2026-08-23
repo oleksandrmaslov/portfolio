@@ -199,6 +199,16 @@ ripples, text fringe, and displacement compositor. The landing inserts it into
 the Universe composer; canonical project pages and Board Flight use its
 standalone overlay.
 
+The reticle in `app/shared/core.jsx` reports one of four modes. `hot`
+("open →") is tested first and wins over `grab` and `probe`, so a link laid
+over a draggable surface still reads as a link; anything clickable that is
+neither an anchor nor a button carries `data-hot` rather than being added to
+the selector by class. The reticle is hidden until the pointer proves where it
+is: `core.jsx` sets `mo-cursor-live` on the documentElement on the first real
+pointer move, press or wheel, and clears it when the pointer leaves the window
+or the window blurs. `app/shared/styles/pointer.css` gates visibility on that
+class, so the two files must be changed together. Touch never sets it.
+
 Preserve native DOM text. The WebGL layer draws only the displaced fringe, so
 text quality, baselines, focus, selection, and hit targets remain browser
 native. `window.MOCursorDistortion`, `data-mo-cursor-*`, and the existing

@@ -133,6 +133,7 @@ function Boot(_ref) {
     className: "boot__cursor"
   }))), React.createElement("div", {
     className: "boot__skip",
+    "data-hot": true,
     onClick: skip
   }, "skip \u21B5"));
 }
@@ -215,11 +216,15 @@ function Cursor() {
       py = 0,
       lastMode = "idle",
       lastProbe = 0,
-      raf = 0;
-    var HOT = "button, a, .node, .swatch, .curve, .family, .compBlock, .t-link, [data-hot]";
+      raf = 0,
+      live = false;
+    var root = document.documentElement;
+    var HOT = "a[href], button, summary, [role='link'], [role='button'], [role='tab'], " + "[data-hot], .key, .node, .swatch, .curve, .family, .compBlock, .t-link";
+    var PROBE = ".photoTile, .ascii-fig__cv";
+    var GRAB = ".bus3d, .universeBg";
     var writeCoords = function writeCoords() {
       var c = coordRef.current;
-      if (c) c.textContent = String(px).padStart(4, "0") + " / " + String(py).padStart(4, "0");
+      if (c) c.textContent = String(Math.round(px)).padStart(4, "0") + " / " + String(Math.round(py)).padStart(4, "0");
     };
     var probe = function probe(now) {
       if (now - lastProbe < 60) return;
@@ -227,11 +232,20 @@ function Cursor() {
       var el = document.elementFromPoint(px, py);
       var next = "idle";
       if (el) {
-        if (el.closest(".bus3d") || el.closest(".universeBg")) next = "grab";else if (el.closest(".photoTile")) next = "probe";else if (el.closest(HOT)) next = "hot";
+        if (el.closest(HOT)) next = "hot";else if (el.closest(PROBE)) next = "probe";else if (el.closest(GRAB)) next = "grab";
       }
       if (next !== lastMode) {
         lastMode = next;
         setMode(next);
+      }
+    };
+    var setLive = function setLive(on) {
+      if (live === on) return;
+      live = on;
+      root.classList.toggle("mo-cursor-live", on);
+      if (!on && lastMode !== "idle") {
+        lastMode = "idle";
+        setMode("idle");
       }
     };
     var flushMove = function flushMove(now) {
@@ -240,18 +254,39 @@ function Cursor() {
       writeCoords();
       probe(now);
     };
-    var onMove = function onMove(e) {
+    var track = function track(e) {
+      if (e.pointerType === "touch") return;
       px = e.clientX;
       py = e.clientY;
+      setLive(true);
       if (!raf) raf = requestAnimationFrame(flushMove);
     };
-    window.addEventListener("mousemove", onMove, {
+    var onOut = function onOut(e) {
+      if (!e.relatedTarget) setLive(false);
+    };
+    var onBlur = function onBlur() {
+      return setLive(false);
+    };
+    window.addEventListener("pointermove", track, {
       passive: true
     });
+    window.addEventListener("pointerdown", track, {
+      passive: true
+    });
+    window.addEventListener("wheel", track, {
+      passive: true
+    });
+    document.addEventListener("mouseout", onOut);
+    window.addEventListener("blur", onBlur);
     return function () {
-      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("pointermove", track);
+      window.removeEventListener("pointerdown", track);
+      window.removeEventListener("wheel", track);
+      document.removeEventListener("mouseout", onOut);
+      window.removeEventListener("blur", onBlur);
       if (raf) cancelAnimationFrame(raf);
-      document.documentElement.classList.remove("custom-cursor");
+      root.classList.remove("custom-cursor");
+      root.classList.remove("mo-cursor-live");
     };
   }, []);
   return React.createElement("div", {
@@ -559,17 +594,35 @@ function AsciiHero(_ref) {
       y: -1000,
       active: false
     };
+    var ptrX = 0,
+      ptrY = 0,
+      ptrSeen = false;
     var onMove = function onMove(e) {
+      if (e.pointerType === "touch") return;
+      ptrX = e.clientX;
+      ptrY = e.clientY;
+      ptrSeen = true;
+    };
+    var onOut = function onOut(e) {
+      if (!e.relatedTarget) ptrSeen = false;
+    };
+    window.addEventListener("pointermove", onMove, {
+      passive: true
+    });
+    document.addEventListener("mouseout", onOut);
+    var syncCursor = function syncCursor() {
+      if (!ptrSeen) {
+        cursor.active = false;
+        return;
+      }
       var r = el.getBoundingClientRect();
-      cursor.x = (e.clientX - r.left) / r.width * cols;
-      cursor.y = (e.clientY - r.top) / r.height * rows;
-      cursor.active = true;
+      var inside = r.width > 0 && r.height > 0 && ptrX >= r.left && ptrX <= r.right && ptrY >= r.top && ptrY <= r.bottom;
+      cursor.active = inside;
+      if (inside) {
+        cursor.x = (ptrX - r.left) / r.width * cols;
+        cursor.y = (ptrY - r.top) / r.height * rows;
+      }
     };
-    var onLeave = function onLeave() {
-      cursor.active = false;
-    };
-    el.addEventListener("mousemove", onMove);
-    el.addEventListener("mouseleave", onLeave);
     var initialRect = el.getBoundingClientRect();
     var onScreen = initialRect.bottom > 0 && initialRect.top < window.innerHeight;
     var disposed = false;
@@ -621,6 +674,7 @@ function AsciiHero(_ref) {
       }
       last = now;
       el.__exCleared = false;
+      syncCursor();
       var t = now * 0.0009;
       var buf = [];
       for (var _r = 0; _r < rows; _r++) {
@@ -686,8 +740,8 @@ function AsciiHero(_ref) {
       io.disconnect();
       window.removeEventListener("scroll", onScroll);
       document.removeEventListener("visibilitychange", onVisibility);
-      el.removeEventListener("mousemove", onMove);
-      el.removeEventListener("mouseleave", onLeave);
+      window.removeEventListener("pointermove", onMove);
+      document.removeEventListener("mouseout", onOut);
     };
   }, [cols, rows, ramp]);
   return React.createElement("pre", {
@@ -7000,6 +7054,7 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     pcb: -0.52,
     mcu: -0.42
   };
+  var WAFER_EXPLODE = 0.30;
   var waferParts = [],
     waferMats = [];
   function buildWaferReal(group) {
@@ -7402,7 +7457,7 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
           try {
             for (_iterator28.s(); !(_step28 = _iterator28.n()).done;) {
               var w = _step28.value;
-              w.position.copy(w.userData.vec).multiplyScalar(exs * 0.15);
+              w.position.copy(w.userData.vec).multiplyScalar(exs * WAFER_EXPLODE);
             }
           } catch (err) {
             _iterator28.e(err);
@@ -8704,6 +8759,7 @@ function OriginBeat() {
 window.OriginBeat = OriginBeat;
 
 /* ---- app/landing/sections/work.jsx ---- */
+function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
 function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
 function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
@@ -9064,10 +9120,13 @@ function NodeCard(_ref2) {
   };
   var popScale = locked ? 1.025 : 1 - absD * 0.06;
   var popOp = 1 - absD * 0.4;
-  return React.createElement("article", {
+  return React.createElement("article", _extends({
     ref: cardRef,
     className: "rcard " + (locked ? "rcard--locked " : "") + (focused ? "rcard--focused" : ""),
-    "data-addr": work.addr,
+    "data-addr": work.addr
+  }, hasPage ? {
+    "data-hot": ""
+  } : {}, {
     "data-screen-label": (i + 2).toString().padStart(2, "0") + " " + work.name,
     onMouseEnter: function onMouseEnter() {
       return _onFocus && _onFocus(work.addr);
@@ -9088,7 +9147,7 @@ function NodeCard(_ref2) {
       transform: "scale(".concat(popScale.toFixed(3), ")"),
       opacity: popOp.toFixed(3)
     }
-  }, React.createElement("span", {
+  }), React.createElement("span", {
     className: "rcard__spine",
     "aria-hidden": "true"
   }), React.createElement("div", {

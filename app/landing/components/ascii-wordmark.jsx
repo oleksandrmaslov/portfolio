@@ -102,17 +102,40 @@ function AsciiHero({ cols = 108, rows = 20, ramp = " ·:-=+*#%@", className = ""
       hashCell[i] = s - Math.floor(s);
     }
 
-    /* ---------- cursor tracking ---------- */
+    /* ---------- cursor tracking ----------
+       The <pre> is pointer-transparent: it sits over the universe and must not
+       take a drag meant for the field behind it. So the bubble is driven from
+       a window listener and mapped through the element's own rect — which,
+       now that the box hugs the glyph grid (base.css), is a 1:1 match with the
+       columns this loop draws.
+
+       The rect is read once per frame rather than per event: at high mouse
+       rates a getBoundingClientRect() inside the move handler is a forced
+       layout on every sample, and this loop only repaints at ~30fps anyway. */
     const cursor = { x: -1000, y: -1000, active: false };
+    let ptrX = 0, ptrY = 0, ptrSeen = false;
     const onMove = (e) => {
-      const r = el.getBoundingClientRect();
-      cursor.x = ((e.clientX - r.left) / r.width)  * cols;
-      cursor.y = ((e.clientY - r.top)  / r.height) * rows;
-      cursor.active = true;
+      if (e.pointerType === "touch") return;
+      ptrX = e.clientX; ptrY = e.clientY; ptrSeen = true;
     };
-    const onLeave = () => { cursor.active = false; };
-    el.addEventListener("mousemove", onMove);
-    el.addEventListener("mouseleave", onLeave);
+    // A pointer that has not moved yet, or has left the window, is nowhere —
+    // no bubble, rather than one stuck at the last place it was seen.
+    const onOut = (e) => { if (!e.relatedTarget) ptrSeen = false; };
+    window.addEventListener("pointermove", onMove, { passive: true });
+    document.addEventListener("mouseout", onOut);
+
+    const syncCursor = () => {
+      if (!ptrSeen) { cursor.active = false; return; }
+      const r = el.getBoundingClientRect();
+      const inside = r.width > 0 && r.height > 0
+        && ptrX >= r.left && ptrX <= r.right
+        && ptrY >= r.top  && ptrY <= r.bottom;
+      cursor.active = inside;
+      if (inside) {
+        cursor.x = ((ptrX - r.left) / r.width)  * cols;
+        cursor.y = ((ptrY - r.top)  / r.height) * rows;
+      }
+    };
 
     /* ---------- demand-driven render gate ---------- */
     const initialRect = el.getBoundingClientRect();
@@ -162,6 +185,7 @@ function AsciiHero({ cols = 108, rows = 20, ramp = " ·:-=+*#%@", className = ""
       last = now;
 
       el.__exCleared = false;
+      syncCursor();
 
       const t = now * 0.0009;
       const buf = [];
@@ -238,8 +262,8 @@ function AsciiHero({ cols = 108, rows = 20, ramp = " ·:-=+*#%@", className = ""
       io.disconnect();
       window.removeEventListener("scroll", onScroll);
       document.removeEventListener("visibilitychange", onVisibility);
-      el.removeEventListener("mousemove", onMove);
-      el.removeEventListener("mouseleave", onLeave);
+      window.removeEventListener("pointermove", onMove);
+      document.removeEventListener("mouseout", onOut);
     };
   }, [cols, rows, ramp]);
 

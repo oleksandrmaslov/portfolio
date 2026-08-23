@@ -694,6 +694,7 @@
 
   /* ---- REAL Wafer exploded view (actual part GLBs, world-aligned) ---- */
   const WAFER_H = { key:1.06, case:0.60, display:0.40, switches:0.18, usbc:-0.36, plate:-0.82, antenna:-0.62, softoff:-0.54, pcb:-0.52, mcu:-0.42 };
+  const WAFER_EXPLODE = 0.30;   // how far the exploded view actually opens
   const waferParts = [], waferMats = [];
   function buildWaferReal(group) {
     const load = window.loadProjectModel;
@@ -975,7 +976,11 @@
         deviceGroup.visible = ex > 0.02 && waferParts.length > 0;
         if (deviceGroup.visible) {
           const exs = ex < 0.5 ? 2*ex*ex : 1 - Math.pow(-2*ex+2, 2)/2;
-          for (const w of waferParts) w.position.copy(w.userData.vec).multiplyScalar(exs * 0.15);
+          // Separation as a fraction of each part's full out-vector. The stack
+          // has to stay legible as ONE device at flight distance, so this is
+          // nowhere near 1 — 0.30 opens the case, plate, PCB and keycaps far
+          // enough to count the layers without the board coming apart.
+          for (const w of waferParts) w.position.copy(w.userData.vec).multiplyScalar(exs * WAFER_EXPLODE);
           const op = Math.min(1, ex * 2.5);
           for (const m of waferMats) m.opacity = op;
           deviceGroup.rotation.y += dt * 0.0004;
