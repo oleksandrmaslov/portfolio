@@ -466,7 +466,8 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       vignette:   0.34,     // "small vignette"
       grain:      0.0,      // film grain removed per request
       dof:        true,     // gentle depth-of-field
-      focus:      10.0,     // pinned to the card plane — mids stay readable
+      focus:      13.4,     // pinned to the card plane — mids stay readable
+                            // (moved out with TILE_BOX; the cards now sit ~11-17u)
       aperture:   0.00025,  // small aperture keeps mid-distance content crisp
       maxblur:    0.0045,   // low ceiling — only the deep field melts
       // --- DoF cost controls, read by FastBokehPass below ---
@@ -735,6 +736,15 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     /* ---------- world configuration ---------- */
     // Smaller box → denser cluster around the camera. Fog hides the wrap.
     const BOX = new THREE.Vector3(26, 18, 26);
+    /* The CARDS get a bigger box than the dust does. At BOX the nearest tiles
+       sat ~7u out, which at 3×4 fills a third of the frame and reads as a
+       closet rather than a field — the ambient debris and the star parallax
+       are what want the tight box, not the twelve things you are meant to
+       look AT. Tiles wrap and edge-fade against this instead, so the opening
+       spread reaches ~11–17u without a card ever crossing the wrap surface
+       while still opaque. Keep the wrap and the fade on the SAME box: they
+       are the two halves of hiding the teleport. */
+    const TILE_BOX = BOX.clone().multiplyScalar(1.4);
     const TILE_W = 3.0;
     const TILE_H = 4.0;
 
@@ -839,6 +849,14 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     const tiles = [];
     const tileWires = [];
     const goldenAngle = Math.PI * (3 - Math.sqrt(5));
+    // Latitude band for the opening spread — see the placement note below.
+    const FIELD_LAT = 0.55;
+    // Where the first node stands, and the cone around it that stays empty.
+    const GREET_POS = new THREE.Vector3(3.3, 1.9, -13.2);
+    const GREET_DIR = GREET_POS.clone().normalize();
+    const GREET_COS = Math.cos(26 * Math.PI / 180);
+    const GREET_CLEAR_R = 21;        // past this, a card is too far back to eclipse
+    const _placeV = new THREE.Vector3();
     const N = projects.length;
     projects.forEach((p, i) => {
       const tex = makeTileTexture(p, THREE);
@@ -849,16 +867,53 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       const geo = new THREE.PlaneGeometry(TILE_W, TILE_H);
       const mesh = new THREE.Mesh(geo, mat);
 
-      // initial Fibonacci-spread positions inside BOX — closer in for density
-      const yN = 1 - (i / Math.max(1, N - 1)) * 2;
+      /* INITIAL PLACEMENT — a Fibonacci spread, but never at the poles.
+         `1 - (i / (N-1)) * 2` runs the latitude from +1 to -1, which puts
+         index 0 exactly overhead and index N-1 exactly underfoot: radial
+         collapses to 0, so both land dead on the camera's vertical axis
+         where nobody who looks around the horizon will ever find them.
+         Wafer was the one directly above your head.
+
+         The band is compressed to ±FIELD_LAT instead. The spiral keeps its
+         even spread and the field still reads as a sphere — roughly ±24° of
+         elevation once BOX's proportions are applied — it just stops using
+         the two positions a visitor never looks at. The half-step on i keeps
+         the first and last cards off the band edges too. */
+      const yN = FIELD_LAT * (1 - ((i + 0.5) / Math.max(1, N)) * 2);
       const radial = Math.sqrt(1 - yN * yN);
       const theta = i * goldenAngle;
       const r = 0.55 + 0.30 * ((i * 13 % 100) / 100);
-      mesh.position.set(
-        Math.cos(theta) * radial * BOX.x * r * 0.55,
-        yN * BOX.y * r * 0.6,
-        Math.sin(theta) * radial * BOX.z * r * 0.55,
-      );
+      if (i === 0) {
+        /* THE FIRST NODE GREETS YOU. The camera starts at the origin looking
+           down −Z, so this one is placed there on purpose rather than left to
+           wherever the spiral drops it: a visitor who arrives to empty space
+           has no reason to believe there is anything to find. Up and to the
+           right of centre keeps it clear of the wordmark, the control cluster
+           and the field guide, and ~13u out sits on the DoF focus plane so it
+           lands sharp. Registry order decides who this is —
+           app/data/projects.js puts Wafer first. */
+        mesh.position.copy(GREET_POS);
+      } else {
+        /* KEEP THE GREETING CONE CLEAR. Placing the first node in front only
+           works if nothing else is standing there — the spiral drops a card
+           near −Z every time, and a nearer one eclipses the card the whole
+           arrangement exists to show. Any card that lands inside the cone AND
+           close enough to occlude walks around the ring until it is clear.
+           A rule rather than a tuned phase offset, so adding a project cannot
+           quietly re-break it. */
+        let th = theta;
+        for (let guard = 0; guard < 12; guard++) {
+          _placeV.set(
+            Math.cos(th) * radial * TILE_BOX.x * r * 0.55,
+            yN * TILE_BOX.y * r * 0.6,
+            Math.sin(th) * radial * TILE_BOX.z * r * 0.55,
+          );
+          const far = _placeV.length() > GREET_CLEAR_R;
+          if (far || _placeV.clone().normalize().dot(GREET_DIR) < GREET_COS) break;
+          th += 0.62;
+        }
+        mesh.position.copy(_placeV);
+      }
 
       mesh.userData = { project: p, texture: tex, kind: "tile", index: i,
         // each card gets a small persistent rotational offset for personality
@@ -973,13 +1028,28 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     const GRID_Z = -16;
     const tileTargets = projects.map(() => new THREE.Vector3());
     const carouselTarget = new THREE.Vector3();
+    /* CLEARED FIELD — one ring, four scales.
+       Every beat that needs the cards out of its way puts them on a ring
+       around whatever the beat is about. Both x and y come from the ring
+       angle, so two nodes can only share a screen position if they share an
+       index. The old form took x from a golden-angle spiral and y from a
+       linear index ramp, which let neighbours line up: 0x08 sat behind 0x07
+       in the origin beat AND in the work reel, and no amount of nudging one
+       node fixes a formula that can pair any two. */
+    function scatter(i, R, Y, Z, D) {
+      const ang = (i / Math.max(1, projects.length)) * Math.PI * 2;
+      return tileTargets[i].set(
+        Math.cos(ang) * R,
+        Math.sin(ang) * Y,
+        Z + Math.sin(ang * 2) * D,
+      );
+    }
+
     function targetForTile(mode, i, t) {
       const target = tileTargets[i];
       if (mode === "dive") {
         // Everything clears far out — only node 0x00 (the hub) remains, centered.
-        const yN = 1 - (i / Math.max(1, projects.length - 1)) * 2;
-        const theta = i * goldenAngle;
-        return target.set(Math.cos(theta) * 22, yN * 13, -26 + Math.sin(theta) * 6);
+        return scatter(i, 22, 13, -26, 6);
       }
       if (mode === "origin") {
         const concept = (window.__mo_origin && window.__mo_origin.concept) || "assembly";
@@ -987,11 +1057,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         const addr = m && m.userData.project.addr;
         const fIdx = MO_FEATURED.indexOf(addr || "");
         // ASSEMBLY: clear ALL nodes far out so the particle glyph reads clean.
-        if (concept === "assembly") {
-          const yN = 1 - (i / Math.max(1, projects.length - 1)) * 2;
-          const theta = i * goldenAngle;
-          return target.set(Math.cos(theta) * 19, yN * 11, -22 + Math.sin(theta) * 5);
-        }
+        if (concept === "assembly") return scatter(i, 19, 11, -22, 5);
         // HUB: featured nodes ring the hub, the rest drift back.
         if (fIdx >= 0) {
           const ang = (fIdx / Math.max(1, MO_FEATURED.length)) * Math.PI * 2 - Math.PI / 2 + t * 0.00004;
@@ -1001,9 +1067,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
             ORIGIN_CENTER.z + Math.sin(ang * 1.3) * 1.4,
           );
         }
-        const yN = 1 - (i / Math.max(1, projects.length - 1)) * 2;
-        const theta = i * goldenAngle;
-        return target.set(Math.cos(theta) * 16, yN * 9, -18 + Math.sin(theta) * 4);
+        return scatter(i, 16, 9, -18, 4);
       }
       if (mode === "reel") {
         // WORK REEL — the featured tiles parade past the lens (positions 1–4).
@@ -1025,9 +1089,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         if (rIdx >= 0) {
           target.set((rIdx + 1 - pos) * REEL_DX, 0.62, -10.6);
         } else {
-          const th = i * goldenAngle;
-          const yN = 1 - (i / Math.max(1, projects.length - 1)) * 2;
-          target.set(Math.cos(th) * 20, yN * 11, -25 + Math.sin(th) * 5);
+          scatter(i, 20, 11, -25, 5);
         }
         if (g > 0.001) {
           // CAROUSEL — every node docks into a slow cylindrical carousel
@@ -2348,7 +2410,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
               m.userData.driftTarget = null;
             }
           } else {
-            wrapAroundCamera(m, BOX);
+            wrapAroundCamera(m, TILE_BOX);
           }
         }
       }
@@ -2491,9 +2553,9 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
           // about to cross. Full opacity until 95% of the way out, then a quick
           // fade across the final 5% shell so the wrap happens invisibly.
           nearIn = THREE.MathUtils.smoothstep(dist, 2.5, 6.0);
-          const ex = Math.abs(m.position.x - camera.position.x) / (BOX.x / 2);
-          const ey = Math.abs(m.position.y - camera.position.y) / (BOX.y / 2);
-          const ez = Math.abs(m.position.z - camera.position.z) / (BOX.z / 2);
+          const ex = Math.abs(m.position.x - camera.position.x) / (TILE_BOX.x / 2);
+          const ey = Math.abs(m.position.y - camera.position.y) / (TILE_BOX.y / 2);
+          const ez = Math.abs(m.position.z - camera.position.z) / (TILE_BOX.z / 2);
           const edge = Math.max(ex, ey, ez);
           farOut = THREE.MathUtils.smoothstep(edge, 0.95, 1.0);
         } else if (mode === "dive") {

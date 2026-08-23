@@ -2369,7 +2369,7 @@ function Universe(_ref) {
       vignette: 0.34,
       grain: 0.0,
       dof: true,
-      focus: 10.0,
+      focus: 13.4,
       aperture: 0.00025,
       maxblur: 0.0045,
       dofDepthScale: 0.5,
@@ -2556,6 +2556,7 @@ function Universe(_ref) {
       }
     }
     var BOX = new THREE.Vector3(26, 18, 26);
+    var TILE_BOX = BOX.clone().multiplyScalar(1.4);
     var TILE_W = 3.0;
     var TILE_H = 4.0;
     var cam = {
@@ -2634,6 +2635,12 @@ function Universe(_ref) {
     var tiles = [];
     var tileWires = [];
     var goldenAngle = Math.PI * (3 - Math.sqrt(5));
+    var FIELD_LAT = 0.55;
+    var GREET_POS = new THREE.Vector3(3.3, 1.9, -13.2);
+    var GREET_DIR = GREET_POS.clone().normalize();
+    var GREET_COS = Math.cos(26 * Math.PI / 180);
+    var GREET_CLEAR_R = 21;
+    var _placeV = new THREE.Vector3();
     var N = projects.length;
     projects.forEach(function (p, i) {
       var tex = makeTileTexture(p, THREE);
@@ -2646,11 +2653,22 @@ function Universe(_ref) {
       });
       var geo = new THREE.PlaneGeometry(TILE_W, TILE_H);
       var mesh = new THREE.Mesh(geo, mat);
-      var yN = 1 - i / Math.max(1, N - 1) * 2;
+      var yN = FIELD_LAT * (1 - (i + 0.5) / Math.max(1, N) * 2);
       var radial = Math.sqrt(1 - yN * yN);
       var theta = i * goldenAngle;
       var r = 0.55 + 0.30 * (i * 13 % 100 / 100);
-      mesh.position.set(Math.cos(theta) * radial * BOX.x * r * 0.55, yN * BOX.y * r * 0.6, Math.sin(theta) * radial * BOX.z * r * 0.55);
+      if (i === 0) {
+        mesh.position.copy(GREET_POS);
+      } else {
+        var th = theta;
+        for (var guard = 0; guard < 12; guard++) {
+          _placeV.set(Math.cos(th) * radial * TILE_BOX.x * r * 0.55, yN * TILE_BOX.y * r * 0.6, Math.sin(th) * radial * TILE_BOX.z * r * 0.55);
+          var far = _placeV.length() > GREET_CLEAR_R;
+          if (far || _placeV.clone().normalize().dot(GREET_DIR) < GREET_COS) break;
+          th += 0.62;
+        }
+        mesh.position.copy(_placeV);
+      }
       mesh.userData = {
         project: p,
         texture: tex,
@@ -2741,30 +2759,26 @@ function Universe(_ref) {
       return new THREE.Vector3();
     });
     var carouselTarget = new THREE.Vector3();
+    function scatter(i, R, Y, Z, D) {
+      var ang = i / Math.max(1, projects.length) * Math.PI * 2;
+      return tileTargets[i].set(Math.cos(ang) * R, Math.sin(ang) * Y, Z + Math.sin(ang * 2) * D);
+    }
     function targetForTile(mode, i, t) {
       var target = tileTargets[i];
       if (mode === "dive") {
-        var yN = 1 - i / Math.max(1, projects.length - 1) * 2;
-        var theta = i * goldenAngle;
-        return target.set(Math.cos(theta) * 22, yN * 13, -26 + Math.sin(theta) * 6);
+        return scatter(i, 22, 13, -26, 6);
       }
       if (mode === "origin") {
         var concept = window.__mo_origin && window.__mo_origin.concept || "assembly";
         var m = tiles[i];
         var addr = m && m.userData.project.addr;
         var fIdx = MO_FEATURED.indexOf(addr || "");
-        if (concept === "assembly") {
-          var _yN = 1 - i / Math.max(1, projects.length - 1) * 2;
-          var _theta = i * goldenAngle;
-          return target.set(Math.cos(_theta) * 19, _yN * 11, -22 + Math.sin(_theta) * 5);
-        }
+        if (concept === "assembly") return scatter(i, 19, 11, -22, 5);
         if (fIdx >= 0) {
           var ang = fIdx / Math.max(1, MO_FEATURED.length) * Math.PI * 2 - Math.PI / 2 + t * 0.00004;
           return target.set(ORIGIN_CENTER.x + Math.cos(ang) * ORIGIN_RING_R, ORIGIN_CENTER.y + Math.sin(ang) * ORIGIN_RING_R * 0.62, ORIGIN_CENTER.z + Math.sin(ang * 1.3) * 1.4);
         }
-        var _yN2 = 1 - i / Math.max(1, projects.length - 1) * 2;
-        var _theta2 = i * goldenAngle;
-        return target.set(Math.cos(_theta2) * 16, _yN2 * 9, -18 + Math.sin(_theta2) * 4);
+        return scatter(i, 16, 9, -18, 4);
       }
       if (mode === "reel") {
         var rb = window.__mo_reel || {
@@ -2779,9 +2793,7 @@ function Universe(_ref) {
         if (rIdx >= 0) {
           target.set((rIdx + 1 - pos) * REEL_DX, 0.62, -10.6);
         } else {
-          var th = i * goldenAngle;
-          var _yN3 = 1 - i / Math.max(1, projects.length - 1) * 2;
-          target.set(Math.cos(th) * 20, _yN3 * 11, -25 + Math.sin(th) * 5);
+          scatter(i, 20, 11, -25, 5);
         }
         if (g > 0.001) {
           var ang0 = i / Math.max(1, projects.length) * Math.PI * 2;
@@ -2800,11 +2812,11 @@ function Universe(_ref) {
         return target.set((col - (GRID_COLS - 1) / 2) * GRID_SPACING_X, ((GRID_ROWS - 1) / 2 - row) * GRID_SPACING_Y, GRID_Z);
       }
       if (mode === "ambient") {
-        var _yN4 = 1 - i / Math.max(1, projects.length - 1) * 2;
-        var radial = Math.sqrt(1 - _yN4 * _yN4);
-        var _theta3 = i * goldenAngle + t * 0.00006;
+        var yN = 1 - i / Math.max(1, projects.length - 1) * 2;
+        var radial = Math.sqrt(1 - yN * yN);
+        var theta = i * goldenAngle + t * 0.00006;
         var _R = 13;
-        return target.set(Math.cos(_theta3) * radial * _R, _yN4 * _R * 0.6, Math.sin(_theta3) * radial * _R - 4);
+        return target.set(Math.cos(theta) * radial * _R, yN * _R * 0.6, Math.sin(theta) * radial * _R - 4);
       }
       return null;
     }
@@ -4117,7 +4129,7 @@ function Universe(_ref) {
                 _m2.userData.driftTarget = null;
               }
             } else {
-              wrapAroundCamera(_m2, BOX);
+              wrapAroundCamera(_m2, TILE_BOX);
             }
           }
         } catch (err) {
@@ -4232,9 +4244,9 @@ function Universe(_ref) {
             farOut = THREE.MathUtils.smoothstep(dist, 18, 28);
           } else if (mode === "drift") {
             nearIn = THREE.MathUtils.smoothstep(dist, 2.5, 6.0);
-            var ex = Math.abs(_m3.position.x - camera.position.x) / (BOX.x / 2);
-            var ey = Math.abs(_m3.position.y - camera.position.y) / (BOX.y / 2);
-            var ez = Math.abs(_m3.position.z - camera.position.z) / (BOX.z / 2);
+            var ex = Math.abs(_m3.position.x - camera.position.x) / (TILE_BOX.x / 2);
+            var ey = Math.abs(_m3.position.y - camera.position.y) / (TILE_BOX.y / 2);
+            var ez = Math.abs(_m3.position.z - camera.position.z) / (TILE_BOX.z / 2);
             var edge = Math.max(ex, ey, ez);
             farOut = THREE.MathUtils.smoothstep(edge, 0.95, 1.0);
           } else if (mode === "dive") {

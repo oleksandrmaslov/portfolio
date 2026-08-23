@@ -377,6 +377,50 @@ full-canvas resolve every frame and nothing else.
 - Preview from the repository root with `python -m http.server 8000` and test
   the public HTML routes in a real browser.
 
+## Where the cards stand
+
+The opening spread in `app/landing/scenes/universe.jsx` is a Fibonacci spiral
+with two rules on top, both load-bearing.
+
+**No poles.** The textbook form runs latitude from `+1` to `-1`, which collapses
+`radial` to zero at both ends and parks index 0 straight overhead and index
+`N-1` straight underfoot — the two directions a visitor scanning the horizon
+never looks. Wafer was the one above your head. The band is compressed to
+`±FIELD_LAT` (0.55, about ±24° once BOX's proportions apply) and `i` takes a
+half-step so the first and last cards sit inside the band rather than on its
+edges.
+
+**The first node greets you.** Index 0 is placed at `GREET_POS`, in front of
+the camera's opening view direction, instead of wherever the spiral drops it.
+Registry order decides who that is — `app/data/projects.js` puts Wafer first.
+A card placed in front only works if nothing stands in front of it, so any
+other card landing inside a 26° cone around that direction and nearer than
+`GREET_CLEAR_R` walks around the ring until it is clear. That is a rule and not
+a tuned phase offset on purpose: adding a project must not quietly re-break it.
+
+**The cards get a bigger box than the dust.** `TILE_BOX` is `BOX * 1.4`, and
+tiles place, wrap and edge-fade against it while the ambient debris, the star
+parallax and the assembly cloud keep the tight `BOX`. At `BOX` the nearest
+cards sat about 7u out, which at 3×4 fills a third of the frame and reads as a
+closet; the spread is 11–16u now. The wrap and the edge fade must stay on the
+**same** box — they are the two halves of hiding the teleport, and splitting
+them puts a tile across the wrap surface at full opacity. `GRADE.focus` moved
+out with them: it is pinned to the card plane, so leaving it behind would have
+put the whole field outside the depth of field.
+
+**Every beat that clears the field uses one function.** `scatter(i, R, Y, Z, D)`
+puts the cards on a ring around whatever the beat is about, and dive, both
+origin concepts and the work-reel background are four calls to it at four
+scales. Both `x` and `y` come from the ring angle, so two nodes can only share
+a screen position if they share an index.
+
+That is the whole point of the shape, and it replaced four copies of a form
+that took `x` from a golden-angle spiral and `y` from a linear index ramp.
+That version let neighbours line up: `0x08` sat directly behind `0x07` in **all
+four** beats. Per-node offsets were the wrong instinct — a formula that can pair
+any two nodes needs fixing once, not patching per node and per beat. If a new
+arrangement is added, give it a `scatter` call rather than a fifth copy.
+
 ## Models and live demos
 
 Place shared GLBs in `models/`, then update the matching record in
