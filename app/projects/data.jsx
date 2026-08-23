@@ -12,45 +12,163 @@ const PROJECT_DATA = {
     slug: "wafer",
     file: "Wafer v3.html",
     name: "Wafer",
-    tagline: "36-key ultrathin split keyboard",
+    tagline: "36-key split built as one object",
     overline: "EMBEDDED · HARDWARE · FIRMWARE",
-    year: "2025",
+    year: "03 / 2025 →",
     place: "Munich, DE",
-    role: "Designer · firmware · hardware",
-    stack: ["ZMK", "Zephyr", "KiCad", "nRF52840", "NPM1300", "Sharp memory"],
-    primitive: "slab",                // small 3D object kind
-    model: "models/wafer_demo.glb",   // canonical assembled hero GLB
-    modelFit: 3.4,                    // longest-edge size in world units (bigger = bigger on card)
-    modelPose: { x: 1.05, y: 0, z: 0 }, // rest pose — keyboard face toward the camera
-    demoSize: { d: 200, w: 110, h: 14 }, // demo model dimensions (label values)
+    role: "Product design · PCB · firmware · manufacturing",
+    stack: ["ZMK", "Zephyr 4.1", "KiCad", "Ergogen", "Fusion 360", "ISP1807", "nPM1300"],
+    primitive: "slab",
+    model: "models/wafer_demo.glb",
+    modelFit: 3.4,
+    modelPose: { x: 1.05, y: 0, z: 0 },
+    demoSize: { d: 200, w: 110, h: 14 },
     metrics: [
-      { value: "4–8", unit: "mm height" },
-      { value: "36",  unit: "keys total" },
-      { value: "R3",  unit: "revision" },
+      { value: "4-8", unit: "mm enclosure" },
+      { value: "36",  unit: "keys" },
+      { value: "30+", unit: "case revisions" },
     ],
     intro:
-      "Wafer is the third revision of a 36-key split keyboard that sits flush on the desk. " +
-      "Aluminium case, magnetic mating, 4–8 mm build height. Custom PCB on ISP1807 (nRF52840) " +
-      "with NPM1300 PMIC and a Sharp memory display. I designed the schematic, drew the boards, " +
-      "milled the prototypes, and wrote the firmware on a ZMK fork — including the I2C driver " +
-      "for the PMIC and direct battery-voltage readout, which I merged upstream into ZMK.",
+      "Every wireless split I built before this one felt like a stack of parts: controller " +
+      "board, battery, display, case, each solving its own problem and each adding height. " +
+      "Wafer is the version where I stopped treating those as modules. The controller, " +
+      "charging, power management and display all belong to one custom PCB, inside a machined " +
+      "aluminium shell that runs 4 to 8 mm depending where you measure it.",
     sections: [
-      { kind: "stub", h: "Brief",
-        body: "[ writing pending · 22-05 · the constraint set: thin, split, no compromise on key feel — and why R1 and R2 didn't get there yet ]" },
-      { kind: "stub", h: "Hardware",
-        body: "[ writing pending · 22-05 · schematic, stackup, key wells, magnetic mating, case milling, what broke twice before R3 settled ]" },
-      { kind: "photo", caption: "case + boards — R3 prototype, top view" },
-      { kind: "stub", h: "Firmware",
-        body: "[ writing pending · 22-05 · the ZMK fork, the NPM1300 driver, the memory display path, sleep / wake states ]" },
-      { kind: "photo", caption: "Sharp memory display · live status surface" },
-      { kind: "stub", h: "What I'd do next",
-        body: "[ writing pending · 22-05 · R4: per-key RGB? thinner stack? wireless dongle vs direct?" +
-              " — open questions I haven't answered yet ]" },
+      { kind: "stub", h: "The sandwich was the problem",
+        body: "Before Wafer I had built several splits, including a wireless low-profile Corne. " +
+              "They taught me less about layout than about assembly: DIY boards get put together " +
+              "vertically. A controller sits on a PCB, a battery beside it, a display bolted on " +
+              "top, and sockets and clearances accumulate until the case exists mainly to hide " +
+              "the pile. I traced my hand, drew a 36-key stagger, and found Ergogen, which turns " +
+              "a layout description into KiCad output. The decision that mattered was not the " +
+              "stagger. It was that Wafer would have no controller module: the MCU, charging, " +
+              "power management and display would belong to the board itself." },
+      { kind: "photo", src: "public/media/wafer/journal-ergogen-first.webp", ratio: "286 / 241",
+        caption: "ergogen · first 36-key pass" },
+      { kind: "photo", src: "public/media/wafer/journal-wafer-outline.webp", ratio: "683 / 490",
+        caption: "wafer outline · the box everything else fits inside" },
+      { kind: "stub", h: "Learning PCB design by rebuilding it",
+        body: "I started from the Mikoto MCU schematic, added a nice!view display and the matrix, " +
+              "and went straight to routing. That first board took almost three weeks and was " +
+              "exactly what you make when you know just enough to be dangerous: six layers for a " +
+              "circuit that did not need them, decoupling capacitors placed without much thought, " +
+              "and an antenna footprint I picked because it looked right. So I rebuilt it. Then I " +
+              "rebuilt it again. Those two rewrites taught me more than the first working " +
+              "schematic did." },
+      { kind: "photo", src: "public/media/wafer/journal-six-layer-mistake.webp", ratio: "1382 / 789",
+        caption: "revision 1 · six layers · routing the circuit never needed" },
+      { kind: "photo", src: "public/media/wafer/journal-first-layout.webp", ratio: "1103 / 753",
+        caption: "first wafer layout · rebuilt twice after this" },
+      { kind: "stub", h: "A module instead of a bare radio",
+        body: "The goal changed from putting every component on the board to integrating only " +
+              "what I could integrate well. RF was the clearest example: I dropped the bare " +
+              "nRF52840 for an ISP1807, an 8 x 8 x 1 mm system-in-package with the antenna and " +
+              "matching network already solved. To keep the BGA escape sane I defined a 13-pin " +
+              "connector of my own rather than filling the board with via-in-pad. Integration " +
+              "does not mean reinventing the radio. It means being deliberate about which " +
+              "problems are worth owning." },
+      { kind: "photo", src: "public/media/wafer/journal-bare-vs-sip.webp", tone: "light", ratio: "694 / 421",
+        caption: "bare nRF52840 · against the ISP1807 SiP" },
+      { kind: "photo", src: "public/media/wafer/journal-isp1807.webp", ratio: "1044 / 773",
+        caption: "ISP1807 · nRF52840 + antenna · 8 × 8 × 1 mm" },
+      { kind: "stub", h: "The power system kept changing because the product did",
+        body: "The first architecture used a BQ24075 charger next to a MAX17048 fuel gauge, which " +
+              "recreated the problem I was removing mechanically: more parts, more routing, more " +
+              "separate responsibilities. Moving to a Nordic nPM1100 took conversion efficiency " +
+              "from around 78 percent to around 92 percent, roughly a fifth more runtime from the " +
+              "same cell, at the cost of dropping from 1.5 A charging to 400 mA. With a 250 mAh " +
+              "battery that trade was easy. The third revision went to the nPM1300: dual bucks, " +
+              "configurable load switches and a 32 to 800 mA charger set from devicetree." },
+      { kind: "photo", src: "public/media/wafer/journal-classic-charger.webp", tone: "light", ratio: "925 / 873",
+        caption: "BQ24075 + MAX17048 · charger and gauge as two parts" },
+      { kind: "photo", src: "public/media/wafer/journal-npm1300.webp", ratio: "829 / 780",
+        caption: "nPM1300 · charge · rails · telemetry · one I2C device" },
+      { kind: "stub", h: "Firmware had to know the hardware",
+        body: "Once power was a PMIC rather than a collection of circuits, ZMK configuration alone " +
+              "stopped being enough, so I keep a fork on Zephyr 4.1. The piece I care about most " +
+              "is battery reporting. Instead of a separate fuel gauge the firmware selects ADC " +
+              "bank 0x05 on the nPM1300, triggers a VBAT measurement, waits a margin, reads the " +
+              "result registers back over I2C, reconstructs millivolts and hands that to the LiPo " +
+              "percentage curve ZMK already has. It lives in my fork. I have not upstreamed it." },
+      { kind: "photo", src: "public/media/wafer/journal-vbat-driver.webp", ratio: "893 / 810",
+        caption: "VBAT read · ADC bank 0x05 · into ZMK percentage" },
+      { kind: "photo", src: "public/media/wafer/journal-schematic.webp", tone: "light", ratio: "1165 / 789",
+        caption: "final schematic · ISP1807 · nPM1300 · 250 mAh · Tag-Connect SWD" },
+      { kind: "stub", h: "Five hundred switches",
+        body: "Ultra-thin switches are the whole premise, so sourcing became part of the design. " +
+              "Buying PG1316S from Kailh directly at 500 pieces brought them to 0.42 dollars each " +
+              "against about 0.75 at retail; keycaps landed at 0.08, the displays at roughly 10 " +
+              "dollars, and ten N52 magnets cost 3. None of that is glamorous, but a keyboard " +
+              "that is only affordable at one-off prices is a prototype, not a product, and I " +
+              "wanted to know the difference before the case was finished." },
+      { kind: "photo", src: "public/media/wafer/journal-switch-sourcing.webp", tone: "light", ratio: "1500 / 1127",
+        caption: "PG1316S variants · compared before 500 pieces" },
+      { kind: "stub", h: "Thinness is a stack budget",
+        body: "The 4 mm target was never one clever mechanical trick. Ultra-thin switches set the " +
+              "floor, the battery has to sit beside the electronics rather than under them, the " +
+              "display housing eats more height than the flat board around it, and magnets, " +
+              "wiring, reset access, switch travel and the aluminium wall all compete for the " +
+              "same few millimetres. An early printed case proved the point by being wrong: I had " +
+              "modelled the display from a reference that did not match the real part, so the " +
+              "pocket came out smaller than the module. A component can fit in X and Y and still " +
+              "fail the product in Z." },
+      { kind: "photo", src: "public/media/wafer/journal-display-cutout-error.webp", ratio: "3 / 4",
+        caption: "printed case · display pocket cut from the wrong reference" },
+      { kind: "photo", src: "public/media/wafer/journal-thin-profile.webp", ratio: "728 / 471",
+        caption: "section · 5 mm thin zone · 8 mm at the display" },
+      { kind: "photo", src: "public/media/wafer/side-profile.webp", ratio: "3 / 4",
+        caption: "R3 · side profile in hand" },
+      { kind: "stub", h: "The case turned into a manufacturing project",
+        body: "I printed more than thirty enclosure revisions before the first CNC order. Early " +
+              "ones answered fit questions: does the display clear the PCB, where do the magnets " +
+              "sit, can I still reach reset and soft-off. Later ones asked different questions. " +
+              "Could a cutter reach that corner? How is the part held? Which wall is too thin " +
+              "once tolerances are real instead of CAD-perfect? Fusion's CNC simulation answered " +
+              "some of that before anyone cut metal, which is a cheap way to find out that your " +
+              "geometry is unmachinable." },
+      { kind: "photo", src: "public/media/wafer/journal-cnc-sim.webp", tone: "light", ratio: "1082 / 717",
+        caption: "fusion · tooling and fixturing simulation" },
+      { kind: "stub", h: "Where to put material back",
+        body: "The first aluminium run showed me everything at once: tool wear, fixturing and " +
+              "baseline shifts, tolerance stackup, and finishing steps like blasting and " +
+              "anodising that move critical dimensions after the machining is done. That run was " +
+              "an iteration, not a finished enclosure. The useful shift was giving up on removing " +
+              "every last tenth of a millimetre and working out where to add material back so the " +
+              "part could be made repeatably. That turned out to be a much more useful definition " +
+              "of thin." },
+      { kind: "photo", src: "public/media/wafer/journal-cnc-case-b.webp", ratio: "4 / 3",
+        caption: "first CNC run · tolerance stackup visible" },
+      { kind: "photo", src: "public/media/wafer/journal-cnc-case-a.webp", ratio: "3 / 4",
+        caption: "top frame · bottom pocket · two machined halves" },
+      { kind: "stub", h: "Fine pitch by hand",
+        body: "The factory handled the charger section and the SMD passives as a PCBA order. The " +
+              "PG1316S switches and the ISP1807 I soldered myself, which at that pitch is mostly " +
+              "a question of alignment and patience. The antenna area got covers printed in " +
+              "multiple materials with the logo in them, which is the kind of detail nobody asks " +
+              "for and I enjoyed anyway." },
+      { kind: "photo", src: "public/media/wafer/journal-hand-solder.webp", ratio: "3 / 4",
+        caption: "hand-soldered · PG1316S and ISP1807" },
+      { kind: "photo", src: "public/media/wafer/journal-bench.webp", ratio: "4 / 3",
+        caption: "bring-up · bench" },
+      { kind: "stub", h: "Where it stands",
+        body: "Electronics and firmware work. The enclosure has been produced and iterated, and " +
+              "the public repository carries the configuration, hardware files and build notes. " +
+              "What is left is mechanical: tightening the design against what the first CNC run " +
+              "taught me, so the published files describe something I would recommend somebody " +
+              "else build. The honest status is not production complete. The device proves the " +
+              "architecture; making the mechanical result repeatable is the rest of the work. I " +
+              "started this because I wanted a thinner keyboard and kept going because I wanted " +
+              "to know what makes DIY hardware feel finished." },
+      { kind: "photo", src: "public/media/wafer/display-detail.webp", ratio: "3 / 4",
+        caption: "memory-in-pixel · seated in the shell" },
+      { kind: "photo", src: "public/media/wafer/magnets-steel.webp", tone: "light", ratio: "3 / 4",
+        caption: "N52 magnets · mate the halves · hold to steel" },
     ],
     links: [
-      { kind: "GITHUB",  label: "oleksandrmaslov/wafer",          href: "https://github.com/oleksandrmaslov" },
-      { kind: "CASE PDF", label: "case-file · 8 pages · pending", href: "#" },
-      { kind: "ZMK PR",  label: "battery-voltage · merged",       href: "#" },
+      { kind: "GITHUB", label: "oleksandrmaslov/wafer-zmk-config", href: "https://github.com/oleksandrmaslov/wafer-zmk-config" },
+      { kind: "ZMK FORK", label: "zmk · core/move-to-zephyr-4-1", href: "https://github.com/oleksandrmaslov/zmk/tree/core/move-to-zephyr-4-1" },
+      { kind: "JOURNAL", label: "Blueprint build log · 16 entries", href: "https://blueprint.hackclub.com/projects/2800" },
     ],
     prev: "0x0C",
     next: "0x02",
@@ -158,43 +276,70 @@ const PROJECT_DATA = {
      ========================================================= */
   "0x04": {
     addr: "0x04",
-    slug: "tactical-flashlight",
+    slug: "ci-clop",
     file: "Tactical Flashlight v2.html",
-    name: "Tactical Flashlight",
-    tagline: "Volunteer firmware · For Energy for Ukraine",
-    overline: "VOLUNTEER · FIRMWARE · SCHEMATIC",
-    year: "12 / 2025",
+    name: "Ci-Clop",
+    tagline: "Field light interface rebuilt around urgency",
+    overline: "FIRMWARE · INTERACTION · PRODUCTION",
+    year: "01 / 2026 →",
     place: "Munich → Kyiv",
-    role: "Volunteer · firmware · schematic",
-    stack: ["C", "ARM Cortex-M0", "PY32F002A", "KiCad"],
+    role: "Embedded firmware · interaction · production integration",
+    stack: ["C", "ARM Cortex-M0", "PY32F002A", "Black Magic Probe", "GitHub Actions"],
     primitive: "cone",
     model: "models/tactical_flashlight.glb",
     demoSize: { d: 120, w: 28, h: 28 },
     metrics: [
-      { value: "PY32", unit: "F002A · ARM-M0" },
-      { value: "2",    unit: "light modes + SOS" },
-      { value: "1",    unit: "schematic · prod-ready" },
+      { value: "1→2", unit: "physical buttons" },
+      { value: "3",   unit: "legacy brightness steps" },
+      { value: "4",   unit: "gesture classes" },
     ],
     intro:
-      "Volunteer firmware written in C for an ARM Cortex-M0 (PY32F002A) — two light modes " +
-      "with saved brightness, SOS, and battery indication on addressable LEDs. I also drew " +
-      "the schematic and prepared the prototype for production in China. The fund delivers " +
-      "torches to frontline volunteers; my part was making one cheap MCU do exactly what " +
-      "the soldiers in the field actually need it to do, in the dark, with cold hands.",
+      "Our older field lights had one button and a three-step brightness carousel, so every " +
+      "press advanced to the next state and off was just the position you eventually reached. " +
+      "That is fine on a workbench and bad when somebody needs the light gone immediately. " +
+      "Ci-Clop rebuilds the interaction around that moment: two controls with separate jobs, " +
+      "direct shutoff, brightness the user sets and the device remembers, and an SOS mode.",
     sections: [
-      { kind: "stub", h: "Brief",
-        body: "[ writing pending · 22-05 · why PY32F002A · why volunteer firmware can't be 'fine' · cost / sourcing ]" },
-      { kind: "stub", h: "Modes",
-        body: "[ writing pending · 22-05 · brightness memory, SOS, low-batt indication, no-state-loss across power cycles ]" },
-      { kind: "photo", caption: "PCB · rev 1 · ready for production" },
-      { kind: "stub", h: "Production",
-        body: "[ writing pending · 22-05 · BOM, gerbers, panelisation notes, what changed for manufacturing ]" },
-      { kind: "photo", caption: "torches · post-assembly · in the field" },
+      { kind: "stub", h: "Off should not be a position in a carousel",
+        body: "One button, three brightness stages, and off reached by pressing through the rest. " +
+              "It was easy to build and easy to explain, and it worked because whoever held the " +
+              "light knew which state it was in. Under pressure that assumption breaks: you " +
+              "should not have to remember whether the next press means brighter, dimmer or " +
+              "finally dark. The second physical control exists so shutoff can be its own action " +
+              "instead of a position in a sequence. One extra button removes a surprising amount " +
+              "of doubt." },
+      { kind: "photo", src: "public/media/ci-clop/previous-light.webp", ratio: "16 / 9",
+        caption: "previous generation · one button · three steps" },
+      { kind: "stub", h: "Two buttons became an input language",
+        body: "The firmware recognises single, double and triple presses and a long hold. The " +
+              "point is not to hide as many features as possible behind gestures, but to match " +
+              "how hard something is to trigger against how much it costs to trigger by accident. " +
+              "A long hold suits brightness because the action is continuous. A triple press suits " +
+              "SOS because nobody does it without meaning to. Common actions stay a single press." },
+      { kind: "video", src: "public/media/ci-clop/bringup.mp4", ratio: "9 / 16",
+        caption: "bench bring-up · 01 / 2026 · button and output" },
+      { kind: "stub", h: "Brightness belongs to the user",
+        body: "Instead of three fixed stages, a hold ramps the level and the firmware stores what " +
+              "you chose, so the light comes back where you left it. It also signals when the " +
+              "ramp reaches its minimum or maximum rather than letting you keep holding while " +
+              "nothing changes. SOS and battery indication borrow the same outputs temporarily " +
+              "without destroying the lighting state underneath, which is most of the work in a " +
+              "device with no screen: several state machines competing for one LED, resolved " +
+              "before the user notices." },
+      { kind: "stub", h: "The firmware created a manufacturing problem",
+        body: "Adding Black Magic Probe support fixed my workflow and exposed the next " +
+              "bottleneck. Volunteers assembling these should not need to know about SWD, GDB, " +
+              "target names or which ELF is current. Ci-Clop became one of the first products " +
+              "wired into the Iskra release path, where private source builds an artifact an " +
+              "approved station can flash without ever seeing that source. An early idea to make " +
+              "the light double as a power bank was dropped after it caused more problems than it " +
+              "solved; the product got better by doing less." },
+      { kind: "photo", src: "public/media/ci-clop/board-bringup.webp", ratio: "2 / 1",
+        caption: "board · bring-up hardware" },
     ],
     links: [
-      { kind: "GITHUB",  label: "oleksandrmaslov/tac-light", href: "https://github.com/oleksandrmaslov" },
-      { kind: "CASE PDF", label: "case-file · 6 pages · pending", href: "#" },
       { kind: "PROJECT", label: "Energy for Ukraine", href: "https://energyforukraine.de/" },
+      { kind: "TOOLING", label: "Flashed through Iskra", href: "https://github.com/oleksandrmaslov/iskra" },
     ],
     prev: "0x03",
     next: "0x05",
@@ -202,7 +347,7 @@ const PROJECT_DATA = {
 };
 
 /* =========================================================
-   0x09 · ISKRA
+   0x03 · ISKRA
    Full project record threaded into the canonical by-address
    navigation ring.
    ========================================================= */
@@ -211,43 +356,75 @@ PROJECT_DATA["0x03"] = {
   slug: "iskra",
   file: "Iskra v3.html",
   name: "Iskra",
-  tagline: "Volunteer flashing station · zero firmware knowledge needed",
-  overline: "FLASHING STATION · FACTORY-SAFE · WPF",
-  year: "05 / 2026",
+  tagline: "Factory flashing without the factory engineer",
+  overline: "PRODUCTION SYSTEM · TOOLING · TRUST",
+  year: "05 / 2026 →",
   place: "Munich → Kyiv",
-  role: "Tooling · C# · state machine",
-  stack: ["C#", ".NET / WPF", "Black Magic Probe", "arm-none-eabi-gdb", "SQLite", "Ed25519"],
+  role: "Architecture · application · security model · tooling",
+  stack: ["C#", ".NET / WPF", "Avalonia", "Black Magic Probe", "arm-none-eabi-gdb", "SQLite", "Ed25519"],
   primitive: "slab",
   model: "models/iskra-mark.glb",
   demoSize: { d: 120, w: 28, h: 28 },
   metrics: [
-    { value: "2-PHASE", unit: "scan → flash · safe-by-design" },
-    { value: "Ed25519", unit: "signed catalog · SHA-256" },
-    { value: "0",       unit: "commands typed by volunteers" },
+    { value: "3",   unit: "operator languages" },
+    { value: "3",   unit: "trust repositories" },
+    { value: "ARM", unit: "Cortex-M targets" },
   ],
   intro:
-    "Iskra (Іскра — 'spark') is a Windows flashing station for Energy for Ukraine volunteers " +
-    "who have never written a firmware command in their life. They pick their name, a batch, " +
-    "and a product from a signed catalog, plug in the board, and press one big FLASH key. " +
-    "Underneath, a two-phase state machine scans the target first — and bails safely before " +
-    "touching flash if the wrong board is connected — then flashes and verifies, logging every " +
-    "unit. It turns a GDB-and-Black-Magic-Probe ritual into something a volunteer can run a " +
-    "hundred times a night without ever being able to brick a board.",
+    "Iskra started as a way for volunteers to flash ARM Cortex-M boards without learning " +
+    "GDB, and turned into the trust layer around that: signed firmware catalogs, pre-flight " +
+    "checks, controlled binary distribution and a record of every attempt. Someone approved " +
+    "to build a device can now do it without receiving the firmware source or my development " +
+    "environment. That separation is the part I find interesting. Flashing stops being an " +
+    "engineer\u2019s command and becomes a production operation with rules.",
   sections: [
-    { kind: "stub", h: "Why",
-      body: "[ writing pending · the volunteer reality: no toolchain, no terminal, no room for a bricked board · why a GUI beats a wiki page ]" },
-    { kind: "stub", h: "Two-phase safety",
-      body: "[ writing pending · scan-only phase 1 (swdp_scan, no attach/load) · E_TARGET_MISMATCH bails before any write · phase 2 flash + compare-sections ]" },
-    { kind: "photo", caption: "station · operator view · one FLASH key" },
-    { kind: "stub", h: "Trust chain",
-      body: "[ writing pending · Ed25519-signed catalog · SHA-256 preflight · batch lock pins product+version for a lot · SQLite history + CSV ]" },
-    { kind: "stub", h: "Packaging",
-      body: "[ writing pending · GitHub device-flow firmware fetch · DPAPI token storage · toolchain-bundling installer · CLI parity ]" },
-    { kind: "photo", caption: "flashing line · Black Magic Probe · field assembly" },
+    { kind: "stub", h: "The last step still needed me",
+      body: "Energy for Ukraine could already share models, ship components and get volunteers " +
+            "soldering. Programmable hardware left one dependency at the end: somebody had to " +
+            "find the right firmware, know which MCU it belonged to, wire the probe, invoke the " +
+            "ARM toolchain, and judge whether the flash had actually worked. That is a normal " +
+            "development workflow and a poor manufacturing interface. Iskra began by making the " +
+            "safe path something an operator could follow without first learning how I work." },
+    { kind: "photo", src: "public/media/iskra/bench.webp", ratio: "3 / 4",
+      caption: "ci-clop panel · tag-connect · iskra under test" },
+    { kind: "stub", h: "The flash button is the least interesting part",
+      body: "A flashing GUI demos easily. A trustworthy flashing transaction does not. Before " +
+            "anything is written, the workflow has to answer whether the catalog is trusted, " +
+            "whether the release is revoked, whether this operator may fetch the artifact, " +
+            "whether its hash matches, whether the load map belongs to the connected target, " +
+            "whether exactly one compatible probe is present, and whether GDB exists at all. Any " +
+            "of those failing stops the operation instead of improvising around it, and the " +
+            "result is recorded either way." },
+    { kind: "photo", src: "public/media/iskra/station.webp", tone: "light", ratio: "434 / 313",
+      caption: "avalonia build · probe missing · flash stays blocked" },
+    { kind: "stub", h: "Manufacturing access is not source access",
+      body: "I wanted to approve a person to build a device, which means handing them compiled " +
+            "firmware and nothing else. GitHub has no permission for that: read access to " +
+            "private releases is read access to the repository. So I moved the boundary into the " +
+            "architecture. A public signed catalog points at a private repository holding only " +
+            "compiled artifacts, while source, history and CI stay in a separate private " +
+            "repository the operator never touches. Each person signs in as themselves, so " +
+            "approval and revocation happen one person at a time." },
+    { kind: "stub", h: "Fail closed, but say why",
+      body: "GitHub returns 404 when you cannot see a private repository, which is right for " +
+            "privacy and useless as an error message. Early on that collapsed into a generic " +
+            "download failure telling the operator to check their network, when the real answer " +
+            "was that their account had not been approved. The tool now separates no access, not " +
+            "signed in, expired authorization, missing asset and genuine transport failure. A " +
+            "volunteer can act on those without calling the person who wrote the tool." },
+    { kind: "stub", h: "What is still open",
+      body: "Iskra covers the software side of a controlled station. The debug probe is still a " +
+            "cost and availability bottleneck for distributed manufacturing, so the next " +
+            "experiment is a cheap ARM probe built from common development boards, ideally " +
+            "provisioned by Iskra before it provisions anything else. The repository also keeps " +
+            "its production gates visible: hardware-in-the-loop acceptance and the remaining " +
+            "release checks are not done. I would rather say that than put a production-ready " +
+            "badge on a manufacturing tool." },
+    { kind: "video", src: "public/media/iskra/volunteer-build.mp4", ratio: "9 / 16",
+      caption: "volunteer assembly · 05 / 2026 · why the firmware step had to scale" },
   ],
   links: [
-    { kind: "GITHUB",  label: "oleksandrmaslov/iskra", href: "https://github.com/oleksandrmaslov/iskra" },
-    { kind: "INSTALLER", label: "Iskra setup · Windows", href: "https://github.com/oleksandrmaslov/iskra/releases" },
+    { kind: "GITHUB", label: "oleksandrmaslov/iskra", href: "https://github.com/oleksandrmaslov/iskra" },
     { kind: "PROJECT", label: "Energy for Ukraine", href: "https://energyforukraine.de/" },
   ],
   prev: "0x02",
@@ -286,12 +463,14 @@ PROJECT_DATA["0x06"] = {
   sections: [
     { kind: "stub", h: "Type through the board",
       body: "Select a key, then press the key you want it to become. It binds, advances to the next key in reading order, and waits — you set your base layer by typing your base layer. The application is running on a keyboard; hunting for A in a searchable list while your finger rests on A is the central absurdity of every configurator, and it is free to fix." },
-    { kind: "photo", src: "public/zmk-mac.png", caption: "the editor · the canvas is the product, chrome only frames it" },
+    { kind: "photo", src: "public/media/wafer-studio/editor.webp", ratio: "1 / 1",
+      caption: "the editor · the canvas is the product, chrome only frames it" },
     { kind: "stub", h: "Fewer decisions, not fewer features",
       body: "Alphas are read off the current layer and matched against QWERTY, Colemak, Colemak-DH, Dvorak and Workman — recognised, they permute to any of the others in one step, letters only. A layer copies as a single undo entry rather than forty-two. Painting a hold-tap across the home row wraps each key instead of replacing it, so every key keeps its own letter: home-row mods in eight clicks. Mirror is offered per key, and only when the board actually has an opposite one." },
     { kind: "stub", h: "One light, one law",
       body: "Surfaces carry no colour of their own. Colour appears only where an edge turns away from the light and splits it: distance decides brightness, bearing decides hue, steepness decides whether any colour appears at all. The whole application shares one light source and every dispersive edge paints its gradient in viewport space, so moving the light re-disperses the entire interface coherently. The accent is achromatic — what marks an element as primary is its position on the dispersion scale, not a brand hue." },
-    { kind: "photo", src: "public/og-card.png", caption: "the mark · dispersion at rest" },
+    { kind: "photo", src: "public/media/wafer-studio/mark.webp", ratio: "1200 / 630",
+      caption: "the mark · dispersion at rest" },
     { kind: "stub", h: "The protocol boundary",
       body: "A ZMK Studio binding is one behavior id and two integers, with no field that can reference another binding — behaviour composition is impossible through the protocol, not merely unbuilt. Combos, macros, tap-dance, conditional layers, encoders, lighting and hold-tap timing are not exposed at all. Those need firmware work upstream in ZMK; any UI here would be a UI over nothing. Wafer Studio shows only what the connected keyboard reports it can do." },
     { kind: "stub", h: "Browser and desktop",
@@ -375,36 +554,75 @@ PROJECT_DATA["0x05"] = {
   slug: "venovisor",
   file: "Venovisor.html",
   name: "Venovisor",
-  tagline: "Wearable eye-level interface",
-  overline: "WEARABLE EXPERIMENT · HARDWARE · DISPLAYS",
-  year: "[ year ]",
-  place: "[ place ]",
-  role: "[ role ]",
-  stack: ["Hardware", "Volunteer", "Displays"],
+  tagline: "Firmware for a device that already had users",
+  overline: "FIRMWARE SYSTEM · MEDICAL · FIELD",
+  year: "06 / 2026 →",
+  place: "Munich, DE",
+  role: "Embedded firmware · device behaviour · production integration",
+  stack: ["C", "PY32", "ARM Cortex-M0", "Iskra pipeline"],
   primitive: "slab",
   model: null,           // no GLB yet - the page draws the same node-shell proxy the universe shows
-  demoSize: { d: 48, w: 32, h: 10 },   // [ real dimensions pending ]
+  demoSize: { d: 48, w: 32, h: 10 },
   metrics: [
-    { value: "TBD", unit: "[ headline number ]" },
-    { value: "TBD", unit: "[ scale or scope ]" },
-    { value: "TBD", unit: "[ outcome ]" },
+    { value: "1", unit: "fielded device family" },
+    { value: "3", unit: "production layers shared with Ci-Clop" },
   ],
   intro:
-    "[ writing pending · A compact wearable interface exploring low-power information at eye level. · this paragraph wants the one-screen " +
-    "version: what it is, who it was for, and the single decision that shaped it ]",
+    "Venovisor existed before I joined it. Energy for Ukraine had already built the device, " +
+    "delivered it, and medics in Ukraine were using it. My work starts at the next " +
+    "generation: adapting the firmware to new hardware and behaviour, and moving the device " +
+    "onto the same controlled production pipeline as Ci-Clop. The earlier hardware and " +
+    "enclosure are not mine and I am not presenting them that way. What interests me is what " +
+    "changes when the user already exists.",
   sections: [
-    { kind: "stub", h: "Why",
-      body: "[ writing pending · the problem in one paragraph · what existed before and why it did not hold ]" },
-    { kind: "stub", h: "How it works",
-      body: "[ writing pending · the mechanism · the one design decision worth explaining ]" },
-    { kind: "photo", caption: "[ photo pending · venovisor ]" },
-    { kind: "stub", h: "What it cost",
-      body: "[ writing pending · the hard part · what was cut and why ]" },
+    { kind: "stub", h: "This did not start on my desk",
+      body: "Most embedded projects begin with a blank schematic. Mine began partway through a " +
+            "product life. Energy for Ukraine had joined an existing Ukrainian venovisor effort " +
+            "in 2024; the earlier prototype was judged too bulky, and the team built a more " +
+            "compact version with USB-C charging and status indication. Those decisions are " +
+            "project history, not my authorship. What matters for my work is what came after: " +
+            "the devices were built, shipped and used, so the person on the other end of a " +
+            "firmware change is not hypothetical." },
+    { kind: "photo", src: "public/media/venovisor/delivered.webp", tone: "light", ratio: "3 / 4",
+      caption: "previous generation · clinical use · 12 / 2025" },
+    { kind: "stub", h: "Real users make small decisions heavier",
+      body: "A confusing button gesture on a hobby project is an annoyance. An ambiguous state " +
+            "transition on a tool used under pressure is a product fault. So the interesting " +
+            "constraint is not a list of MCU features, it is adapting the next hardware " +
+            "generation without losing the predictability a fielded device has already earned. " +
+            "That is also why the page is scoped to firmware rather than claiming the whole " +
+            "device: the question I can actually answer is how the next controller should behave " +
+            "and how that behaviour stays identical across manufactured units." },
+    { kind: "stub", h: "Reuse the platform, not the product",
+      body: "The Venovisor firmware shares a technical lineage with Ci-Clop: button handling, " +
+            "high-power output control, power management, persistent settings and the same " +
+            "PY32-class environment. Reuse is only worth having if it leaves room for " +
+            "product-specific behaviour. A medical device should not inherit a field light\u2019s " +
+            "interaction model just because the code already exists. The shared layer is the " +
+            "control architecture; the state model on top of it belongs to this product." },
+    { kind: "video", src: "public/media/venovisor/printing.mp4", ratio: "16 / 9",
+      caption: "production context · venovisor parts printing" },
+    { kind: "stub", h: "Production is the shared layer",
+      body: "The strongest thing Ci-Clop and Venovisor have in common is not their interface, it " +
+            "is how they are released. Both build from private source into compiled artifacts " +
+            "published to a shared distribution repository, referenced through a signed Iskra " +
+            "catalog and flashed by an approved operator who never sees the source. By August " +
+            "2026 the Venovisor firmware CI was wired into that path. The products stay " +
+            "different; the manufacturing trust model does not have to." },
     { kind: "stub", h: "Where it stands",
-      body: "[ writing pending · current state · what would come next ]" },
-    { kind: "photo", caption: "[ photo pending · venovisor ]" },
+      body: "This is active development on the next hardware generation, not a retrospective " +
+            "claim over the original device. The firmware repository is separated and connected " +
+            "to the Iskra publishing architecture, and the wider controller work is still " +
+            "moving. The next milestone is not another screenshot. It is validating the new " +
+            "behaviour against the manufacturing and medical-use context that already exists " +
+            "around this device family." },
+    { kind: "photo", src: "public/media/venovisor/in-use.webp", ratio: "9 / 16",
+      caption: "previous generation · field medic kit" },
   ],
-  links: [],             // [ artifacts pending: repo, release, live URL, writeup ]
+  links: [
+    { kind: "PROJECT", label: "Energy for Ukraine", href: "https://energyforukraine.de/" },
+    { kind: "TOOLING", label: "Released through Iskra", href: "https://github.com/oleksandrmaslov/iskra" },
+  ],
   prev: "0x04",
   next: "0x06",
 };

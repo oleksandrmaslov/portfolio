@@ -49,6 +49,7 @@ jobs:
             --exclude='_site/' \
             --exclude='face-test.html' \
             --exclude='tools/' \
+            --exclude='studies/' \
             --exclude='*.md' \
             ./ _site/
 

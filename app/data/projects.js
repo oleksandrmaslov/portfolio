@@ -78,11 +78,13 @@
     },
     {
       addr: "0x05", slug: "venovisor", name: "Venovisor",
-      nodeClass: "WEARABLE EXPERIMENT", state: "FORMING", featured: false,
+      nodeClass: "FIRMWARE SYSTEM", state: "ACTIVE DEVELOPMENT", featured: false,
       file: "Venovisor.html",
-      statement: "A compact wearable interface exploring low-power information at eye level.",
-      short: "Wearable eye-level interface",
-      tags: ["Hardware", "Volunteer", "Displays"],
+      // Scope is firmware. The device, its enclosure and the earlier redesign
+      // predate this work and are not claimed here; see app/projects/data.jsx.
+      statement: "Firmware for the next generation of a vein-finding device used by medics in Ukraine.",
+      short: "Vein-finder firmware · next generation",
+      tags: ["Firmware", "Medical", "Volunteer"],
       model: mdl({ rigFit: 2.6 }),   // node-shell proxy until a GLB lands
     },
     {

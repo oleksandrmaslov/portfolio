@@ -104,6 +104,93 @@ DM Mono that nothing ever used.
 changes, update `app/design-system/foundations.jsx` in the same commit so the
 reference surface does not describe a system the site no longer has.
 
+## Case-study media and copy
+
+`studies/` is a 207 MB working editorial pack: long-form case studies, an
+authorship-boundary README, and the original photo and video archive. It is
+**excluded from the deploy** and must stay that way. Nothing in it is served.
+
+`public/media/<slug>/` holds the derivatives the pages actually load. Rebuild
+them with `python tools/media/build-media.py`: stills become WebP at a 1500 px
+long edge, clips are re-encoded to a 960 px long edge, CRF 29, no audio, with
+`+faststart`. That took the set from 25.1 MB to 5.3 MB.
+
+The encoder is `ffmpeg-static`, installed under `tools/media/node_modules` by
+`npm install --prefix tools/media` and gitignored, so nothing has to sit on the
+system PATH. The build script falls back to copying clips verbatim if it is
+missing, and says so.
+
+`python tools/media/fetch-blueprint.py` pulls the Wafer build-journal images
+from blueprint.hackclub.com and re-encodes them into `public/media/wafer/` with
+a `journal-` prefix. It prints the exact `ratio` string for each file, ready to
+paste into a record.
+
+A story block in `app/projects/data.jsx` is one of three kinds:
+
+```js
+{ kind: "stub",  h: "Heading", body: "..." }
+{ kind: "photo", src: "public/media/wafer/side-profile.webp", ratio: "3 / 4", caption: "..." }
+{ kind: "video", src: "public/media/ci-clop/bringup.mp4",     ratio: "9 / 16", caption: "..." }
+```
+
+An earlier pass added a fourth `diagram` kind rendering inline SVG, on the
+theory that Iskra's trust boundary could not be photographed. It was removed:
+real material beat it. The operator-station screenshot shows the product, the
+fail-closed state and the Ci-Clop product row all at once, which no synthesised
+figure did. Prefer the real artefact.
+
+`tone: "light"` flips the lens for a light-background image. The default assumes
+a dark subject, so a white schematic or a light UI screenshot punches a hole
+where the lens lands. Set it on anything above roughly 140 mean luminance.
+
+**Captions are labels, not sentences.** The house register is terse, lowercase
+leaning, middle-dot separated, no terminal period and no commentary:
+`nPM1300 · charge · rails · telemetry · one I2C device`. Authorship boundaries
+belong in the body copy; a caption should never carry a disclaimer.
+
+`ratio` is per block because the archive is mixed: 27 of 40 stills and 15 of 19
+clips are portrait, and the rest run 4:3, 16:9, 2:1 and near-square. Omitting it
+falls back to the media's intrinsic aspect. `AsciiMediaFigure` picks a measure
+from the ratio, so a portrait frame does not occupy the full 860 px column.
+
+Video runs through the same ASCII lens as the stills: `AsciiPhoto.loadVideo()`
+binds a `<video>` as the sampled WebGL texture and re-uploads a frame per tick
+while the clip plays. Clips are muted, looped, `playsInline`, gated on an
+IntersectionObserver so an off-screen figure decodes nothing, and carry a
+play/pause control. `window.AsciiPhotoFigure` remains an alias of
+`AsciiMediaFigure` for older call sites.
+
+**Contexts are recycled and this is load-bearing.** Every figure is a WebGL
+context and browsers cap concurrent contexts near 16, silently killing the
+oldest past that. The Wafer case file alone has 21 figures plus the page's own
+3D hero rig; before recycling, five figures and the hero all lost their context
+on one scroll. A figure more than 1400 px outside the viewport therefore
+disposes its engine, calls `WEBGL_lose_context`, and bumps a generation counter
+that remounts the canvas. The remount is required: a canvas whose context was
+explicitly lost can never return another one. Do not "optimise" the second
+observer away.
+
+### Authorship boundaries, which are not style choices
+
+`studies/case_studies/00_README.md` records what each project may and may not
+claim, and the shipped copy follows it. Do not soften these while editing:
+
+- **Wafer.** The nPM1300 battery work lives in a personal ZMK fork. Do not write
+  that it was merged upstream. The first CNC run was an iteration that exposed
+  tolerance problems, not finished production, and the enclosure was ordered,
+  not milled personally.
+- **Ci-Clop.** Scope is firmware, interaction and production integration. Do not
+  claim schematic or PCB authorship. The abandoned power-bank direction is not a
+  current feature.
+- **Venovisor.** The device, its enclosure and the earlier redesign predate this
+  work. The page claims the next firmware generation only. Field photographs
+  establish the context the firmware must respect; they are not evidence for it.
+  Prefer "used by medics" over any clinical or diagnostic-performance claim.
+- **Iskra.** Prefer exact properties (signed metadata, hash verification,
+  source/artifact separation, per-person revocation, fail-closed) over the word
+  secure, and do not call it production ready while its own roadmap keeps
+  acceptance gates open.
+
 ## Shared pointer effects
 
 `app/shared/styles/pointer.css` is the single square-reticle stylesheet.

@@ -1,0 +1,318 @@
+[
+  {
+    "path": "MEDIA_MANIFEST.md",
+    "bytes": 7555
+  },
+  {
+    "path": "case_studies/00_README.md",
+    "bytes": 5973
+  },
+  {
+    "path": "case_studies/01_PORTFOLIO_UNIVERSE.md",
+    "bytes": 7351
+  },
+  {
+    "path": "case_studies/02_WAFER.md",
+    "bytes": 15377
+  },
+  {
+    "path": "case_studies/03_ISKRA.md",
+    "bytes": 18592
+  },
+  {
+    "path": "case_studies/04_CI_CLOP.md",
+    "bytes": 18935
+  },
+  {
+    "path": "case_studies/05_VENOVISOR_FIRMWARE.md",
+    "bytes": 12481
+  },
+  {
+    "path": "case_studies/06_ENERGY_FOR_UKRAINE_EDITORIAL.md",
+    "bytes": 14993
+  },
+  {
+    "path": "case_studies/07_CONTENT_LIBRARY.md",
+    "bytes": 10418
+  },
+  {
+    "path": "case_studies/08_RESEARCH_NOTES_AND_MEDIA.md",
+    "bytes": 10459
+  },
+  {
+    "path": "case_studies/ALL_CASE_STUDIES.md",
+    "bytes": 114941
+  },
+  {
+    "path": "media/00_indexes/key_photos_contact.jpg",
+    "bytes": 447993
+  },
+  {
+    "path": "media/00_indexes/sheet_01.jpg",
+    "bytes": 192358
+  },
+  {
+    "path": "media/00_indexes/sheet_02.jpg",
+    "bytes": 177522
+  },
+  {
+    "path": "media/00_indexes/sheet_03.jpg",
+    "bytes": 263489
+  },
+  {
+    "path": "media/00_indexes/sheet_04.jpg",
+    "bytes": 168794
+  },
+  {
+    "path": "media/00_indexes/sheet_05.jpg",
+    "bytes": 233518
+  },
+  {
+    "path": "media/00_indexes/sheet_06.jpg",
+    "bytes": 149152
+  },
+  {
+    "path": "media/00_indexes/sheet_07.jpg",
+    "bytes": 21123
+  },
+  {
+    "path": "media/00_indexes/wafer_contact.jpg",
+    "bytes": 141665
+  },
+  {
+    "path": "media/ci_clop/board_and_bringup/photo_363@26-01-2026_10-01-52.jpg",
+    "bytes": 158291
+  },
+  {
+    "path": "media/ci_clop/board_and_bringup/video_37@26-01-2026_10-01-52.mp4",
+    "bytes": 8417850
+  },
+  {
+    "path": "media/ci_clop/board_and_bringup/video_38@26-01-2026_10-01-52.mp4",
+    "bytes": 18107937
+  },
+  {
+    "path": "media/ci_clop/board_and_bringup/video_39@26-01-2026_10-02-01.mp4",
+    "bytes": 8417850
+  },
+  {
+    "path": "media/ci_clop/old_interface/photo_131@30-11-2024_06-35-05.jpg",
+    "bytes": 127357
+  },
+  {
+    "path": "media/ci_clop/old_interface/photo_212@16-09-2025_03-28-09.jpg",
+    "bytes": 77704
+  },
+  {
+    "path": "media/ci_clop/old_interface/photo_218@18-09-2025_04-27-01.jpg",
+    "bytes": 131882
+  },
+  {
+    "path": "media/energy_for_ukraine/field_videos/video_2026-06-22_01-39-16.mp4",
+    "bytes": 29515519
+  },
+  {
+    "path": "media/energy_for_ukraine/field_videos/video_58@23-07-2026_19-33-01.mp4",
+    "bytes": 30459993
+  },
+  {
+    "path": "media/energy_for_ukraine/field_videos/video_59@23-07-2026_19-33-01.mp4",
+    "bytes": 2587987
+  },
+  {
+    "path": "media/energy_for_ukraine/field_videos/video_60@16-08-2026_18-16-01.mp4",
+    "bytes": 10039005
+  },
+  {
+    "path": "media/energy_for_ukraine/field_videos/video_61@17-08-2026_18-54-01.mp4",
+    "bytes": 1368488
+  },
+  {
+    "path": "media/energy_for_ukraine/field_videos/video_62@20-08-2026_18-34-48.mp4",
+    "bytes": 1248258
+  },
+  {
+    "path": "media/energy_for_ukraine/field_videos/video_63@21-08-2026_14-11-01.mp4",
+    "bytes": 6764449
+  },
+  {
+    "path": "media/energy_for_ukraine/product_demos/video_55@15-06-2026_17-35-15.mp4",
+    "bytes": 11706709
+  },
+  {
+    "path": "media/energy_for_ukraine/product_demos/video_56@15-06-2026_17-35-15.mp4",
+    "bytes": 7585170
+  },
+  {
+    "path": "media/energy_for_ukraine/product_demos/video_57@18-06-2026_17-04-01.mp4",
+    "bytes": 14273877
+  },
+  {
+    "path": "media/energy_for_ukraine/selected_photos/photo_131@30-11-2024_06-35-05.jpg",
+    "bytes": 127357
+  },
+  {
+    "path": "media/energy_for_ukraine/selected_photos/photo_183@23-02-2025_00-34-52.jpg",
+    "bytes": 92542
+  },
+  {
+    "path": "media/energy_for_ukraine/selected_photos/photo_212@16-09-2025_03-28-09.jpg",
+    "bytes": 77704
+  },
+  {
+    "path": "media/energy_for_ukraine/selected_photos/photo_218@18-09-2025_04-27-01.jpg",
+    "bytes": 131882
+  },
+  {
+    "path": "media/energy_for_ukraine/selected_photos/photo_253@09-11-2025_04-10-18.jpg",
+    "bytes": 293256
+  },
+  {
+    "path": "media/energy_for_ukraine/selected_photos/photo_306@11-12-2025_10-01-09.jpg",
+    "bytes": 84762
+  },
+  {
+    "path": "media/energy_for_ukraine/selected_photos/photo_311@13-12-2025_15-16-49.jpg",
+    "bytes": 161970
+  },
+  {
+    "path": "media/energy_for_ukraine/selected_photos/photo_328@22-12-2025_16-23-11.jpg",
+    "bytes": 272430
+  },
+  {
+    "path": "media/energy_for_ukraine/selected_photos/photo_337@28-12-2025_11-59-58.jpg",
+    "bytes": 241767
+  },
+  {
+    "path": "media/energy_for_ukraine/selected_photos/photo_357@25-01-2026_03-50-24.jpg",
+    "bytes": 136364
+  },
+  {
+    "path": "media/energy_for_ukraine/selected_photos/photo_363@26-01-2026_10-01-52.jpg",
+    "bytes": 158291
+  },
+  {
+    "path": "media/energy_for_ukraine/selected_photos/photo_375@27-01-2026_10-01-08.jpg",
+    "bytes": 110722
+  },
+  {
+    "path": "media/energy_for_ukraine/selected_photos/photo_380@27-01-2026_14-01-06.jpg",
+    "bytes": 147509
+  },
+  {
+    "path": "media/energy_for_ukraine/selected_photos/photo_412@23-02-2026_13-31-01.jpg",
+    "bytes": 263185
+  },
+  {
+    "path": "media/energy_for_ukraine/selected_photos/photo_420@15-03-2026_21-17-01.jpg",
+    "bytes": 63969
+  },
+  {
+    "path": "media/energy_for_ukraine/selected_photos/photo_445@09-04-2026_14-07-01.jpg",
+    "bytes": 211138
+  },
+  {
+    "path": "media/energy_for_ukraine/selected_photos/photo_464@01-05-2026_16-15-14.jpg",
+    "bytes": 140926
+  },
+  {
+    "path": "media/energy_for_ukraine/selected_photos/photo_478@20-05-2026_18-20-08.jpg",
+    "bytes": 143310
+  },
+  {
+    "path": "media/energy_for_ukraine/selected_photos/photo_501@21-06-2026_16-23-01.jpg",
+    "bytes": 68026
+  },
+  {
+    "path": "media/energy_for_ukraine/selected_photos/photo_511@08-07-2026_17-07-01.jpg",
+    "bytes": 126089
+  },
+  {
+    "path": "media/energy_for_ukraine/selected_photos/photo_518@18-07-2026_18-59-01.jpg",
+    "bytes": 371103
+  },
+  {
+    "path": "media/energy_for_ukraine/selected_photos/photo_520@21-07-2026_20-17-01.jpg",
+    "bytes": 112069
+  },
+  {
+    "path": "media/iskra/volunteer_production/video_47@11-05-2026_03-48-20.mp4",
+    "bytes": 10418446
+  },
+  {
+    "path": "media/iskra/volunteer_production/video_48@11-05-2026_03-48-20.mp4",
+    "bytes": 7980322
+  },
+  {
+    "path": "media/iskra/volunteer_production/video_49@11-05-2026_03-48-20.mp4",
+    "bytes": 4218158
+  },
+  {
+    "path": "media/iskra/volunteer_production/video_50@11-05-2026_03-48-20.mp4",
+    "bytes": 11873192
+  },
+  {
+    "path": "media/iskra/volunteer_production/video_51@11-05-2026_03-48-20.mp4",
+    "bytes": 12049670
+  },
+  {
+    "path": "media/venovisor/field_context/photo_311@13-12-2025_15-16-49.jpg",
+    "bytes": 161970
+  },
+  {
+    "path": "media/venovisor/field_context/photo_328@22-12-2025_16-23-11.jpg",
+    "bytes": 272430
+  },
+  {
+    "path": "media/venovisor/field_context/photo_412@23-02-2026_13-31-01.jpg",
+    "bytes": 263185
+  },
+  {
+    "path": "media/venovisor/field_context/photo_420@15-03-2026_21-17-01.jpg",
+    "bytes": 63969
+  },
+  {
+    "path": "media/venovisor/field_context/photo_464@01-05-2026_16-15-14.jpg",
+    "bytes": 140926
+  },
+  {
+    "path": "media/venovisor/production/video_54@13-05-2026_18-02-01.mp4",
+    "bytes": 8926015
+  },
+  {
+    "path": "media/wafer/final_photos/1659C908-D87A-4C98-91E0-DF9A299454D3.jpeg",
+    "bytes": 400248
+  },
+  {
+    "path": "media/wafer/final_photos/247C37C1-66B4-434C-ADB9-725A015F3932.jpeg",
+    "bytes": 267369
+  },
+  {
+    "path": "media/wafer/final_photos/54F9E90A-F267-44B3-82BE-1908FD0D0013.jpeg",
+    "bytes": 211965
+  },
+  {
+    "path": "media/wafer/final_photos/78B1E795-ED86-4470-97B0-84D715563822.jpeg",
+    "bytes": 219767
+  },
+  {
+    "path": "media/wafer/final_photos/A872F6DC-BCDB-4080-9207-5EBCAB41425A.jpeg",
+    "bytes": 357009
+  },
+  {
+    "path": "media/wafer/final_photos/ADCB7626-7225-49B1-8A26-B39CEEDE1591.jpeg",
+    "bytes": 347220
+  },
+  {
+    "path": "media/wafer/final_photos/BC5CB3DE-24F9-409E-B752-51E0EF83F9CE.jpeg",
+    "bytes": 574888
+  },
+  {
+    "path": "media/wafer/final_photos/D8A13CD5-1C35-40CA-85A1-B64564DAFAC8.jpeg",
+    "bytes": 210767
+  },
+  {
+    "path": "media/wafer/final_photos/E5699420-BFB3-4647-871C-486BE4134372.jpeg",
+    "bytes": 394070
+  }
+]

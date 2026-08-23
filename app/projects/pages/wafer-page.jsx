@@ -79,12 +79,28 @@ function PhotoHolder({ caption, label = "PHOTO · PLACEHOLDER", id }) {
   );
 }
 
+/* "1 CLIPS" reads like a bug. Count only what a story actually contains and
+   agree the noun with it. */
+function pcStoryMeta(project) {
+  const n = (k) => project.sections.filter((s) => s.kind === k).length;
+  const part = (c, one, many) => (c ? c + " " + (c === 1 ? one : many) : null);
+  return [
+    part(n("stub"), "BLOCK", "BLOCKS"),
+    part(n("photo"), "PHOTO", "PHOTOS"),
+    part(n("video"), "CLIP", "CLIPS"),
+  ].filter(Boolean).join(" · ");
+}
+
 function SectionBlock({ block, i }) {
-  if (block.kind === "photo") {
+  if (block.kind === "photo" || block.kind === "video") {
     return (
       <div className="pp-body__photo">
-        <AsciiPhotoFigure
-          src={block.src || "app/projects/components/wafer-sample.jpg"}
+        <AsciiMediaFigure
+          kind={block.kind}
+          src={block.src || "app/projects/components/wafer-sample.webp"}
+          poster={block.poster}
+          ratio={block.ratio}
+          tone={block.tone}
           caption={block.caption}
           id={(i + 1).toString().padStart(2, "0") + " / —"}
           idx={i}
@@ -110,7 +126,7 @@ function ProjectStory({ project }) {
         <div className="pp-section__num" data-mo-cursor-mirror data-mo-cursor-opacity=".hv-page">02</div>
         <h2 className="pp-section__title" data-mo-cursor-mirror data-mo-cursor-opacity=".hv-page">The story<em>.</em></h2>
         <div className="pp-section__meta">
-          <div data-mo-cursor-mirror data-mo-cursor-opacity=".hv-page">{project.sections.filter(s => s.kind !== "photo").length} BLOCKS · {project.sections.filter(s => s.kind === "photo").length} PHOTOS</div>
+          <div data-mo-cursor-mirror data-mo-cursor-opacity=".hv-page">{pcStoryMeta(project)}</div>
         </div>
       </header>
       <div className="pp-story__lede" data-mo-cursor-mirror data-mo-cursor-opacity=".hv-page">{project.intro}</div>

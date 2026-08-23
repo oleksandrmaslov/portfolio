@@ -12,7 +12,7 @@
    - color modes: mono(bone) | teal(signal) | full(sampled color)
 
    Usage:
-     const fx = new AsciiPhoto(canvas, { src: "wafer-sample.jpg" });
+     const fx = new AsciiPhoto(canvas, { src: "wafer-sample.webp" });
      fx.set({ cell: 16, feel: "scan", color: "full" });
      fx.setPointer(u, v);  fx.setHover(true);  fx.toggleConvert();
 
@@ -324,6 +324,33 @@
       this.rampN = n;
     }
 
+    /* Bind a <video> as the sampled texture. Every other part of the engine
+       stays identical: the lens, the convert ramp and the CA all read from
+       TEXTURE0, so a moving frame resolves into glyphs exactly like a still.
+       The frame is re-uploaded only while the element is actually playing,
+       which keeps the idle-skip path below intact for a paused clip. */
+    loadVideo(el) {
+      this._video = el;
+      const bind = () => {
+        const gl = this.gl;
+        if (!el.videoWidth || !el.videoHeight) return;
+        this.imgAspect = el.videoWidth / el.videoHeight;
+        if (!this.photoTex) this.photoTex = gl.createTexture();
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, this.photoTex);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, el);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        if (!this.ready) { this.ready = true; if (this.onReady) this.onReady(); }
+        this._dirty = true;
+      };
+      this._bindVideoFrame = bind;
+      if (el.readyState >= 2) bind();
+      else el.addEventListener("loadeddata", bind, { once: true });
+    }
+
     load(src) {
       const img = new Image();
       img.crossOrigin = "anonymous";
@@ -431,7 +458,13 @@
       // ---- idle skip: when nothing is animating and the lens is gone,
       // stop issuing GPU work. The canvas holds the last (plain-photo) frame.
       // Scanline shimmer needs continuous redraw only while ascii is visible. ----
-      const animating =
+      // a running clip is always "animating": pull the current frame first so
+      // the shader samples it, then fall through to the normal draw.
+      const v = this._video;
+      const videoLive = !!(v && !v.paused && !v.ended && v.readyState >= 2);
+      if (videoLive && this._bindVideoFrame) this._bindVideoFrame();
+
+      const animating = videoLive ||
         Math.abs(this.hoverTarget - this.hover) > 0.002 ||
         Math.abs(this.convertTarget - this.convert) > 0.002 ||
         this.hover > 0.002 || this.convert > 0.002 || this._caBoost > 0.01 || this._pulse >= 0;
@@ -479,8 +512,19 @@
     }
 
     destroy() {
+      this._video = null;
+      this._bindVideoFrame = null;
       cancelAnimationFrame(this._raf);
       window.removeEventListener("resize", this._onResize);
+      // Browsers cap concurrent WebGL contexts (Chrome around 16) and silently
+      // kill the oldest past that. A long case file can hold twenty figures
+      // plus the page's own 3D rig, so a disposed figure has to hand its
+      // context back rather than just stop drawing.
+      try {
+        const ext = this.gl && this.gl.getExtension("WEBGL_lose_context");
+        if (ext) ext.loseContext();
+      } catch (_) {}
+      this.ready = false;
     }
   }
 
