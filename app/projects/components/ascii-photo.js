@@ -220,7 +220,6 @@
     cellAspect: 1.8,     // height / width (monospace-ish)
     lensR: 0.22,         // fraction of min canvas dimension (aspect-corrected)
     lensSoft: 0.55,      // 0..1
-    ca: 0.4,             // chromatic aberration
     feel: "scan",        // "scan" | "dissolve"
     color: "full",       // "mono" | "teal" | "full"
     feather: 0.45,       // edge feathering

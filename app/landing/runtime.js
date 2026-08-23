@@ -1917,7 +1917,7 @@ var PROJECTS = (window.MO_PROJECTS || []).filter(function (p) {
   };
 });
 if (!PROJECTS.length) console.warn("[universe] MO_PROJECTS missing — load app/data/projects.js first");
-var MO_FEATURED = window.MO_FEATURED_ADDRS || ["0x01", "0x02", "0x03", "0x04"];
+var MO_FEATURED = window.MO_FEATURED_ADDRS || ["0x01", "0x03", "0x04", "0x06"];
 window.UNIVERSE_PROJECTS = PROJECTS;
 function makeTileTexture(p, THREE) {
   var c = document.createElement("canvas");
@@ -2276,12 +2276,16 @@ function Universe(_ref) {
   var hoverObjRef = React.useRef(null);
   var modeRef = React.useRef(mode);
   var focusRef = React.useRef(focusAddr);
+  var activeAddrRef = React.useRef(activeAddr);
   React.useEffect(function () {
     modeRef.current = mode;
   }, [mode]);
   React.useEffect(function () {
     focusRef.current = focusAddr;
   }, [focusAddr]);
+  React.useEffect(function () {
+    activeAddrRef.current = activeAddr;
+  }, [activeAddr]);
   React.useEffect(function () {
     var THREE = window.THREE;
     if (!THREE) {
@@ -3591,7 +3595,20 @@ function Universe(_ref) {
       ndc.y = -((clientY - rect.top) / rect.height) * 2 + 1;
       raycaster.setFromCamera(ndc, camera);
       var hits = raycaster.intersectObjects(tiles, false);
-      return hits[0] || null;
+      var _iterator5 = _createForOfIteratorHelper(hits),
+        _step5;
+      try {
+        for (_iterator5.s(); !(_step5 = _iterator5.n()).done;) {
+          var _h2 = _step5.value;
+          var op = _h2.object && _h2.object.material && _h2.object.material.opacity;
+          if (op == null || op > 0.12) return _h2;
+        }
+      } catch (err) {
+        _iterator5.e(err);
+      } finally {
+        _iterator5.f();
+      }
+      return null;
     }
     var v3 = new THREE.Vector3();
     var camDirTmp = new THREE.Vector3();
@@ -3606,11 +3623,11 @@ function Universe(_ref) {
         maxX = -Infinity,
         maxY = -Infinity;
       camera.getWorldDirection(camDirTmp);
-      var _iterator5 = _createForOfIteratorHelper(_tsbCorners),
-        _step5;
+      var _iterator6 = _createForOfIteratorHelper(_tsbCorners),
+        _step6;
       try {
-        for (_iterator5.s(); !(_step5 = _iterator5.n()).done;) {
-          var c = _step5.value;
+        for (_iterator6.s(); !(_step6 = _iterator6.n()).done;) {
+          var c = _step6.value;
           v3.copy(c);
           mesh.localToWorld(v3);
           _tsbCamRel.copy(v3).sub(camera.position);
@@ -3624,9 +3641,9 @@ function Universe(_ref) {
           if (sy > maxY) maxY = sy;
         }
       } catch (err) {
-        _iterator5.e(err);
+        _iterator6.e(err);
       } finally {
-        _iterator5.f();
+        _iterator6.f();
       }
       return {
         x: minX,
@@ -3783,7 +3800,7 @@ function Universe(_ref) {
       w = s.w;
       h = s.h;
       renderer.setSize(w, h);
-      camera.aspect = w / h;
+      camera.aspect = w / Math.max(1, h);
       camera.updateProjectionMatrix();
       fitGlyphToView();
       if (cursorFx) cursorFx.resize(w, h);
@@ -3824,11 +3841,11 @@ function Universe(_ref) {
         sz = cam.pos.z;
       cam.pos.set(0, 0, 0);
       camera.position.copy(cam.pos);
-      var _iterator6 = _createForOfIteratorHelper(tiles),
-        _step6;
+      var _iterator7 = _createForOfIteratorHelper(tiles),
+        _step7;
       try {
-        for (_iterator6.s(); !(_step6 = _iterator6.n()).done;) {
-          var m = _step6.value;
+        for (_iterator7.s(); !(_step7 = _iterator7.n()).done;) {
+          var m = _step7.value;
           m.position.x -= sx;
           m.position.y -= sy;
           m.position.z -= sz;
@@ -3840,23 +3857,23 @@ function Universe(_ref) {
           }
         }
       } catch (err) {
-        _iterator6.e(err);
+        _iterator7.e(err);
       } finally {
-        _iterator6.f();
+        _iterator7.f();
       }
-      var _iterator7 = _createForOfIteratorHelper(ambient),
-        _step7;
+      var _iterator8 = _createForOfIteratorHelper(ambient),
+        _step8;
       try {
-        for (_iterator7.s(); !(_step7 = _iterator7.n()).done;) {
-          var sp = _step7.value;
+        for (_iterator8.s(); !(_step8 = _iterator8.n()).done;) {
+          var sp = _step8.value;
           sp.position.x -= sx;
           sp.position.y -= sy;
           sp.position.z -= sz;
         }
       } catch (err) {
-        _iterator7.e(err);
+        _iterator8.e(err);
       } finally {
-        _iterator7.f();
+        _iterator8.f();
       }
       shiftBufferAttr(stars.geometry.attributes.position, sx, sy, sz);
       var aArr = assemblyPts.geometry.attributes.position.array;
@@ -3906,18 +3923,18 @@ function Universe(_ref) {
     var _glyphC = new THREE.Vector3();
     var _fieldCam = new THREE.Vector3();
     function scatterTiles() {
-      var _iterator8 = _createForOfIteratorHelper(tiles),
-        _step8;
+      var _iterator9 = _createForOfIteratorHelper(tiles),
+        _step9;
       try {
-        for (_iterator8.s(); !(_step8 = _iterator8.n()).done;) {
-          var m = _step8.value;
+        for (_iterator9.s(); !(_step9 = _iterator9.n()).done;) {
+          var m = _step9.value;
           var _v = driftHome(m.userData.index, new THREE.Vector3(), true);
           m.userData.driftTarget = _v.add(cam.pos);
         }
       } catch (err) {
-        _iterator8.e(err);
+        _iterator9.e(err);
       } finally {
-        _iterator8.f();
+        _iterator9.f();
       }
     }
     function frame(now) {
@@ -3954,11 +3971,11 @@ function Universe(_ref) {
         _idleFired = true;
         var nearTile = null,
           nd = Infinity;
-        var _iterator9 = _createForOfIteratorHelper(tiles),
-          _step9;
+        var _iterator0 = _createForOfIteratorHelper(tiles),
+          _step0;
         try {
-          for (_iterator9.s(); !(_step9 = _iterator9.n()).done;) {
-            var m = _step9.value;
+          for (_iterator0.s(); !(_step0 = _iterator0.n()).done;) {
+            var m = _step0.value;
             var d = m.position.distanceToSquared(camera.position);
             if (d > 9 && d < nd) {
               nd = d;
@@ -3966,9 +3983,9 @@ function Universe(_ref) {
             }
           }
         } catch (err) {
-          _iterator9.e(err);
+          _iterator0.e(err);
         } finally {
-          _iterator9.f();
+          _iterator0.f();
         }
         if (nearTile) {
           var rel = nearTile.position.clone().sub(cam.pos);
@@ -4023,33 +4040,33 @@ function Universe(_ref) {
           _flowDY = 0;
           shiftBufferAttr(stars.geometry.attributes.position, _flowDX, _flowDY, _flowDZ);
           stars.geometry.attributes.position.needsUpdate = true;
-          var _iterator0 = _createForOfIteratorHelper(ambient),
-            _step0;
+          var _iterator1 = _createForOfIteratorHelper(ambient),
+            _step1;
           try {
-            for (_iterator0.s(); !(_step0 = _iterator0.n()).done;) {
-              var sp = _step0.value;
+            for (_iterator1.s(); !(_step1 = _iterator1.n()).done;) {
+              var sp = _step1.value;
               sp.position.x -= _flowDX;
               sp.position.z -= _flowDZ;
             }
           } catch (err) {
-            _iterator0.e(err);
+            _iterator1.e(err);
           } finally {
-            _iterator0.f();
+            _iterator1.f();
           }
           if (mode === "drift") {
-            var _iterator1 = _createForOfIteratorHelper(tiles),
-              _step1;
+            var _iterator10 = _createForOfIteratorHelper(tiles),
+              _step10;
             try {
-              for (_iterator1.s(); !(_step1 = _iterator1.n()).done;) {
-                var _m = _step1.value;
+              for (_iterator10.s(); !(_step10 = _iterator10.n()).done;) {
+                var _m = _step10.value;
                 if (_m.userData.driftTarget) continue;
                 _m.position.x -= _flowDX;
                 _m.position.z -= _flowDZ;
               }
             } catch (err) {
-              _iterator1.e(err);
+              _iterator10.e(err);
             } finally {
-              _iterator1.f();
+              _iterator10.f();
             }
           }
         } else if (exploreOn || !_flTransit) {
@@ -4096,7 +4113,7 @@ function Universe(_ref) {
         camera.getWorldDirection(FORWARD);
         cam.pos.addScaledVector(FORWARD, cam.vel * dt / 1000);
         if (PDRIFT.amp > 0 && !FLOW_RM) {
-          var wantGain = mode === "drift" && driftActive && !dragging && !activeAddr && !hoverObjRef.current ? 1 : PDRIFT.focusDamp;
+          var wantGain = mode === "drift" && driftActive && !dragging && !activeAddrRef.current && !hoverObjRef.current ? 1 : PDRIFT.focusDamp;
           var gainRate = wantGain < pdriftGain ? 8 : PDRIFT.ease;
           pdriftGain += (wantGain - pdriftGain) * (1 - Math.exp(-gainRate * dt / 1000));
           var _s3 = dt / 1000;
@@ -4113,11 +4130,11 @@ function Universe(_ref) {
         if (cam.pos.lengthSq() > REBASE_DIST2) rebaseWorld();
       }
       if (mode === "drift") {
-        var _iterator10 = _createForOfIteratorHelper(tiles),
-          _step10;
+        var _iterator11 = _createForOfIteratorHelper(tiles),
+          _step11;
         try {
-          for (_iterator10.s(); !(_step10 = _iterator10.n()).done;) {
-            var _m2 = _step10.value;
+          for (_iterator11.s(); !(_step11 = _iterator11.n()).done;) {
+            var _m2 = _step11.value;
             var dt2 = _m2.userData.driftTarget;
             if (dt2) {
               var rate = 0.025;
@@ -4130,30 +4147,30 @@ function Universe(_ref) {
             }
           }
         } catch (err) {
-          _iterator10.e(err);
+          _iterator11.e(err);
         } finally {
-          _iterator10.f();
+          _iterator11.f();
         }
       }
-      var _iterator11 = _createForOfIteratorHelper(ambient),
-        _step11;
-      try {
-        for (_iterator11.s(); !(_step11 = _iterator11.n()).done;) {
-          var _sp2 = _step11.value;
-          wrapAroundCamera(_sp2, BOX);
-        }
-      } catch (err) {
-        _iterator11.e(err);
-      } finally {
-        _iterator11.f();
-      }
-      wrapPointsAroundCamera(stars, SBOX);
-      camera.getWorldDirection(_camDir);
-      var _iterator12 = _createForOfIteratorHelper(tileWires),
+      var _iterator12 = _createForOfIteratorHelper(ambient),
         _step12;
       try {
         for (_iterator12.s(); !(_step12 = _iterator12.n()).done;) {
-          var wire = _step12.value;
+          var _sp2 = _step12.value;
+          wrapAroundCamera(_sp2, BOX);
+        }
+      } catch (err) {
+        _iterator12.e(err);
+      } finally {
+        _iterator12.f();
+      }
+      wrapPointsAroundCamera(stars, SBOX);
+      camera.getWorldDirection(_camDir);
+      var _iterator13 = _createForOfIteratorHelper(tileWires),
+        _step13;
+      try {
+        for (_iterator13.s(); !(_step13 = _iterator13.n()).done;) {
+          var wire = _step13.value;
           var parent = wire.userData.parentTile;
           if (!parent) continue;
           var isModel = !!wire.userData.isModel;
@@ -4180,17 +4197,17 @@ function Universe(_ref) {
               wire.visible = modelOp > 0.02;
               if (modelOp !== wire.userData.lastModelOpacity) {
                 var fadeMaterials = wire.userData.fadeMaterials || [];
-                var _iterator18 = _createForOfIteratorHelper(fadeMaterials),
-                  _step18;
+                var _iterator19 = _createForOfIteratorHelper(fadeMaterials),
+                  _step19;
                 try {
-                  for (_iterator18.s(); !(_step18 = _iterator18.n()).done;) {
-                    var material = _step18.value;
+                  for (_iterator19.s(); !(_step19 = _iterator19.n()).done;) {
+                    var material = _step19.value;
                     material.opacity = modelOp;
                   }
                 } catch (err) {
-                  _iterator18.e(err);
+                  _iterator19.e(err);
                 } finally {
-                  _iterator18.f();
+                  _iterator19.f();
                 }
                 wire.userData.lastModelOpacity = modelOp;
               }
@@ -4205,15 +4222,15 @@ function Universe(_ref) {
           wire.scale.lerp(_vScale.set(targetScale, targetScale, targetScale), frameLerp(0.10, dt));
         }
       } catch (err) {
-        _iterator12.e(err);
+        _iterator13.e(err);
       } finally {
-        _iterator12.f();
+        _iterator13.f();
       }
-      var _iterator13 = _createForOfIteratorHelper(tiles),
-        _step13;
+      var _iterator14 = _createForOfIteratorHelper(tiles),
+        _step14;
       try {
-        for (_iterator13.s(); !(_step13 = _iterator13.n()).done;) {
-          var _m3 = _step13.value;
+        for (_iterator14.s(); !(_step14 = _iterator14.n()).done;) {
+          var _m3 = _step14.value;
           var target = targetForTile(mode, _m3.userData.index, now);
           if (target) {
             var _rate = mode === "reel" ? 0.18 : mode === "grid" ? 0.055 : 0.025;
@@ -4274,30 +4291,30 @@ function Universe(_ref) {
           uD.modelOpacityBase = uD.mobSm * arrFade;
         }
       } catch (err) {
-        _iterator13.e(err);
-      } finally {
-        _iterator13.f();
-      }
-      var _iterator14 = _createForOfIteratorHelper(ambientBatches),
-        _step14;
-      try {
-        for (_iterator14.s(); !(_step14 = _iterator14.n()).done;) {
-          var batch = _step14.value;
-          batch.nodes.length = 0;
-          batch.depthSum = 0;
-        }
-      } catch (err) {
         _iterator14.e(err);
       } finally {
         _iterator14.f();
       }
-      ambientRight.set(1, 0, 0).applyQuaternion(camera.quaternion);
-      ambientUp.set(0, 1, 0).applyQuaternion(camera.quaternion);
-      var _iterator15 = _createForOfIteratorHelper(ambient),
+      var _iterator15 = _createForOfIteratorHelper(ambientBatches),
         _step15;
       try {
         for (_iterator15.s(); !(_step15 = _iterator15.n()).done;) {
-          var _sp3 = _step15.value;
+          var batch = _step15.value;
+          batch.nodes.length = 0;
+          batch.depthSum = 0;
+        }
+      } catch (err) {
+        _iterator15.e(err);
+      } finally {
+        _iterator15.f();
+      }
+      ambientRight.set(1, 0, 0).applyQuaternion(camera.quaternion);
+      ambientUp.set(0, 1, 0).applyQuaternion(camera.quaternion);
+      var _iterator16 = _createForOfIteratorHelper(ambient),
+        _step16;
+      try {
+        for (_iterator16.s(); !(_step16 = _iterator16.n()).done;) {
+          var _sp3 = _step16.value;
           var phase = _sp3.userData.phase + now * 0.0008;
           var _dist = _sp3.position.distanceTo(camera.position);
           var _nearIn = THREE.MathUtils.smoothstep(_dist, 1.5, 5.0);
@@ -4319,9 +4336,9 @@ function Universe(_ref) {
           _batch.depthSum += depth;
         }
       } catch (err) {
-        _iterator15.e(err);
+        _iterator16.e(err);
       } finally {
-        _iterator15.f();
+        _iterator16.f();
       }
       var halfW = AMB_SCALE * 0.5;
       var halfH = AMB_SCALE * ambientAtlas.cropRatio * 0.5;
@@ -4331,11 +4348,11 @@ function Universe(_ref) {
       var ux = ambientUp.x * halfH,
         uy = ambientUp.y * halfH,
         uz = ambientUp.z * halfH;
-      var _iterator16 = _createForOfIteratorHelper(ambientBatches),
-        _step16;
+      var _iterator17 = _createForOfIteratorHelper(ambientBatches),
+        _step17;
       try {
-        for (_iterator16.s(); !(_step16 = _iterator16.n()).done;) {
-          var _batch2 = _step16.value;
+        for (_iterator17.s(); !(_step17 = _iterator17.n()).done;) {
+          var _batch2 = _step17.value;
           var count = _batch2.nodes.length;
           _batch2.mesh.visible = count > 0;
           _batch2.geo.setDrawRange(0, count * 6);
@@ -4398,9 +4415,9 @@ function Universe(_ref) {
           opacityAttr.needsUpdate = true;
         }
       } catch (err) {
-        _iterator16.e(err);
+        _iterator17.e(err);
       } finally {
-        _iterator16.f();
+        _iterator17.f();
       }
       if (hoverObjRef.current && overlayRef.current) {
         var corners = tileScreenCorners(hoverObjRef.current);
@@ -4427,11 +4444,11 @@ function Universe(_ref) {
           originHub.material.opacity = 0.25 + eP * 0.75;
           var pulse = 1 + Math.sin(now * 0.0025) * 0.04;
           originHub.scale.set(4.2 * pulse, 4.2 * pulse, 1);
-          var _iterator17 = _createForOfIteratorHelper(originLinks),
-            _step17;
+          var _iterator18 = _createForOfIteratorHelper(originLinks),
+            _step18;
           try {
-            for (_iterator17.s(); !(_step17 = _iterator17.n()).done;) {
-              var link = _step17.value;
+            for (_iterator18.s(); !(_step18 = _iterator18.n()).done;) {
+              var link = _step18.value;
               var tile = link.userData.tile;
               var la = link.geometry.attributes.position.array;
               la[0] = ORIGIN_CENTER.x;
@@ -4444,9 +4461,9 @@ function Universe(_ref) {
               link.material.opacity = eP * 0.45;
             }
           } catch (err) {
-            _iterator17.e(err);
+            _iterator18.e(err);
           } finally {
-            _iterator17.f();
+            _iterator18.f();
           }
         }
         var inDive = mode === "dive";
@@ -4594,11 +4611,14 @@ function Universe(_ref) {
       if (frameI % 18 === 0) {
         var _hoverObjRef$current;
         var yawDeg = (cam.yaw * 180 / Math.PI % 360 + 360) % 360;
-        setStatus({
+        var next = {
           yaw: yawDeg.toFixed(0).padStart(3, "0"),
           pit: (cam.pitch * 180 / Math.PI).toFixed(0),
           vel: cam.vel.toFixed(1),
-          tile: ((_hoverObjRef$current = hoverObjRef.current) === null || _hoverObjRef$current === void 0 || (_hoverObjRef$current = _hoverObjRef$current.userData) === null || _hoverObjRef$current === void 0 || (_hoverObjRef$current = _hoverObjRef$current.project) === null || _hoverObjRef$current === void 0 ? void 0 : _hoverObjRef$current.addr) || activeAddr || "—"
+          tile: ((_hoverObjRef$current = hoverObjRef.current) === null || _hoverObjRef$current === void 0 || (_hoverObjRef$current = _hoverObjRef$current.userData) === null || _hoverObjRef$current === void 0 || (_hoverObjRef$current = _hoverObjRef$current.project) === null || _hoverObjRef$current === void 0 ? void 0 : _hoverObjRef$current.addr) || activeAddrRef.current || "—"
+        };
+        setStatus(function (prev) {
+          return prev && prev.yaw === next.yaw && prev.pit === next.pit && prev.vel === next.vel && prev.tile === next.tile ? prev : next;
         });
       }
       var vW = Math.max(0, Math.min(1.4, window.__mo_vel || 0));
@@ -4906,10 +4926,14 @@ function NodeHandoff() {
   };
   var fadeUniverse = function fadeUniverse(toOpacity, ms) {
     var uni = document.querySelector(".universeBg");
-    if (uni) {
-      uni.style.transition = "opacity ".concat(ms, "ms cubic-bezier(0.16,1,0.3,1)");
-      uni.style.opacity = String(toOpacity);
-    }
+    if (!uni) return;
+    if (uni.__moFadeT) clearTimeout(uni.__moFadeT);
+    uni.style.transition = "opacity ".concat(ms, "ms cubic-bezier(0.16,1,0.3,1)");
+    uni.style.opacity = String(toOpacity);
+    uni.__moFadeT = setTimeout(function () {
+      uni.style.transition = "";
+      uni.__moFadeT = 0;
+    }, ms + 60);
   };
   useNHE(function () {
     var onFly = function onFly(e) {

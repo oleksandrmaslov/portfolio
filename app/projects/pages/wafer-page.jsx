@@ -178,8 +178,11 @@ function leaveToUniverse() {
 }
 
 function ProjectFooterNav({ project }) {
-  const prev = window.PROJECT_DATA[project.prev];
-  const next = window.PROJECT_DATA[project.next];
+  // Fall back to this project rather than throwing: the ring is closed today,
+  // but an unguarded read here blanks the entire page on a gap, and the `!p`
+  // check in goTo below shows a missing record was already considered.
+  const prev = window.PROJECT_DATA[project.prev] || project;
+  const next = window.PROJECT_DATA[project.next] || project;
   const goTo = (p) => {
     if (!p) return;
     document.body.classList.add("hv-exit");

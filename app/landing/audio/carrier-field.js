@@ -397,7 +397,7 @@
     // (felt more than heard); bells speak the motif with rests for air. One
     // step mutates per bar — the motif stays itself but never loops (Eno
     // discipline kept, musicality restored). Density follows idleLife.
-    const MOTIF_SCALE = ["0x01", "0x02", "0x04", "0x05", "0x07"];  // 9:8 5:4 3:2 5:3 2:1
+    const MOTIF_SCALE = MELODY;   // one pentatonic; it had been declared twice
     const motif = [0, 2, -1, 4, 1, -1, 3, -1, 2, -1, 4, 2, 0, -1, 3, -1];  // -1 = rest
     let motifPos = 0;
     function thump(amp) {
@@ -747,7 +747,14 @@
           c1.onended = function () { [c1, cg, cp].forEach(function (n) { try { n.disconnect(); } catch (e) {} }); };
         } catch (e) {}
         state.woken = true;
-        const loop = () => { frame(); this._raf = requestAnimationFrame(loop); };
+        // Sleep the visualiser whenever the context is not running. suspend()
+        // is the honest off switch, but this rAF kept reading the analyser and
+        // scheduling ~8 param ramps every frame for the life of the page. Park
+        // it on a slow poll instead and let resume() spin it straight back up.
+        const loop = () => {
+          if (ctx && ctx.state === "running") { frame(); this._raf = requestAnimationFrame(loop); }
+          else { this._raf = 0; this._sleepT = setTimeout(loop, 250); }
+        };
         loop();
         scheduleMelody();                                     // melodic + rhythmic field comes alive
         scheduleChord();                                      // harmony slowly evolves
@@ -760,6 +767,12 @@
       // suspended the browser produces NO sound at all (zero leak) and the
       // generative schedulers skip (guarded on ctx.state) so nothing piles up.
       suspend() { if (ctx && ctx.state === "running") return ctx.suspend(); },
+      // stopAll is for teardown; the landing never unmounts the field, but a
+      // host that does would otherwise leave the rAF and the sleep poll live.
+      stopAll() {
+        if (this._raf) { cancelAnimationFrame(this._raf); this._raf = 0; }
+        if (this._sleepT) { clearTimeout(this._sleepT); this._sleepT = 0; }
+      },
       resume() { if (ctx && ctx.state === "suspended") return ctx.resume(); },
 
       setMaster(v) {

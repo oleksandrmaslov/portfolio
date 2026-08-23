@@ -77,11 +77,14 @@
     if ("envMapIntensity" in base) base.envMapIntensity = envInt;
     root.traverse((o) => {
       if (!o.isMesh) return;
-      const prev = o.material;
+      // DO NOT dispose the material we are replacing. window.loadProjectModel
+      // hands out root.clone(true), and Object3D.clone() SHARES materials and
+      // geometries with the cached root rather than copying them — so freeing
+      // `prev` here frees GPU state that every future consumer of the same URL
+      // still points at. Three silently recompiles, so the symptom was a hitch
+      // rather than a black model. tuneRealMaterials in this file gets this
+      // right: it clones and never disposes the source.
       o.material = base;
-      if (prev && prev.dispose && prev !== base) {
-        (Array.isArray(prev) ? prev : [prev]).forEach((p) => p && p.dispose && p.dispose());
-      }
     });
     return base;
   };

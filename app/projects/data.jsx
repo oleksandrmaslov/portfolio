@@ -170,7 +170,7 @@ const PROJECT_DATA = {
       { kind: "ZMK FORK", label: "zmk · core/move-to-zephyr-4-1", href: "https://github.com/oleksandrmaslov/zmk/tree/core/move-to-zephyr-4-1" },
       { kind: "JOURNAL", label: "Blueprint build log · 16 entries", href: "https://blueprint.hackclub.com/projects/2800" },
     ],
-    prev: "0x0C",
+    prev: "0x0D",
     next: "0x02",
   },
 

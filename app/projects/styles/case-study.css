@@ -85,14 +85,6 @@ body { background: var(--void); overflow-x: clip; }
 .hv-stage__mount { position: absolute; inset: 0; }
 .hv-stage__mount canvas { display: block; width: 100%; height: 100%; }
 /* during inspect the model is the foreground + grabbable */
-body.hv-inspecting .hv-stage {
-  z-index: 40;
-  opacity: 1 !important;
-  pointer-events: auto;
-  cursor: grab;
-}
-body.hv-inspecting .hv-stage:active { cursor: grabbing; }
-
 /* page entry/exit */
 .hv-page { position: relative; z-index: 1; }
 .hv-page--ready { }
@@ -232,8 +224,6 @@ body.hv-exit .pp-shell { opacity: 0; transition: opacity 300ms var(--e-out); }
 }
 .hv-demo__hintDot { width: 6px; height: 6px; border-radius: 50%; background: var(--signal); box-shadow: 0 0 8px var(--signal); }
 /* fade the corner button away while inspecting */
-body.hv-inspecting .hv-demo { opacity: 0; pointer-events: none; }
-
 /* ============================================================
    INSPECT MODE — dim scrim + HUD over the fullscreen model
    ============================================================ */
@@ -248,86 +238,11 @@ body.hv-inspecting .hv-demo { opacity: 0; pointer-events: none; }
   visibility: hidden;
   transition: opacity 460ms var(--e-out), visibility 460ms;
 }
-body.hv-inspecting .hv-scrim { opacity: 1; visibility: visible; }
 /* page content (incl. shell + corner button) fades back during inspect */
-body.hv-inspecting .pp-shell { opacity: 0; pointer-events: none; transition: opacity 360ms var(--e-out); }
-
-.hv-inspect {
-  position: fixed;
-  inset: 0;
-  z-index: 50;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 420ms var(--e-out);
-}
-body.hv-inspecting .hv-inspect { opacity: 1; }
-.hv-inspect__corner { position: absolute; width: 30px; height: 30px; border: 1px solid var(--signal); opacity: 0.6; }
-.hv-inspect__corner--tl { top: var(--s-7); left: var(--s-7); border-right: 0; border-bottom: 0; }
-.hv-inspect__corner--tr { top: var(--s-7); right: var(--s-7); border-left: 0; border-bottom: 0; }
-.hv-inspect__corner--bl { bottom: var(--s-7); left: var(--s-7); border-right: 0; border-top: 0; }
-.hv-inspect__corner--br { bottom: var(--s-7); right: var(--s-7); border-left: 0; border-top: 0; }
-
 /* top-left mode readout */
-.hv-inspect__hud {
-  position: absolute; top: var(--s-7); left: var(--s-8);
-  display: flex; flex-direction: column; gap: var(--s-3);
-  font-family: var(--ff-mono); font-size: var(--fs-micro);
-  letter-spacing: var(--tr-caps); text-transform: uppercase;
-}
-.hv-inspect__hudRow { display: flex; gap: var(--s-4); align-items: center; }
-.hv-inspect__hudK { color: var(--ghost); min-width: 64px; }
-.hv-inspect__hudV { color: var(--bone); }
-.hv-inspect__hudV.is-live { color: var(--signal); text-shadow: 0 0 6px var(--signal-glow); }
-
 /* centered title while inspecting */
-.hv-inspect__title {
-  position: absolute; top: var(--s-7); left: 50%; transform: translateX(-50%);
-  text-align: center;
-  font-family: var(--ff-mono); font-size: var(--fs-micro);
-  letter-spacing: var(--tr-caps); text-transform: uppercase; color: var(--ash);
-}
-.hv-inspect__title b { color: var(--bone); font-weight: 500; }
-
 /* bottom control bar */
-.hv-inspect__bar {
-  position: absolute; bottom: var(--s-8); left: 50%; transform: translateX(-50%);
-  display: inline-flex; align-items: center; gap: var(--s-4);
-  padding: var(--s-4) var(--s-5);
-  background: rgba(7, 9, 15, 0.7);
-  border: 1px solid var(--hairline);
-  backdrop-filter: blur(8px);
-  pointer-events: auto;
-}
-.hv-inspect__hintCtr {
-  font-family: var(--ff-mono); font-size: var(--fs-micro);
-  letter-spacing: var(--tr-caps); text-transform: uppercase; color: var(--ghost);
-  padding: 0 var(--s-4);
-}
-.hv-btn {
-  display: inline-flex; align-items: center; gap: var(--s-3);
-  padding: var(--s-3) var(--s-5);
-  font-family: var(--ff-mono); font-size: var(--fs-nano); letter-spacing: var(--tr-caps); text-transform: uppercase;
-  border: 1px solid var(--hairline); color: var(--ash);
-  background: transparent; cursor: pointer;
-  transition: border-color var(--d-fast), color var(--d-fast), background var(--d-fast);
-}
-.hv-btn:hover { border-color: var(--signal); color: var(--signal); }
-.hv-btn.is-on { border-color: var(--signal); color: var(--signal); background: var(--signal-ghost); }
-.hv-btn__dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
-
 /* close button top-right */
-.hv-inspect__close {
-  position: absolute; top: var(--s-7); right: var(--s-8);
-  pointer-events: auto;
-  display: inline-flex; align-items: center; gap: var(--s-3);
-  padding: var(--s-3) var(--s-5);
-  background: rgba(4, 6, 13, 0.7); border: 1px solid var(--signal);
-  font-family: var(--ff-mono); font-size: var(--fs-nano); letter-spacing: var(--tr-caps); text-transform: uppercase; color: var(--signal);
-  cursor: pointer;
-}
-.hv-inspect__close:hover { background: var(--signal-ghost); }
-.hv-inspect__closeSep { width: 10px; height: 1px; background: var(--signal-dim); }
-
 /* keep reused page sections above the fixed stage */
 .pp-story, .pp-links, .pp-foot { position: relative; z-index: 1; }
 .pp { background: linear-gradient(180deg, transparent 0%, var(--void) 18%, var(--void) 100%); }

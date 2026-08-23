@@ -119,14 +119,6 @@
   font-weight: 400;
   color: var(--ash);
 }
-.hero__row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--s-8);
-  margin-top: var(--s-7);
-  padding-top: var(--s-6);
-  border-top: 1px solid var(--hairline);
-}
 .hero__lede {
   font-family: var(--ff-display);
   font-size: var(--fs-lead);

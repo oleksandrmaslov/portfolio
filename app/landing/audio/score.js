@@ -100,12 +100,16 @@
     var stop = e.detail && e.detail.stop;
     // final stop — the universe GATHERS into the passage door: the field
     // aligns around the visitor (rare payoff) + a slow centre ripple.
-    if (stop >= 5 && !gatherFired) {
+    // Final stop is (featured count + 1) — the "Open the universe" gate. It
+    // was the literal 5, which silently points at the wrong card the moment
+    // MO_FEATURED_ADDRS changes length.
+    var lastStop = (window.MO_FEATURED_ADDRS || []).length + 1;
+    if (stop >= lastStop && !gatherFired) {
       gatherFired = true;
       if (on()) CF.reward();
       if (window.__mo_disturb) window.__mo_disturb(window.innerWidth / 2, window.innerHeight * 0.45, 1.15);
     }
-    if (stop < 5) gatherFired = false;
+    if (stop < lastStop) gatherFired = false;
     if (addr === reelAddr) return;
     if (lockTimer) { clearTimeout(lockTimer); lockTimer = null; }
     if (reelAddr) { try { CF.unhoverNode(reelAddr); } catch (_) {} }

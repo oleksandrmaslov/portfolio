@@ -37,6 +37,11 @@ jobs:
       - name: Configure Pages
         uses: actions/configure-pages@v5
 
+      # The landing's .jsx are build inputs only: index.html serves the
+      # precompiled app/landing/runtime.js, which already contains them, so
+      # publishing both shipped ~313 KB of source twice over. core.jsx and
+      # projects/rendering/*.jsx are NOT excluded - project routes load those
+      # directly and Babel-compiles them in the browser.
       - name: Stage static site
         shell: bash
         run: |
@@ -51,6 +56,9 @@ jobs:
             --exclude='tools/' \
             --exclude='studies/' \
             --exclude='*.md' \
+            --exclude='app/landing/*.jsx' \
+            --exclude='app/landing/**/*.jsx' \
+            --exclude='app/shared/key-button.jsx' \
             ./ _site/
 
       - name: Upload Pages artifact

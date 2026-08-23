@@ -12,6 +12,9 @@ function EventBus3D({ sections }) {
   const labelRef    = React.useRef(null);
   const [hover, setHover]   = React.useState(-1);
   const [active, setActive] = React.useState(-1);
+  // The render loop below is a mount-only effect: it must read this through
+  // a ref or it sees -1 forever and a clicked node never marks active.
+  const activeRef = React.useRef(-1);
 
   React.useEffect(() => {
     if (!window.THREE) { console.warn("THREE not loaded"); return; }
@@ -56,7 +59,9 @@ function EventBus3D({ sections }) {
 
     for (let i = 0; i < N; i++) {
       // Fibonacci sphere distribution
-      const y      = 1 - (i / (N - 1)) * 2;
+      // Math.max guards N === 1: i / 0 is Infinity and the sqrt below then
+      // puts NaN into a Vector3, which silently kills the whole scene.
+      const y      = 1 - (i / Math.max(1, N - 1)) * 2;
       const radius = Math.sqrt(1 - y * y);
       const theta  = PHI * i;
       const x      = Math.cos(theta) * radius;
@@ -171,7 +176,7 @@ function EventBus3D({ sections }) {
       const idx = hits[0].object.userData.idx;
       const target = document.getElementById(sections[idx].id);
       if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
-      setActive(idx);
+      setActive(idx); activeRef.current = idx;
       spawnPulse(idx);
     };
     dom.addEventListener("mousedown", onMouseDown2);
@@ -235,7 +240,7 @@ function EventBus3D({ sections }) {
       // update node visuals based on hover/flash
       for (const n of nodes) {
         const isHover  = n.idx === hoverIdx;
-        const isActive = n.idx === active;
+        const isActive = n.idx === activeRef.current;
         const target = isHover || isActive ? 0x00f0c8 : 0x9aa3b3;
         n.edges.material.color.setHex(target);
 

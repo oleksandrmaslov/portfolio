@@ -64,12 +64,20 @@ function PCKeyButton({ children, legend = "↵", primary, onPress }) {
 }
 if (!window.KeyButton) window.KeyButton = PCKeyButton;
 
-/* layout → rig offset (shared project-page breakpoints) */
+/* layout → rig offset (shared project-page breakpoints).
+   A page may override any breakpoint with PAGE_CONFIG.heroLayout
+   { mobile, tablet, desktop } when its model needs to sit clear of the title
+   column; omitted keys keep the shared defaults. This read was missing here
+   while standard-page.jsx had it, so the seven routes that compose through
+   THIS file shipped a tuned override that did nothing and their hero models
+   sat on the shared default — over the metrics row the override exists to
+   clear. Keep the two implementations identical. */
 function pcHeroLayoutParams() {
   const w = window.innerWidth;
-  if (w <= 700)  return { fracX: 0,    scale: 0.58, offY: 0.95 };
-  if (w <= 1000) return { fracX: 0.18, scale: 0.74, offY: 0.18 };
-  return { fracX: 0.34, scale: 0.88, offY: 0 };
+  const o = (window.PAGE_CONFIG && window.PAGE_CONFIG.heroLayout) || {};
+  if (w <= 700)  return Object.assign({ fracX: 0,    scale: 0.58, offY: 0.95 }, o.mobile);
+  if (w <= 1000) return Object.assign({ fracX: 0.18, scale: 0.74, offY: 0.18 }, o.tablet);
+  return Object.assign({ fracX: 0.34, scale: 0.88, offY: 0 }, o.desktop);
 }
 function pcApplyHeroLayout(rig) {
   if (!rig) return;
@@ -183,8 +191,11 @@ function pcLeaveToUniverse() {
 }
 
 function PCProjectFooterNav({ project }) {
-  const prev = window.PROJECT_DATA[project.prev];
-  const next = window.PROJECT_DATA[project.next];
+  // Fall back to this project rather than throwing: the ring is closed today,
+  // but an unguarded read here blanks the entire page on a gap, and the `!p`
+  // check in goTo below shows a missing record was already considered.
+  const prev = window.PROJECT_DATA[project.prev] || project;
+  const next = window.PROJECT_DATA[project.next] || project;
   const goTo = (p) => {
     if (!p) return;
     document.body.classList.add("hv-exit");

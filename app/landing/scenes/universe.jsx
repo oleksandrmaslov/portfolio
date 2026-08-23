@@ -40,7 +40,9 @@ const PROJECTS = (window.MO_PROJECTS || [])
   };
 });
 if (!PROJECTS.length) console.warn("[universe] MO_PROJECTS missing — load app/data/projects.js first");
-const MO_FEATURED = window.MO_FEATURED_ADDRS || ["0x01", "0x02", "0x03", "0x04"];
+// Fallback must match work.jsx's and the registry's — a disagreement here
+// would parade one set of cards while the DOM reel listed another.
+const MO_FEATURED = window.MO_FEATURED_ADDRS || ["0x01", "0x03", "0x04", "0x06"];
 
 window.UNIVERSE_PROJECTS = PROJECTS;
 
@@ -351,8 +353,13 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
   const hoverObjRef = React.useRef(null);
   const modeRef     = React.useRef(mode);
   const focusRef    = React.useRef(focusAddr);
+  // The render loop lives in a mount-only effect, so every cross-render value
+  // it reads has to come through a ref. activeAddr was read directly and was
+  // therefore pinned to its first-render value of null.
+  const activeAddrRef = React.useRef(activeAddr);
   React.useEffect(() => { modeRef.current = mode; }, [mode]);
   React.useEffect(() => { focusRef.current = focusAddr; }, [focusAddr]);
+  React.useEffect(() => { activeAddrRef.current = activeAddr; }, [activeAddr]);
 
   React.useEffect(() => {
     const THREE = window.THREE;
@@ -1910,8 +1917,17 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       ndc.x =  ((clientX - rect.left) / rect.width)  * 2 - 1;
       ndc.y = -((clientY - rect.top)  / rect.height) * 2 + 1;
       raycaster.setFromCamera(ndc, camera);
+      /* Raycaster ignores material opacity, and these tiles are never hidden
+         with `visible` — only faded. So a card at opacity 0 (mid-wrap, or
+         parked on the scatter ring during the reel) stayed hoverable: the LOCK
+         reticle would appear over empty space and a click there navigated to a
+         project the visitor could not see. Ignore anything the eye cannot. */
       const hits = raycaster.intersectObjects(tiles, false);
-      return hits[0] || null;
+      for (const h of hits) {
+        const op = h.object && h.object.material && h.object.material.opacity;
+        if (op == null || op > 0.12) return h;
+      }
+      return null;
     }
 
     /* ---------- screen-space tile bounds (tight) ---------- */
@@ -2105,7 +2121,10 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     const onResize = () => {
       const s = sz(); w = s.w; h = s.h;
       renderer.setSize(w, h);
-      camera.aspect = w / h;
+      // ResizeObserver fires on any transition to 0x0, and w/0 bakes Infinity
+      // (or NaN) into the projection matrix permanently — the scene then draws
+      // nothing until a later non-zero resize.
+      camera.aspect = w / Math.max(1, h);
       camera.updateProjectionMatrix();
       fitGlyphToView();
       if (cursorFx) cursorFx.resize(w, h);
@@ -2378,7 +2397,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
            Damped to PDRIFT.focusDamp whenever a card is focused/hovered or the
            user is actively driving, so reading a label never feels seasick. */
         if (PDRIFT.amp > 0 && !FLOW_RM) {
-          const wantGain = (mode === "drift" && driftActive && !dragging && !activeAddr && !hoverObjRef.current)
+          const wantGain = (mode === "drift" && driftActive && !dragging && !activeAddrRef.current && !hoverObjRef.current)
             ? 1 : PDRIFT.focusDamp;
           const gainRate = wantGain < pdriftGain ? 8 : PDRIFT.ease;
           pdriftGain += (wantGain - pdriftGain) * (1 - Math.exp(-gainRate * dt / 1000));
@@ -2958,12 +2977,18 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       frameI++;
       if (frameI % 18 === 0) {
         const yawDeg = ((cam.yaw * 180 / Math.PI) % 360 + 360) % 360;
-        setStatus({
+        const next = {
           yaw: yawDeg.toFixed(0).padStart(3, "0"),
           pit: (cam.pitch * 180 / Math.PI).toFixed(0),
           vel: cam.vel.toFixed(1),
-          tile: hoverObjRef.current?.userData?.project?.addr || activeAddr || "—",
-        });
+          tile: hoverObjRef.current?.userData?.project?.addr || activeAddrRef.current || "—",
+        };
+        // Return the previous object when nothing changed. A fresh object here
+        // failed Object.is every time and reconciled the whole Universe subtree
+        // 3.3x/second forever, including with the camera completely still.
+        setStatus((prev) => (prev
+          && prev.yaw === next.yaw && prev.pit === next.pit
+          && prev.vel === next.vel && prev.tile === next.tile) ? prev : next);
       }
 
       // Scene grade — advance grain and keep live-tunable uniforms in sync.

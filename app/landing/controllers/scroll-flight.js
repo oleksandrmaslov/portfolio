@@ -22,6 +22,17 @@
    Tuning: window.__mo_flightCfg { warp, style, doppler, dock }.
    ============================================================ */
 (function () {
+  /* The work reel's scroll geometry, mirrored from app/landing/sections/work.jsx:
+     STOPS = featured + 2 (a title slot and the "show all" gate), PADS = 0.6,
+     and progress 0 sits padN = PADS / (STOPS + PADS) into the section. Derived
+     rather than typed so adding a featured node cannot leave the auto-dock
+     landing on a half-panned title. */
+  const REEL_PADS = 0.6;
+  const reelPadN = () => {
+    const stops = ((window.MO_FEATURED_ADDRS || []).length + 2) + REEL_PADS;
+    return REEL_PADS / stops;
+  };
+
   "use strict";
 
   var reduceMotion = window.matchMedia &&
@@ -271,10 +282,12 @@
       ? sections.origin.top + 0.25 * (sections.origin.dockHeight - vh) // origin: first line resolved
       : sections.title.top + 0.20 * sections.title.dockHeight;         // title still framed
     if (seg === "toWork") return fwd
-      // reel TITLE stop exactly: progress 0 sits at padN = PADS/TOTAL_V
-      // (0.6 / 6.6) into the section — 0.15 overshot it and left the
-      // "Selected work." title panned half off-screen after auto-dock.
-      ? sections.work.top + 0.091 * (sections.work.dockHeight - vh)
+      // reel TITLE stop exactly: progress 0 sits at padN = PADS/TOTAL_V into
+      // the section — 0.15 overshot it and left the "Selected work." title
+      // panned half off-screen after auto-dock. DERIVED, not typed: TOTAL_V
+      // counts the featured nodes, so a literal here silently desyncs the
+      // moment MO_FEATURED_ADDRS gains or loses an address.
+      ? sections.work.top + reelPadN() * (sections.work.dockHeight - vh)
       : sections.origin.top + 0.80 * (sections.origin.dockHeight - vh); // origin hold (pre lift-off)
     return fwd
       ? sections.about.top + 0.065 * (sections.about.dockHeight - vh) // about node-card resolved

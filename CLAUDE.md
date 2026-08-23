@@ -349,6 +349,30 @@ the composer up, the scene lands in its own non-multisampled targets and the
 drawing buffer only ever receives one full-screen quad, so MSAA there bought a
 full-canvas resolve every frame and nothing else.
 
+## Audit findings worth remembering
+
+A four-way audit on 2026-08-23 turned up three patterns that keep recurring
+here, and they are the things to check first when something behaves oddly:
+
+- **A mount-only effect that reads React state directly.** The render loops
+  live in `useEffect(..., [])`, so any cross-render value must come through a
+  ref. `activeAddr` in `universe.jsx` and `active` in `event-bus.jsx` were both
+  read straight and were pinned to their first-render value forever.
+- **A constant typed in one file that is derived in another.** The reel's
+  `padN` was hardcoded as `0.091` in `scroll-flight.js` and its last stop as
+  `5` in `score.js`, both derived from `MO_FEATURED_ADDRS.length` in
+  `work.jsx`. Both are computed now. When you change the featured list, grep
+  for anything that assumed its length.
+- **A ring verified in one direction.** `0x01.prev` was left pointing at
+  `0x0C` when `0x0D` was inserted, so Bulgaria was reachable by NEXT only —
+  and the forward-only walk used to verify it passed. Walk both ways.
+
+Also fixed and worth not re-introducing: `applySolidMaterials` used to dispose
+the material it replaced, but `loadProjectModel` hands out `root.clone(true)`
+and `Object3D.clone()` **shares** materials with the cached root — so that
+freed GPU state every later consumer of the same URL still pointed at.
+`tuneRealMaterials` in the same file shows the correct pattern.
+
 ## Runtime and validation
 
 - Keep the landing loader and `mo:preloader-done` contract intact. That is the

@@ -63,5 +63,4 @@
   .bf-foot__meta { font-size: clamp(9px, 0.52vw, 13px); }
 
   /* ── console keys ── */
-  .tkey { font-size: clamp(13px, 0.76vw, 19px); padding: 0.7vw 1.16vw; }
 }

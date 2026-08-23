@@ -79,9 +79,18 @@ function NodeHandoff() {
     return rig;
   };
 
+  /* The inline transition has to be REMOVED once it has played. Board Flight
+     drives `.universeBg` opacity per frame from the scroll and clears the
+     transition once at its own mount — which happens long before any return
+     from a project page — so a leftover 700ms ease here makes the board
+     takeover lag the scroll by most of a second instead of tracking it. */
   const fadeUniverse = (toOpacity, ms) => {
     const uni = document.querySelector(".universeBg");
-    if (uni) { uni.style.transition = `opacity ${ms}ms cubic-bezier(0.16,1,0.3,1)`; uni.style.opacity = String(toOpacity); }
+    if (!uni) return;
+    if (uni.__moFadeT) clearTimeout(uni.__moFadeT);
+    uni.style.transition = `opacity ${ms}ms cubic-bezier(0.16,1,0.3,1)`;
+    uni.style.opacity = String(toOpacity);
+    uni.__moFadeT = setTimeout(() => { uni.style.transition = ""; uni.__moFadeT = 0; }, ms + 60);
   };
 
   /* ---------- FORWARD: any card / tile → its project page ---------- */
