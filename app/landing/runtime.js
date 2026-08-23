@@ -2347,8 +2347,9 @@ function Universe(_ref) {
     var _sz = sz(),
       w = _sz.w,
       h = _sz.h;
+    var _composerAvailable = !!(THREE.EffectComposer && THREE.RenderPass && THREE.OutputPass && window.MOCursorDistortion && window.MOCursorDistortion.createComposerEffect);
     var renderer = new THREE.WebGLRenderer({
-      antialias: true,
+      antialias: !_composerAvailable,
       alpha: true,
       powerPreference: "high-performance"
     });
@@ -2418,11 +2419,72 @@ function Universe(_ref) {
       dof: true,
       focus: 10.0,
       aperture: 0.00025,
-      maxblur: 0.0045
+      maxblur: 0.0045,
+      dofDepthScale: 0.5,
+      dofDepthEvery: 2
     }, window.__mo_grade || {});
     var _veryWeak = navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 2 || navigator.deviceMemory && navigator.deviceMemory <= 2;
     var _isSmall = matchMedia("(max-width: 760px)").matches;
     var _composerDpr = Math.min(window.devicePixelRatio, _isSmall ? 1.25 : 1.5);
+    function makeFastBokehPass(BokehPassCtor, dofScene, dofCamera, params) {
+      var pass = new BokehPassCtor(dofScene, dofCamera, params);
+      pass.renderTargetDepth.dispose();
+      pass.renderTargetDepth = new THREE.WebGLRenderTarget(1, 1, {
+        minFilter: THREE.NearestFilter,
+        magFilter: THREE.NearestFilter,
+        type: THREE.UnsignedByteType,
+        stencilBuffer: false
+      });
+      pass.renderTargetDepth.texture.name = "FastBokehPass.depth";
+      pass.uniforms.tDepth.value = pass.renderTargetDepth.texture;
+      pass.uniforms.texel = {
+        value: new THREE.Vector2(1 / 1024, 1 / 1024)
+      };
+      pass.materialBokeh.fragmentShader = ["#include <common>", "varying vec2 vUv;", "uniform sampler2D tColor;", "uniform sampler2D tDepth;", "uniform float maxblur;", "uniform float aperture;", "uniform float nearClip;", "uniform float farClip;", "uniform float focus;", "uniform float aspect;", "uniform vec2 texel;", "#include <packing>", "void main() {", "  float depth = unpackRGBAToDepth( texture2D( tDepth, vUv ) );", "  float viewZ = perspectiveDepthToViewZ( depth, nearClip, farClip );", "  float factor = ( focus + viewZ );", "  float coc = clamp( factor * aperture, -maxblur, maxblur );", "  vec2 rad = vec2( coc * 0.4, coc * 0.4 * aspect );", "  vec4 centre = texture2D( tColor, vUv );", "  if ( abs( rad.x ) < texel.x * 0.75 && abs( rad.y ) < texel.y * 0.75 ) {", "    gl_FragColor = vec4( centre.rgb, 1.0 );", "    return;", "  }", "  vec4 col = centre;", "  col += texture2D( tColor, vUv + vec2(  1.0000,  0.0000 ) * rad );", "  col += texture2D( tColor, vUv + vec2(  0.7071,  0.7071 ) * rad );", "  col += texture2D( tColor, vUv + vec2(  0.0000,  1.0000 ) * rad );", "  col += texture2D( tColor, vUv + vec2( -0.7071,  0.7071 ) * rad );", "  col += texture2D( tColor, vUv + vec2( -1.0000,  0.0000 ) * rad );", "  col += texture2D( tColor, vUv + vec2( -0.7071, -0.7071 ) * rad );", "  col += texture2D( tColor, vUv + vec2(  0.0000, -1.0000 ) * rad );", "  col += texture2D( tColor, vUv + vec2(  0.7071, -0.7071 ) * rad );", "  col += texture2D( tColor, vUv + vec2(  0.5081,  0.2105 ) * rad );", "  col += texture2D( tColor, vUv + vec2( -0.2105,  0.5081 ) * rad );", "  col += texture2D( tColor, vUv + vec2( -0.5081, -0.2105 ) * rad );", "  col += texture2D( tColor, vUv + vec2(  0.2105, -0.5081 ) * rad );", "  gl_FragColor = vec4( ( col / 13.0 ).rgb, 1.0 );", "}"].join("\n");
+      pass.materialBokeh.needsUpdate = true;
+      pass.depthScale = 0.5;
+      pass.depthEvery = 1;
+      pass._depthTick = 0;
+      pass.setSize = function (width, height) {
+        this.uniforms.aspect.value = width / height;
+        var dw = Math.max(1, Math.round(width * this.depthScale));
+        var dh = Math.max(1, Math.round(height * this.depthScale));
+        this.renderTargetDepth.setSize(dw, dh);
+        this.uniforms.texel.value.set(1 / Math.max(1, width), 1 / Math.max(1, height));
+        this._depthTick = 0;
+      };
+      pass.render = function (renderer, writeBuffer, readBuffer) {
+        var every = Math.max(1, this.depthEvery | 0);
+        if (this._depthTick % every === 0) {
+          this.scene.overrideMaterial = this.materialDepth;
+          renderer.getClearColor(this._oldClearColor);
+          var oldClearAlpha = renderer.getClearAlpha();
+          var oldAutoClear = renderer.autoClear;
+          renderer.autoClear = false;
+          renderer.setClearColor(0xffffff);
+          renderer.setClearAlpha(1.0);
+          renderer.setRenderTarget(this.renderTargetDepth);
+          renderer.clear();
+          renderer.render(this.scene, this.camera);
+          this.scene.overrideMaterial = null;
+          renderer.setClearColor(this._oldClearColor);
+          renderer.setClearAlpha(oldClearAlpha);
+          renderer.autoClear = oldAutoClear;
+        }
+        this._depthTick++;
+        this.uniforms.tColor.value = readBuffer.texture;
+        this.uniforms.nearClip.value = this.camera.near;
+        this.uniforms.farClip.value = this.camera.far;
+        if (this.renderToScreen) {
+          renderer.setRenderTarget(null);
+        } else {
+          renderer.setRenderTarget(writeBuffer);
+          renderer.clear();
+        }
+        this.fsQuad.render(renderer);
+      };
+      return pass;
+    }
     var composer = null,
       bokehPass = null,
       cursorFx = null,
@@ -2439,11 +2501,13 @@ function Universe(_ref) {
         composer.setSize(w, h);
         composer.addPass(new RenderPass(scene, camera));
         if (GRADE.dof && !_veryWeak && BokehPass) {
-          bokehPass = new BokehPass(scene, camera, {
+          bokehPass = makeFastBokehPass(BokehPass, scene, camera, {
             focus: GRADE.focus,
             aperture: GRADE.aperture,
             maxblur: GRADE.maxblur
           });
+          bokehPass.depthScale = Math.min(1, Math.max(0.25, GRADE.dofDepthScale || 0.5));
+          bokehPass.depthEvery = Math.max(1, Math.round(GRADE.dofDepthEvery || 1));
           composer.addPass(bokehPass);
         }
         cursorFx = createCursorEffect({
@@ -2513,18 +2577,26 @@ function Universe(_ref) {
     window.addEventListener("scroll", onAnyAct, {
       passive: true
     });
-    var _probeFrames = 0,
+    var DOF_MIN_FPS = 30;
+    var DOF_WARMUP = 30;
+    var DOF_WINDOW = 90;
+    var _probeWarm = 0,
+      _probeFrames = 0,
       _probeAccum = 0,
       _probeDone = false;
     function probeDoF(dt) {
       if (_probeDone || !bokehPass) return;
-      if (dt > 0 && dt < 200) {
-        _probeAccum += dt;
-        _probeFrames++;
+      if (!(dt > 0 && dt < 200)) return;
+      if (_probeWarm < DOF_WARMUP) {
+        _probeWarm++;
+        return;
       }
-      if (_probeFrames >= 90) {
+      _probeAccum += dt;
+      _probeFrames++;
+      if (_probeFrames >= DOF_WINDOW) {
         var avgFps = 1000 / (_probeAccum / _probeFrames);
-        if (avgFps < 42) {
+        window.__mo_dofFps = Math.round(avgFps * 10) / 10;
+        if (avgFps < DOF_MIN_FPS) {
           bokehPass.enabled = false;
           window.__mo_dofOn = false;
         }

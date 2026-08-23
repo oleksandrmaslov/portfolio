@@ -218,11 +218,33 @@ mark a device as weak.
 
 When the viewport is at most 760 px wide, the composer pixel ratio is capped at
 1.25; otherwise it is capped at 1.5. This size check reduces fill rate but does
-not disable depth of field. After 90 valid rendered frames, an average below 42
-FPS disables only the Bokeh pass for the current Universe mount. The pointer
-displacement, chromatic aberration, and vignette remain active. Depth of field
-is reconsidered only when the Universe mounts again. Board Flight deliberately
-uses its lite renderer and therefore skips its separate Bokeh path.
+not disable depth of field. The first 30 valid frames are discarded — mount is
+when the GLBs upload and the shaders compile, and judging the device on that
+stall was disabling depth of field on machines that then ran fine. Over the
+following 90 valid frames, an average below **30** FPS disables only the Bokeh
+pass for the current Universe mount, and the measured average is left on
+`window.__mo_dofFps`. The gate is 30 because depth of field is a look, not a
+luxury: a device holding a steady 30 keeps it. The pointer displacement,
+chromatic aberration, and vignette remain active either way. Depth of field is
+reconsidered only when the Universe mounts again. Board Flight deliberately uses
+its lite renderer and therefore skips its separate Bokeh path.
+
+The Universe does not run stock `BokehPass`. `makeFastBokehPass` in
+`app/landing/scenes/universe.jsx` re-fits it to this scene's actual settings:
+13 tap positions instead of 41 at the same mean radius, an early-out wherever
+the circle of confusion is sub-pixel, and a depth prepass at half resolution
+into an 8-bit target (`dofDepthScale`) refreshed every second frame
+(`dofDepthEvery`), both tunable through `window.__mo_grade`. At `maxblur`
+0.0045 the blur disc is about 3.5 px at 1080p, which is what makes all three
+free visually. The prepass itself is load-bearing and must not be replaced by a
+`DepthTexture` read off the main pass: the cards, the constellation and both
+point clouds are `depthWrite: false`, so main-pass depth does not know they
+exist and every one of them would inherit the far-field blur.
+
+The renderer requests `antialias` only when the composer is unavailable. With
+the composer up, the scene lands in its own non-multisampled targets and the
+drawing buffer only ever receives one full-screen quad, so MSAA there bought a
+full-canvas resolve every frame and nothing else.
 
 ## Runtime and validation
 

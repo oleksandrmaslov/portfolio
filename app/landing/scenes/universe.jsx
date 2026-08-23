@@ -355,7 +355,18 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     let { w, h } = sz();
 
     /* ---------- renderer / scene / camera ---------- */
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
+    // MSAA on the drawing buffer is only worth paying for on the direct-render
+    // fallback. When the composer is up, the scene lands in its own
+    // (non-multisampled) HalfFloat targets and the canvas only ever receives one
+    // full-screen quad — so `antialias: true` buys nothing but a full-canvas
+    // multisample resolve every frame, which is real money on integrated GPUs.
+    const _composerAvailable = !!(
+      THREE.EffectComposer && THREE.RenderPass && THREE.OutputPass
+      && window.MOCursorDistortion && window.MOCursorDistortion.createComposerEffect
+    );
+    const renderer = new THREE.WebGLRenderer({
+      antialias: !_composerAvailable, alpha: true, powerPreference: "high-performance",
+    });
     // Cap at 1.5 — on a soft drifting field the extra retina pixels are
     // imperceptible but cost ~1.8× the fragment work at DPR 2.
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
@@ -433,7 +444,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
        Subtle chromatic aberration · gentle depth-of-field · small vignette.
        Film grain and node bloom are intentionally omitted.
 
-       Pipeline: RenderPass → BokehPass(DoF) → PointerGrade(CA+vig+grain) → OutputPass
+       Pipeline: RenderPass → FastBokehPass(DoF) → PointerGrade(CA+vig+grain) → OutputPass
 
        • All values live in window.__mo_grade so they remain tunable at runtime.
        • Guarded + tiered: on low-power devices the (expensive) Bokeh depth
@@ -449,6 +460,9 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       focus:      10.0,     // pinned to the card plane — mids stay readable
       aperture:   0.00025,  // small aperture keeps mid-distance content crisp
       maxblur:    0.0045,   // low ceiling — only the deep field melts
+      // --- DoF cost controls, read by FastBokehPass below ---
+      dofDepthScale: 0.5,   // depth prepass resolution, as a fraction of the composer's
+      dofDepthEvery: 2,     // re-render the depth prepass every Nth frame
     }, window.__mo_grade || {}));
 
     // Device tier. We enable DoF OPTIMISTICALLY everywhere (modern phones like
@@ -462,6 +476,150 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     // Cap the composer's internal resolution lower on small screens so the
     // fill-rate-heavy DoF pass stays affordable on phones.
     const _composerDpr = Math.min(window.devicePixelRatio, _isSmall ? 1.25 : 1.5);
+
+
+    /* ============================================================
+       FastBokehPass — stock BokehPass, a quarter of the bill
+       ------------------------------------------------------------
+       Stock BokehPass is the most expensive thing in this scene, and almost
+       all of it is waste AT OUR SETTINGS. maxblur is 0.0045, so the circle of
+       confusion never exceeds 0.4 × 0.0045 × viewport ≈ 3.5 px at 1080p — and
+       the stock shader throws 41 texture taps at that disc while a second full
+       scene render fills a full-resolution HalfFloat depth target every frame.
+       Three changes, none of which the eye can find:
+
+         1. 13 taps instead of 41 (centre + 8 outer + 4 inner). The mean tap
+            radius is 0.314 of the CoC against the stock kernel's 0.313, so the
+            falloff keeps its shape; on a 3.5 px disc the other 28 samples were
+            resolving detail that does not exist.
+         2. An early-out for a sub-pixel CoC. Everything near the focus plane —
+            the cards, which is what you actually read — now costs one tap.
+         3. The depth prepass runs at half resolution into an 8-bit target
+            (RGBADepthPacking is 8-bit anyway; the stock HalfFloat target
+            doubled the bandwidth for no precision) and only every Nth frame.
+            The CoC map is low-frequency and the colour buffer is never stale,
+            so a one-frame-old blur RADIUS on a 3.5 px disc is invisible.
+
+       Deliberately NOT done: reading depth from the main pass through a
+       DepthTexture, which would delete the prepass outright. The cards, the
+       constellation and both point clouds are all `depthWrite: false`, so
+       main-pass depth does not know they exist — every one of them would
+       inherit the far-field CoC and the card text would go soft. The
+       override-material prepass is what keeps them sharp. Do not "optimise" it
+       into a depth-texture read.
+       ============================================================ */
+    function makeFastBokehPass(BokehPassCtor, dofScene, dofCamera, params) {
+      const pass = new BokehPassCtor(dofScene, dofCamera, params);
+
+      // 8-bit is the correct pairing for RGBADepthPacking; swap the stock
+      // HalfFloat target for one.
+      pass.renderTargetDepth.dispose();
+      pass.renderTargetDepth = new THREE.WebGLRenderTarget(1, 1, {
+        minFilter: THREE.NearestFilter,
+        magFilter: THREE.NearestFilter,
+        type: THREE.UnsignedByteType,
+        stencilBuffer: false,
+      });
+      pass.renderTargetDepth.texture.name = "FastBokehPass.depth";
+      pass.uniforms.tDepth.value = pass.renderTargetDepth.texture;
+
+      // Texel of the FULL-resolution colour buffer — the sub-pixel early-out
+      // measures against the pixels it would otherwise be gathering.
+      pass.uniforms.texel = { value: new THREE.Vector2(1 / 1024, 1 / 1024) };
+
+      pass.materialBokeh.fragmentShader = [
+        "#include <common>",
+        "varying vec2 vUv;",
+        "uniform sampler2D tColor;",
+        "uniform sampler2D tDepth;",
+        "uniform float maxblur;",
+        "uniform float aperture;",
+        "uniform float nearClip;",
+        "uniform float farClip;",
+        "uniform float focus;",
+        "uniform float aspect;",
+        "uniform vec2 texel;",
+        "#include <packing>",
+        "void main() {",
+        "  float depth = unpackRGBAToDepth( texture2D( tDepth, vUv ) );",
+        "  float viewZ = perspectiveDepthToViewZ( depth, nearClip, farClip );",
+        "  float factor = ( focus + viewZ );",   // viewZ is <= 0, so this is a difference
+        "  float coc = clamp( factor * aperture, -maxblur, maxblur );",
+        // Stock's widest ring sits at 0.4 of the CoC; keep exactly that reach.
+        "  vec2 rad = vec2( coc * 0.4, coc * 0.4 * aspect );",
+        "  vec4 centre = texture2D( tColor, vUv );",
+        "  if ( abs( rad.x ) < texel.x * 0.75 && abs( rad.y ) < texel.y * 0.75 ) {",
+        "    gl_FragColor = vec4( centre.rgb, 1.0 );",
+        "    return;",
+        "  }",
+        "  vec4 col = centre;",
+        "  col += texture2D( tColor, vUv + vec2(  1.0000,  0.0000 ) * rad );",
+        "  col += texture2D( tColor, vUv + vec2(  0.7071,  0.7071 ) * rad );",
+        "  col += texture2D( tColor, vUv + vec2(  0.0000,  1.0000 ) * rad );",
+        "  col += texture2D( tColor, vUv + vec2( -0.7071,  0.7071 ) * rad );",
+        "  col += texture2D( tColor, vUv + vec2( -1.0000,  0.0000 ) * rad );",
+        "  col += texture2D( tColor, vUv + vec2( -0.7071, -0.7071 ) * rad );",
+        "  col += texture2D( tColor, vUv + vec2(  0.0000, -1.0000 ) * rad );",
+        "  col += texture2D( tColor, vUv + vec2(  0.7071, -0.7071 ) * rad );",
+        "  col += texture2D( tColor, vUv + vec2(  0.5081,  0.2105 ) * rad );",
+        "  col += texture2D( tColor, vUv + vec2( -0.2105,  0.5081 ) * rad );",
+        "  col += texture2D( tColor, vUv + vec2( -0.5081, -0.2105 ) * rad );",
+        "  col += texture2D( tColor, vUv + vec2(  0.2105, -0.5081 ) * rad );",
+        "  gl_FragColor = vec4( ( col / 13.0 ).rgb, 1.0 );",
+        "}",
+      ].join("\n");
+      pass.materialBokeh.needsUpdate = true;
+
+      pass.depthScale = 0.5;
+      pass.depthEvery = 1;
+      pass._depthTick = 0;
+
+      pass.setSize = function (width, height) {
+        this.uniforms.aspect.value = width / height;
+        const dw = Math.max(1, Math.round(width * this.depthScale));
+        const dh = Math.max(1, Math.round(height * this.depthScale));
+        this.renderTargetDepth.setSize(dw, dh);
+        this.uniforms.texel.value.set(1 / Math.max(1, width), 1 / Math.max(1, height));
+        // The resize dropped the depth attachment — never let a skipped frame
+        // sample it before it has been filled again.
+        this._depthTick = 0;
+      };
+
+      pass.render = function (renderer, writeBuffer, readBuffer) {
+        const every = Math.max(1, this.depthEvery | 0);
+        if (this._depthTick % every === 0) {
+          this.scene.overrideMaterial = this.materialDepth;
+          renderer.getClearColor(this._oldClearColor);
+          const oldClearAlpha = renderer.getClearAlpha();
+          const oldAutoClear = renderer.autoClear;
+          renderer.autoClear = false;
+          renderer.setClearColor(0xffffff);
+          renderer.setClearAlpha(1.0);
+          renderer.setRenderTarget(this.renderTargetDepth);
+          renderer.clear();
+          renderer.render(this.scene, this.camera);
+          this.scene.overrideMaterial = null;
+          renderer.setClearColor(this._oldClearColor);
+          renderer.setClearAlpha(oldClearAlpha);
+          renderer.autoClear = oldAutoClear;
+        }
+        this._depthTick++;
+
+        this.uniforms.tColor.value = readBuffer.texture;
+        this.uniforms.nearClip.value = this.camera.near;
+        this.uniforms.farClip.value = this.camera.far;
+
+        if (this.renderToScreen) {
+          renderer.setRenderTarget(null);
+        } else {
+          renderer.setRenderTarget(writeBuffer);
+          renderer.clear();
+        }
+        this.fsQuad.render(renderer);
+      };
+
+      return pass;
+    }
 
     // The shared controller owns the exact combined cursor shader, its four
     // ripple slots, paint buffers and pointer wake. Universe
@@ -477,9 +635,11 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         composer.setSize(w, h);
         composer.addPass(new RenderPass(scene, camera));
         if (GRADE.dof && !_veryWeak && BokehPass) {
-          bokehPass = new BokehPass(scene, camera, {
+          bokehPass = makeFastBokehPass(BokehPass, scene, camera, {
             focus: GRADE.focus, aperture: GRADE.aperture, maxblur: GRADE.maxblur,
           });
+          bokehPass.depthScale = Math.min(1, Math.max(0.25, GRADE.dofDepthScale || 0.5));
+          bokehPass.depthEvery = Math.max(1, Math.round(GRADE.dofDepthEvery || 1));
           composer.addPass(bokehPass);
         }
         cursorFx = createCursorEffect({
@@ -532,18 +692,30 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     window.addEventListener("keydown", onAnyAct, { passive: true });
     window.addEventListener("scroll", onAnyAct, { passive: true });
 
-    // Adaptive DoF probe: sample FPS over the first ~2s of real rendering. If the
+    // Adaptive DoF probe: sample FPS over ~1.5s of settled rendering. If the
     // device can't sustain it, disable the (expensive) bokeh pass automatically —
     // the CA + vignette grade stays. This protects weak phones without punishing
     // capable ones (iPhone 16 Pro Max keeps its DoF).
-    let _probeFrames = 0, _probeAccum = 0, _probeDone = false;
+    //
+    // The gate is 30 FPS, not 60: DoF is a look, and a device holding a steady
+    // 30 should keep it rather than be stripped back for missing a number it was
+    // never going to hit. The first frames are DISCARDED — mount is when the GLBs
+    // upload, the shaders compile and the first tile textures land, and judging
+    // the device on that stall was disabling DoF on machines that then ran fine.
+    const DOF_MIN_FPS = 30;
+    const DOF_WARMUP  = 30;   // frames thrown away before measuring
+    const DOF_WINDOW  = 90;   // frames measured (~1.5s at 60)
+    let _probeWarm = 0, _probeFrames = 0, _probeAccum = 0, _probeDone = false;
     function probeDoF(dt) {
       if (_probeDone || !bokehPass) return;
       // ignore absurd dt (tab was backgrounded / first frame)
-      if (dt > 0 && dt < 200) { _probeAccum += dt; _probeFrames++; }
-      if (_probeFrames >= 90) {            // ~1.5s of frames
+      if (!(dt > 0 && dt < 200)) return;
+      if (_probeWarm < DOF_WARMUP) { _probeWarm++; return; }
+      _probeAccum += dt; _probeFrames++;
+      if (_probeFrames >= DOF_WINDOW) {
         const avgFps = 1000 / (_probeAccum / _probeFrames);
-        if (avgFps < 42) {
+        window.__mo_dofFps = Math.round(avgFps * 10) / 10;   // readable from the console
+        if (avgFps < DOF_MIN_FPS) {
           bokehPass.enabled = false;
           window.__mo_dofOn = false;
         }
