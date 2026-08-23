@@ -43,8 +43,10 @@ body.pp-exit .pp-shell { opacity: 0; transition: opacity 280ms var(--e-out); }
   cursor: pointer;
   transition: color var(--d-fast);
 }
-.pp-shell__brand:hover { color: var(--signal); }
-.pp-shell__brand:hover .pp-shell__brandBack { color: var(--signal); }
+/* Two separate destinations now, so they light separately — hovering the
+   wordmark must not suggest it does what the arrow does. */
+.pp-shell__brandM:hover { color: var(--signal); }
+.pp-shell__brandBack:hover { color: var(--signal); }
 .pp-shell__brandM { color: var(--bone); font-weight: 500; }
 .pp-shell__brandSep {
   width: 18px; height: 1px;

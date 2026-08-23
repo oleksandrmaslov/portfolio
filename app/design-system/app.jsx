@@ -5,15 +5,8 @@
 const { useState: useStateA, useEffect: useEffectA } = React;
 
 function App() {
-  const [booted, setBooted] = useStateA(() => sessionStorage.getItem("mo_booted") === "1");
-
-  useEffectA(() => {
-    if (booted) sessionStorage.setItem("mo_booted", "1");
-  }, [booted]);
-
   return (
     <>
-      {!booted && <Boot onDone={() => setBooted(true)} />}
       <FibGrid />
       <Cursor />
       <Shell />

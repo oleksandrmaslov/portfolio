@@ -46,9 +46,15 @@ const MSORTS = [
 /* ============================================================
    ManifestApp
    ============================================================ */
+/* NO BOOT OVERLAY HERE — see app/projects/index/styles.css.
+   Boot is a React component, so it could only ever render AFTER React, Babel
+   and the in-browser JSX compile had already finished. It masked nothing; it
+   just held a page that was ready behind ~3s of synthetic log, and because it
+   mounts as a SIBLING of the manifest rather than in place of it, the row
+   stagger below played out underneath the overlay and was over before anyone
+   saw it. Removing the overlay is what makes that entrance visible. */
 function ManifestApp() {
   const projects = window.UNIVERSE_PROJECTS || [];
-  const [booted, setBooted] = useMA(() => sessionStorage.getItem("mo_booted") === "1");
 
   const [family, setFamily] = useMA("ALL");
   const [sortId, setSortId] = useMA("addr");
@@ -56,9 +62,6 @@ function ManifestApp() {
   const [focus,  setFocus]  = useMA(null);
   const [time,   setTime]   = useMA("--:--");
 
-  useME(() => {
-    if (booted) sessionStorage.setItem("mo_booted", "1");
-  }, [booted]);
   useME(() => {
     const tick = () => setTime(new Date().toTimeString().slice(0, 5));
     tick();
@@ -120,12 +123,16 @@ function ManifestApp() {
 
   return (
     <>
-      {!booted && window.Boot ? React.createElement(window.Boot, { onDone: () => setBooted(true) }) : null}
       {window.FibGrid ? React.createElement(window.FibGrid) : null}
       {window.Cursor  ? React.createElement(window.Cursor)  : null}
 
       <header className="shell m-shell">
-        <div className="shell__brand">M.O.</div>
+        <a className="shell__brand" href="./" aria-label="Back to the title"
+           onClick={(e) => {
+             e.preventDefault();
+             document.body.classList.add("landing-exit");
+             setTimeout(() => { window.location.href = "./"; }, 380);
+           }}>M.O.</a>
         <nav className="shell__nav">
           <a href="./">LANDING ↗</a>
           <a href="./#work">WORK</a>

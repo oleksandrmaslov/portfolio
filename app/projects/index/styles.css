@@ -334,6 +334,38 @@
   from { opacity: 0; transform: translateX(-8px); }
   to   { opacity: 1; transform: translateX(0); }
 }
+
+/* ============================================================
+   ARRIVAL
+   ------------------------------------------------------------
+   This page has no loader. React, Babel and the in-browser JSX
+   compile decide when it can paint, and a synthetic boot log
+   rendered after all of that only delays a page that is already
+   finished — so the arrival IS the transition.
+
+   The chrome fades up once; the rows already carry their own
+   staggered `m-row-in` (28ms apart, set inline from the row
+   index), and that stagger only became visible when the overlay
+   that used to cover it was removed. Keep the chrome shorter
+   than the row stagger so the table is what the eye lands on.
+   ============================================================ */
+.m-shell,
+.m-page {
+  animation: m-arrive 420ms var(--e-out) both;
+}
+.m-page { animation-delay: 60ms; }
+/* `to` resolves to `none`, not `translateY(0)`: .m-shell is position:fixed and
+   `both` keeps the final keyframe, so a lingering transform would leave it a
+   containing block for anything fixed inside it. */
+@keyframes m-arrive {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .m-shell,
+  .m-page,
+  .m-row { animation: none; opacity: 1; transform: none; }
+}
 .m-row:last-child { border-bottom: 0; }
 .m-row:hover,
 .m-row--focus {

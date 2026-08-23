@@ -276,6 +276,14 @@ claim, and the shipped copy follows it. Do not soften these while editing:
   first production-shaped build, not a development benchmark. Image rights are a
   launch gate: a local asset is not a licensed one.
 
+The wordmark in the header is the way home on every route: the landing scrolls
+to `#title`, All Projects and the design system navigate to `./`, and the
+project pages carry it as its own link. On those pages the brand used to be a
+single anchor reading `M.O. ∥ ← UNIVERSE` that ran the reverse node flight, so
+one control had two meanings. It is two controls now — the wordmark goes to the
+title, `← UNIVERSE` keeps the flight back to wherever the page was opened from
+— and their hover states were decoupled to match.
+
 ## Shared pointer effects
 
 `app/shared/styles/pointer.css` is the single square-reticle stylesheet.
@@ -343,7 +351,21 @@ full-canvas resolve every frame and nothing else.
 
 ## Runtime and validation
 
-- Keep the landing loader and `mo:preloader-done` contract intact.
+- Keep the landing loader and `mo:preloader-done` contract intact. That is the
+  landing's own `app/landing/preloader.js`. **There is no other loader.** The
+  `Boot` overlay that used to live in `app/shared/core.jsx` was deleted on
+  2026-08-23, along with its `.boot*` styles and the `mo_booted` session flag.
+  It was a React component, so it could only render after React, Babel and the
+  in-browser JSX compile had already finished: it masked nothing, and it held a
+  ready page behind ~3s of synthetic log. Worse, it mounted as a sibling of the
+  content rather than in place of it, so All Projects' staggered `m-row-in`
+  entrance played out underneath it and was over before anyone saw it. Removing
+  it is what made that entrance visible. Do not reintroduce a loader on a page
+  whose paint is already gated by its own script loading.
+- The GLB warm-up used to hang off that overlay's mount effect and now runs
+  deferred at the bottom of `core.jsx`. It must stay deferred: core.jsx loads
+  before each page's data scripts, and the single yield is what lets
+  `UNIVERSE_PROJECTS` and `PROJECT_DATA` populate before it reads them.
 - Keep fixed and sticky landing layers outside CSS filters that create new
   containing blocks.
 - Prefer visibility-gated rendering and explicit Three.js disposal; the site

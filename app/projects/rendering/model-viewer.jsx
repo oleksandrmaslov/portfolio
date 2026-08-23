@@ -113,7 +113,7 @@
   /* Preload a list of GLB URLs — kicks off the same cached fetch+parse used
      by loadProjectModel, so by the time any tile/viewer asks for a model the
      promise is already resolved (or at least in-flight). Safe to call from
-     the Boot preloader: it waits until THREE.GLTFLoader is available, and
+     the shared warm-up in core.jsx: it waits until THREE.GLTFLoader is available, and
      swallows individual failures so one bad URL doesn't block the rest. */
   window.preloadModels = function (urls) {
     if (!urls || !urls.length) return Promise.resolve();

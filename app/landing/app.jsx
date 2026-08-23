@@ -115,7 +115,9 @@ function ShellLanding({ section }) {
       <div className="lp-shell__blur" aria-hidden="true">
         <div /><div /><div /><div /><div /><div /><div />
       </div>
-      <div className="shell__brand">M.O.</div>
+      {/* the wordmark is the way home on every route — here that is the
+          title section, which is the top of this page */}
+      <a className="shell__brand" href="#title" aria-label="Back to the title">M.O.</a>
       <nav className="shell__nav">
         <a href="#work" className={section === "work" ? "is-active" : ""} aria-current={section === "work" ? "location" : undefined}>WORK</a>
         <a href="#about" className={section === "about" ? "is-active" : ""} aria-current={section === "about" ? "location" : undefined}>ABOUT</a>

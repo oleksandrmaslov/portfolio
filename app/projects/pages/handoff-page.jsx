@@ -231,12 +231,17 @@ function PCShell({ project }) {
       <div className="pp-shell__blur" aria-hidden="true">
         <div></div><div></div><div></div><div></div><div></div><div></div><div></div>
       </div>
-      <a href="./" className="shell__brand pp-shell__brand" data-mo-cursor-mirror data-mo-cursor-opacity=".pp-shell,.hv-page"
-         onClick={(e) => { e.preventDefault(); pcLeaveToUniverse(); }}>
-        <span className="pp-shell__brandM">M.O.</span>
+      {/* Two destinations, so two controls. The wordmark goes home to the
+          title like it does on every other route; the arrow keeps the
+          reverse node flight back to wherever this page was opened from. */}
+      <div className="shell__brand pp-shell__brand">
+        <a className="pp-shell__brandM" href="./" aria-label="Back to the title"
+           data-mo-cursor-mirror data-mo-cursor-opacity=".pp-shell,.hv-page">M.O.</a>
         <span className="pp-shell__brandSep" />
-        <span className="pp-shell__brandBack">← UNIVERSE</span>
-      </a>
+        <a className="pp-shell__brandBack" href="./#work"
+           onClick={(e) => { e.preventDefault(); pcLeaveToUniverse(); }}
+           data-mo-cursor-mirror data-mo-cursor-opacity=".pp-shell,.hv-page">← UNIVERSE</a>
+      </div>
       <nav className="shell__nav pp-shell__nav">
         <a href="./#work" onClick={(e) => { e.preventDefault(); pcLeaveToUniverse(); }} data-mo-cursor-mirror data-mo-cursor-opacity=".pp-shell,.hv-page">WORK</a>
         <a href="./#about" onClick={(e) => { e.preventDefault(); pcLeaveToUniverse(); }} data-mo-cursor-mirror data-mo-cursor-opacity=".pp-shell,.hv-page">ABOUT</a>

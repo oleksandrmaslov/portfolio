@@ -5,73 +5,32 @@
 const { useState, useEffect, useRef, useMemo, useCallback } = React;
 
 /* ============================================================
-   BOOT — terminal preloader
+   MODEL WARM-UP
+   ------------------------------------------------------------
+   This used to hang off the boot overlay's mount effect. The
+   overlay is gone — it could only ever render after React, Babel
+   and the in-browser JSX compile had finished, so it masked
+   nothing and just held a ready page behind ~3s of synthetic log
+   — but the preload it kicked off is real and every route wants
+   it. It runs deferred instead of at module scope: core.jsx is
+   loaded before each page's data scripts, and yielding once lets
+   the whole synchronous + Babel pass finish, so UNIVERSE_PROJECTS
+   (landing, All Projects) and PROJECT_DATA (project pages) are
+   both populated by the time this reads them.
    ============================================================ */
-function Boot({ onDone }) {
-  const lines = useMemo(() => [
-    { t: "info", text: "M.O. SYSTEM // bootloader v0.1.0", time: "0.000s" },
-    { t: "ok",   text: "cpu core online — nrf52840 @ 64MHz",  time: "0.001s" },
-    { t: "ok",   text: "memory mapped — 256kB ram",            time: "0.003s" },
-    { t: "ok",   text: "design tokens loaded",                 time: "0.005s" },
-    { t: "ok",   text: "geist + geist mono mounted",           time: "0.008s" },
-    { t: "ok",   text: "fibonacci scaffold initialised — φ=1.6180339887",  time: "0.013s" },
-    { t: "ok",   text: "event bus connected — 7 channels",     time: "0.021s" },
-    { t: "ok",   text: "three.js renderer attached",           time: "0.034s" },
-    { t: "ok",   text: "3d assets prefetched — models warm",   time: "0.048s" },
-    { t: "ok",   text: "all systems nominal",                  time: "0.055s" },
-  ], []);
-
-  // Kick off the GLB preload as soon as Boot mounts. Pulls model URLs from
-  // every known source on the page (universe tile list + per-project data),
-  // so this single hook warms the cache for both Landing and project pages.
-  // Fire-and-forget — Boot's own timing is independent.
-  useEffect(() => {
+(function warmModels() {
+  let done = false;
+  setTimeout(() => {
+    if (done) return;
+    done = true;
     if (typeof window.preloadModels !== "function") return;
     const urls = new Set();
     (window.UNIVERSE_PROJECTS || []).forEach(p => p.model && urls.add(p.model));
     const PD = window.PROJECT_DATA || {};
     Object.values(PD).forEach(p => p && p.model && urls.add(p.model));
     if (urls.size) window.preloadModels(Array.from(urls));
-  }, []);
-
-  const [shown, setShown] = useState(0);
-  const [done, setDone]   = useState(false);
-  const [gone, setGone]   = useState(false);
-
-  useEffect(() => {
-    if (shown >= lines.length) {
-      const t1 = setTimeout(() => setDone(true), 220);
-      const t2 = setTimeout(() => setGone(true), 1200);
-      const t3 = setTimeout(() => onDone(), 1700);
-      return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
-    }
-    const id = setTimeout(() => setShown(s => s + 1), 90 + Math.random() * 60);
-    return () => clearTimeout(id);
-  }, [shown, lines.length, onDone]);
-
-  const skip = () => { setGone(true); setTimeout(onDone, 300); };
-
-  return (
-    <div className={"boot " + (gone ? "gone" : "")}>
-      <div className="boot__inner">
-        <div className="boot__title">M.O. ∥ SYSTEM</div>
-        {lines.slice(0, shown).map((l, i) => (
-          <span key={i} className={"boot__line " + l.t}>
-            {l.text}
-            <span className="boot__time">{l.time}</span>
-          </span>
-        ))}
-        {done && (
-          <span className="boot__ready">
-            &gt; READY
-            <span className="boot__cursor" />
-          </span>
-        )}
-      </div>
-      <div className="boot__skip" data-hot onClick={skip}>skip ↵</div>
-    </div>
-  );
-}
+  }, 0);
+})();
 
 /* ============================================================
    FIB GRID — proportional column overlay (press G to reveal)
@@ -255,7 +214,7 @@ function Shell() {
   }, []);
   return (
     <header className="shell">
-      <div className="shell__brand">M.O. ∥ SYSTEM v0.1.0</div>
+      <a className="shell__brand" href="./" aria-label="Back to the title">M.O. ∥ SYSTEM v0.1.0</a>
       <nav className="shell__nav">
         <a href="#brief">BRIEF</a>
         <a href="#color">COLOR</a>
@@ -274,7 +233,6 @@ function Shell() {
   );
 }
 
-window.Boot = Boot;
 window.FibGrid = FibGrid;
 window.Cursor = Cursor;
 window.Shell = Shell;

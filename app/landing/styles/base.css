@@ -688,6 +688,16 @@ body.mo-explore .universe__mount { touch-action: none; }
   margin-bottom: calc(env(safe-area-inset-bottom, 0px) + 20px);
   text-align: center;
 }
+/* The shell is invisible in explore mode but `.shell > *` (shell.css) re-enables
+   pointer events on its children, so the volume button went on hit-testing under
+   the overlay's EXIT — and .lp is a z-index:1 stacking context, which traps the
+   overlay's z-index:60 BELOW the z-index:50 shell. Tapping EXIT toggled the
+   sound and left explore mode open. Chrome that has been faded out must not
+   catch the pointer. */
+body.mo-explore .lp-shell,
+body.mo-explore .lp-shell > *,
+body.mo-explore .lp-shell > * > * { pointer-events: none; }
+
 /* explore mode strips the title chrome — the field owns the screen */
 body.mo-explore .title__shield,
 body.mo-explore .fieldHint,

@@ -15,52 +15,11 @@ var _React = React,
   useRef = _React.useRef,
   useMemo = _React.useMemo,
   useCallback = _React.useCallback;
-function Boot(_ref) {
-  var onDone = _ref.onDone;
-  var lines = useMemo(function () {
-    return [{
-      t: "info",
-      text: "M.O. SYSTEM // bootloader v0.1.0",
-      time: "0.000s"
-    }, {
-      t: "ok",
-      text: "cpu core online — nrf52840 @ 64MHz",
-      time: "0.001s"
-    }, {
-      t: "ok",
-      text: "memory mapped — 256kB ram",
-      time: "0.003s"
-    }, {
-      t: "ok",
-      text: "design tokens loaded",
-      time: "0.005s"
-    }, {
-      t: "ok",
-      text: "geist + geist mono mounted",
-      time: "0.008s"
-    }, {
-      t: "ok",
-      text: "fibonacci scaffold initialised — φ=1.6180339887",
-      time: "0.013s"
-    }, {
-      t: "ok",
-      text: "event bus connected — 7 channels",
-      time: "0.021s"
-    }, {
-      t: "ok",
-      text: "three.js renderer attached",
-      time: "0.034s"
-    }, {
-      t: "ok",
-      text: "3d assets prefetched — models warm",
-      time: "0.048s"
-    }, {
-      t: "ok",
-      text: "all systems nominal",
-      time: "0.055s"
-    }];
-  }, []);
-  useEffect(function () {
+(function warmModels() {
+  var done = false;
+  setTimeout(function () {
+    if (done) return;
+    done = true;
     if (typeof window.preloadModels !== "function") return;
     var urls = new Set();
     (window.UNIVERSE_PROJECTS || []).forEach(function (p) {
@@ -71,77 +30,13 @@ function Boot(_ref) {
       return p && p.model && urls.add(p.model);
     });
     if (urls.size) window.preloadModels(Array.from(urls));
-  }, []);
-  var _useState = useState(0),
-    _useState2 = _slicedToArray(_useState, 2),
-    shown = _useState2[0],
-    setShown = _useState2[1];
-  var _useState3 = useState(false),
-    _useState4 = _slicedToArray(_useState3, 2),
-    done = _useState4[0],
-    setDone = _useState4[1];
-  var _useState5 = useState(false),
-    _useState6 = _slicedToArray(_useState5, 2),
-    gone = _useState6[0],
-    setGone = _useState6[1];
-  useEffect(function () {
-    if (shown >= lines.length) {
-      var t1 = setTimeout(function () {
-        return setDone(true);
-      }, 220);
-      var t2 = setTimeout(function () {
-        return setGone(true);
-      }, 1200);
-      var t3 = setTimeout(function () {
-        return onDone();
-      }, 1700);
-      return function () {
-        clearTimeout(t1);
-        clearTimeout(t2);
-        clearTimeout(t3);
-      };
-    }
-    var id = setTimeout(function () {
-      return setShown(function (s) {
-        return s + 1;
-      });
-    }, 90 + Math.random() * 60);
-    return function () {
-      return clearTimeout(id);
-    };
-  }, [shown, lines.length, onDone]);
-  var skip = function skip() {
-    setGone(true);
-    setTimeout(onDone, 300);
-  };
-  return React.createElement("div", {
-    className: "boot " + (gone ? "gone" : "")
-  }, React.createElement("div", {
-    className: "boot__inner"
-  }, React.createElement("div", {
-    className: "boot__title"
-  }, "M.O. \u2225 SYSTEM"), lines.slice(0, shown).map(function (l, i) {
-    return React.createElement("span", {
-      key: i,
-      className: "boot__line " + l.t
-    }, l.text, React.createElement("span", {
-      className: "boot__time"
-    }, l.time));
-  }), done && React.createElement("span", {
-    className: "boot__ready"
-  }, "> READY", React.createElement("span", {
-    className: "boot__cursor"
-  }))), React.createElement("div", {
-    className: "boot__skip",
-    "data-hot": true,
-    onClick: skip
-  }, "skip \u21B5"));
-}
+  }, 0);
+})();
 function FibGrid() {
-  var _useState7 = useState(false),
-    _useState8 = _slicedToArray(_useState7, 2),
-    on = _useState8[0],
-    setOn = _useState8[1];
+  var _useState = useState(false),
+    _useState2 = _slicedToArray(_useState, 2),
+    on = _useState2[0],
+    setOn = _useState2[1];
   useEffect(function () {
     var onKey = function onKey(e) {
       if (e.key !== "g" && e.key !== "G") return;
@@ -205,10 +100,10 @@ function FibGrid() {
 function Cursor() {
   var ref = useRef(null);
   var coordRef = useRef(null);
-  var _useState9 = useState("idle"),
-    _useState0 = _slicedToArray(_useState9, 2),
-    mode = _useState0[0],
-    setMode = _useState0[1];
+  var _useState3 = useState("idle"),
+    _useState4 = _slicedToArray(_useState3, 2),
+    mode = _useState4[0],
+    setMode = _useState4[1];
   useEffect(function () {
     document.documentElement.classList.add("custom-cursor");
     var node = ref.current;
@@ -310,10 +205,10 @@ function Cursor() {
   }, "0000 / 0000"), mode === "grab" && React.createElement("span", null, "drag to rotate"), mode === "probe" && React.createElement("span", null, "inspect \u2316"), mode === "hot" && React.createElement("span", null, "open \u2192")));
 }
 function Shell() {
-  var _useState1 = useState("--:--"),
-    _useState10 = _slicedToArray(_useState1, 2),
-    time = _useState10[0],
-    setTime = _useState10[1];
+  var _useState5 = useState("--:--"),
+    _useState6 = _slicedToArray(_useState5, 2),
+    time = _useState6[0],
+    setTime = _useState6[1];
   useEffect(function () {
     var tick = function tick() {
       return setTime(new Date().toTimeString().slice(0, 5));
@@ -326,8 +221,10 @@ function Shell() {
   }, []);
   return React.createElement("header", {
     className: "shell"
-  }, React.createElement("div", {
-    className: "shell__brand"
+  }, React.createElement("a", {
+    className: "shell__brand",
+    href: "./",
+    "aria-label": "Back to the title"
   }, "M.O. \u2225 SYSTEM v0.1.0"), React.createElement("nav", {
     className: "shell__nav"
   }, React.createElement("a", {
@@ -352,7 +249,6 @@ function Shell() {
     className: "shell__hint"
   }, "[G] grid")));
 }
-window.Boot = Boot;
 window.FibGrid = FibGrid;
 window.Cursor = Cursor;
 window.Shell = Shell;
@@ -9265,8 +9161,10 @@ function ShellLanding(_ref) {
   }, React.createElement("div", {
     className: "lp-shell__blur",
     "aria-hidden": "true"
-  }, React.createElement("div", null), React.createElement("div", null), React.createElement("div", null), React.createElement("div", null), React.createElement("div", null), React.createElement("div", null), React.createElement("div", null)), React.createElement("div", {
-    className: "shell__brand"
+  }, React.createElement("div", null), React.createElement("div", null), React.createElement("div", null), React.createElement("div", null), React.createElement("div", null), React.createElement("div", null), React.createElement("div", null)), React.createElement("a", {
+    className: "shell__brand",
+    href: "#title",
+    "aria-label": "Back to the title"
   }, "M.O."), React.createElement("nav", {
     className: "shell__nav"
   }, React.createElement("a", {
