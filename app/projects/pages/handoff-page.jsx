@@ -241,7 +241,6 @@ function PCShell({ project }) {
         <a href="./#work" onClick={(e) => { e.preventDefault(); pcLeaveToUniverse(); }} data-mo-cursor-mirror data-mo-cursor-opacity=".pp-shell,.hv-page">WORK</a>
         <a href="./#about" onClick={(e) => { e.preventDefault(); pcLeaveToUniverse(); }} data-mo-cursor-mirror data-mo-cursor-opacity=".pp-shell,.hv-page">ABOUT</a>
         <a href="./#contact" onClick={(e) => { e.preventDefault(); pcLeaveToUniverse(); }} data-mo-cursor-mirror data-mo-cursor-opacity=".pp-shell,.hv-page">CONTACT</a>
-        <a href="Design System.html" data-mo-cursor-mirror data-mo-cursor-opacity=".pp-shell,.hv-page">SYSTEM ↗</a>
       </nav>
       <div className="shell__status pp-shell__status">
         <span className="shell__dot" />

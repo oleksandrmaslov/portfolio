@@ -144,7 +144,7 @@ function OriginBeat() {
         </div>
 
         {/* ── handoff cue → Selected Work ── */}
-        <div className="origin__handoff" style={{ opacity: handoff.toFixed(3), transform: `translate(-50%, ${(1 - handoff) * 10}px)` }}>
+        <div className="origin__handoff" style={{ opacity: handoff.toFixed(3), transform: `translateY(${(1 - handoff) * 10}px)` }}>
           <span className="origin__handoffLine" />
           <span>03 · SELECTED WORK</span>
           <span className="origin__handoffArr">↓</span>

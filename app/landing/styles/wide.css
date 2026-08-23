@@ -40,7 +40,7 @@
 
   /* ── origin ── */
   .origin__head2 { font-size: clamp(84px, 4.9vw, 125px); }
-  .origin__type { max-width: 46vw; left: 6vw; }
+  .origin__type { max-width: 46vw; left: var(--gutter); }
 
   /* ── about node card (0x00) ── */
   .uNode { width: 22.4vw; }

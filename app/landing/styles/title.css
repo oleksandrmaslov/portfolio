@@ -43,10 +43,10 @@
 }
 
 .lp-title {
-  --tc-x: var(--s-7);              /* content + corner gutter = header gutter */
+  --tc-x: var(--gutter);           /* content + corner gutter = header gutter */
   --tf-top: max(58px, 3.4vw);      /* frame top — sits just under the fixed header */
   --tf-bot: 42px;                  /* frame bottom — baseline row lives beneath */
-  --tc-bot: var(--s-8);            /* content bottom, 13px inside the frame */
+  --tc-bot: var(--gutter-bot);     /* content bottom, 13px inside the frame */
 }
 
 /* frame + shields follow the same box */

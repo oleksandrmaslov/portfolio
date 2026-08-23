@@ -7599,7 +7599,6 @@ var _bfClamp = function _bfClamp(v, a, b) {
 };
 var _bfRenderEps = 0.004;
 function BoardFlight(_ref) {
-  var _STOPS$active;
   var onEnter = _ref.onEnter,
     onContact = _ref.onContact;
   var secRef = useBFR(null);
@@ -7954,7 +7953,6 @@ function BoardFlight(_ref) {
       behavior: "smooth"
     });
   };
-  var refShort = ((_STOPS$active = STOPS[active]) === null || _STOPS$active === void 0 ? void 0 : _STOPS$active.ref.split(" · ")[0]) || "—";
   var footE = _bfEaseOut(foot);
   var openGate = _bfClamp(((leadUi.o || 0) - 0.55) / 0.4, 0, 1);
   var chromeFade = ((1 - _bfClamp(foot * 1.4, 0, 1)) * openGate).toFixed(3);
@@ -8057,8 +8055,10 @@ function BoardFlight(_ref) {
   }, STOPS.map(function (st, i) {
     var center = st.p / 10;
     var d = Math.abs(prog - center) * N;
-    var vis = Math.max(0, 1 - d * 1.6);
-    var isOn = d < 0.45 && foot < 0.4;
+    var held = i === 0 && prog <= center || i === N - 1 && prog >= center;
+    var ramp = held ? 1 : _bfClamp((0.5 - d) / 0.17, 0, 1);
+    var vis = ramp * ramp * (3 - 2 * ramp);
+    var isOn = (held || d < 0.5) && foot < 0.4;
     return React.createElement("article", {
       key: i,
       className: "bf-ch " + (isOn ? "is-on" : ""),
@@ -8102,29 +8102,6 @@ function BoardFlight(_ref) {
       "data-mo-cursor-opacity": ".bf-ch,.bf-layer,.lp"
     }, st.ref))));
   })), React.createElement("div", {
-    className: "bf-hud",
-    style: {
-      opacity: chromeFade
-    }
-  }, React.createElement("div", {
-    className: "bf-hudRow",
-    "data-mo-board-cursor-mirror": true,
-    "data-mo-cursor-opacity": ".bf-hud,.bf-layer,.lp"
-  }, React.createElement("span", null, "REF"), React.createElement("span", {
-    className: "v"
-  }, refShort)), React.createElement("div", {
-    className: "bf-hudRow",
-    "data-mo-board-cursor-mirror": true,
-    "data-mo-cursor-opacity": ".bf-hud,.bf-layer,.lp"
-  }, React.createElement("span", null, "STOP"), React.createElement("span", {
-    className: "v"
-  }, (active + 1).toString().padStart(2, "0"), " / ", N.toString().padStart(2, "0"))), React.createElement("div", {
-    className: "bf-hudRow",
-    "data-mo-board-cursor-mirror": true,
-    "data-mo-cursor-opacity": ".bf-hud,.bf-layer,.lp"
-  }, React.createElement("span", null, "CAM"), React.createElement("span", {
-    className: "v"
-  }, foot > 0.5 ? "HERO" : "PROBE"))), React.createElement("div", {
     className: "bf-rail",
     style: {
       opacity: chromeFade,
@@ -8230,18 +8207,7 @@ function BoardFlight(_ref) {
     className: "bf-foot__linkVal"
   }, "download \xB7 2 pages"), React.createElement("span", {
     className: "bf-foot__arr"
-  }, "\u2193")), React.createElement("a", {
-    className: "bf-foot__link",
-    href: "Design System.html",
-    "data-mo-board-cursor-mirror": true,
-    "data-mo-cursor-opacity": ".bf-foot,.bf-layer,.lp"
-  }, React.createElement("span", {
-    className: "bf-foot__linkKey"
-  }, "SYSTEM"), React.createElement("span", {
-    className: "bf-foot__linkVal"
-  }, "design foundation \xB7 v0.1"), React.createElement("span", {
-    className: "bf-foot__arr"
-  }, "\u2192"))), React.createElement("div", {
+  }, "\u2193"))), React.createElement("div", {
     className: "bf-foot__meta"
   }, React.createElement("span", {
     "data-mo-board-cursor-mirror": true,
@@ -8748,7 +8714,7 @@ function OriginBeat() {
     className: "origin__handoff",
     style: {
       opacity: handoff.toFixed(3),
-      transform: "translate(-50%, ".concat((1 - handoff) * 10, "px)")
+      transform: "translateY(".concat((1 - handoff) * 10, "px)")
     }
   }, React.createElement("span", {
     className: "origin__handoffLine"
@@ -8873,8 +8839,8 @@ function Work(_ref) {
   var TITLE_SLOT_VW = compactReel ? 100 : midReel ? 80 : 56;
   var CARD_SLOT_VW = compactReel ? 78 : midReel ? 70 : 52;
   var SHOWALL_SLOT_VW = compactReel ? 96 : midReel ? 70 : 52;
-  var TITLE_GUTTER_PX = compactReel ? 20 : 56;
-  var titleInnerLeft = "calc(".concat(TITLE_GUTTER_PX, "px - ").concat((50 - TITLE_SLOT_VW / 2).toFixed(2), "vw)");
+  var TITLE_GUTTER = compactReel ? "var(--s-5)" : "var(--gutter)";
+  var titleInnerLeft = "calc(".concat(TITLE_GUTTER, " - ").concat((50 - TITLE_SLOT_VW / 2).toFixed(2), "vw)");
   var slotCentersVW = function () {
     var out = [TITLE_SLOT_VW / 2];
     var cursor = TITLE_SLOT_VW;

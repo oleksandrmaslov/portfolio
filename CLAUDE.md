@@ -31,8 +31,13 @@ Catalogue) are scaffolds: their chrome is real, their case-study copy is
 marked `[ ... ]` pending. Fill the placeholders in `app/projects/data.jsx`;
 do not delete the routes to "clean up".
 
-`Design System.html` is a deployed reference surface. `face-test.html` is a
-local test surface and is explicitly excluded from deployment. Internal folders
+`Design System.html` is a deployed reference surface. Its only entry point is
+the `SYSTEM ↗` link in the All Projects header — it was removed from the three
+project-page headers and from the board-flight end screen on 2026-08-23, since
+the end screen is a contact beat and an internal reference is not a way to
+reach a person. Do not orphan the route by removing that last link too.
+`face-test.html` is a local test surface and is explicitly excluded from
+deployment. Internal folders
 and source files can be reorganized, but do not rename a public root HTML route
 or change its outward links without an explicit migration and redirect plan.
 
@@ -89,6 +94,20 @@ Above 1720 px, `app/landing/styles/wide.css` re-expresses the label band and
 the landing's own sizes proportionally. Every value there is a `clamp()` with a
 ceiling at the 2560 px equivalent, so type stops growing on ultrawide instead of
 scaling without limit. Keep new ultrawide sizes bounded the same way.
+
+Three gutter tokens in `tokens.css` own every window-edge inset: `--gutter`
+(34px, left/right), `--gutter-top` (89px, the first row clear of the fixed
+shell header) and `--gutter-bot` (55px). They exist because the same four
+corners were being set five different ways — the shell at 34px, the board
+flight's section marker at `clamp(22px, 5vw, 64px)`, its chapter card at
+`5vw`, its waypoint rail at 21px, the work reel's stops at 56px and the origin
+statement at `clamp(24px, 6vw, 120px)`. Anything anchored to a viewport corner
+keys to these; the shell header is the reference because it is the one piece of
+chrome on every route. Phone breakpoints keep their own tighter `--s-5`
+overrides — a 34px gutter each side of a 375px screen is a different
+composition problem. The work reel's giant title is positioned from JS and
+passes `var(--gutter)` into its `calc()` rather than a px literal, for the same
+reason.
 
 `app/shared/styles/key.css` is the single definition of the `.key` keycap and
 is loaded by every route. It was previously duplicated declaration-for-

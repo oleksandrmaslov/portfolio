@@ -96,8 +96,11 @@ function Work({ onHoverWork }) {
   const TITLE_SLOT_VW   = compactReel ? 100 : midReel ? 80 : 56;
   const CARD_SLOT_VW    = compactReel ? 78  : midReel ? 70 : 52;
   const SHOWALL_SLOT_VW = compactReel ? 96  : midReel ? 70 : 52;
-  const TITLE_GUTTER_PX = compactReel ? 20 : 56;
-  const titleInnerLeft  = `calc(${TITLE_GUTTER_PX}px - ${(50 - TITLE_SLOT_VW / 2).toFixed(2)}vw)`;
+  // The giant reel title starts on the shared window gutter (tokens.css), so
+  // it lines up with the shell brand directly above it. Referencing the custom
+  // property instead of a px literal keeps the two from drifting apart.
+  const TITLE_GUTTER    = compactReel ? "var(--s-5)" : "var(--gutter)";
+  const titleInnerLeft  = `calc(${TITLE_GUTTER} - ${(50 - TITLE_SLOT_VW / 2).toFixed(2)}vw)`;
   const slotCentersVW = (() => {
     const out = [TITLE_SLOT_VW / 2];
     let cursor = TITLE_SLOT_VW;

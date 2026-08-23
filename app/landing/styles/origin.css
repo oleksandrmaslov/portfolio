@@ -27,8 +27,8 @@
 /* ---- identity statement block — LEFT-BOTTOM anchor ---- */
 .origin__type {
   position: absolute; z-index: 3;
-  left: clamp(24px, 6vw, 120px);
-  bottom: clamp(44px, 9vh, 112px);
+  left: var(--gutter);
+  bottom: var(--gutter-bot);
   top: auto;
   max-width: min(640px, 46vw);
   display: flex; flex-direction: column;
@@ -74,10 +74,15 @@
 .origin__sigK { font-family: var(--ff-mono); font-size: var(--fs-micro); letter-spacing: var(--tr-caps); text-transform: uppercase; color: var(--signal-dim); }
 .origin__sigV { font-family: var(--ff-display); font-size: var(--fs-meta); color: var(--ash); }
 
-/* ---- handoff cue → Selected Work ---- */
+/* ---- handoff cue → Selected Work ----
+   Bottom-RIGHT on the shared gutter, the same corner the board flight's
+   entry cue uses. The landing now reads the same way in every beat: the
+   statement or chapter holds the bottom-left, the prompt for what comes
+   next holds the bottom-right. Centring it was the one cue on the whole
+   landing that was not corner-anchored. */
 .origin__handoff {
   position: absolute; z-index: 4;
-  left: 50%; bottom: 5vh; transform: translateX(-50%);
+  right: var(--gutter); bottom: var(--gutter-bot);
   display: inline-flex; align-items: center; gap: var(--s-4);
   font-family: var(--ff-mono); font-size: var(--fs-micro);
   letter-spacing: var(--tr-caps); text-transform: uppercase; color: var(--signal);

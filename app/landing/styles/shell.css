@@ -5,7 +5,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--s-6) var(--s-7);
+  padding: var(--s-6) var(--gutter);
   z-index: 50;
   font-family: var(--ff-mono);
   font-size: var(--fs-meta);

@@ -370,9 +370,8 @@ function BoardFlight({ onEnter, onContact }) {
     window.scrollTo({ top: el.offsetTop + raw * total, behavior: "smooth" });
   };
 
-  const refShort = STOPS[active]?.ref.split(" · ")[0] || "—";
   const footE = _bfEaseOut(foot);
-  // Board chrome (mark / HUD / rail / progress / chapters) must NOT show while
+  // Board chrome (mark / rail / progress / chapters) must NOT show while
   // the board is still windowed inside the card — gate it on the window opening.
   const openGate = _bfClamp(((leadUi.o || 0) - 0.55) / 0.4, 0, 1);
   const chromeFade = ((1 - _bfClamp(foot * 1.4, 0, 1)) * openGate).toFixed(3);
@@ -446,10 +445,29 @@ function BoardFlight({ onEnter, onContact }) {
         {/* chapter overlays (fade out as the footer beat takes over) */}
         <div className="bf-stage" aria-hidden="false">
           {STOPS.map((st, i) => {
+            // Chapter centres are p = 1,3,5,7,9 over N stops, so adjacent
+            // cards sit exactly d = 1.0 apart and the hand-off point between
+            // any two is d = 0.5. Every card is drawn in the SAME box, so a
+            // fade that still has value at 0.5 double-exposes two display
+            // headlines and two body paragraphs on top of each other — which
+            // is what the old `1 - d * 1.6` did (0.2 opacity each, both
+            // legible, neither readable). Ramp to zero AT the hand-off: the
+            // outgoing card is gone the instant the incoming one starts, so
+            // the beat reads as one card replacing another.
             const center = st.p / 10;
             const d = Math.abs(prog - center) * N;
-            const vis = Math.max(0, 1 - d * 1.6);
-            const isOn = d < 0.45 && foot < 0.4;
+            // END CAPS. The first chapter's centre is 10% into the flight and
+            // the last's is at 90%, so on its own the fade opens the board on
+            // an empty corner: the reader arrives to chrome, a waypoint rail
+            // and no text, and has to guess that scrolling produces some. Hold
+            // the outer two open past their own centres — outward there is no
+            // neighbour to hand off to, so nothing can double-expose. The board
+            // now always has exactly one chapter up, from the moment the window
+            // opens to the moment the footer takes over.
+            const held = (i === 0 && prog <= center) || (i === N - 1 && prog >= center);
+            const ramp = held ? 1 : _bfClamp((0.5 - d) / 0.17, 0, 1);
+            const vis = ramp * ramp * (3 - 2 * ramp);   // smoothstep, no linear edge
+            const isOn = (held || d < 0.5) && foot < 0.4;
             return (
               <article
                 key={i}
@@ -479,13 +497,6 @@ function BoardFlight({ onEnter, onContact }) {
               </article>
             );
           })}
-        </div>
-
-        {/* probe HUD */}
-        <div className="bf-hud" style={{ opacity: chromeFade }}>
-          <div className="bf-hudRow" data-mo-board-cursor-mirror data-mo-cursor-opacity=".bf-hud,.bf-layer,.lp"><span>REF</span><span className="v">{refShort}</span></div>
-          <div className="bf-hudRow" data-mo-board-cursor-mirror data-mo-cursor-opacity=".bf-hud,.bf-layer,.lp"><span>STOP</span><span className="v">{(active + 1).toString().padStart(2, "0")} / {N.toString().padStart(2, "0")}</span></div>
-          <div className="bf-hudRow" data-mo-board-cursor-mirror data-mo-cursor-opacity=".bf-hud,.bf-layer,.lp"><span>CAM</span><span className="v">{foot > 0.5 ? "HERO" : "PROBE"}</span></div>
         </div>
 
         {/* waypoint rail */}
@@ -533,10 +544,6 @@ function BoardFlight({ onEnter, onContact }) {
               <a className="bf-foot__link" href="assets/Oleksandr-Maslov-CV.pdf" download data-mo-board-cursor-mirror data-mo-cursor-opacity=".bf-foot,.bf-layer,.lp">
                 <span className="bf-foot__linkKey">CV · PDF</span>
                 <span className="bf-foot__linkVal">download · 2 pages</span><span className="bf-foot__arr">↓</span>
-              </a>
-              <a className="bf-foot__link" href="Design System.html" data-mo-board-cursor-mirror data-mo-cursor-opacity=".bf-foot,.bf-layer,.lp">
-                <span className="bf-foot__linkKey">SYSTEM</span>
-                <span className="bf-foot__linkVal">design foundation · v0.1</span><span className="bf-foot__arr">→</span>
               </a>
             </div>
             <div className="bf-foot__meta">

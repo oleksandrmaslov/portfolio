@@ -42,7 +42,7 @@
 /* ── the rail (title slot + N card slots) ───────────────── */
 .lp-workReel__rail {
   position: absolute;
-  bottom: 56px;                  /* bottom-aligned */
+  bottom: var(--gutter-bot);     /* bottom-aligned, on the shared gutter */
   left: 0;
   display: flex;
   height: auto;
@@ -70,7 +70,7 @@
 .lp-workReel__titleInner {
   position: absolute;
   bottom: 0;
-  left: calc(56px - 22vw);    /* slot center is at 50vw, slot left at 22vw */
+  left: calc(var(--gutter) - 22vw);   /* fallback; JSX overrides per breakpoint */
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -335,8 +335,8 @@
 /* ── top-right stop buttons ────────────────────────────── */
 .lp-workReel__stops {
   position: absolute;
-  top: 96px;
-  right: 56px;
+  top: var(--gutter-top);
+  right: var(--gutter);
   display: flex;
   flex-direction: column;
   align-items: flex-end;
