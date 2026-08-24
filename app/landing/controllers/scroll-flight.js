@@ -163,6 +163,16 @@
       about: { top: 0, bottom: 0, height: 0 },
     },
   };
+  // Scroll events arrive before the animation frame. Cache their compositor
+  // position there so the perpetual flight frame never queries layout after
+  // its previous frame's CSS-variable writes.
+  var cachedScrollY = window.scrollY;
+  window.__mo_scrollY = cachedScrollY;
+  function cacheScrollY() {
+    cachedScrollY = window.scrollY;
+    window.__mo_scrollY = cachedScrollY;
+  }
+  window.addEventListener("scroll", cacheScrollY, { passive: true });
 
   function observeLayoutSections(elements) {
     if (!layout.observer) return;
@@ -192,7 +202,7 @@
     // Keep the read phase together: one layout flush, never interleaved with
     // the per-frame style writes below.
     var vh = window.innerHeight;
-    var y = window.scrollY;
+    var y = cachedScrollY;
     var rT = eT.getBoundingClientRect();
     var rO = eO.getBoundingClientRect();
     var rW = eW.getBoundingClientRect();
@@ -245,6 +255,7 @@
     window.removeEventListener("mo:title-ready", scheduleLayoutMeasure);
     window.removeEventListener("resize", scheduleLayoutMeasure);
     window.removeEventListener("orientationchange", scheduleLayoutMeasure);
+    window.removeEventListener("scroll", cacheScrollY);
     window.removeEventListener("pagehide", destroyLayoutCache);
   }
 
@@ -299,7 +310,7 @@
       dock.anim = null; dock.idle = 0; return;
     }
     if (dock.cool > 0) dock.cool -= dt;
-    var y = window.scrollY;
+    var y = cachedScrollY;
     if (dock.anim) {
       var a = dock.anim;
       var k = clamp01((now - a.t0) / a.dur);
@@ -322,13 +333,12 @@
   }
 
   /* ---------- CSS var writer (only touch the DOM when a value moves) ---------- */
-  var root = document.documentElement;
   var lastVars = {};
-  function setVar(name, v) {
+  function setVar(name, v, target) {
     var q = Math.round(v * 500) / 500;
     if (lastVars[name] === q) return;
     lastVars[name] = q;
-    root.style.setProperty(name, String(q));
+    target.style.setProperty(name, String(q));
   }
   var bodyClasses = {};
   function setBodyClass(name, on) {
@@ -356,7 +366,7 @@
     buildIris();
 
     var vh = layout.vh;
-    var y = window.scrollY;
+    var y = cachedScrollY;
     syncViewportRects(y);
     var sections = layout.sections;
     var eT = sections.title.el;
@@ -433,10 +443,10 @@
     var b = easeIO(clamp01((exitP - 0.08) / 0.82));
     var c2 = easeIO(clamp01((exitP - 0.16) / 0.74));
     window.__mo_titleExit = reduceMotion ? (exitP > 0.5 ? 1 : 0) : a;
-    setVar("--flt-a", reduceMotion ? 0 : a);
-    setVar("--flt-b", reduceMotion ? 0 : b);
-    setVar("--flt-c", reduceMotion ? 0 : c2);
-    setVar("--fl-title", 1 - clamp01((exitP - 0.5) / 0.45));
+    setVar("--flt-a", reduceMotion ? 0 : a, eT);
+    setVar("--flt-b", reduceMotion ? 0 : b, eT);
+    setVar("--flt-c", reduceMotion ? 0 : c2, eT);
+    setVar("--fl-title", 1 - clamp01((exitP - 0.5) / 0.45), eT);
     setBodyClass("fl-titleDim", exitP > 0.3);
     setBodyClass("fl-titleGone", exitP > 0.97);
     // strip the one-shot entrance reveal animations the first time the exit
@@ -449,9 +459,9 @@
     }
 
     /* ── stage presence for the sticky sections ── */
-    setVar("--fl-origin", stagePresence(rO, vh));
-    setVar("--fl-work", stagePresence(rW, vh));
-    setVar("--fl-iris", irisV);
+    setVar("--fl-origin", stagePresence(rO, vh), sections.origin.el);
+    setVar("--fl-work", stagePresence(rW, vh), sections.work.el);
+    setVar("--fl-iris", irisV, iris);
 
     /* ── sound ── */
     windUpdate(surgeSm, C);

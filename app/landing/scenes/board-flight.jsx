@@ -31,8 +31,8 @@ function BoardFlight({ onEnter, onContact }) {
   const secRef     = useBFR(null);
   const layerRef   = useBFR(null);
   const mountRef   = useBFR(null);
-  const artRef     = useBFR(null);
   const ctrlRef    = useBFR(null);
+  const readyRef   = useBFR(false);
   const tRef       = useBFR(0);
   const footRef    = useBFR(0);
   const presRef    = useBFR(0);
@@ -63,28 +63,41 @@ function BoardFlight({ onEnter, onContact }) {
   const FOOT_PORTION   = FOOT_V / TOTAL_V;
 
   const [active, setActive] = useBF(0);
-  const [prog, setProg]     = useBF(0);
-  const [foot, setFoot]     = useBF(0);
-  // lead-in UI state: c = card chrome presence, o = window-open progress
-  const [leadUi, setLeadUi] = useBF({ c: 0, o: 0, e: 0 });
 
   /* ── build the board scene lazily, only when you scroll near it ── */
   useBFE(() => {
     const mount = mountRef.current;
     if (!mount) return;
-    let bootRaf = 0, bootIdle = 0, renderRaf = 0, cursorFx = null, last = performance.now();
+    let bootRaf = 0, bootIdle = 0, renderRaf = 0, retryTimer = 0, cursorFx = null, last = performance.now();
     let disposed = false, started = false, near = false, bootObserver = null;
-    let fallbackListening = false;
+    let fallbackListening = false, attempts = 0;
     uniRef.current = document.querySelector(".universeBg");
-    if (uniRef.current) uniRef.current.style.transition = "none";
 
-    const boot = () => {
+    const boot = async () => {
       if (disposed) return;
-      const ctrl = window.MOBoard.build(mount, { lite: true });
-      if (!ctrl) return;
+      let ctrl = null;
+      try {
+        ctrl = await window.MOBoard.build(mount, { lite: true });
+      } catch (error) {
+        console.warn("[board] preflight failed", error);
+      }
+      if (!ctrl) {
+        // Keep the Universe as a valid fallback and make one clean retry. A
+        // permanent renderer failure must never fade into an empty Board layer.
+        if (!disposed && attempts < 2) {
+          started = false;
+          retryTimer = window.setTimeout(() => {
+            retryTimer = 0;
+            if (!disposed) scheduleBoot();
+          }, 900);
+        }
+        return;
+      }
+      if (disposed) { ctrl.dispose(); return; }
       ctrlRef.current = ctrl;
       const sharedCursor = window.MOCursorDistortion;
-      if (sharedCursor && typeof sharedCursor.mountStandalone === "function") {
+      const finePointer = !window.matchMedia || window.matchMedia("(pointer: fine)").matches;
+      if (finePointer && sharedCursor && typeof sharedCursor.mountStandalone === "function") {
         cursorFx = sharedCursor.mountStandalone({
           THREE: window.THREE,
           selector: "[data-mo-board-cursor-mirror]",
@@ -113,6 +126,8 @@ function BoardFlight({ onEnter, onContact }) {
         renderRaf = requestAnimationFrame(loop);
       };
       wakeRenderRef.current = wakeRender;
+      readyRef.current = true;
+      window.dispatchEvent(new CustomEvent("mo:board-ready"));
       wakeRender();
     };
 
@@ -139,8 +154,9 @@ function BoardFlight({ onEnter, onContact }) {
       if (disposed || started || !near) return;
       if (window.THREE && window.MOBoard) {
         started = true;
+        attempts += 1;
         stopBootWatch();
-        boot();
+        void boot();
         return;
       }
       bootRaf = requestAnimationFrame(tryBoot);
@@ -178,11 +194,16 @@ function BoardFlight({ onEnter, onContact }) {
     }
 
     const section = secRef.current;
+    const forcePreflight = window.location.hash === "#about" || window.location.hash === "#contact";
     if (section && window.IntersectionObserver) {
       bootObserver = new window.IntersectionObserver((entries) => {
         const entry = entries.find((candidate) => candidate.target === section);
-        if (entry) setNear(entry.isIntersecting);
-      }, { root: null, rootMargin: "75% 0px", threshold: 0 });
+        if (entry) setNear(entry.isIntersecting || forcePreflight);
+      }, {
+        root: null,
+        rootMargin: `${Math.round(window.innerHeight * 4)}px 0px`,
+        threshold: 0,
+      });
       bootObserver.observe(section);
     } else if (section) {
       fallbackListening = true;
@@ -190,6 +211,7 @@ function BoardFlight({ onEnter, onContact }) {
       window.addEventListener("resize", fallbackProbe, { passive: true });
       fallbackProbe();
     }
+    if (forcePreflight) setNear(true);
 
     const onResize = () => {
       const c = ctrlRef.current;
@@ -199,12 +221,13 @@ function BoardFlight({ onEnter, onContact }) {
     window.addEventListener("resize", onResize);
     return () => {
       disposed = true;
+      readyRef.current = false;
       stopBootWatch();
+      if (retryTimer) clearTimeout(retryTimer);
       if (renderRaf) cancelAnimationFrame(renderRaf);
       wakeRenderRef.current = null;
       window.removeEventListener("resize", onResize);
       window.__mo_universe_pause = false;
-      window.__mo_morph = null;
       if (cursorFx) cursorFx.destroy();
       if (uniRef.current) { uniRef.current.style.opacity = ""; uniRef.current.style.transition = ""; uniRef.current.style.transform = ""; }
       const c = ctrlRef.current;
@@ -216,27 +239,40 @@ function BoardFlight({ onEnter, onContact }) {
   useBFE(() => {
     const el = secRef.current;
     if (!el) return;
-    let raf;
+    const layer = layerRef.current;
+    const uni = uniRef.current || document.querySelector(".universeBg");
+    const aboutLayer = el.querySelector(".aboutNode-layer");
+    const aboutNode = el.querySelector(".uNode");
+    const grain = layer && layer.querySelector(".bf-grain");
+    const mark = layer && layer.querySelector(".bf-mark");
+    const chapters = layer ? Array.from(layer.querySelectorAll(".bf-ch")) : [];
+    const rail = layer && layer.querySelector(".bf-rail");
+    const progress = layer && layer.querySelector(".bf-prog");
+    const progressFill = layer && layer.querySelector(".bf-prog__fill");
+    const cue = layer && layer.querySelector(".bf-cue");
+    const footer = layer && layer.querySelector(".bf-foot");
+    const footerInner = footer && footer.querySelector(".bf-foot__inner");
+    let raf = 0, measureRaf = 0, dead = false;
+    let trackTop = 0, trackHeight = 1, viewportH = window.innerHeight;
     const ENTRY_VH = MODE === "takeover" ? 0.36 : MODE === "wipe" ? 0.58 : 0.7;
 
     const update = () => {
-      const vh = window.innerHeight;
-      const rect = el.getBoundingClientRect();
-      const total = el.offsetHeight - vh;
-      const top = -rect.top;
+      raf = 0;
+      const vh = viewportH;
+      const total = trackHeight - vh;
+      const pageY = Number.isFinite(window.__mo_scrollY) ? window.__mo_scrollY : window.scrollY;
+      const top = pageY - trackTop;
+      const rectTop = -top;
+      const rectBottom = rectTop + trackHeight;
       const raw = total > 0 ? _bfClamp(top / total, 0, 1) : 0;
 
       // ── lead-in (About node-card → board grows OUT of the card) ──
-      // The real board is windowed into the card's art rect (small, pulled-back
-      // establishing shot), then the card frame OPENS: the clip-path expands
-      // from the card rectangle to the full viewport while the chrome fades and
-      // the board camera dollies into the flight start. The PCB literally morphs
-      // out of the card — one object, no separate stand-in, no context seam.
+      // The real board begins as the card's small, pulled-back model, then the
+      // card frame clears while the same camera dollies into the flight start:
+      // one board, no separate stand-in and no WebGL context seam.
       const lead = _bfClamp(raw / LEAD_PORTION, 0, 1);
       const cardP = _bfClamp(lead / 0.26, 0, 1);             // card resolves in the lens
       const openP = _bfClamp((lead - 0.28) / 0.60, 0, 1);    // card window opens → full board
-      window.__mo_morph = null;                              // particle-trace morph retired
-
       // flight parameter — runs over FLIGHT_PORTION, AFTER the lead-in
       const padStart = 0.5 / FLIGHT_V;
       const fr = _bfClamp((raw - LEAD_PORTION) / FLIGHT_PORTION, 0, 1);
@@ -246,29 +282,29 @@ function BoardFlight({ onEnter, onContact }) {
       // footer beat — last portion of the section
       const footerMix = _bfClamp((raw - LEAD_PORTION - FLIGHT_PORTION) / (FOOT_PORTION * 0.82), 0, 1);
       footRef.current = footerMix;
+      const boardReady = readyRef.current;
+      const visualOpenP = boardReady ? openP : 0;
+      const visualCardP = boardReady ? cardP : 0;
 
       // contact (footer) active → drives nav highlight. Published to a window
       // bridge so LandingApp's central section resolver can read it (and still
       // calls onContact if a parent passed one, for back-compat).
-      const contactOn = footerMix > 0.5;
+      const contactOn = boardReady && footerMix > 0.5;
       window.__mo_bf = window.__mo_bf || {};
       window.__mo_bf.footer = contactOn;
       // Flight bridge: the unified HUD reads the board leg state here.
       window.__mo_bf.lead = lead;
-      window.__mo_bf.openP = openP;
+      window.__mo_bf.openP = visualOpenP;
       window.__mo_bf.t = t;
-      window.__mo_bf.foot = footerMix;
+      window.__mo_bf.foot = boardReady ? footerMix : 0;
       if (contactOn !== contactRef.current) { contactRef.current = contactOn; onContactRef.current && onContactRef.current(contactOn); }
-
-      const layer = layerRef.current;
-      const uni = uniRef.current;
 
       if (MODE === "takeover") {
         // ── The PCB morphs OUT of the card. The board canvas is windowed into
         //    the card's art rectangle (clip-path), small + pulled back; as the
         //    card OPENS (openP) the clip expands to the full viewport, the board
         //    camera dollies into the flight, and the card chrome fades. ──
-        const oe  = _bfEaseInOut(openP);
+        const oe  = _bfEaseInOut(visualOpenP);
         // At rest (window closed) the REAL board sits fully formed and framed as
         // a clean whole-board 3/4 "model" (nodeMix=1) inside the card's window.
         // As the window OPENS, the camera dollies out of that node framing into
@@ -277,7 +313,7 @@ function BoardFlight({ onEnter, onContact }) {
         // mini-PCB). introMix stays 0 so the board is solid the whole time.
         introRef.current = 0;
         nodeRef.current = 1 - oe;
-        presRef.current = cardP;         // render the board as soon as the card is up
+        presRef.current = visualCardP;   // render only after a controller is ready
         if (wakeRenderRef.current) wakeRenderRef.current();
 
         // The board renders fullscreen + TRANSPARENT (LITE path = no opaque
@@ -287,40 +323,47 @@ function BoardFlight({ onEnter, onContact }) {
         // grain must stay OFF while it's the small floating model (so the card +
         // universe show behind it), then fade in only as it takes over.
         if (layer) {
-          layer.style.opacity = _bfClamp(cardP * 1.4, 0, 1).toFixed(3);
+          layer.style.opacity = _bfClamp(visualCardP * 1.4, 0, 1).toFixed(3);
           layer.style.clipPath = "none";
           layer.style.transform = "none";
-          layer.style.pointerEvents = openP > 0.6 ? "auto" : "none";
+          const layerActive = boardReady && visualOpenP > 0.6;
+          layer.style.pointerEvents = layerActive ? "auto" : "none";
+          layer.inert = !layerActive;
+          layer.setAttribute("aria-hidden", layerActive ? "false" : "true");
           // void backdrop: 0 until the board is ~60% closed-in, then ramps to 1
-          const voidMix = _bfClamp((openP - 0.55) / 0.35, 0, 1);
-          layer.style.setProperty("--bf-void", voidMix.toFixed(3));
-          const grain = layer.querySelector(".bf-grain");
+          const voidMix = _bfClamp((visualOpenP - 0.55) / 0.35, 0, 1);
+          layer.style.backgroundColor = `rgba(4, 6, 13, ${voidMix.toFixed(3)})`;
           if (grain) grain.style.opacity = voidMix.toFixed(3);
         }
         // universe stays lit behind the floating card, fades as the board opens
         if (uni) {
-          const uniFade = _bfEaseInOut(openP);
+          uni.style.transition = boardReady && raw > 0 ? "none" : "";
+          const uniFade = _bfEaseInOut(visualOpenP);
           uni.style.opacity = (1 - uniFade).toFixed(3);
           uni.style.transform = `scale(${(1 + 0.05 * oe).toFixed(4)})`;
         }
         // keep the universe ALIVE while the card floats; pause once board is full
-        window.__mo_universe_pause = openP > 0.985;
-        const engaged = openP > 0.5;
+        window.__mo_universe_pause = boardReady && visualOpenP > 0.92;
+        const engaged = boardReady && visualOpenP > 0.5;
         if (engaged !== enteredRef.current) {
           enteredRef.current = engaged;
           if (engaged) onEnterRef.current && onEnterRef.current();
         }
         // card chrome: resolves in (cardP), then fades as the window opens
-        const cVis = cardP * (1 - _bfClamp(openP / 0.55, 0, 1));
-        setLeadUi((prev) => {
-          const c = +cVis.toFixed(2), o = +openP.toFixed(2), e = +cardP.toFixed(2);
-          return (prev.c === c && prev.o === o && prev.e === e) ? prev : { c, o, e };
-        });
+        const cVis = cardP * (1 - _bfClamp(visualOpenP / 0.55, 0, 1));
+        if (aboutLayer) {
+          aboutLayer.style.opacity = cVis.toFixed(3);
+          aboutLayer.setAttribute("aria-hidden", cVis < 0.02 ? "true" : "false");
+        }
+        if (aboutNode) {
+          aboutNode.style.transform = `scale(${(1 + visualOpenP * 0.06).toFixed(3)}) translateY(${((1 - cardP) * 26).toFixed(1)}px)`;
+          aboutNode.style.filter = cardP < 0.996 ? `blur(${((1 - cardP) * 9).toFixed(2)}px)` : "none";
+        }
       } else {
         // ── scroll-driven crossfade / wipe (comparison files) ──
-        const entry = rect.top > 0 ? _bfClamp((vh - rect.top) / (ENTRY_VH * vh), 0, 1) : 1;
-        const exit  = rect.bottom < vh ? _bfClamp(rect.bottom / (0.6 * vh), 0, 1) : 1;
-        const presence = Math.min(entry, exit);
+        const entry = rectTop > 0 ? _bfClamp((vh - rectTop) / (ENTRY_VH * vh), 0, 1) : 1;
+        const exit  = rectBottom < vh ? _bfClamp(rectBottom / (0.6 * vh), 0, 1) : 1;
+        const presence = boardReady ? Math.min(entry, exit) : 0;
         presRef.current = presence;
         if (wakeRenderRef.current) wakeRenderRef.current();
         if (presence > 0.45 && !enteredRef.current) { enteredRef.current = true; onEnterRef.current && onEnterRef.current(); }
@@ -340,21 +383,95 @@ function BoardFlight({ onEnter, onContact }) {
             if (uni) { uni.style.opacity = (1 - presence).toFixed(3); uni.style.transform = ""; }
             window.__mo_universe_pause = presence > 0.92;
           }
-          layer.style.pointerEvents = presence > 0.5 ? "auto" : "none";
+          const layerActive = presence > 0.5;
+          layer.style.pointerEvents = layerActive ? "auto" : "none";
+          layer.inert = !layerActive;
+          layer.setAttribute("aria-hidden", layerActive ? "false" : "true");
         }
       }
 
-      setProg(t);
-      setFoot(footerMix);
+      // Continuous scroll values stay out of React. Updating the authored
+      // overlay nodes directly avoids reconciling the full Board subtree on
+      // every wheel frame while preserving the exact same equations.
+      const openGate = _bfClamp((visualOpenP - 0.55) / 0.4, 0, 1);
+      const chromeFade = (1 - _bfClamp(footerMix * 1.4, 0, 1)) * openGate;
+      if (mark) mark.style.opacity = chromeFade.toFixed(3);
+      if (rail) {
+        rail.style.opacity = chromeFade.toFixed(3);
+        rail.style.pointerEvents = chromeFade > 0.02 && footerMix <= 0.4 ? "auto" : "none";
+        rail.inert = !(chromeFade > 0.02 && footerMix <= 0.4);
+        rail.setAttribute("aria-hidden", rail.inert ? "true" : "false");
+      }
+      if (progress) progress.style.opacity = chromeFade.toFixed(3);
+      if (progressFill) progressFill.style.transform = `scaleX(${t.toFixed(4)})`;
+      if (cue) cue.style.opacity = openGate > 0.99 && t < 0.05 && footerMix < 0.02 ? "1" : "0";
+
+      chapters.forEach((chapter, i) => {
+        const center = STOPS[i].p / 10;
+        const d = Math.abs(t - center) * N;
+        const held = (i === 0 && t <= center) || (i === N - 1 && t >= center);
+        const ramp = held ? 1 : _bfClamp((0.5 - d) / 0.17, 0, 1);
+        const vis = ramp * ramp * (3 - 2 * ramp);
+        const cardOp = vis * (1 - _bfClamp(footerMix * 1.6, 0, 1)) * openGate;
+        const isOn = cardOp > 0.02 && (held || d < 0.5) && footerMix < 0.4;
+        chapter.classList.toggle("is-on", isOn);
+        chapter.style.opacity = cardOp.toFixed(3);
+        chapter.style.transform = `translateY(${((t - center) * N * 24).toFixed(1)}px)`;
+        chapter.style.pointerEvents = isOn ? "auto" : "none";
+        chapter.inert = !isOn;
+        chapter.setAttribute("aria-hidden", isOn ? "false" : "true");
+      });
+
+      const footE = boardReady ? _bfEaseOut(footerMix) : 0;
+      if (footer) {
+        footer.style.opacity = footE.toFixed(3);
+        footer.style.pointerEvents = boardReady && footerMix > 0.35 ? "auto" : "none";
+        footer.setAttribute("aria-hidden", boardReady && footerMix >= 0.1 ? "false" : "true");
+        footer.inert = !boardReady || footerMix <= 0.35;
+      }
+      if (footerInner) footerInner.style.transform = `translateY(${((1 - footE) * 40).toFixed(1)}px)`;
     };
-    const onScroll = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(update); };
-    update();
+
+    const measure = () => {
+      measureRaf = 0;
+      if (dead) return;
+      const rect = el.getBoundingClientRect();
+      trackTop = rect.top + window.scrollY;
+      trackHeight = rect.height;
+      viewportH = window.innerHeight;
+      update();
+    };
+    const scheduleMeasure = () => {
+      if (!dead && !measureRaf) measureRaf = requestAnimationFrame(measure);
+    };
+    const onScroll = () => { if (!raf) raf = requestAnimationFrame(update); };
+    const forceUpdate = () => {
+      if (dead) return;
+      if (raf) cancelAnimationFrame(raf);
+      raf = 0;
+      // BFCache restores scroll position and DOM styles together. Refresh the
+      // shared position and re-apply this scene's state in the same event turn,
+      // before the browser paints the restored frame.
+      window.__mo_scrollY = window.scrollY;
+      update();
+    };
+    const ro = window.ResizeObserver ? new ResizeObserver(scheduleMeasure) : null;
+    if (ro) ro.observe(el);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(scheduleMeasure, () => {});
+    measure();
     window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
+    window.addEventListener("resize", scheduleMeasure);
+    window.addEventListener("mo:board-ready", forceUpdate);
+    window.addEventListener("mo:page-restored", forceUpdate);
     return () => {
+      dead = true;
       window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", scheduleMeasure);
+      window.removeEventListener("mo:board-ready", forceUpdate);
+      window.removeEventListener("mo:page-restored", forceUpdate);
+      if (ro) ro.disconnect();
+      if (raf) cancelAnimationFrame(raf);
+      if (measureRaf) cancelAnimationFrame(measureRaf);
     };
   }, [MODE, FLIGHT_PORTION, FLIGHT_V]);
 
@@ -370,12 +487,6 @@ function BoardFlight({ onEnter, onContact }) {
     window.scrollTo({ top: el.offsetTop + raw * total, behavior: "smooth" });
   };
 
-  const footE = _bfEaseOut(foot);
-  // Board chrome (mark / rail / progress / chapters) must NOT show while
-  // the board is still windowed inside the card — gate it on the window opening.
-  const openGate = _bfClamp(((leadUi.o || 0) - 0.55) / 0.4, 0, 1);
-  const chromeFade = ((1 - _bfClamp(foot * 1.4, 0, 1)) * openGate).toFixed(3);
-
   return (
     <section
       ref={secRef}
@@ -385,19 +496,17 @@ function BoardFlight({ onEnter, onContact }) {
       style={{ height: `calc(${TOTAL_V} * 100vh)` }}
     >
       {/* ── About NODE card — node 0x00, presented as one more node-card.
-          The REAL board renders windowed into the card's art rect (small,
-          pulled-back); as you scroll, the card frame OPENS and the PCB grows
-          out of it to fill the screen. The art element is the window the
-          board's clip-path tracks. ── */}
-      <div className="aboutNode-layer" style={{ opacity: leadUi.c.toFixed(3) }} aria-hidden={leadUi.c < 0.02}>
+          The REAL board begins as its small, pulled-back model; as you scroll,
+          the card frame clears and that same board grows to fill the screen. ── */}
+      <div className="aboutNode-layer" style={{ opacity: 0 }} aria-hidden="true">
         <div
           className="uNode"
           data-screen-label="04 About — node 0x00"
           style={{
             // Dock: the node card resolves out of the transit (rises +
             // sharpens) instead of a flat fade — the arrival at station 0x00.
-            transform: `scale(${(1 + (leadUi.o || 0) * 0.06).toFixed(3)}) translateY(${((1 - (leadUi.e || 0)) * 26).toFixed(1)}px)`,
-            filter: (leadUi.e || 0) < 0.996 ? `blur(${((1 - (leadUi.e || 0)) * 9).toFixed(2)}px)` : "none",
+            transform: "scale(1) translateY(26px)",
+            filter: "blur(9px)",
           }}
         >
           {/* teal corner brackets — same as the universe tile cards */}
@@ -418,9 +527,8 @@ function BoardFlight({ onEnter, onContact }) {
             </div>
           </div>
 
-          {/* the model field — the live mini-PCB renders here (board canvas
-              clipped to this rect); it grows OUT of the card as you scroll */}
-          <div className="uNode__field" ref={artRef} aria-hidden="true" />
+          {/* dotted model field behind the live board as it grows out */}
+          <div className="uNode__field" aria-hidden="true" />
 
           {/* name block — bottom-left, like the tile cards */}
           <div className="uNode__foot">
@@ -431,13 +539,13 @@ function BoardFlight({ onEnter, onContact }) {
         </div>
       </div>
 
-      <div className={"bf-layer bf-layer--" + MODE} ref={layerRef} style={{ opacity: 0 }}>
+      <div className={"bf-layer bf-layer--" + MODE} ref={layerRef} style={{ opacity: 0, pointerEvents: "none" }} inert="" aria-hidden="true">
         {/* the board canvas */}
         <div className="bf-mount" ref={mountRef} />
         <div className="bf-grain" aria-hidden="true" />
 
         {/* section marker */}
-        <div className="bf-mark" style={{ opacity: chromeFade }}>
+        <div className="bf-mark" style={{ opacity: 0 }}>
           <span className="bf-mark__dot" />
           <span data-mo-board-cursor-mirror data-mo-cursor-opacity=".bf-mark,.bf-layer,.lp">0x00 · INTERNAL ARCHITECTURE</span>
         </div>
@@ -445,46 +553,18 @@ function BoardFlight({ onEnter, onContact }) {
         {/* chapter overlays (fade out as the footer beat takes over) */}
         <div className="bf-stage" aria-hidden="false">
           {STOPS.map((st, i) => {
-            // Chapter centres are p = 1,3,5,7,9 over N stops, so adjacent
-            // cards sit exactly d = 1.0 apart and the hand-off point between
-            // any two is d = 0.5. Every card is drawn in the SAME box, so a
-            // fade that still has value at 0.5 double-exposes two display
-            // headlines and two body paragraphs on top of each other — which
-            // is what the old `1 - d * 1.6` did (0.2 opacity each, both
-            // legible, neither readable). Ramp to zero AT the hand-off: the
-            // outgoing card is gone the instant the incoming one starts, so
-            // the beat reads as one card replacing another.
             const center = st.p / 10;
-            const d = Math.abs(prog - center) * N;
-            // END CAPS. The first chapter's centre is 10% into the flight and
-            // the last's is at 90%, so on its own the fade opens the board on
-            // an empty corner: the reader arrives to chrome, a waypoint rail
-            // and no text, and has to guess that scrolling produces some. Hold
-            // the outer two open past their own centres — outward there is no
-            // neighbour to hand off to, so nothing can double-expose. The board
-            // now always has exactly one chapter up, from the moment the window
-            // opens to the moment the footer takes over.
-            const held = (i === 0 && prog <= center) || (i === N - 1 && prog >= center);
-            const ramp = held ? 1 : _bfClamp((0.5 - d) / 0.17, 0, 1);
-            const vis = ramp * ramp * (3 - 2 * ramp);   // smoothstep, no linear edge
-            // Gate hit-testing on what is actually ON SCREEN, not just on which
-            // chapter owns the scroll. .bf-layer is a FIXED full-viewport layer
-            // that exists from first paint at opacity 0, and openGate is what
-            // holds it closed until the board takes over — so an ungated card
-            // sat invisible over the title's bottom-left corner and swallowed
-            // drags meant for the universe. The end caps above made chapter 0
-            // own prog 0, which is exactly when the title is on screen.
-            const cardOp = vis * (1 - _bfClamp(foot * 1.6, 0, 1)) * openGate;
-            const isOn = cardOp > 0.02 && (held || d < 0.5) && foot < 0.4;
             return (
               <article
                 key={i}
-                className={"bf-ch " + (isOn ? "is-on" : "")}
+                className="bf-ch"
                 style={{
-                  opacity: cardOp.toFixed(3),
-                  transform: `translateY(${((prog - center) * N * 24).toFixed(1)}px)`,
-                  pointerEvents: isOn ? "auto" : "none",
+                  opacity: 0,
+                  transform: `translateY(${(-center * N * 24).toFixed(1)}px)`,
+                  pointerEvents: "none",
                 }}
+                inert=""
+                aria-hidden="true"
                 data-screen-label={st.chapter.n + " " + st.chapter.kicker}
               >
                 <div className="bf-ch__num" data-mo-board-cursor-mirror data-mo-cursor-opacity=".bf-ch,.bf-layer,.lp">{st.chapter.n}</div>
@@ -508,7 +588,7 @@ function BoardFlight({ onEnter, onContact }) {
         </div>
 
         {/* waypoint rail */}
-        <div className="bf-rail" style={{ opacity: chromeFade, pointerEvents: foot > 0.4 ? "none" : "auto" }}>
+        <div className="bf-rail" style={{ opacity: 0, pointerEvents: "none" }} inert="" aria-hidden="true">
           {STOPS.map((st, i) => (
             <button key={i} className={"bf-rail__stop " + (active === i ? "is-active" : "")} onClick={() => jump(i)}>
               <span className="bf-rail__dot" /><span data-mo-board-cursor-mirror data-mo-cursor-opacity=".bf-rail,.bf-layer,.lp">{st.chapter.n} · {st.ref.split(" · ")[0]}</span>
@@ -517,24 +597,25 @@ function BoardFlight({ onEnter, onContact }) {
         </div>
 
         {/* progress hairline */}
-        <div className="bf-prog" style={{ opacity: chromeFade }}>
-          <div className="bf-prog__fill" style={{ width: (prog * 100).toFixed(2) + "%" }} />
+        <div className="bf-prog" style={{ opacity: 0 }}>
+          <div className="bf-prog__fill" style={{ transform: "scaleX(0)" }} />
         </div>
 
         {/* entry cue */}
-        <div className="bf-cue" style={{ opacity: (openGate > 0.99 && prog < 0.05 && foot < 0.02 ? 1 : 0) }}>
+        <div className="bf-cue" style={{ opacity: 0 }}>
           <span className="bf-cue__line" /><span data-mo-board-cursor-mirror data-mo-cursor-opacity=".bf-cue,.bf-layer,.lp">KEEP SCROLLING — FOLLOW THE TRACE ↓</span>
         </div>
 
         {/* ── FOOTER beat — resolves in-scene over the hero board shot ── */}
         <div
           className="bf-foot"
-          style={{ opacity: footE.toFixed(3), pointerEvents: foot > 0.35 ? "auto" : "none" }}
-          aria-hidden={foot < 0.1}
+          style={{ opacity: 0, pointerEvents: "none" }}
+          inert=""
+          aria-hidden="true"
           data-screen-label="05 Contact"
         >
           <div className="bf-foot__scrim" aria-hidden="true" />
-          <div className="bf-foot__inner" style={{ transform: `translateY(${((1 - footE) * 40).toFixed(1)}px)` }}>
+          <div className="bf-foot__inner" style={{ transform: "translateY(40px)" }}>
             <div className="bf-foot__kicker" data-mo-board-cursor-mirror data-mo-cursor-opacity=".bf-foot,.bf-layer,.lp"><span className="bf-foot__live" />SW1 · OUTPUT — OPEN CHANNEL</div>
             <div className="bf-foot__line" data-mo-board-cursor-mirror data-mo-cursor-opacity=".bf-foot,.bf-layer,.lp">For products that cross hardware, software and interaction.</div>
             <a className="bf-foot__big t-link" href="mailto:oleksandrmaslov08@gmail.com" data-mo-board-cursor-mirror data-mo-cursor-opacity=".bf-foot,.bf-layer,.lp">

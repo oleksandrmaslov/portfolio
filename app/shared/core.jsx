@@ -4,19 +4,38 @@
 
 const { useState, useEffect, useRef, useMemo, useCallback } = React;
 
+/* A page restored from the back/forward cache keeps the exact DOM and global
+   flags it had at navigation time. Clear one-way exit state before the saved
+   frame is shown again; otherwise Back can restore a fully transparent page. */
+(function restorePersistedPage() {
+  window.addEventListener("pageshow", (event) => {
+    if (!event.persisted) return;
+    window.__hv_leaving = false;
+    window.__mo_universe_pause = false;
+    document.body.classList.remove("hv-exit", "landing-exit", "wf-flying");
+    const universe = document.querySelector(".universeBg");
+    if (universe) {
+      if (universe.__moFadeT) clearTimeout(universe.__moFadeT);
+      universe.__moFadeT = 0;
+      universe.style.opacity = "";
+      universe.style.transform = "";
+      universe.style.transition = "";
+    }
+    window.dispatchEvent(new CustomEvent("mo:page-restored"));
+  });
+})();
+
 /* ============================================================
    MODEL WARM-UP
    ------------------------------------------------------------
    This used to hang off the boot overlay's mount effect. The
    overlay is gone — it could only ever render after React, Babel
    and the in-browser JSX compile had finished, so it masked
-   nothing and just held a ready page behind ~3s of synthetic log
-   — but the preload it kicked off is real and every route wants
-   it. It runs deferred instead of at module scope: core.jsx is
-   loaded before each page's data scripts, and yielding once lets
-   the whole synchronous + Babel pass finish, so UNIVERSE_PROJECTS
-   (landing, All Projects) and PROJECT_DATA (project pages) are
-   both populated by the time this reads them.
+   nothing and just held a ready page behind ~3s of synthetic log.
+   Landing and All Projects still benefit from warming their field
+   registry. Project routes deliberately warm only their current
+   model in projects/data.jsx; sweeping PROJECT_DATA here defeated
+   that memory/GPU boundary and parsed every case-study mark.
    ============================================================ */
 (function warmModels() {
   let done = false;
@@ -26,8 +45,6 @@ const { useState, useEffect, useRef, useMemo, useCallback } = React;
     if (typeof window.preloadModels !== "function") return;
     const urls = new Set();
     (window.UNIVERSE_PROJECTS || []).forEach(p => p.model && urls.add(p.model));
-    const PD = window.PROJECT_DATA || {};
-    Object.values(PD).forEach(p => p && p.model && urls.add(p.model));
     if (urls.size) window.preloadModels(Array.from(urls));
   }, 0);
 })();

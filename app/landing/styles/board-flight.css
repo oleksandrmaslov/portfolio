@@ -27,8 +27,8 @@
    it show through the canvas's transparent sky. While the board is still the
    small floating "model" on the node-card, the layer must stay TRANSPARENT so
    the card + universe read behind it. The backdrop opacity is driven per-frame
-   via the --bf-void custom property (0 at rest → 1 when taken over). */
-.bf-layer--takeover { background: rgba(4, 6, 13, var(--bf-void, 0)); }
+   as a direct background-color (0 at rest → 1 when taken over). */
+.bf-layer--takeover { background-color: rgba(4, 6, 13, 0); }
 
 /* the WebGL board canvas */
 .bf-mount { position: absolute; inset: 0; z-index: 0; }
@@ -110,7 +110,7 @@
 .bf-rail__stop.is-active .bf-rail__dot { background: var(--signal); box-shadow: 0 0 8px var(--signal); }
 
 .bf-prog { position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: var(--hairline); z-index: 11; }
-.bf-prog__fill { height: 1px; background: var(--signal); box-shadow: 0 0 6px var(--signal); transition: width 60ms linear; }
+.bf-prog__fill { height: 1px; background: var(--signal); box-shadow: 0 0 6px var(--signal); transform-origin: left center; will-change: transform; }
 
 /* Bottom-RIGHT, not centred: the chapter card now owns the bottom-left and
    runs to 44vw, so a centred cue collides with it between roughly 820px and

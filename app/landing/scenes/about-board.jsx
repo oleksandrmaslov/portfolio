@@ -684,8 +684,14 @@
       if (instances.computeBoundingSphere) instances.computeBoundingSphere();
       group.add(instances);
     }
+    // Cluster records repeat the same small package types. Build one package
+    // graph per type and clone it; Object3D clones share immutable geometry
+    // and materials, avoiding dozens of identical allocations during preflight.
+    const partTemplates = new Map();
     for (const p of CPARTS) {
-      const g = buildPart(p.k);
+      const template = partTemplates.get(p.k);
+      const g = template ? template.clone(true) : buildPart(p.k);
+      if (!template) partTemplates.set(p.k, g);
       g.position.set(p.x, TOP, p.z);
       if (p.rot) g.rotation.y = Math.PI / 2;
       group.add(g);
@@ -695,13 +701,16 @@
   /* ---- REAL Wafer exploded view (actual part GLBs, world-aligned) ---- */
   const WAFER_H = { key:1.06, case:0.60, display:0.40, switches:0.18, usbc:-0.36, plate:-0.82, antenna:-0.62, softoff:-0.54, pcb:-0.52, mcu:-0.42 };
   const WAFER_EXPLODE = 0.30;   // how far the exploded view actually opens
-  const waferParts = [], waferMats = [];
-  function buildWaferReal(group) {
+  function buildWaferReal(group, state) {
     const load = window.loadProjectModel;
     if (!load) { console.warn("[board3] loadProjectModel missing"); return; }
     const files = ["case_L","case_R","plate_L","plate_R","pcb_L","pcb_R","usbc_L","usbc_R","switches_L","switches_R","mcu","display_L","display_R","antenna_L","antenna_R","softoff_L","softoff_R"];
     for (const s of ["L","R"]) { for (let r=0;r<3;r++) for (let c=0;c<5;c++) files.push(`key_${s}_r${r}c${c}`); for (let t=0;t<3;t++) files.push(`key_${s}_t${t}`); }
     Promise.all(files.map(f => load("models/wafer_parts/"+f+".glb", THREE).then(root=>({f,root})).catch(()=>null))).then(ok => {
+      // Model requests can finish after a navigation disposed this controller.
+      // Their roots share cached geometry/materials, so dropping them is safer
+      // than disposing GPU state still owned by another consumer.
+      if (state.disposed) return;
       ok = ok.filter(Boolean);
       if (!ok.length) return;
       const holder = new THREE.Group();
@@ -725,8 +734,8 @@
         const horiz = rel.clone().addScaledVector(UPm, -rel.dot(UPm));
         const vec = new THREE.Vector3().addScaledVector(UPm, (WAFER_H[kind]||0)*base*0.35).addScaledVector(horiz, 0.4);
         const wrap = new THREE.Group(); wrap.add(root); wrap.userData.vec = vec; holder.add(wrap);
-        waferParts.push(wrap);
-        root.traverse(o => { if (o.isMesh && o.material) { const m = o.material = o.material.clone(); m.transparent = true; if ("envMapIntensity" in m) m.envMapIntensity = 1.2; waferMats.push(m); } });
+        state.parts.push(wrap);
+        root.traverse(o => { if (o.isMesh && o.material) { const m = o.material = o.material.clone(); m.transparent = true; if ("envMapIntensity" in m) m.envMapIntensity = 1.2; state.materials.push(m); } });
       }
       holder.position.copy(centre).multiplyScalar(-1);
       const align = new THREE.Group(); align.add(holder);
@@ -739,7 +748,15 @@
     });
   }
 
-  function build(mount, opts) {
+  function yieldBuildPhase(timeout = 180) {
+    return new Promise((resolve) => {
+      const afterIdle = () => requestAnimationFrame(() => setTimeout(resolve, 0));
+      if (window.requestIdleCallback) window.requestIdleCallback(afterIdle, { timeout });
+      else afterIdle();
+    });
+  }
+
+  async function buildScene(mount, opts, lifecycle) {
     const LITE = !!(opts && opts.lite);
     const THREE = window.THREE;
     if (!THREE) { console.warn("THREE missing"); return null; }
@@ -752,6 +769,7 @@
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.05;
     mount.appendChild(renderer.domElement);
+    await yieldBuildPhase();
 
     const scene = new THREE.Scene();
     scene.fog = new THREE.Fog(0x04060d, 55, 150);
@@ -774,6 +792,7 @@
       }
       if (pmrem) pmrem.dispose();
     }
+    await yieldBuildPhase();
 
     const camera = new THREE.PerspectiveCamera(40, W / H, 0.5, 400);
     camera.position.set(0, 30, 40);
@@ -791,6 +810,7 @@
     const colorTex = drawColor(colorW, Math.round(colorW * BOARD_D / BOARD_W));
     const specTex = drawSpec(detailW, Math.round(detailW * BOARD_D / BOARD_W));
     const bumpTex = drawBump(detailW, Math.round(detailW * BOARD_D / BOARD_W));
+    await yieldBuildPhase();
     const boardMat = new THREE.MeshStandardMaterial({
       map: colorTex, metalnessMap: specTex, roughnessMap: specTex,
       bumpMap: bumpTex, bumpScale: 0.4,
@@ -801,6 +821,7 @@
     scene.add(board);
 
     scatterParts(scene);
+    await yieldBuildPhase();
 
     const curvePts = TRACE_PTS.map(p => new THREE.Vector3(p[0], TOP + 0.05, p[1]));
     const curve = new THREE.CatmullRomCurve3(curvePts, false, "catmullrom", 0.5);
@@ -857,9 +878,13 @@
       transparent: true, opacity: 0, depthWrite: false,
     }));
     scene.add(assembly2);
+    await yieldBuildPhase();
+
+    // Async Wafer assets belong to this controller only. Keeping this state
+    // build-local prevents a later Board mount from inheriting stale parts.
+    const waferState = lifecycle.waferState;
 
     // components at stops
-    const stopObjs = [];
     let deviceGroup = null;
     STOPS.forEach((st) => {
       const [px, pz] = TRACE_PTS[st.p];
@@ -867,16 +892,15 @@
       grp.scale.setScalar(0.85);
       grp.position.set(px, 0, pz);
       scene.add(grp);
-      stopObjs.push({ st, grp, pos: new THREE.Vector3(px, TOP + 2, pz) });
-
       if (st.explode) {
         deviceGroup = new THREE.Group();
         deviceGroup.position.set(px, TOP + 4.6, pz);
         deviceGroup.visible = false;
         scene.add(deviceGroup);
-        buildWaferReal(deviceGroup);
+        buildWaferReal(deviceGroup, waferState);
       }
     });
+    await yieldBuildPhase();
 
     const formMats = [];
     scene.traverse((o) => {
@@ -973,16 +997,16 @@
       if (deviceGroup) {
         const dt2 = Math.abs(t - stopTForIndex(STOPS.findIndex(s => s.explode)));
         const ex = Math.max(0, 1 - dt2 * 9);
-        deviceGroup.visible = ex > 0.02 && waferParts.length > 0;
+        deviceGroup.visible = ex > 0.02 && waferState.parts.length > 0;
         if (deviceGroup.visible) {
           const exs = ex < 0.5 ? 2*ex*ex : 1 - Math.pow(-2*ex+2, 2)/2;
           // Separation as a fraction of each part's full out-vector. The stack
           // has to stay legible as ONE device at flight distance, so this is
           // nowhere near 1 — 0.30 opens the case, plate, PCB and keycaps far
           // enough to count the layers without the board coming apart.
-          for (const w of waferParts) w.position.copy(w.userData.vec).multiplyScalar(exs * WAFER_EXPLODE);
+          for (const w of waferState.parts) w.position.copy(w.userData.vec).multiplyScalar(exs * WAFER_EXPLODE);
           const op = Math.min(1, ex * 2.5);
-          for (const m of waferMats) m.opacity = op;
+          for (const m of waferState.materials) m.opacity = op;
           deviceGroup.rotation.y += dt * 0.0004;
         }
       }
@@ -1023,6 +1047,7 @@
       if (composer) composer.setSize(w, h);
     }
     function dispose() {
+      waferState.disposed = true;
       if (bokeh && bokeh.dispose) bokeh.dispose();
       if (composer && composer.dispose) composer.dispose();
       const geometries = new Set();
@@ -1050,9 +1075,51 @@
       renderer.dispose();
       if (renderer.forceContextLoss) renderer.forceContextLoss();
       try { mount.removeChild(renderer.domElement); } catch (_) {}
+      waferState.parts.length = 0;
+      waferState.materials.length = 0;
+    }
+
+    // Compile and upload while the fixed Board layer is still transparent.
+    // Leaving this until presRef becomes visible put the entire first-frame
+    // shader/geometry cost directly on the About takeover.
+    try {
+      update(0, "probe", 16, 0, 0, 1);
+      if (renderer.compileAsync) await renderer.compileAsync(scene, camera);
+      else if (renderer.compile) renderer.compile(scene, camera);
+      await yieldBuildPhase(250);
+      render();
+    } catch (error) {
+      console.warn("[board] hidden preflight render failed", error);
     }
 
     return { update, render, setSize, dispose, stops: STOPS, domElement: renderer.domElement };
+  }
+
+  async function build(mount, opts) {
+    const lifecycle = {
+      waferState: { parts: [], materials: [], disposed: false },
+    };
+    const existingCanvases = new Set(mount.querySelectorAll("canvas"));
+    try {
+      return await buildScene(mount, opts, lifecycle);
+    } catch (error) {
+      // A constructor/texture failure can happen before a controller exists,
+      // so BoardFlight has nothing it can call dispose() on. Cancel late model
+      // work and release any context/canvas created by this failed attempt.
+      lifecycle.waferState.disposed = true;
+      lifecycle.waferState.parts.length = 0;
+      lifecycle.waferState.materials.length = 0;
+      mount.querySelectorAll("canvas").forEach((canvas) => {
+        if (existingCanvases.has(canvas)) return;
+        try {
+          const gl = canvas.getContext("webgl2") || canvas.getContext("webgl");
+          const lose = gl && gl.getExtension("WEBGL_lose_context");
+          if (lose) lose.loseContext();
+        } catch (_) {}
+        try { canvas.remove(); } catch (_) {}
+      });
+      throw error;
+    }
   }
 
   window.MOBoard = { build, STOPS };

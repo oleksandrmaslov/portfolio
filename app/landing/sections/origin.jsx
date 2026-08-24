@@ -16,7 +16,7 @@
    (same progressive-blur language as the header). This is the
    literal setup for the later "dive into node 0x00" → Board.
    ============================================================ */
-const { useState: useO, useEffect: useOE, useRef: useOR } = React;
+const { useEffect: useOE, useRef: useOR } = React;
 
 /* The statement finishes resolving by p≈0.60, then holds
    fully sharp for a third of the section (0.60 → 0.90) before the lift-off.
@@ -32,13 +32,13 @@ const ORIGIN_LINES = [
 
 const _oEase  = (t) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
 const _oClamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const _oLineEase = (p, at) => _oEase(_oClamp((p - (at - 0.24)) / 0.24, 0, 1));
 
 /* shared bridge object the universe render loop reads every frame */
 window.__mo_origin = window.__mo_origin || { p: 0, active: false, concept: "assembly" };
 
 function OriginBeat() {
   const secRef = useOR(null);
-  const [p, setP] = useO(0);
   // Landing ships ONE concept: assembly. The HUB concept lives in its own
   // exploration file, which sets window.__mo_origin_lock = "hub" before boot.
   const concept = (typeof window !== "undefined" && window.__mo_origin_lock) || "assembly";
@@ -46,38 +46,108 @@ function OriginBeat() {
   /* publish concept to the bridge */
   useOE(() => { window.__mo_origin.concept = concept; }, [concept]);
 
-  /* scroll → progress p, published to the bridge */
+  /* Scroll → progress, published to the bridge and painted directly.
+     This track used to put every scroll frame through React reconciliation
+     while also re-reading its layout. Its DOM is stable, so continuous motion
+     belongs here; React remains responsible for the structure only. */
   useOE(() => {
     const el = secRef.current;
     if (!el) return;
-    let raf;
-    const update = () => {
-      const total = el.offsetHeight - window.innerHeight;
+
+    const typeEl = el.querySelector(".origin__type");
+    const lineEls = Array.from(el.querySelectorAll(".origin__line"));
+    const sigEl = el.querySelector(".origin__sig");
+    const handoffEl = el.querySelector(".origin__handoff");
+    if (!typeEl || lineEls.length !== ORIGIN_LINES.length || !sigEl || !handoffEl) return;
+
+    let raf = 0;
+    let needsMeasure = true;
+    let disposed = false;
+    const geometry = { top: 0, height: 0, scrollHeight: 0, viewportH: window.innerHeight };
+
+    const measure = () => {
       const rect = el.getBoundingClientRect();
-      const top = -rect.top;
+      geometry.top = rect.top + window.scrollY;
+      geometry.height = rect.height;
+      /* Keep the original offsetHeight equation, but pay for the layout read
+         only during measurement rather than on every scroll frame. */
+      geometry.scrollHeight = el.offsetHeight;
+      geometry.viewportH = window.innerHeight;
+      needsMeasure = false;
+    };
+
+    const update = () => {
+      raf = 0;
+      if (needsMeasure) measure();
+
+      const pageY = Number.isFinite(window.__mo_scrollY) ? window.__mo_scrollY : window.scrollY;
+      const rectTop = geometry.top - pageY;
+      const rectBottom = rectTop + geometry.height;
+      const total = geometry.scrollHeight - geometry.viewportH;
+      const top = -rectTop;
       const np = total > 0 ? _oClamp(top / total, 0, 1) : 0;
-      const active = rect.top < window.innerHeight * 0.6 &&
-                     rect.bottom > window.innerHeight * 0.4;
+      const active = rectTop < geometry.viewportH * 0.6 &&
+                     rectBottom > geometry.viewportH * 0.4;
       window.__mo_origin.p = np;
       window.__mo_origin.active = active;
-      setP(np);
+
+      const handoff = _oClamp((np - 0.76) / 0.14, 0, 1);
+      // Lift-off begins at 0.90, exactly where the toWork transit engages
+      // (flight.js: pO ≥ 0.9), preserving the fully-sharp dwell.
+      const exitK = _oClamp((np - 0.90) / 0.10, 0, 1);
+
+      typeEl.style.opacity = (1 - exitK).toFixed(3);
+      typeEl.style.transform = `translateY(${(exitK * -46).toFixed(1)}px)`;
+      typeEl.style.filter = exitK > 0.004 ? `blur(${(exitK * 7).toFixed(2)}px)` : "none";
+
+      lineEls.forEach((lineEl, i) => {
+        const e = _oLineEase(np, ORIGIN_LINES[i].at);
+        lineEl.style.filter = `blur(${((1 - e) * 16).toFixed(2)}px)`;
+        lineEl.style.opacity = (0.08 + e * 0.92).toFixed(3);
+        lineEl.style.transform = `translateY(${((1 - e) * 18).toFixed(1)}px)`;
+      });
+
+      sigEl.style.opacity = _oClamp((np - 0.56) / 0.16, 0, 1).toFixed(3);
+      handoffEl.style.opacity = handoff.toFixed(3);
+      handoffEl.style.transform = `translateY(${(1 - handoff) * 10}px)`;
     };
-    const onScroll = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(update); };
+
+    const schedule = (remeasure = false) => {
+      needsMeasure = needsMeasure || remeasure;
+      if (!raf) raf = requestAnimationFrame(update);
+    };
+    const onScroll = () => schedule(false);
+    const onResize = () => schedule(true);
+
+    /* Prime synchronously so a history restore/deep link does not show the
+       p=0 pose for a frame. All subsequent scroll frames use cached geometry. */
+    measure();
     update();
     window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
+    window.addEventListener("resize", onResize);
+    window.visualViewport?.addEventListener("resize", onResize);
+
+    const resizeObserver = window.ResizeObserver
+      ? new ResizeObserver(() => schedule(true))
+      : null;
+    resizeObserver?.observe(el);
+
+    /* Font settling can move the section without resizing the section itself. */
+    if (document.fonts?.ready) {
+      document.fonts.ready.then(() => {
+        if (!disposed) schedule(true);
+      });
+    }
+
     return () => {
+      disposed = true;
       window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
+      window.removeEventListener("resize", onResize);
+      window.visualViewport?.removeEventListener("resize", onResize);
+      resizeObserver?.disconnect();
       cancelAnimationFrame(raf);
     };
   }, []);
-
-  const handoff = _oClamp((p - 0.76) / 0.14, 0, 1);
-  // Lift-off begins at 0.90, exactly where the toWork
-  // transit engages (flight.js: pO ≥ 0.9), so the statement holds sharp
-  // through the whole dwell and leaves only when the camera does.
-  const exitK = _oClamp((p - 0.90) / 0.10, 0, 1);
 
   return (
     <section
@@ -96,9 +166,9 @@ function OriginBeat() {
               is bottom-anchored in CSS, so the exit lift is a plain
               translateY — no centering offset to carry. ── */}
         <div className="origin__type" style={{
-          opacity: (1 - exitK).toFixed(3),
-          transform: `translateY(${(exitK * -46).toFixed(1)}px)`,
-          filter: exitK > 0.004 ? `blur(${(exitK * 7).toFixed(2)}px)` : "none",
+          opacity: "1.000",
+          transform: "translateY(0.0px)",
+          filter: "none",
         }}>
           <div className="origin__kicker">
             <span className="origin__kickerDot" />
@@ -110,8 +180,7 @@ function OriginBeat() {
           </div>
           <h2 className="origin__head2">
             {ORIGIN_LINES.map((ln, i) => {
-              const local = _oClamp((p - (ln.at - 0.24)) / 0.24, 0, 1);
-              const e = _oEase(local);
+              const e = _oLineEase(0, ln.at);
               const style = {
                 filter: `blur(${((1 - e) * 16).toFixed(2)}px)`,
                 opacity: (0.08 + e * 0.92).toFixed(3),
@@ -131,7 +200,7 @@ function OriginBeat() {
             })}
           </h2>
 
-          <div className="origin__sig" style={{ opacity: _oClamp((p - 0.56) / 0.16, 0, 1).toFixed(3) }}>
+          <div className="origin__sig" style={{ opacity: "0.000" }}>
             <div className="origin__sigCol" data-mo-cursor-mirror data-mo-cursor-opacity=".origin__sig,.origin__type,.origin__stage,.lp">
               <span className="origin__sigK">▙ NOW</span>
               <span className="origin__sigV">ZMK · Kerfur · Iskra</span>
@@ -144,7 +213,7 @@ function OriginBeat() {
         </div>
 
         {/* ── handoff cue → Selected Work ── */}
-        <div className="origin__handoff" style={{ opacity: handoff.toFixed(3), transform: `translateY(${(1 - handoff) * 10}px)` }}>
+        <div className="origin__handoff" style={{ opacity: "0.000", transform: "translateY(10px)" }}>
           <span className="origin__handoffLine" />
           <span>03 · SELECTED WORK</span>
           <span className="origin__handoffArr">↓</span>

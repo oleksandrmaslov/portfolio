@@ -50,7 +50,7 @@
   will-change: transform;
 }
 .lp-workReel__slot {
-  flex: 0 0 52vw;                /* ~50vw so neighbouring cards peek in */
+  flex: 0 0 var(--work-card-slot, 52vw); /* ~50vw so neighbouring cards peek in */
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -60,17 +60,17 @@
 /* ── title slot (0) — bottom-aligned giant type ─────────── */
 .lp-workReel__slot--title {
   position: relative;        /* anchor for absolutely-positioned inner block */
-  flex: 0 0 56vw;
+  flex: 0 0 var(--work-title-slot, 56vw);
 }
 /* Title block: pinned to the slot's bottom-left. Its horizontal offset is
-   set INLINE by the JSX (left: calc(gutter - (50 - slot/2)vw)) from the same
-   slot constants as the centring math; the previous hardcoded
+   published as --work-title-left from the same slot constants as the
+   centring math; the previous hardcoded
    calc(56px - 22vw) only matched the desktop 56vw slot and pushed the title
    half off-screen at the responsive widths. */
 .lp-workReel__titleInner {
   position: absolute;
   bottom: 0;
-  left: calc(var(--gutter) - 22vw);   /* fallback; JSX overrides per breakpoint */
+  left: var(--work-title-left, calc(var(--gutter) - 22vw));
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -242,7 +242,7 @@
    gateway plate: top progress rail, chrome bar, a 12-node constellation,
    and a footer hosting the primary KeyButton. */
 .lp-workReel__slot--showAll {
-  flex: 0 0 52vw;
+  flex: 0 0 var(--work-showall-slot, 52vw);
 }
 .showAllGate {
   position: relative;
@@ -380,10 +380,13 @@
   z-index: 5;
 }
 .lp-workReel__progressFill {
+  width: 100%;
   height: 1px;
   background: var(--signal);
   box-shadow: 0 0 6px var(--signal);
-  transition: width 60ms linear;
+  transform-origin: left center;
+  transition: transform 60ms linear;
+  will-change: transform;
 }
 
 /* ============================================================
@@ -392,8 +395,8 @@
 @media (max-width: 1100px) {
   .lp-workReel__stops { display: none; }
   .rcard { width: 64vw; }
-  .lp-workReel__slot { flex: 0 0 70vw; padding: 0 18px; }
-  .lp-workReel__slot--title { flex: 0 0 80vw; padding-left: 32px; }
+  .lp-workReel__slot { padding: 0 18px; }
+  .lp-workReel__slot--title { padding-left: 32px; }
   /* Breakpoint refits of the nowrap --fs-d1-nowrap title, not ramp drift. */
   .lp-workReel__title { font-size: clamp(56px, 10vw, 120px); }
 }
@@ -415,8 +418,8 @@
 .aboutNode-layer {
   position: fixed;
   inset: 0;
-  /* below the board layer (bf-layer z-4) so the board, clipped to the field
-     window, sits INSIDE the card and grows out of it */
+  /* below the board layer (bf-layer z-4) so the live board appears through
+     the card field before it grows into the viewport */
   z-index: 3;
   display: flex;
   align-items: center;
@@ -478,7 +481,7 @@
   text-align: right; color: var(--ghost);
 }
 
-/* the model field — dotted graph; the board canvas is clipped into this rect */
+/* the model field — dotted graph; the live board is composed through this rect */
 .uNode__field {
   position: relative;
   margin: 16px 26px;

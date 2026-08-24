@@ -9,7 +9,22 @@ const { useState: useLA, useEffect: useEA } = React;
 function LandingApp() {
   const [section, setSection] = useLA("title");      // title | intro | work | about | contact
   const [hoverAddr, setHoverAddr] = useLA(null);      // address of the currently-hovered work
-  const [activeProject, setActiveProject] = useLA(null);
+
+  /* Root-route fragments are public inbound URLs. Their targets are mounted
+     by React after the browser's native initial fragment pass, so replay that
+     one jump once the committed DOM actually contains the section. */
+  useEA(() => {
+    const id = decodeURIComponent(window.location.hash.slice(1));
+    if (!id) return;
+    let secondRaf = 0;
+    const firstRaf = requestAnimationFrame(() => {
+      secondRaf = requestAnimationFrame(() => {
+        const target = document.getElementById(id);
+        if (target) target.scrollIntoView({ block: "start", behavior: "auto" });
+      });
+    });
+    return () => { cancelAnimationFrame(firstRaf); cancelAnimationFrame(secondRaf); };
+  }, []);
 
   /* ── SINGLE source of truth for the active section ───────────────
      The old design let each section fire its OWN IntersectionObserver
@@ -22,18 +37,17 @@ function LandingApp() {
      IS the active one. This always replays going up or down. */
   useEA(() => {
     const ORDER = ["title", "intro", "work", "about"];
-    let raf = 0;
+    let raf = 0, measureRaf = 0, dead = false;
+    let bounds = [];
     const resolve = () => {
       raf = 0;
-      const mid = window.innerHeight / 2;
+      const pageY = Number.isFinite(window.__mo_scrollY) ? window.__mo_scrollY : window.scrollY;
+      const mid = pageY + window.innerHeight / 2;
       let pick = null, nearest = Infinity;
-      for (const id of ORDER) {
-        const el = document.getElementById(id);
-        if (!el) continue;
-        const r = el.getBoundingClientRect();
-        if (r.top <= mid && r.bottom >= mid) { pick = id; break; }   // straddles centre
-        const d = r.top > mid ? r.top - mid : mid - r.bottom;         // gap fallback
-        if (d < nearest) { nearest = d; pick = id; }
+      for (const bound of bounds) {
+        if (bound.top <= mid && bound.bottom >= mid) { pick = bound.id; break; }
+        const d = bound.top > mid ? bound.top - mid : mid - bound.bottom;
+        if (d < nearest) { nearest = d; pick = bound.id; }
       }
       if (!pick) return;
       // Within the board section, the footer beat reads as "contact"
@@ -41,14 +55,35 @@ function LandingApp() {
       if (pick === "about" && window.__mo_bf && window.__mo_bf.footer) pick = "contact";
       setSection(prev => (prev === pick ? prev : pick));
     };
+    const measure = () => {
+      measureRaf = 0;
+      if (dead) return;
+      const pageY = window.scrollY;
+      bounds = ORDER.map((id) => {
+        const el = document.getElementById(id);
+        if (!el) return null;
+        const rect = el.getBoundingClientRect();
+        return { id, top: rect.top + pageY, bottom: rect.bottom + pageY };
+      }).filter(Boolean);
+      resolve();
+    };
+    const scheduleMeasure = () => {
+      if (!measureRaf) measureRaf = requestAnimationFrame(measure);
+    };
     const onScroll = () => { if (!raf) raf = requestAnimationFrame(resolve); };
-    resolve();
+    const ro = window.ResizeObserver ? new ResizeObserver(scheduleMeasure) : null;
+    if (ro) ORDER.forEach((id) => { const el = document.getElementById(id); if (el) ro.observe(el); });
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(scheduleMeasure, () => {});
+    measure();
     window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
+    window.addEventListener("resize", scheduleMeasure);
     return () => {
+      dead = true;
       window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
+      window.removeEventListener("resize", scheduleMeasure);
+      if (ro) ro.disconnect();
       if (raf) cancelAnimationFrame(raf);
+      if (measureRaf) cancelAnimationFrame(measureRaf);
     };
   }, []);
 
@@ -79,7 +114,6 @@ function LandingApp() {
           projects={window.UNIVERSE_PROJECTS}
           mode={mode}
           focusAddr={hoverAddr}
-          onActive={setActiveProject}
         />
       </div>
 

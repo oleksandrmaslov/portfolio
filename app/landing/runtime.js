@@ -15,6 +15,23 @@ var _React = React,
   useRef = _React.useRef,
   useMemo = _React.useMemo,
   useCallback = _React.useCallback;
+(function restorePersistedPage() {
+  window.addEventListener("pageshow", function (event) {
+    if (!event.persisted) return;
+    window.__hv_leaving = false;
+    window.__mo_universe_pause = false;
+    document.body.classList.remove("hv-exit", "landing-exit", "wf-flying");
+    var universe = document.querySelector(".universeBg");
+    if (universe) {
+      if (universe.__moFadeT) clearTimeout(universe.__moFadeT);
+      universe.__moFadeT = 0;
+      universe.style.opacity = "";
+      universe.style.transform = "";
+      universe.style.transition = "";
+    }
+    window.dispatchEvent(new CustomEvent("mo:page-restored"));
+  });
+})();
 (function warmModels() {
   var done = false;
   setTimeout(function () {
@@ -24,10 +41,6 @@ var _React = React,
     var urls = new Set();
     (window.UNIVERSE_PROJECTS || []).forEach(function (p) {
       return p.model && urls.add(p.model);
-    });
-    var PD = window.PROJECT_DATA || {};
-    Object.values(PD).forEach(function (p) {
-      return p && p.model && urls.add(p.model);
     });
     if (urls.size) window.preloadModels(Array.from(urls));
   }, 0);
@@ -4891,6 +4904,32 @@ function NodeHandoff() {
   var rigRef = useNHR(null);
   var rafRef = useNHR(0);
   useNHE(function () {
+    var onRestore = function onRestore() {
+      cancelAnimationFrame(rafRef.current);
+      if (rigRef.current) {
+        try {
+          rigRef.current.dispose();
+        } catch (_) {}
+        rigRef.current = null;
+      }
+      var mount = mountRef.current;
+      if (mount) while (mount.firstChild) mount.removeChild(mount.firstChild);
+      var wf = document.querySelector(".wf");
+      if (wf) wf.classList.remove("wf--dissolve");
+      returningRef.current = false;
+      setHolding(false);
+      setHud({
+        addr: "",
+        name: ""
+      });
+      setMode("idle");
+    };
+    window.addEventListener("mo:page-restored", onRestore);
+    return function () {
+      return window.removeEventListener("mo:page-restored", onRestore);
+    };
+  }, []);
+  useNHE(function () {
     window.__mo_open_project = function (p, originRect) {
       var project = window.MO_PROJECT_BY_ADDR && window.MO_PROJECT_BY_ADDR[p.addr] || p.mo || p;
       window.dispatchEvent(new CustomEvent("mo:nodeFlight", {
@@ -5183,6 +5222,10 @@ function NodeHandoff() {
 window.NodeHandoff = NodeHandoff;
 
 /* ---- app/landing/scenes/about-board.jsx ---- */
+function _regenerator() { var e, t, r = "function" == typeof Symbol ? Symbol : {}, n = r.iterator || "@@iterator", o = r.toStringTag || "@@toStringTag"; function i(r, n, o, i) { var c = n && n.prototype instanceof Generator ? n : Generator, u = Object.create(c.prototype); return _regeneratorDefine2(u, "_invoke", function (r, n, o) { var i, c, u, f = 0, p = o || [], y = !1, G = { p: 0, n: 0, v: e, a: d, f: d.bind(e, 4), d: function d(t, r) { return i = t, c = 0, u = e, G.n = r, a; } }; function d(r, n) { for (c = r, u = n, t = 0; !y && f && !o && t < p.length; t++) { var o, i = p[t], d = G.p, l = i[2]; r > 3 ? (o = l === n) && (u = i[(c = i[4]) ? 5 : (c = 3, 3)], i[4] = i[5] = e) : i[0] <= d && ((o = r < 2 && d < i[1]) ? (c = 0, G.v = n, G.n = i[1]) : d < l && (o = r < 3 || i[0] > n || n > l) && (i[4] = r, i[5] = n, G.n = l, c = 0)); } if (o || r > 1) return a; throw y = !0, n; } return function (o, p, l) { if (f > 1) throw TypeError("Generator is already running"); for (y && 1 === p && d(p, l), c = p, u = l; (t = c < 2 ? e : u) || !y;) { i || (c ? c < 3 ? (c > 1 && (G.n = -1), d(c, u)) : G.n = u : G.v = u); try { if (f = 2, i) { if (c || (o = "next"), t = i[o]) { if (!(t = t.call(i, u))) throw TypeError("iterator result is not an object"); if (!t.done) return t; u = t.value, c < 2 && (c = 0); } else 1 === c && (t = i["return"]) && t.call(i), c < 2 && (u = TypeError("The iterator does not provide a '" + o + "' method"), c = 1); i = e; } else if ((t = (y = G.n < 0) ? u : r.call(n, G)) !== a) break; } catch (t) { i = e, c = 1, u = t; } finally { f = 1; } } return { value: t, done: y }; }; }(r, o, i), !0), u; } var a = {}; function Generator() {} function GeneratorFunction() {} function GeneratorFunctionPrototype() {} t = Object.getPrototypeOf; var c = [][n] ? t(t([][n]())) : (_regeneratorDefine2(t = {}, n, function () { return this; }), t), u = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(c); function f(e) { return Object.setPrototypeOf ? Object.setPrototypeOf(e, GeneratorFunctionPrototype) : (e.__proto__ = GeneratorFunctionPrototype, _regeneratorDefine2(e, o, "GeneratorFunction")), e.prototype = Object.create(u), e; } return GeneratorFunction.prototype = GeneratorFunctionPrototype, _regeneratorDefine2(u, "constructor", GeneratorFunctionPrototype), _regeneratorDefine2(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = "GeneratorFunction", _regeneratorDefine2(GeneratorFunctionPrototype, o, "GeneratorFunction"), _regeneratorDefine2(u), _regeneratorDefine2(u, o, "Generator"), _regeneratorDefine2(u, n, function () { return this; }), _regeneratorDefine2(u, "toString", function () { return "[object Generator]"; }), (_regenerator = function _regenerator() { return { w: i, m: f }; })(); }
+function _regeneratorDefine2(e, r, n, t) { var i = Object.defineProperty; try { i({}, "", {}); } catch (e) { i = 0; } _regeneratorDefine2 = function _regeneratorDefine(e, r, n, t) { function o(r, n) { _regeneratorDefine2(e, r, function (e) { return this._invoke(r, n, e); }); } r ? i ? i(e, r, { value: n, enumerable: !t, configurable: !t, writable: !t }) : e[r] = n : (o("next", 0), o("throw", 1), o("return", 2)); }, _regeneratorDefine2(e, r, n, t); }
+function asyncGeneratorStep(n, t, e, r, o, a, c) { try { var i = n[a](c), u = i.value; } catch (n) { return void e(n); } i.done ? t(u) : Promise.resolve(u).then(r, o); }
+function _asyncToGenerator(n) { return function () { var t = this, e = arguments; return new Promise(function (r, o) { var a = n.apply(t, e); function _next(n) { asyncGeneratorStep(a, r, o, _next, _throw, "next", n); } function _throw(n) { asyncGeneratorStep(a, r, o, _next, _throw, "throw", n); } _next(void 0); }); }; }
 function _createForOfIteratorHelper(r, e) { var t = "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (!t) { if (Array.isArray(r) || (t = _unsupportedIterableToArray(r)) || e && r && "number" == typeof r.length) { t && (r = t); var _n = 0, F = function F() {}; return { s: F, n: function n() { return _n >= r.length ? { done: !0 } : { done: !1, value: r[_n++] }; }, e: function e(r) { throw r; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var o, a = !0, u = !1; return { s: function s() { t = t.call(r); }, n: function n() { var r = t.next(); return a = r.done, r; }, e: function e(r) { u = !0, o = r; }, f: function f() { try { a || null == t["return"] || t["return"](); } finally { if (u) throw o; } } }; }
 function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
 function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
@@ -6957,12 +7000,15 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     } finally {
       _iterator23.f();
     }
+    var partTemplates = new Map();
     var _iterator24 = _createForOfIteratorHelper(CPARTS),
       _step24;
     try {
       for (_iterator24.s(); !(_step24 = _iterator24.n()).done;) {
         var p = _step24.value;
-        var g = buildPart(p.k);
+        var template = partTemplates.get(p.k);
+        var g = template ? template.clone(true) : buildPart(p.k);
+        if (!template) partTemplates.set(p.k, g);
         g.position.set(p.x, TOP, p.z);
         if (p.rot) g.rotation.y = Math.PI / 2;
         group.add(g);
@@ -6986,9 +7032,7 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     mcu: -0.42
   };
   var WAFER_EXPLODE = 0.30;
-  var waferParts = [],
-    waferMats = [];
-  function buildWaferReal(group) {
+  function buildWaferReal(group, state) {
     var load = window.loadProjectModel;
     if (!load) {
       console.warn("[board3] loadProjectModel missing");
@@ -7010,6 +7054,7 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
         return null;
       });
     })).then(function (ok) {
+      if (state.disposed) return;
       ok = ok.filter(Boolean);
       if (!ok.length) return;
       var holder = new THREE.Group();
@@ -7080,13 +7125,13 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
           wrap.add(_root2);
           wrap.userData.vec = vec;
           holder.add(wrap);
-          waferParts.push(wrap);
+          state.parts.push(wrap);
           _root2.traverse(function (o) {
             if (o.isMesh && o.material) {
               var m = o.material = o.material.clone();
               m.transparent = true;
               if ("envMapIntensity" in m) m.envMapIntensity = 1.2;
-              waferMats.push(m);
+              state.materials.push(m);
             }
           });
         }
@@ -7106,401 +7151,503 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       group.add(align);
     });
   }
-  function build(mount, opts) {
-    var LITE = !!(opts && opts.lite);
-    var THREE = window.THREE;
-    if (!THREE) {
-      console.warn("THREE missing");
-      return null;
-    }
-    var W = mount.clientWidth,
-      H = mount.clientHeight;
-    var renderer = new THREE.WebGLRenderer({
-      antialias: !LITE,
-      alpha: true,
-      powerPreference: "high-performance"
-    });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, LITE ? 1.25 : 2));
-    renderer.setSize(W, H);
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.05;
-    mount.appendChild(renderer.domElement);
-    var scene = new THREE.Scene();
-    scene.fog = new THREE.Fog(0x04060d, 55, 150);
-    var envTarget = null,
-      pmrem = null,
-      envScene = null;
-    try {
-      pmrem = new THREE.PMREMGenerator(renderer);
-      envScene = new THREE.RoomEnvironment();
-      envTarget = pmrem.fromScene(envScene, 0.04);
-      scene.environment = envTarget.texture;
-    } catch (e) {
-      console.warn("env failed", e);
-    } finally {
-      if (envScene) {
-        if (envScene.dispose) envScene.dispose();else envScene.traverse(function (object) {
-          if (object.geometry && object.geometry.dispose) object.geometry.dispose();
-          var mats = object.material ? Array.isArray(object.material) ? object.material : [object.material] : [];
-          mats.forEach(function (material) {
-            return material && material.dispose && material.dispose();
-          });
+  function yieldBuildPhase() {
+    var timeout = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 180;
+    return new Promise(function (resolve) {
+      var afterIdle = function afterIdle() {
+        return requestAnimationFrame(function () {
+          return setTimeout(resolve, 0);
         });
-      }
-      if (pmrem) pmrem.dispose();
-    }
-    var camera = new THREE.PerspectiveCamera(40, W / H, 0.5, 400);
-    camera.position.set(0, 30, 40);
-    camera.lookAt(0, 0, 0);
-    var key = new THREE.DirectionalLight(0xffffff, 2.2);
-    key.position.set(-30, 50, 25);
-    scene.add(key);
-    var fill = new THREE.DirectionalLight(0x9ab4ff, 0.5);
-    fill.position.set(30, 20, -20);
-    scene.add(fill);
-    var rim = new THREE.PointLight(0x00f0c8, 60, 120, 2);
-    rim.position.set(0, 14, -10);
-    scene.add(rim);
-    scene.add(new THREE.AmbientLight(0xffffff, 0.25));
-    var colorW = LITE ? 2048 : 4096;
-    var detailW = LITE ? 1024 : 4096;
-    var colorTex = drawColor(colorW, Math.round(colorW * BOARD_D / BOARD_W));
-    var specTex = drawSpec(detailW, Math.round(detailW * BOARD_D / BOARD_W));
-    var bumpTex = drawBump(detailW, Math.round(detailW * BOARD_D / BOARD_W));
-    var boardMat = new THREE.MeshStandardMaterial({
-      map: colorTex,
-      metalnessMap: specTex,
-      roughnessMap: specTex,
-      bumpMap: bumpTex,
-      bumpScale: 0.4,
-      metalness: 1.0,
-      roughness: 1.0,
-      envMapIntensity: 1.0
+      };
+      if (window.requestIdleCallback) window.requestIdleCallback(afterIdle, {
+        timeout: timeout
+      });else afterIdle();
     });
-    var edgeMat = mat(0x151009, 0.0, 0.85);
-    var board = new THREE.Mesh(new THREE.BoxGeometry(BOARD_W, BOARD_T, BOARD_D), [edgeMat, edgeMat, boardMat, edgeMat, edgeMat, edgeMat]);
-    scene.add(board);
-    scatterParts(scene);
-    var curvePts = TRACE_PTS.map(function (p) {
-      return new THREE.Vector3(p[0], TOP + 0.05, p[1]);
-    });
-    var curve = new THREE.CatmullRomCurve3(curvePts, false, "catmullrom", 0.5);
-    var STAR_N = 380;
-    var starGeo2 = new THREE.BufferGeometry();
-    var starPos2 = new Float32Array(STAR_N * 3);
-    for (var i = 0; i < STAR_N; i++) {
-      var r = 80 + Math.random() * 260;
-      var th = Math.random() * Math.PI * 2;
-      var ph = Math.acos(2 * Math.random() - 1);
-      starPos2[i * 3 + 0] = Math.sin(ph) * Math.cos(th) * r;
-      starPos2[i * 3 + 1] = Math.abs(Math.cos(ph) * r) * 0.5 + 8;
-      starPos2[i * 3 + 2] = Math.sin(ph) * Math.sin(th) * r;
-    }
-    starGeo2.setAttribute("position", new THREE.BufferAttribute(starPos2, 3));
-    var starField2 = new THREE.Points(starGeo2, new THREE.PointsMaterial({
-      color: 0x00f0c8,
-      size: 0.9,
-      sizeAttenuation: true,
-      transparent: true,
-      opacity: 0.5,
-      depthWrite: false
-    }));
-    scene.add(starField2);
-    var ASM_N = 620;
-    var asmGeo2 = new THREE.BufferGeometry();
-    var asmPos2 = new Float32Array(ASM_N * 3);
-    var asmTar2 = new Float32Array(ASM_N * 3);
-    var asmSca2 = new Float32Array(ASM_N * 3);
-    var _tp = new THREE.Vector3();
-    for (var _i1 = 0; _i1 < ASM_N; _i1++) {
-      if (Math.random() < 0.7) {
-        curve.getPointAt(Math.random(), _tp);
-        asmTar2[_i1 * 3 + 0] = _tp.x + (Math.random() - 0.5) * 5;
-        asmTar2[_i1 * 3 + 1] = TOP + 0.4 + Math.random() * 2.2;
-        asmTar2[_i1 * 3 + 2] = _tp.z + (Math.random() - 0.5) * 5;
-      } else {
-        var st = STOPS[Math.random() * STOPS.length | 0];
-        var _TRACE_PTS$st$p5 = _slicedToArray(TRACE_PTS[st.p], 2),
-          px = _TRACE_PTS$st$p5[0],
-          pz = _TRACE_PTS$st$p5[1];
-        var a = Math.random() * Math.PI * 2,
-          rr2 = Math.random() * 7;
-        asmTar2[_i1 * 3 + 0] = px + Math.cos(a) * rr2;
-        asmTar2[_i1 * 3 + 1] = TOP + 0.5 + Math.random() * 2.5;
-        asmTar2[_i1 * 3 + 2] = pz + Math.sin(a) * rr2;
-      }
-      asmSca2[_i1 * 3 + 0] = asmTar2[_i1 * 3 + 0] + (Math.random() - 0.5) * 180;
-      asmSca2[_i1 * 3 + 1] = asmTar2[_i1 * 3 + 1] + 40 + Math.random() * 120;
-      asmSca2[_i1 * 3 + 2] = asmTar2[_i1 * 3 + 2] + 30 + Math.random() * 160;
-      asmPos2[_i1 * 3 + 0] = asmSca2[_i1 * 3 + 0];
-      asmPos2[_i1 * 3 + 1] = asmSca2[_i1 * 3 + 1];
-      asmPos2[_i1 * 3 + 2] = asmSca2[_i1 * 3 + 2];
-    }
-    asmGeo2.setAttribute("position", new THREE.BufferAttribute(asmPos2, 3).setUsage(THREE.DynamicDrawUsage));
-    var assembly2 = new THREE.Points(asmGeo2, new THREE.PointsMaterial({
-      color: 0x00f0c8,
-      size: 1.1,
-      sizeAttenuation: true,
-      transparent: true,
-      opacity: 0,
-      depthWrite: false
-    }));
-    scene.add(assembly2);
-    var stopObjs = [];
-    var deviceGroup = null;
-    STOPS.forEach(function (st) {
-      var _TRACE_PTS$st$p6 = _slicedToArray(TRACE_PTS[st.p], 2),
-        px = _TRACE_PTS$st$p6[0],
-        pz = _TRACE_PTS$st$p6[1];
-      var grp = buildComponent(st.kind);
-      grp.scale.setScalar(0.85);
-      grp.position.set(px, 0, pz);
-      scene.add(grp);
-      stopObjs.push({
-        st: st,
-        grp: grp,
-        pos: new THREE.Vector3(px, TOP + 2, pz)
-      });
-      if (st.explode) {
-        deviceGroup = new THREE.Group();
-        deviceGroup.position.set(px, TOP + 4.6, pz);
-        deviceGroup.visible = false;
-        scene.add(deviceGroup);
-        buildWaferReal(deviceGroup);
-      }
-    });
-    var formMats = [];
-    scene.traverse(function (o) {
-      if (o.isMesh && o.material) {
-        var mats = Array.isArray(o.material) ? o.material : [o.material];
-        mats.forEach(function (m) {
-          if (!formMats.includes(m)) formMats.push(m);
-        });
-      }
-    });
-    var formMatsTransparent = false;
-    var composer = null,
-      bokeh = null;
-    try {
-      if (!LITE && THREE.EffectComposer && THREE.BokehPass && THREE.RenderPass) {
-        composer = new THREE.EffectComposer(renderer);
-        composer.addPass(new THREE.RenderPass(scene, camera));
-        bokeh = new THREE.BokehPass(scene, camera, {
-          focus: 30,
-          aperture: 0.0009,
-          maxblur: 0.006
-        });
-        composer.addPass(bokeh);
-        if (THREE.OutputPass) composer.addPass(new THREE.OutputPass());
-      }
-    } catch (e) {
-      console.warn("composer failed", e);
-      composer = null;
-    }
-    var tmpPos = new THREE.Vector3(),
-      tmpLook = new THREE.Vector3(),
-      tmpTan = new THREE.Vector3(),
-      tmpSide = new THREE.Vector3(),
-      UP = new THREE.Vector3(0, 1, 0);
-    var camPos = new THREE.Vector3().copy(camera.position);
-    var camLook = new THREE.Vector3(0, 0, 0);
-    var curLook = new THREE.Vector3(0, 0, 0);
-    function stopTForIndex(i) {
-      return STOPS[i].p / (TRACE_PTS.length - 1);
-    }
-    var HERO_POS = new THREE.Vector3(),
-      HERO_LOOK = new THREE.Vector3();
-    var NODE_POS = new THREE.Vector3(),
-      NODE_LOOK = new THREE.Vector3();
-    var tmpFinalPos = new THREE.Vector3(),
-      tmpFinalLook = new THREE.Vector3();
-    function update(t, mode, dt, footerMix, introMix, nodeMix) {
-      t = Math.max(0, Math.min(1, t));
-      footerMix = Math.max(0, Math.min(1, footerMix || 0));
-      introMix = Math.max(0, Math.min(1, introMix || 0));
-      nodeMix = Math.max(0, Math.min(1, nodeMix || 0));
-      var ease = 1 - Math.pow(0.0015, dt / 1000);
-      var nowMs = performance.now();
-      var active = 0,
-        best = 1e9;
-      STOPS.forEach(function (s, i) {
-        var d = Math.abs(t - stopTForIndex(i));
-        if (d < best) {
-          best = d;
-          active = i;
-        }
-      });
-      if (mode === "bench") {
-        curve.getPointAt(t, tmpLook);
-        tmpPos.set(tmpLook.x + 6, 26, tmpLook.z + 26);
-        camLook.copy(tmpLook);
-      } else {
-        curve.getPointAt(t, tmpPos);
-        curve.getTangentAt(t, tmpTan);
-        tmpSide.copy(tmpTan).cross(UP).normalize();
-        tmpPos.addScaledVector(tmpTan, -8).addScaledVector(tmpSide, 7);
-        tmpPos.y += 12;
-        curve.getPointAt(Math.min(1, t + 0.05), tmpLook);
-        tmpLook.y += 0.2;
-        camLook.copy(tmpLook);
-      }
-      camPos.lerp(tmpPos, ease);
-      curLook.lerp(camLook, ease);
-      tmpFinalPos.copy(camPos);
-      tmpFinalLook.copy(curLook);
-      if (footerMix > 0) {
-        var fe = footerMix < 0.5 ? 2 * footerMix * footerMix : 1 - Math.pow(-2 * footerMix + 2, 2) / 2;
-        HERO_POS.set(-6 + Math.sin(nowMs * 0.00018) * 2, 50, 96);
-        HERO_LOOK.set(0, -2, 2);
-        tmpFinalPos.lerp(HERO_POS, fe);
-        tmpFinalLook.lerp(HERO_LOOK, fe);
-      }
-      if (introMix > 0) {
-        var ie = introMix < 0.5 ? 2 * introMix * introMix : 1 - Math.pow(-2 * introMix + 2, 2) / 2;
-        tmpFinalPos.x -= 9 * ie;
-        tmpFinalPos.y += 30 * ie;
-        tmpFinalPos.z += 24 * ie;
-      }
-      camera.position.copy(tmpFinalPos);
-      camera.lookAt(tmpFinalLook);
-      if (nodeMix > 0) {
-        var ne = nodeMix < 0.5 ? 2 * nodeMix * nodeMix : 1 - Math.pow(-2 * nodeMix + 2, 2) / 2;
-        var bob = Math.sin(nowMs * 0.0004) * 3;
-        NODE_POS.set(38, 104 + bob, 150);
-        NODE_LOOK.set(0, -4, 0);
-        camera.position.lerpVectors(tmpFinalPos, NODE_POS, ne);
-        tmpFinalLook.lerpVectors(curLook, NODE_LOOK, ne);
-        camera.lookAt(tmpFinalLook);
-      }
-      starField2.material.opacity = 0.5 * (1 - nodeMix);
-      scene.fog.far = 150 + 260 * nodeMix;
-      if (deviceGroup) {
-        var dt2 = Math.abs(t - stopTForIndex(STOPS.findIndex(function (s) {
-          return s.explode;
-        })));
-        var ex = Math.max(0, 1 - dt2 * 9);
-        deviceGroup.visible = ex > 0.02 && waferParts.length > 0;
-        if (deviceGroup.visible) {
-          var exs = ex < 0.5 ? 2 * ex * ex : 1 - Math.pow(-2 * ex + 2, 2) / 2;
-          var _iterator28 = _createForOfIteratorHelper(waferParts),
-            _step28;
-          try {
-            for (_iterator28.s(); !(_step28 = _iterator28.n()).done;) {
-              var w = _step28.value;
-              w.position.copy(w.userData.vec).multiplyScalar(exs * WAFER_EXPLODE);
+  }
+  function buildScene(_x5, _x6, _x7) {
+    return _buildScene.apply(this, arguments);
+  }
+  function _buildScene() {
+    _buildScene = _asyncToGenerator(_regenerator().m(function _callee(mount, opts, lifecycle) {
+      var LITE, THREE, W, H, renderer, scene, envTarget, pmrem, envScene, camera, key, fill, rim, colorW, detailW, colorTex, specTex, bumpTex, boardMat, edgeMat, board, curvePts, curve, STAR_N, starGeo2, starPos2, i, r, th, ph, starField2, ASM_N, asmGeo2, asmPos2, asmTar2, asmSca2, _tp, _i1, st, _TRACE_PTS$st$p5, px, pz, a, rr2, assembly2, waferState, deviceGroup, formMats, formMatsTransparent, composer, bokeh, tmpPos, tmpLook, tmpTan, tmpSide, UP, camPos, camLook, curLook, stopTForIndex, HERO_POS, HERO_LOOK, NODE_POS, NODE_LOOK, tmpFinalPos, tmpFinalLook, update, render, setSize, dispose, _t;
+      return _regenerator().w(function (_context) {
+        while (1) switch (_context.p = _context.n) {
+          case 0:
+            dispose = function _dispose() {
+              waferState.disposed = true;
+              if (bokeh && bokeh.dispose) bokeh.dispose();
+              if (composer && composer.dispose) composer.dispose();
+              var geometries = new Set();
+              var materials = new Set();
+              var textures = new Set([colorTex, specTex, bumpTex]);
+              scene.traverse(function (object) {
+                if (object.geometry && object.geometry.dispose) geometries.add(object.geometry);
+                var objectMaterials = object.material ? Array.isArray(object.material) ? object.material : [object.material] : [];
+                objectMaterials.forEach(function (material) {
+                  if (!material || !material.dispose) return;
+                  materials.add(material);
+                  Object.keys(material).forEach(function (key) {
+                    var value = material[key];
+                    if (value && value.isTexture && value.dispose) textures.add(value);
+                  });
+                });
+              });
+              geometries.forEach(function (geometry) {
+                return geometry.dispose();
+              });
+              materials.forEach(function (material) {
+                return material.dispose();
+              });
+              textures.forEach(function (texture) {
+                return texture && texture.dispose();
+              });
+              if (envTarget) envTarget.dispose();
+              if (renderer.renderLists) renderer.renderLists.dispose();
+              renderer.dispose();
+              if (renderer.forceContextLoss) renderer.forceContextLoss();
+              try {
+                mount.removeChild(renderer.domElement);
+              } catch (_) {}
+              waferState.parts.length = 0;
+              waferState.materials.length = 0;
+            };
+            setSize = function _setSize(w, h) {
+              renderer.setSize(w, h);
+              camera.aspect = w / h;
+              camera.updateProjectionMatrix();
+              if (composer) composer.setSize(w, h);
+            };
+            render = function _render() {
+              if (composer) composer.render();else renderer.render(scene, camera);
+            };
+            update = function _update(t, mode, dt, footerMix, introMix, nodeMix) {
+              t = Math.max(0, Math.min(1, t));
+              footerMix = Math.max(0, Math.min(1, footerMix || 0));
+              introMix = Math.max(0, Math.min(1, introMix || 0));
+              nodeMix = Math.max(0, Math.min(1, nodeMix || 0));
+              var ease = 1 - Math.pow(0.0015, dt / 1000);
+              var nowMs = performance.now();
+              var active = 0,
+                best = 1e9;
+              STOPS.forEach(function (s, i) {
+                var d = Math.abs(t - stopTForIndex(i));
+                if (d < best) {
+                  best = d;
+                  active = i;
+                }
+              });
+              if (mode === "bench") {
+                curve.getPointAt(t, tmpLook);
+                tmpPos.set(tmpLook.x + 6, 26, tmpLook.z + 26);
+                camLook.copy(tmpLook);
+              } else {
+                curve.getPointAt(t, tmpPos);
+                curve.getTangentAt(t, tmpTan);
+                tmpSide.copy(tmpTan).cross(UP).normalize();
+                tmpPos.addScaledVector(tmpTan, -8).addScaledVector(tmpSide, 7);
+                tmpPos.y += 12;
+                curve.getPointAt(Math.min(1, t + 0.05), tmpLook);
+                tmpLook.y += 0.2;
+                camLook.copy(tmpLook);
+              }
+              camPos.lerp(tmpPos, ease);
+              curLook.lerp(camLook, ease);
+              tmpFinalPos.copy(camPos);
+              tmpFinalLook.copy(curLook);
+              if (footerMix > 0) {
+                var fe = footerMix < 0.5 ? 2 * footerMix * footerMix : 1 - Math.pow(-2 * footerMix + 2, 2) / 2;
+                HERO_POS.set(-6 + Math.sin(nowMs * 0.00018) * 2, 50, 96);
+                HERO_LOOK.set(0, -2, 2);
+                tmpFinalPos.lerp(HERO_POS, fe);
+                tmpFinalLook.lerp(HERO_LOOK, fe);
+              }
+              if (introMix > 0) {
+                var ie = introMix < 0.5 ? 2 * introMix * introMix : 1 - Math.pow(-2 * introMix + 2, 2) / 2;
+                tmpFinalPos.x -= 9 * ie;
+                tmpFinalPos.y += 30 * ie;
+                tmpFinalPos.z += 24 * ie;
+              }
+              camera.position.copy(tmpFinalPos);
+              camera.lookAt(tmpFinalLook);
+              if (nodeMix > 0) {
+                var ne = nodeMix < 0.5 ? 2 * nodeMix * nodeMix : 1 - Math.pow(-2 * nodeMix + 2, 2) / 2;
+                var bob = Math.sin(nowMs * 0.0004) * 3;
+                NODE_POS.set(38, 104 + bob, 150);
+                NODE_LOOK.set(0, -4, 0);
+                camera.position.lerpVectors(tmpFinalPos, NODE_POS, ne);
+                tmpFinalLook.lerpVectors(curLook, NODE_LOOK, ne);
+                camera.lookAt(tmpFinalLook);
+              }
+              starField2.material.opacity = 0.5 * (1 - nodeMix);
+              scene.fog.far = 150 + 260 * nodeMix;
+              if (deviceGroup) {
+                var dt2 = Math.abs(t - stopTForIndex(STOPS.findIndex(function (s) {
+                  return s.explode;
+                })));
+                var ex = Math.max(0, 1 - dt2 * 9);
+                deviceGroup.visible = ex > 0.02 && waferState.parts.length > 0;
+                if (deviceGroup.visible) {
+                  var exs = ex < 0.5 ? 2 * ex * ex : 1 - Math.pow(-2 * ex + 2, 2) / 2;
+                  var _iterator28 = _createForOfIteratorHelper(waferState.parts),
+                    _step28;
+                  try {
+                    for (_iterator28.s(); !(_step28 = _iterator28.n()).done;) {
+                      var w = _step28.value;
+                      w.position.copy(w.userData.vec).multiplyScalar(exs * WAFER_EXPLODE);
+                    }
+                  } catch (err) {
+                    _iterator28.e(err);
+                  } finally {
+                    _iterator28.f();
+                  }
+                  var op = Math.min(1, ex * 2.5);
+                  var _iterator29 = _createForOfIteratorHelper(waferState.materials),
+                    _step29;
+                  try {
+                    for (_iterator29.s(); !(_step29 = _iterator29.n()).done;) {
+                      var m = _step29.value;
+                      m.opacity = op;
+                    }
+                  } catch (err) {
+                    _iterator29.e(err);
+                  } finally {
+                    _iterator29.f();
+                  }
+                  deviceGroup.rotation.y += dt * 0.0004;
+                }
+              }
+              starField2.rotation.y += dt * 0.00002;
+              var conv = 1 - introMix;
+              if (introMix > 0.001) {
+                var ce = conv < 0.5 ? 2 * conv * conv : 1 - Math.pow(-2 * conv + 2, 2) / 2;
+                var ap = assembly2.geometry.attributes.position.array;
+                for (var _i10 = 0; _i10 < ASM_N * 3; _i10++) ap[_i10] = asmSca2[_i10] + (asmTar2[_i10] - asmSca2[_i10]) * ce;
+                assembly2.geometry.attributes.position.needsUpdate = true;
+                assembly2.material.opacity = Math.sin(Math.min(1, conv) * Math.PI) * 0.85;
+                assembly2.material.size = 1.4 - conv * 0.5;
+                var fo = Math.min(1, conv / 0.55);
+                var foe = fo < 0.5 ? 2 * fo * fo : 1 - Math.pow(-2 * fo + 2, 2) / 2;
+                if (!formMatsTransparent) {
+                  formMats.forEach(function (m) {
+                    m.transparent = true;
+                  });
+                  formMatsTransparent = true;
+                }
+                formMats.forEach(function (m) {
+                  m.opacity = foe;
+                });
+                starField2.material.opacity = 0.18 + conv * 0.32;
+              } else if (formMatsTransparent) {
+                formMats.forEach(function (m) {
+                  m.opacity = 1;
+                  m.transparent = false;
+                });
+                assembly2.material.opacity = 0;
+                starField2.material.opacity = 0.5;
+                formMatsTransparent = false;
+              }
+              if (bokeh) {
+                var focusDist = camera.position.distanceTo(curLook);
+                bokeh.uniforms.focus.value += (focusDist - bokeh.uniforms.focus.value) * 0.1;
+              }
+              rim.position.copy(curLook);
+              rim.position.y += 8;
+              return active;
+            };
+            stopTForIndex = function _stopTForIndex(i) {
+              return STOPS[i].p / (TRACE_PTS.length - 1);
+            };
+            LITE = !!(opts && opts.lite);
+            THREE = window.THREE;
+            if (THREE) {
+              _context.n = 1;
+              break;
             }
-          } catch (err) {
-            _iterator28.e(err);
-          } finally {
-            _iterator28.f();
-          }
-          var op = Math.min(1, ex * 2.5);
-          var _iterator29 = _createForOfIteratorHelper(waferMats),
-            _step29;
-          try {
-            for (_iterator29.s(); !(_step29 = _iterator29.n()).done;) {
-              var m = _step29.value;
-              m.opacity = op;
+            console.warn("THREE missing");
+            return _context.a(2, null);
+          case 1:
+            W = mount.clientWidth, H = mount.clientHeight;
+            renderer = new THREE.WebGLRenderer({
+              antialias: !LITE,
+              alpha: true,
+              powerPreference: "high-performance"
+            });
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, LITE ? 1.25 : 2));
+            renderer.setSize(W, H);
+            renderer.outputColorSpace = THREE.SRGBColorSpace;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.05;
+            mount.appendChild(renderer.domElement);
+            _context.n = 2;
+            return yieldBuildPhase();
+          case 2:
+            scene = new THREE.Scene();
+            scene.fog = new THREE.Fog(0x04060d, 55, 150);
+            envTarget = null, pmrem = null, envScene = null;
+            try {
+              pmrem = new THREE.PMREMGenerator(renderer);
+              envScene = new THREE.RoomEnvironment();
+              envTarget = pmrem.fromScene(envScene, 0.04);
+              scene.environment = envTarget.texture;
+            } catch (e) {
+              console.warn("env failed", e);
+            } finally {
+              if (envScene) {
+                if (envScene.dispose) envScene.dispose();else envScene.traverse(function (object) {
+                  if (object.geometry && object.geometry.dispose) object.geometry.dispose();
+                  var mats = object.material ? Array.isArray(object.material) ? object.material : [object.material] : [];
+                  mats.forEach(function (material) {
+                    return material && material.dispose && material.dispose();
+                  });
+                });
+              }
+              if (pmrem) pmrem.dispose();
             }
-          } catch (err) {
-            _iterator29.e(err);
-          } finally {
-            _iterator29.f();
-          }
-          deviceGroup.rotation.y += dt * 0.0004;
+            _context.n = 3;
+            return yieldBuildPhase();
+          case 3:
+            camera = new THREE.PerspectiveCamera(40, W / H, 0.5, 400);
+            camera.position.set(0, 30, 40);
+            camera.lookAt(0, 0, 0);
+            key = new THREE.DirectionalLight(0xffffff, 2.2);
+            key.position.set(-30, 50, 25);
+            scene.add(key);
+            fill = new THREE.DirectionalLight(0x9ab4ff, 0.5);
+            fill.position.set(30, 20, -20);
+            scene.add(fill);
+            rim = new THREE.PointLight(0x00f0c8, 60, 120, 2);
+            rim.position.set(0, 14, -10);
+            scene.add(rim);
+            scene.add(new THREE.AmbientLight(0xffffff, 0.25));
+            colorW = LITE ? 2048 : 4096;
+            detailW = LITE ? 1024 : 4096;
+            colorTex = drawColor(colorW, Math.round(colorW * BOARD_D / BOARD_W));
+            specTex = drawSpec(detailW, Math.round(detailW * BOARD_D / BOARD_W));
+            bumpTex = drawBump(detailW, Math.round(detailW * BOARD_D / BOARD_W));
+            _context.n = 4;
+            return yieldBuildPhase();
+          case 4:
+            boardMat = new THREE.MeshStandardMaterial({
+              map: colorTex,
+              metalnessMap: specTex,
+              roughnessMap: specTex,
+              bumpMap: bumpTex,
+              bumpScale: 0.4,
+              metalness: 1.0,
+              roughness: 1.0,
+              envMapIntensity: 1.0
+            });
+            edgeMat = mat(0x151009, 0.0, 0.85);
+            board = new THREE.Mesh(new THREE.BoxGeometry(BOARD_W, BOARD_T, BOARD_D), [edgeMat, edgeMat, boardMat, edgeMat, edgeMat, edgeMat]);
+            scene.add(board);
+            scatterParts(scene);
+            _context.n = 5;
+            return yieldBuildPhase();
+          case 5:
+            curvePts = TRACE_PTS.map(function (p) {
+              return new THREE.Vector3(p[0], TOP + 0.05, p[1]);
+            });
+            curve = new THREE.CatmullRomCurve3(curvePts, false, "catmullrom", 0.5);
+            STAR_N = 380;
+            starGeo2 = new THREE.BufferGeometry();
+            starPos2 = new Float32Array(STAR_N * 3);
+            for (i = 0; i < STAR_N; i++) {
+              r = 80 + Math.random() * 260;
+              th = Math.random() * Math.PI * 2;
+              ph = Math.acos(2 * Math.random() - 1);
+              starPos2[i * 3 + 0] = Math.sin(ph) * Math.cos(th) * r;
+              starPos2[i * 3 + 1] = Math.abs(Math.cos(ph) * r) * 0.5 + 8;
+              starPos2[i * 3 + 2] = Math.sin(ph) * Math.sin(th) * r;
+            }
+            starGeo2.setAttribute("position", new THREE.BufferAttribute(starPos2, 3));
+            starField2 = new THREE.Points(starGeo2, new THREE.PointsMaterial({
+              color: 0x00f0c8,
+              size: 0.9,
+              sizeAttenuation: true,
+              transparent: true,
+              opacity: 0.5,
+              depthWrite: false
+            }));
+            scene.add(starField2);
+            ASM_N = 620;
+            asmGeo2 = new THREE.BufferGeometry();
+            asmPos2 = new Float32Array(ASM_N * 3);
+            asmTar2 = new Float32Array(ASM_N * 3);
+            asmSca2 = new Float32Array(ASM_N * 3);
+            _tp = new THREE.Vector3();
+            for (_i1 = 0; _i1 < ASM_N; _i1++) {
+              if (Math.random() < 0.7) {
+                curve.getPointAt(Math.random(), _tp);
+                asmTar2[_i1 * 3 + 0] = _tp.x + (Math.random() - 0.5) * 5;
+                asmTar2[_i1 * 3 + 1] = TOP + 0.4 + Math.random() * 2.2;
+                asmTar2[_i1 * 3 + 2] = _tp.z + (Math.random() - 0.5) * 5;
+              } else {
+                st = STOPS[Math.random() * STOPS.length | 0];
+                _TRACE_PTS$st$p5 = _slicedToArray(TRACE_PTS[st.p], 2), px = _TRACE_PTS$st$p5[0], pz = _TRACE_PTS$st$p5[1];
+                a = Math.random() * Math.PI * 2, rr2 = Math.random() * 7;
+                asmTar2[_i1 * 3 + 0] = px + Math.cos(a) * rr2;
+                asmTar2[_i1 * 3 + 1] = TOP + 0.5 + Math.random() * 2.5;
+                asmTar2[_i1 * 3 + 2] = pz + Math.sin(a) * rr2;
+              }
+              asmSca2[_i1 * 3 + 0] = asmTar2[_i1 * 3 + 0] + (Math.random() - 0.5) * 180;
+              asmSca2[_i1 * 3 + 1] = asmTar2[_i1 * 3 + 1] + 40 + Math.random() * 120;
+              asmSca2[_i1 * 3 + 2] = asmTar2[_i1 * 3 + 2] + 30 + Math.random() * 160;
+              asmPos2[_i1 * 3 + 0] = asmSca2[_i1 * 3 + 0];
+              asmPos2[_i1 * 3 + 1] = asmSca2[_i1 * 3 + 1];
+              asmPos2[_i1 * 3 + 2] = asmSca2[_i1 * 3 + 2];
+            }
+            asmGeo2.setAttribute("position", new THREE.BufferAttribute(asmPos2, 3).setUsage(THREE.DynamicDrawUsage));
+            assembly2 = new THREE.Points(asmGeo2, new THREE.PointsMaterial({
+              color: 0x00f0c8,
+              size: 1.1,
+              sizeAttenuation: true,
+              transparent: true,
+              opacity: 0,
+              depthWrite: false
+            }));
+            scene.add(assembly2);
+            _context.n = 6;
+            return yieldBuildPhase();
+          case 6:
+            waferState = lifecycle.waferState;
+            deviceGroup = null;
+            STOPS.forEach(function (st) {
+              var _TRACE_PTS$st$p6 = _slicedToArray(TRACE_PTS[st.p], 2),
+                px = _TRACE_PTS$st$p6[0],
+                pz = _TRACE_PTS$st$p6[1];
+              var grp = buildComponent(st.kind);
+              grp.scale.setScalar(0.85);
+              grp.position.set(px, 0, pz);
+              scene.add(grp);
+              if (st.explode) {
+                deviceGroup = new THREE.Group();
+                deviceGroup.position.set(px, TOP + 4.6, pz);
+                deviceGroup.visible = false;
+                scene.add(deviceGroup);
+                buildWaferReal(deviceGroup, waferState);
+              }
+            });
+            _context.n = 7;
+            return yieldBuildPhase();
+          case 7:
+            formMats = [];
+            scene.traverse(function (o) {
+              if (o.isMesh && o.material) {
+                var mats = Array.isArray(o.material) ? o.material : [o.material];
+                mats.forEach(function (m) {
+                  if (!formMats.includes(m)) formMats.push(m);
+                });
+              }
+            });
+            formMatsTransparent = false;
+            composer = null, bokeh = null;
+            try {
+              if (!LITE && THREE.EffectComposer && THREE.BokehPass && THREE.RenderPass) {
+                composer = new THREE.EffectComposer(renderer);
+                composer.addPass(new THREE.RenderPass(scene, camera));
+                bokeh = new THREE.BokehPass(scene, camera, {
+                  focus: 30,
+                  aperture: 0.0009,
+                  maxblur: 0.006
+                });
+                composer.addPass(bokeh);
+                if (THREE.OutputPass) composer.addPass(new THREE.OutputPass());
+              }
+            } catch (e) {
+              console.warn("composer failed", e);
+              composer = null;
+            }
+            tmpPos = new THREE.Vector3(), tmpLook = new THREE.Vector3(), tmpTan = new THREE.Vector3(), tmpSide = new THREE.Vector3(), UP = new THREE.Vector3(0, 1, 0);
+            camPos = new THREE.Vector3().copy(camera.position);
+            camLook = new THREE.Vector3(0, 0, 0);
+            curLook = new THREE.Vector3(0, 0, 0);
+            HERO_POS = new THREE.Vector3(), HERO_LOOK = new THREE.Vector3();
+            NODE_POS = new THREE.Vector3(), NODE_LOOK = new THREE.Vector3();
+            tmpFinalPos = new THREE.Vector3(), tmpFinalLook = new THREE.Vector3();
+            _context.p = 8;
+            update(0, "probe", 16, 0, 0, 1);
+            if (!renderer.compileAsync) {
+              _context.n = 10;
+              break;
+            }
+            _context.n = 9;
+            return renderer.compileAsync(scene, camera);
+          case 9:
+            _context.n = 11;
+            break;
+          case 10:
+            if (renderer.compile) renderer.compile(scene, camera);
+          case 11:
+            _context.n = 12;
+            return yieldBuildPhase(250);
+          case 12:
+            render();
+            _context.n = 14;
+            break;
+          case 13:
+            _context.p = 13;
+            _t = _context.v;
+            console.warn("[board] hidden preflight render failed", _t);
+          case 14:
+            return _context.a(2, {
+              update: update,
+              render: render,
+              setSize: setSize,
+              dispose: dispose,
+              stops: STOPS,
+              domElement: renderer.domElement
+            });
         }
-      }
-      starField2.rotation.y += dt * 0.00002;
-      var conv = 1 - introMix;
-      if (introMix > 0.001) {
-        var ce = conv < 0.5 ? 2 * conv * conv : 1 - Math.pow(-2 * conv + 2, 2) / 2;
-        var ap = assembly2.geometry.attributes.position.array;
-        for (var _i10 = 0; _i10 < ASM_N * 3; _i10++) ap[_i10] = asmSca2[_i10] + (asmTar2[_i10] - asmSca2[_i10]) * ce;
-        assembly2.geometry.attributes.position.needsUpdate = true;
-        assembly2.material.opacity = Math.sin(Math.min(1, conv) * Math.PI) * 0.85;
-        assembly2.material.size = 1.4 - conv * 0.5;
-        var fo = Math.min(1, conv / 0.55);
-        var foe = fo < 0.5 ? 2 * fo * fo : 1 - Math.pow(-2 * fo + 2, 2) / 2;
-        if (!formMatsTransparent) {
-          formMats.forEach(function (m) {
-            m.transparent = true;
-          });
-          formMatsTransparent = true;
+      }, _callee, null, [[8, 13]]);
+    }));
+    return _buildScene.apply(this, arguments);
+  }
+  function build(_x8, _x9) {
+    return _build.apply(this, arguments);
+  }
+  function _build() {
+    _build = _asyncToGenerator(_regenerator().m(function _callee2(mount, opts) {
+      var lifecycle, existingCanvases, _t2;
+      return _regenerator().w(function (_context2) {
+        while (1) switch (_context2.p = _context2.n) {
+          case 0:
+            lifecycle = {
+              waferState: {
+                parts: [],
+                materials: [],
+                disposed: false
+              }
+            };
+            existingCanvases = new Set(mount.querySelectorAll("canvas"));
+            _context2.p = 1;
+            _context2.n = 2;
+            return buildScene(mount, opts, lifecycle);
+          case 2:
+            return _context2.a(2, _context2.v);
+          case 3:
+            _context2.p = 3;
+            _t2 = _context2.v;
+            lifecycle.waferState.disposed = true;
+            lifecycle.waferState.parts.length = 0;
+            lifecycle.waferState.materials.length = 0;
+            mount.querySelectorAll("canvas").forEach(function (canvas) {
+              if (existingCanvases.has(canvas)) return;
+              try {
+                var gl = canvas.getContext("webgl2") || canvas.getContext("webgl");
+                var lose = gl && gl.getExtension("WEBGL_lose_context");
+                if (lose) lose.loseContext();
+              } catch (_) {}
+              try {
+                canvas.remove();
+              } catch (_) {}
+            });
+            throw _t2;
+          case 4:
+            return _context2.a(2);
         }
-        formMats.forEach(function (m) {
-          m.opacity = foe;
-        });
-        starField2.material.opacity = 0.18 + conv * 0.32;
-      } else if (formMatsTransparent) {
-        formMats.forEach(function (m) {
-          m.opacity = 1;
-          m.transparent = false;
-        });
-        assembly2.material.opacity = 0;
-        starField2.material.opacity = 0.5;
-        formMatsTransparent = false;
-      }
-      if (bokeh) {
-        var focusDist = camera.position.distanceTo(curLook);
-        bokeh.uniforms.focus.value += (focusDist - bokeh.uniforms.focus.value) * 0.1;
-      }
-      rim.position.copy(curLook);
-      rim.position.y += 8;
-      return active;
-    }
-    function render() {
-      if (composer) composer.render();else renderer.render(scene, camera);
-    }
-    function setSize(w, h) {
-      renderer.setSize(w, h);
-      camera.aspect = w / h;
-      camera.updateProjectionMatrix();
-      if (composer) composer.setSize(w, h);
-    }
-    function dispose() {
-      if (bokeh && bokeh.dispose) bokeh.dispose();
-      if (composer && composer.dispose) composer.dispose();
-      var geometries = new Set();
-      var materials = new Set();
-      var textures = new Set([colorTex, specTex, bumpTex]);
-      scene.traverse(function (object) {
-        if (object.geometry && object.geometry.dispose) geometries.add(object.geometry);
-        var objectMaterials = object.material ? Array.isArray(object.material) ? object.material : [object.material] : [];
-        objectMaterials.forEach(function (material) {
-          if (!material || !material.dispose) return;
-          materials.add(material);
-          Object.keys(material).forEach(function (key) {
-            var value = material[key];
-            if (value && value.isTexture && value.dispose) textures.add(value);
-          });
-        });
-      });
-      geometries.forEach(function (geometry) {
-        return geometry.dispose();
-      });
-      materials.forEach(function (material) {
-        return material.dispose();
-      });
-      textures.forEach(function (texture) {
-        return texture && texture.dispose();
-      });
-      if (envTarget) envTarget.dispose();
-      if (renderer.renderLists) renderer.renderLists.dispose();
-      renderer.dispose();
-      if (renderer.forceContextLoss) renderer.forceContextLoss();
-      try {
-        mount.removeChild(renderer.domElement);
-      } catch (_) {}
-    }
-    return {
-      update: update,
-      render: render,
-      setSize: setSize,
-      dispose: dispose,
-      stops: STOPS,
-      domElement: renderer.domElement
-    };
+      }, _callee2, null, [[1, 3]]);
+    }));
+    return _build.apply(this, arguments);
   }
   window.MOBoard = {
     build: build,
@@ -7509,6 +7656,10 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
 })();
 
 /* ---- app/landing/scenes/board-flight.jsx ---- */
+function _regenerator() { var e, t, r = "function" == typeof Symbol ? Symbol : {}, n = r.iterator || "@@iterator", o = r.toStringTag || "@@toStringTag"; function i(r, n, o, i) { var c = n && n.prototype instanceof Generator ? n : Generator, u = Object.create(c.prototype); return _regeneratorDefine2(u, "_invoke", function (r, n, o) { var i, c, u, f = 0, p = o || [], y = !1, G = { p: 0, n: 0, v: e, a: d, f: d.bind(e, 4), d: function d(t, r) { return i = t, c = 0, u = e, G.n = r, a; } }; function d(r, n) { for (c = r, u = n, t = 0; !y && f && !o && t < p.length; t++) { var o, i = p[t], d = G.p, l = i[2]; r > 3 ? (o = l === n) && (u = i[(c = i[4]) ? 5 : (c = 3, 3)], i[4] = i[5] = e) : i[0] <= d && ((o = r < 2 && d < i[1]) ? (c = 0, G.v = n, G.n = i[1]) : d < l && (o = r < 3 || i[0] > n || n > l) && (i[4] = r, i[5] = n, G.n = l, c = 0)); } if (o || r > 1) return a; throw y = !0, n; } return function (o, p, l) { if (f > 1) throw TypeError("Generator is already running"); for (y && 1 === p && d(p, l), c = p, u = l; (t = c < 2 ? e : u) || !y;) { i || (c ? c < 3 ? (c > 1 && (G.n = -1), d(c, u)) : G.n = u : G.v = u); try { if (f = 2, i) { if (c || (o = "next"), t = i[o]) { if (!(t = t.call(i, u))) throw TypeError("iterator result is not an object"); if (!t.done) return t; u = t.value, c < 2 && (c = 0); } else 1 === c && (t = i["return"]) && t.call(i), c < 2 && (u = TypeError("The iterator does not provide a '" + o + "' method"), c = 1); i = e; } else if ((t = (y = G.n < 0) ? u : r.call(n, G)) !== a) break; } catch (t) { i = e, c = 1, u = t; } finally { f = 1; } } return { value: t, done: y }; }; }(r, o, i), !0), u; } var a = {}; function Generator() {} function GeneratorFunction() {} function GeneratorFunctionPrototype() {} t = Object.getPrototypeOf; var c = [][n] ? t(t([][n]())) : (_regeneratorDefine2(t = {}, n, function () { return this; }), t), u = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(c); function f(e) { return Object.setPrototypeOf ? Object.setPrototypeOf(e, GeneratorFunctionPrototype) : (e.__proto__ = GeneratorFunctionPrototype, _regeneratorDefine2(e, o, "GeneratorFunction")), e.prototype = Object.create(u), e; } return GeneratorFunction.prototype = GeneratorFunctionPrototype, _regeneratorDefine2(u, "constructor", GeneratorFunctionPrototype), _regeneratorDefine2(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = "GeneratorFunction", _regeneratorDefine2(GeneratorFunctionPrototype, o, "GeneratorFunction"), _regeneratorDefine2(u), _regeneratorDefine2(u, o, "Generator"), _regeneratorDefine2(u, n, function () { return this; }), _regeneratorDefine2(u, "toString", function () { return "[object Generator]"; }), (_regenerator = function _regenerator() { return { w: i, m: f }; })(); }
+function _regeneratorDefine2(e, r, n, t) { var i = Object.defineProperty; try { i({}, "", {}); } catch (e) { i = 0; } _regeneratorDefine2 = function _regeneratorDefine(e, r, n, t) { function o(r, n) { _regeneratorDefine2(e, r, function (e) { return this._invoke(r, n, e); }); } r ? i ? i(e, r, { value: n, enumerable: !t, configurable: !t, writable: !t }) : e[r] = n : (o("next", 0), o("throw", 1), o("return", 2)); }, _regeneratorDefine2(e, r, n, t); }
+function asyncGeneratorStep(n, t, e, r, o, a, c) { try { var i = n[a](c), u = i.value; } catch (n) { return void e(n); } i.done ? t(u) : Promise.resolve(u).then(r, o); }
+function _asyncToGenerator(n) { return function () { var t = this, e = arguments; return new Promise(function (r, o) { var a = n.apply(t, e); function _next(n) { asyncGeneratorStep(a, r, o, _next, _throw, "next", n); } function _throw(n) { asyncGeneratorStep(a, r, o, _next, _throw, "throw", n); } _next(void 0); }); }; }
 function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
 function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
 function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
@@ -7535,8 +7686,8 @@ function BoardFlight(_ref) {
   var secRef = useBFR(null);
   var layerRef = useBFR(null);
   var mountRef = useBFR(null);
-  var artRef = useBFR(null);
   var ctrlRef = useBFR(null);
+  var readyRef = useBFR(false);
   var tRef = useBFR(0);
   var footRef = useBFR(0);
   var presRef = useBFR(0);
@@ -7566,79 +7717,116 @@ function BoardFlight(_ref) {
     _useBF2 = _slicedToArray(_useBF, 2),
     active = _useBF2[0],
     setActive = _useBF2[1];
-  var _useBF3 = useBF(0),
-    _useBF4 = _slicedToArray(_useBF3, 2),
-    prog = _useBF4[0],
-    setProg = _useBF4[1];
-  var _useBF5 = useBF(0),
-    _useBF6 = _slicedToArray(_useBF5, 2),
-    foot = _useBF6[0],
-    setFoot = _useBF6[1];
-  var _useBF7 = useBF({
-      c: 0,
-      o: 0,
-      e: 0
-    }),
-    _useBF8 = _slicedToArray(_useBF7, 2),
-    leadUi = _useBF8[0],
-    setLeadUi = _useBF8[1];
   useBFE(function () {
     var mount = mountRef.current;
     if (!mount) return;
     var bootRaf = 0,
       bootIdle = 0,
       renderRaf = 0,
+      retryTimer = 0,
       cursorFx = null,
       last = performance.now();
     var disposed = false,
       started = false,
       near = false,
       bootObserver = null;
-    var fallbackListening = false;
+    var fallbackListening = false,
+      attempts = 0;
     uniRef.current = document.querySelector(".universeBg");
-    if (uniRef.current) uniRef.current.style.transition = "none";
-    var boot = function boot() {
-      if (disposed) return;
-      var ctrl = window.MOBoard.build(mount, {
-        lite: true
-      });
-      if (!ctrl) return;
-      ctrlRef.current = ctrl;
-      var sharedCursor = window.MOCursorDistortion;
-      if (sharedCursor && typeof sharedCursor.mountStandalone === "function") {
-        cursorFx = sharedCursor.mountStandalone({
-          THREE: window.THREE,
-          selector: "[data-mo-board-cursor-mirror]",
-          zIndex: 20,
-          dprCap: 1,
-          disabledClasses: ["landing-exit", "mo-explore", "nx-page"],
-          disabledWhen: function disabledWhen() {
-            return presRef.current <= _bfRenderEps;
-          },
-          chainPrevious: true
-        });
-      }
-      var _loop = function loop(now) {
-        renderRaf = 0;
-        if (disposed) return;
-        if (presRef.current <= _bfRenderEps) return;
-        var dt = Math.min(50, now - last);
-        last = now;
-        var a = ctrl.update(tRef.current, "probe", dt, footRef.current, introRef.current, nodeRef.current);
-        ctrl.render();
-        if (a !== undefined) setActive(function (prev) {
-          return prev === a ? prev : a;
-        });
-        renderRaf = requestAnimationFrame(_loop);
+    var boot = function () {
+      var _ref2 = _asyncToGenerator(_regenerator().m(function _callee() {
+        var ctrl, sharedCursor, finePointer, _loop, wakeRender, _t;
+        return _regenerator().w(function (_context) {
+          while (1) switch (_context.p = _context.n) {
+            case 0:
+              if (!disposed) {
+                _context.n = 1;
+                break;
+              }
+              return _context.a(2);
+            case 1:
+              ctrl = null;
+              _context.p = 2;
+              _context.n = 3;
+              return window.MOBoard.build(mount, {
+                lite: true
+              });
+            case 3:
+              ctrl = _context.v;
+              _context.n = 5;
+              break;
+            case 4:
+              _context.p = 4;
+              _t = _context.v;
+              console.warn("[board] preflight failed", _t);
+            case 5:
+              if (ctrl) {
+                _context.n = 6;
+                break;
+              }
+              if (!disposed && attempts < 2) {
+                started = false;
+                retryTimer = window.setTimeout(function () {
+                  retryTimer = 0;
+                  if (!disposed) scheduleBoot();
+                }, 900);
+              }
+              return _context.a(2);
+            case 6:
+              if (!disposed) {
+                _context.n = 7;
+                break;
+              }
+              ctrl.dispose();
+              return _context.a(2);
+            case 7:
+              ctrlRef.current = ctrl;
+              sharedCursor = window.MOCursorDistortion;
+              finePointer = !window.matchMedia || window.matchMedia("(pointer: fine)").matches;
+              if (finePointer && sharedCursor && typeof sharedCursor.mountStandalone === "function") {
+                cursorFx = sharedCursor.mountStandalone({
+                  THREE: window.THREE,
+                  selector: "[data-mo-board-cursor-mirror]",
+                  zIndex: 20,
+                  dprCap: 1,
+                  disabledClasses: ["landing-exit", "mo-explore", "nx-page"],
+                  disabledWhen: function disabledWhen() {
+                    return presRef.current <= _bfRenderEps;
+                  },
+                  chainPrevious: true
+                });
+              }
+              _loop = function loop(now) {
+                renderRaf = 0;
+                if (disposed) return;
+                if (presRef.current <= _bfRenderEps) return;
+                var dt = Math.min(50, now - last);
+                last = now;
+                var a = ctrl.update(tRef.current, "probe", dt, footRef.current, introRef.current, nodeRef.current);
+                ctrl.render();
+                if (a !== undefined) setActive(function (prev) {
+                  return prev === a ? prev : a;
+                });
+                renderRaf = requestAnimationFrame(_loop);
+              };
+              wakeRender = function wakeRender() {
+                if (disposed || renderRaf || presRef.current <= _bfRenderEps) return;
+                last = performance.now();
+                renderRaf = requestAnimationFrame(_loop);
+              };
+              wakeRenderRef.current = wakeRender;
+              readyRef.current = true;
+              window.dispatchEvent(new CustomEvent("mo:board-ready"));
+              wakeRender();
+            case 8:
+              return _context.a(2);
+          }
+        }, _callee, null, [[2, 4]]);
+      }));
+      return function boot() {
+        return _ref2.apply(this, arguments);
       };
-      var wakeRender = function wakeRender() {
-        if (disposed || renderRaf || presRef.current <= _bfRenderEps) return;
-        last = performance.now();
-        renderRaf = requestAnimationFrame(_loop);
-      };
-      wakeRenderRef.current = wakeRender;
-      wakeRender();
-    };
+    }();
     var removeFallbackListeners = function removeFallbackListeners() {
       if (!fallbackListening) return;
       fallbackListening = false;
@@ -7660,8 +7848,9 @@ function BoardFlight(_ref) {
       if (disposed || started || !near) return;
       if (window.THREE && window.MOBoard) {
         started = true;
+        attempts += 1;
         stopBootWatch();
-        boot();
+        void boot();
         return;
       }
       bootRaf = requestAnimationFrame(_tryBoot);
@@ -7698,15 +7887,16 @@ function BoardFlight(_ref) {
       setNear(rect.bottom > 0 && rect.top < window.innerHeight);
     }
     var section = secRef.current;
+    var forcePreflight = window.location.hash === "#about" || window.location.hash === "#contact";
     if (section && window.IntersectionObserver) {
       bootObserver = new window.IntersectionObserver(function (entries) {
         var entry = entries.find(function (candidate) {
           return candidate.target === section;
         });
-        if (entry) setNear(entry.isIntersecting);
+        if (entry) setNear(entry.isIntersecting || forcePreflight);
       }, {
         root: null,
-        rootMargin: "75% 0px",
+        rootMargin: "".concat(Math.round(window.innerHeight * 4), "px 0px"),
         threshold: 0
       });
       bootObserver.observe(section);
@@ -7720,6 +7910,7 @@ function BoardFlight(_ref) {
       });
       fallbackProbe();
     }
+    if (forcePreflight) setNear(true);
     var onResize = function onResize() {
       var c = ctrlRef.current;
       if (c) c.setSize(mount.clientWidth, mount.clientHeight);
@@ -7728,12 +7919,13 @@ function BoardFlight(_ref) {
     window.addEventListener("resize", onResize);
     return function () {
       disposed = true;
+      readyRef.current = false;
       stopBootWatch();
+      if (retryTimer) clearTimeout(retryTimer);
       if (renderRaf) cancelAnimationFrame(renderRaf);
       wakeRenderRef.current = null;
       window.removeEventListener("resize", onResize);
       window.__mo_universe_pause = false;
-      window.__mo_morph = null;
       if (cursorFx) cursorFx.destroy();
       if (uniRef.current) {
         uniRef.current.style.opacity = "";
@@ -7747,79 +7939,101 @@ function BoardFlight(_ref) {
   useBFE(function () {
     var el = secRef.current;
     if (!el) return;
-    var raf;
+    var layer = layerRef.current;
+    var uni = uniRef.current || document.querySelector(".universeBg");
+    var aboutLayer = el.querySelector(".aboutNode-layer");
+    var aboutNode = el.querySelector(".uNode");
+    var grain = layer && layer.querySelector(".bf-grain");
+    var mark = layer && layer.querySelector(".bf-mark");
+    var chapters = layer ? Array.from(layer.querySelectorAll(".bf-ch")) : [];
+    var rail = layer && layer.querySelector(".bf-rail");
+    var progress = layer && layer.querySelector(".bf-prog");
+    var progressFill = layer && layer.querySelector(".bf-prog__fill");
+    var cue = layer && layer.querySelector(".bf-cue");
+    var footer = layer && layer.querySelector(".bf-foot");
+    var footerInner = footer && footer.querySelector(".bf-foot__inner");
+    var raf = 0,
+      measureRaf = 0,
+      dead = false;
+    var trackTop = 0,
+      trackHeight = 1,
+      viewportH = window.innerHeight;
     var ENTRY_VH = MODE === "takeover" ? 0.36 : MODE === "wipe" ? 0.58 : 0.7;
     var update = function update() {
-      var vh = window.innerHeight;
-      var rect = el.getBoundingClientRect();
-      var total = el.offsetHeight - vh;
-      var top = -rect.top;
+      raf = 0;
+      var vh = viewportH;
+      var total = trackHeight - vh;
+      var pageY = Number.isFinite(window.__mo_scrollY) ? window.__mo_scrollY : window.scrollY;
+      var top = pageY - trackTop;
+      var rectTop = -top;
+      var rectBottom = rectTop + trackHeight;
       var raw = total > 0 ? _bfClamp(top / total, 0, 1) : 0;
       var lead = _bfClamp(raw / LEAD_PORTION, 0, 1);
       var cardP = _bfClamp(lead / 0.26, 0, 1);
       var openP = _bfClamp((lead - 0.28) / 0.60, 0, 1);
-      window.__mo_morph = null;
       var padStart = 0.5 / FLIGHT_V;
       var fr = _bfClamp((raw - LEAD_PORTION) / FLIGHT_PORTION, 0, 1);
       var t = _bfClamp((fr - padStart) / (1 - padStart), 0, 1);
       tRef.current = t;
       var footerMix = _bfClamp((raw - LEAD_PORTION - FLIGHT_PORTION) / (FOOT_PORTION * 0.82), 0, 1);
       footRef.current = footerMix;
-      var contactOn = footerMix > 0.5;
+      var boardReady = readyRef.current;
+      var visualOpenP = boardReady ? openP : 0;
+      var visualCardP = boardReady ? cardP : 0;
+      var contactOn = boardReady && footerMix > 0.5;
       window.__mo_bf = window.__mo_bf || {};
       window.__mo_bf.footer = contactOn;
       window.__mo_bf.lead = lead;
-      window.__mo_bf.openP = openP;
+      window.__mo_bf.openP = visualOpenP;
       window.__mo_bf.t = t;
-      window.__mo_bf.foot = footerMix;
+      window.__mo_bf.foot = boardReady ? footerMix : 0;
       if (contactOn !== contactRef.current) {
         contactRef.current = contactOn;
         onContactRef.current && onContactRef.current(contactOn);
       }
-      var layer = layerRef.current;
-      var uni = uniRef.current;
       if (MODE === "takeover") {
-        var oe = _bfEaseInOut(openP);
+        var oe = _bfEaseInOut(visualOpenP);
         introRef.current = 0;
         nodeRef.current = 1 - oe;
-        presRef.current = cardP;
+        presRef.current = visualCardP;
         if (wakeRenderRef.current) wakeRenderRef.current();
         if (layer) {
-          layer.style.opacity = _bfClamp(cardP * 1.4, 0, 1).toFixed(3);
+          layer.style.opacity = _bfClamp(visualCardP * 1.4, 0, 1).toFixed(3);
           layer.style.clipPath = "none";
           layer.style.transform = "none";
-          layer.style.pointerEvents = openP > 0.6 ? "auto" : "none";
-          var voidMix = _bfClamp((openP - 0.55) / 0.35, 0, 1);
-          layer.style.setProperty("--bf-void", voidMix.toFixed(3));
-          var grain = layer.querySelector(".bf-grain");
+          var layerActive = boardReady && visualOpenP > 0.6;
+          layer.style.pointerEvents = layerActive ? "auto" : "none";
+          layer.inert = !layerActive;
+          layer.setAttribute("aria-hidden", layerActive ? "false" : "true");
+          var voidMix = _bfClamp((visualOpenP - 0.55) / 0.35, 0, 1);
+          layer.style.backgroundColor = "rgba(4, 6, 13, ".concat(voidMix.toFixed(3), ")");
           if (grain) grain.style.opacity = voidMix.toFixed(3);
         }
         if (uni) {
-          var uniFade = _bfEaseInOut(openP);
+          uni.style.transition = boardReady && raw > 0 ? "none" : "";
+          var uniFade = _bfEaseInOut(visualOpenP);
           uni.style.opacity = (1 - uniFade).toFixed(3);
           uni.style.transform = "scale(".concat((1 + 0.05 * oe).toFixed(4), ")");
         }
-        window.__mo_universe_pause = openP > 0.985;
-        var engaged = openP > 0.5;
+        window.__mo_universe_pause = boardReady && visualOpenP > 0.92;
+        var engaged = boardReady && visualOpenP > 0.5;
         if (engaged !== enteredRef.current) {
           enteredRef.current = engaged;
           if (engaged) onEnterRef.current && onEnterRef.current();
         }
-        var cVis = cardP * (1 - _bfClamp(openP / 0.55, 0, 1));
-        setLeadUi(function (prev) {
-          var c = +cVis.toFixed(2),
-            o = +openP.toFixed(2),
-            e = +cardP.toFixed(2);
-          return prev.c === c && prev.o === o && prev.e === e ? prev : {
-            c: c,
-            o: o,
-            e: e
-          };
-        });
+        var cVis = cardP * (1 - _bfClamp(visualOpenP / 0.55, 0, 1));
+        if (aboutLayer) {
+          aboutLayer.style.opacity = cVis.toFixed(3);
+          aboutLayer.setAttribute("aria-hidden", cVis < 0.02 ? "true" : "false");
+        }
+        if (aboutNode) {
+          aboutNode.style.transform = "scale(".concat((1 + visualOpenP * 0.06).toFixed(3), ") translateY(").concat(((1 - cardP) * 26).toFixed(1), "px)");
+          aboutNode.style.filter = cardP < 0.996 ? "blur(".concat(((1 - cardP) * 9).toFixed(2), "px)") : "none";
+        }
       } else {
-        var entry = rect.top > 0 ? _bfClamp((vh - rect.top) / (ENTRY_VH * vh), 0, 1) : 1;
-        var exit = rect.bottom < vh ? _bfClamp(rect.bottom / (0.6 * vh), 0, 1) : 1;
-        var presence = Math.min(entry, exit);
+        var entry = rectTop > 0 ? _bfClamp((vh - rectTop) / (ENTRY_VH * vh), 0, 1) : 1;
+        var exit = rectBottom < vh ? _bfClamp(rectBottom / (0.6 * vh), 0, 1) : 1;
+        var presence = boardReady ? Math.min(entry, exit) : 0;
         presRef.current = presence;
         if (wakeRenderRef.current) wakeRenderRef.current();
         if (presence > 0.45 && !enteredRef.current) {
@@ -7849,25 +8063,89 @@ function BoardFlight(_ref) {
             }
             window.__mo_universe_pause = presence > 0.92;
           }
-          layer.style.pointerEvents = presence > 0.5 ? "auto" : "none";
+          var _layerActive = presence > 0.5;
+          layer.style.pointerEvents = _layerActive ? "auto" : "none";
+          layer.inert = !_layerActive;
+          layer.setAttribute("aria-hidden", _layerActive ? "false" : "true");
         }
       }
-      setProg(t);
-      setFoot(footerMix);
+      var openGate = _bfClamp((visualOpenP - 0.55) / 0.4, 0, 1);
+      var chromeFade = (1 - _bfClamp(footerMix * 1.4, 0, 1)) * openGate;
+      if (mark) mark.style.opacity = chromeFade.toFixed(3);
+      if (rail) {
+        rail.style.opacity = chromeFade.toFixed(3);
+        rail.style.pointerEvents = chromeFade > 0.02 && footerMix <= 0.4 ? "auto" : "none";
+        rail.inert = !(chromeFade > 0.02 && footerMix <= 0.4);
+        rail.setAttribute("aria-hidden", rail.inert ? "true" : "false");
+      }
+      if (progress) progress.style.opacity = chromeFade.toFixed(3);
+      if (progressFill) progressFill.style.transform = "scaleX(".concat(t.toFixed(4), ")");
+      if (cue) cue.style.opacity = openGate > 0.99 && t < 0.05 && footerMix < 0.02 ? "1" : "0";
+      chapters.forEach(function (chapter, i) {
+        var center = STOPS[i].p / 10;
+        var d = Math.abs(t - center) * N;
+        var held = i === 0 && t <= center || i === N - 1 && t >= center;
+        var ramp = held ? 1 : _bfClamp((0.5 - d) / 0.17, 0, 1);
+        var vis = ramp * ramp * (3 - 2 * ramp);
+        var cardOp = vis * (1 - _bfClamp(footerMix * 1.6, 0, 1)) * openGate;
+        var isOn = cardOp > 0.02 && (held || d < 0.5) && footerMix < 0.4;
+        chapter.classList.toggle("is-on", isOn);
+        chapter.style.opacity = cardOp.toFixed(3);
+        chapter.style.transform = "translateY(".concat(((t - center) * N * 24).toFixed(1), "px)");
+        chapter.style.pointerEvents = isOn ? "auto" : "none";
+        chapter.inert = !isOn;
+        chapter.setAttribute("aria-hidden", isOn ? "false" : "true");
+      });
+      var footE = boardReady ? _bfEaseOut(footerMix) : 0;
+      if (footer) {
+        footer.style.opacity = footE.toFixed(3);
+        footer.style.pointerEvents = boardReady && footerMix > 0.35 ? "auto" : "none";
+        footer.setAttribute("aria-hidden", boardReady && footerMix >= 0.1 ? "false" : "true");
+        footer.inert = !boardReady || footerMix <= 0.35;
+      }
+      if (footerInner) footerInner.style.transform = "translateY(".concat(((1 - footE) * 40).toFixed(1), "px)");
+    };
+    var measure = function measure() {
+      measureRaf = 0;
+      if (dead) return;
+      var rect = el.getBoundingClientRect();
+      trackTop = rect.top + window.scrollY;
+      trackHeight = rect.height;
+      viewportH = window.innerHeight;
+      update();
+    };
+    var scheduleMeasure = function scheduleMeasure() {
+      if (!dead && !measureRaf) measureRaf = requestAnimationFrame(measure);
     };
     var onScroll = function onScroll() {
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(update);
+      if (!raf) raf = requestAnimationFrame(update);
     };
-    update();
+    var forceUpdate = function forceUpdate() {
+      if (dead) return;
+      if (raf) cancelAnimationFrame(raf);
+      raf = 0;
+      window.__mo_scrollY = window.scrollY;
+      update();
+    };
+    var ro = window.ResizeObserver ? new ResizeObserver(scheduleMeasure) : null;
+    if (ro) ro.observe(el);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(scheduleMeasure, function () {});
+    measure();
     window.addEventListener("scroll", onScroll, {
       passive: true
     });
-    window.addEventListener("resize", onScroll);
+    window.addEventListener("resize", scheduleMeasure);
+    window.addEventListener("mo:board-ready", forceUpdate);
+    window.addEventListener("mo:page-restored", forceUpdate);
     return function () {
+      dead = true;
       window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", scheduleMeasure);
+      window.removeEventListener("mo:board-ready", forceUpdate);
+      window.removeEventListener("mo:page-restored", forceUpdate);
+      if (ro) ro.disconnect();
+      if (raf) cancelAnimationFrame(raf);
+      if (measureRaf) cancelAnimationFrame(measureRaf);
     };
   }, [MODE, FLIGHT_PORTION, FLIGHT_V]);
   var jump = function jump(i) {
@@ -7884,9 +8162,6 @@ function BoardFlight(_ref) {
       behavior: "smooth"
     });
   };
-  var footE = _bfEaseOut(foot);
-  var openGate = _bfClamp(((leadUi.o || 0) - 0.55) / 0.4, 0, 1);
-  var chromeFade = ((1 - _bfClamp(foot * 1.4, 0, 1)) * openGate).toFixed(3);
   return React.createElement("section", {
     ref: secRef,
     className: "bf",
@@ -7898,15 +8173,15 @@ function BoardFlight(_ref) {
   }, React.createElement("div", {
     className: "aboutNode-layer",
     style: {
-      opacity: leadUi.c.toFixed(3)
+      opacity: 0
     },
-    "aria-hidden": leadUi.c < 0.02
+    "aria-hidden": "true"
   }, React.createElement("div", {
     className: "uNode",
     "data-screen-label": "04 About \u2014 node 0x00",
     style: {
-      transform: "scale(".concat((1 + (leadUi.o || 0) * 0.06).toFixed(3), ") translateY(").concat(((1 - (leadUi.e || 0)) * 26).toFixed(1), "px)"),
-      filter: (leadUi.e || 0) < 0.996 ? "blur(".concat(((1 - (leadUi.e || 0)) * 9).toFixed(2), "px)") : "none"
+      transform: "scale(1) translateY(26px)",
+      filter: "blur(9px)"
     }
   }, React.createElement("span", {
     className: "uNode__cnr uNode__cnr--tl",
@@ -7940,7 +8215,6 @@ function BoardFlight(_ref) {
     "data-mo-cursor-opacity": ".aboutNode-layer,.uNode,.lp"
   }, React.createElement("span", null, "MASLOV / OLEKSANDR"), React.createElement("span", null, "48.137\xB0 N \xB7 11.575\xB0 E"))), React.createElement("div", {
     className: "uNode__field",
-    ref: artRef,
     "aria-hidden": "true"
   }), React.createElement("div", {
     className: "uNode__foot"
@@ -7962,8 +8236,11 @@ function BoardFlight(_ref) {
     className: "bf-layer bf-layer--" + MODE,
     ref: layerRef,
     style: {
-      opacity: 0
-    }
+      opacity: 0,
+      pointerEvents: "none"
+    },
+    inert: "",
+    "aria-hidden": "true"
   }, React.createElement("div", {
     className: "bf-mount",
     ref: mountRef
@@ -7973,7 +8250,7 @@ function BoardFlight(_ref) {
   }), React.createElement("div", {
     className: "bf-mark",
     style: {
-      opacity: chromeFade
+      opacity: 0
     }
   }, React.createElement("span", {
     className: "bf-mark__dot"
@@ -7985,20 +8262,16 @@ function BoardFlight(_ref) {
     "aria-hidden": "false"
   }, STOPS.map(function (st, i) {
     var center = st.p / 10;
-    var d = Math.abs(prog - center) * N;
-    var held = i === 0 && prog <= center || i === N - 1 && prog >= center;
-    var ramp = held ? 1 : _bfClamp((0.5 - d) / 0.17, 0, 1);
-    var vis = ramp * ramp * (3 - 2 * ramp);
-    var cardOp = vis * (1 - _bfClamp(foot * 1.6, 0, 1)) * openGate;
-    var isOn = cardOp > 0.02 && (held || d < 0.5) && foot < 0.4;
     return React.createElement("article", {
       key: i,
-      className: "bf-ch " + (isOn ? "is-on" : ""),
+      className: "bf-ch",
       style: {
-        opacity: cardOp.toFixed(3),
-        transform: "translateY(".concat(((prog - center) * N * 24).toFixed(1), "px)"),
-        pointerEvents: isOn ? "auto" : "none"
+        opacity: 0,
+        transform: "translateY(".concat((-center * N * 24).toFixed(1), "px)"),
+        pointerEvents: "none"
       },
+      inert: "",
+      "aria-hidden": "true",
       "data-screen-label": st.chapter.n + " " + st.chapter.kicker
     }, React.createElement("div", {
       className: "bf-ch__num",
@@ -8036,9 +8309,11 @@ function BoardFlight(_ref) {
   })), React.createElement("div", {
     className: "bf-rail",
     style: {
-      opacity: chromeFade,
-      pointerEvents: foot > 0.4 ? "none" : "auto"
-    }
+      opacity: 0,
+      pointerEvents: "none"
+    },
+    inert: "",
+    "aria-hidden": "true"
   }, STOPS.map(function (st, i) {
     return React.createElement("button", {
       key: i,
@@ -8055,17 +8330,17 @@ function BoardFlight(_ref) {
   })), React.createElement("div", {
     className: "bf-prog",
     style: {
-      opacity: chromeFade
+      opacity: 0
     }
   }, React.createElement("div", {
     className: "bf-prog__fill",
     style: {
-      width: (prog * 100).toFixed(2) + "%"
+      transform: "scaleX(0)"
     }
   })), React.createElement("div", {
     className: "bf-cue",
     style: {
-      opacity: openGate > 0.99 && prog < 0.05 && foot < 0.02 ? 1 : 0
+      opacity: 0
     }
   }, React.createElement("span", {
     className: "bf-cue__line"
@@ -8075,10 +8350,11 @@ function BoardFlight(_ref) {
   }, "KEEP SCROLLING \u2014 FOLLOW THE TRACE \u2193")), React.createElement("div", {
     className: "bf-foot",
     style: {
-      opacity: footE.toFixed(3),
-      pointerEvents: foot > 0.35 ? "auto" : "none"
+      opacity: 0,
+      pointerEvents: "none"
     },
-    "aria-hidden": foot < 0.1,
+    inert: "",
+    "aria-hidden": "true",
     "data-screen-label": "05 Contact"
   }, React.createElement("div", {
     className: "bf-foot__scrim",
@@ -8086,7 +8362,7 @@ function BoardFlight(_ref) {
   }), React.createElement("div", {
     className: "bf-foot__inner",
     style: {
-      transform: "translateY(".concat(((1 - footE) * 40).toFixed(1), "px)")
+      transform: "translateY(40px)"
     }
   }, React.createElement("div", {
     className: "bf-foot__kicker",
@@ -8478,14 +8754,7 @@ function TitleKeyboardShortcut(_ref3) {
 window.TitleScreen = TitleScreen;
 
 /* ---- app/landing/sections/origin.jsx ---- */
-function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
-function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
-function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
-function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
-function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t["return"] && (u = t["return"](), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
-function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
 var _React = React,
-  useO = _React.useState,
   useOE = _React.useEffect,
   useOR = _React.useRef;
 var ORIGIN_LINES = [{
@@ -8513,6 +8782,9 @@ var _oEase = function _oEase(t) {
 var _oClamp = function _oClamp(v, a, b) {
   return Math.max(a, Math.min(b, v));
 };
+var _oLineEase = function _oLineEase(p, at) {
+  return _oEase(_oClamp((p - (at - 0.24)) / 0.24, 0, 1));
+};
 window.__mo_origin = window.__mo_origin || {
   p: 0,
   active: false,
@@ -8520,45 +8792,100 @@ window.__mo_origin = window.__mo_origin || {
 };
 function OriginBeat() {
   var secRef = useOR(null);
-  var _useO = useO(0),
-    _useO2 = _slicedToArray(_useO, 2),
-    p = _useO2[0],
-    setP = _useO2[1];
   var concept = typeof window !== "undefined" && window.__mo_origin_lock || "assembly";
   useOE(function () {
     window.__mo_origin.concept = concept;
   }, [concept]);
   useOE(function () {
+    var _window$visualViewpor, _document$fonts;
     var el = secRef.current;
     if (!el) return;
-    var raf;
-    var update = function update() {
-      var total = el.offsetHeight - window.innerHeight;
+    var typeEl = el.querySelector(".origin__type");
+    var lineEls = Array.from(el.querySelectorAll(".origin__line"));
+    var sigEl = el.querySelector(".origin__sig");
+    var handoffEl = el.querySelector(".origin__handoff");
+    if (!typeEl || lineEls.length !== ORIGIN_LINES.length || !sigEl || !handoffEl) return;
+    var raf = 0;
+    var needsMeasure = true;
+    var disposed = false;
+    var geometry = {
+      top: 0,
+      height: 0,
+      scrollHeight: 0,
+      viewportH: window.innerHeight
+    };
+    var measure = function measure() {
       var rect = el.getBoundingClientRect();
-      var top = -rect.top;
+      geometry.top = rect.top + window.scrollY;
+      geometry.height = rect.height;
+      geometry.scrollHeight = el.offsetHeight;
+      geometry.viewportH = window.innerHeight;
+      needsMeasure = false;
+    };
+    var update = function update() {
+      raf = 0;
+      if (needsMeasure) measure();
+      var pageY = Number.isFinite(window.__mo_scrollY) ? window.__mo_scrollY : window.scrollY;
+      var rectTop = geometry.top - pageY;
+      var rectBottom = rectTop + geometry.height;
+      var total = geometry.scrollHeight - geometry.viewportH;
+      var top = -rectTop;
       var np = total > 0 ? _oClamp(top / total, 0, 1) : 0;
-      var active = rect.top < window.innerHeight * 0.6 && rect.bottom > window.innerHeight * 0.4;
+      var active = rectTop < geometry.viewportH * 0.6 && rectBottom > geometry.viewportH * 0.4;
       window.__mo_origin.p = np;
       window.__mo_origin.active = active;
-      setP(np);
+      var handoff = _oClamp((np - 0.76) / 0.14, 0, 1);
+      var exitK = _oClamp((np - 0.90) / 0.10, 0, 1);
+      typeEl.style.opacity = (1 - exitK).toFixed(3);
+      typeEl.style.transform = "translateY(".concat((exitK * -46).toFixed(1), "px)");
+      typeEl.style.filter = exitK > 0.004 ? "blur(".concat((exitK * 7).toFixed(2), "px)") : "none";
+      lineEls.forEach(function (lineEl, i) {
+        var e = _oLineEase(np, ORIGIN_LINES[i].at);
+        lineEl.style.filter = "blur(".concat(((1 - e) * 16).toFixed(2), "px)");
+        lineEl.style.opacity = (0.08 + e * 0.92).toFixed(3);
+        lineEl.style.transform = "translateY(".concat(((1 - e) * 18).toFixed(1), "px)");
+      });
+      sigEl.style.opacity = _oClamp((np - 0.56) / 0.16, 0, 1).toFixed(3);
+      handoffEl.style.opacity = handoff.toFixed(3);
+      handoffEl.style.transform = "translateY(".concat((1 - handoff) * 10, "px)");
+    };
+    var schedule = function schedule() {
+      var remeasure = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+      needsMeasure = needsMeasure || remeasure;
+      if (!raf) raf = requestAnimationFrame(update);
     };
     var onScroll = function onScroll() {
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(update);
+      return schedule(false);
     };
+    var onResize = function onResize() {
+      return schedule(true);
+    };
+    measure();
     update();
     window.addEventListener("scroll", onScroll, {
       passive: true
     });
-    window.addEventListener("resize", onScroll);
+    window.addEventListener("resize", onResize);
+    (_window$visualViewpor = window.visualViewport) === null || _window$visualViewpor === void 0 || _window$visualViewpor.addEventListener("resize", onResize);
+    var resizeObserver = window.ResizeObserver ? new ResizeObserver(function () {
+      return schedule(true);
+    }) : null;
+    resizeObserver === null || resizeObserver === void 0 || resizeObserver.observe(el);
+    if ((_document$fonts = document.fonts) !== null && _document$fonts !== void 0 && _document$fonts.ready) {
+      document.fonts.ready.then(function () {
+        if (!disposed) schedule(true);
+      });
+    }
     return function () {
+      var _window$visualViewpor2;
+      disposed = true;
       window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
+      window.removeEventListener("resize", onResize);
+      (_window$visualViewpor2 = window.visualViewport) === null || _window$visualViewpor2 === void 0 || _window$visualViewpor2.removeEventListener("resize", onResize);
+      resizeObserver === null || resizeObserver === void 0 || resizeObserver.disconnect();
       cancelAnimationFrame(raf);
     };
   }, []);
-  var handoff = _oClamp((p - 0.76) / 0.14, 0, 1);
-  var exitK = _oClamp((p - 0.90) / 0.10, 0, 1);
   return React.createElement("section", {
     ref: secRef,
     className: "origin",
@@ -8575,9 +8902,9 @@ function OriginBeat() {
   }), React.createElement("div", {
     className: "origin__type",
     style: {
-      opacity: (1 - exitK).toFixed(3),
-      transform: "translateY(".concat((exitK * -46).toFixed(1), "px)"),
-      filter: exitK > 0.004 ? "blur(".concat((exitK * 7).toFixed(2), "px)") : "none"
+      opacity: "1.000",
+      transform: "translateY(0.0px)",
+      filter: "none"
     }
   }, React.createElement("div", {
     className: "origin__kicker"
@@ -8602,8 +8929,7 @@ function OriginBeat() {
   }, "KYIV \u2192 M\xDCNCHEN")), React.createElement("h2", {
     className: "origin__head2"
   }, ORIGIN_LINES.map(function (ln, i) {
-    var local = _oClamp((p - (ln.at - 0.24)) / 0.24, 0, 1);
-    var e = _oEase(local);
+    var e = _oLineEase(0, ln.at);
     var style = {
       filter: "blur(".concat(((1 - e) * 16).toFixed(2), "px)"),
       opacity: (0.08 + e * 0.92).toFixed(3),
@@ -8624,7 +8950,7 @@ function OriginBeat() {
   })), React.createElement("div", {
     className: "origin__sig",
     style: {
-      opacity: _oClamp((p - 0.56) / 0.16, 0, 1).toFixed(3)
+      opacity: "0.000"
     }
   }, React.createElement("div", {
     className: "origin__sigCol",
@@ -8645,8 +8971,8 @@ function OriginBeat() {
   }, "University / technical Ausbildung \xB7 Wafer company")))), React.createElement("div", {
     className: "origin__handoff",
     style: {
-      opacity: handoff.toFixed(3),
-      transform: "translateY(".concat((1 - handoff) * 10, "px)")
+      opacity: "0.000",
+      transform: "translateY(10px)"
     }
   }, React.createElement("span", {
     className: "origin__handoffLine"
@@ -8667,90 +8993,64 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
 var _React = React,
   useL = _React.useState,
   useE = _React.useEffect,
+  useLE = _React.useLayoutEffect,
   useR = _React.useRef;
-function useCompact() {
-  var bp = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 700;
-  var _useL = useL(function () {
-      return window.innerWidth <= bp;
-    }),
-    _useL2 = _slicedToArray(_useL, 2),
-    c = _useL2[0],
-    setC = _useL2[1];
-  useE(function () {
-    var on = function on() {
-      return setC(window.innerWidth <= bp);
-    };
-    window.addEventListener("resize", on);
-    return function () {
-      return window.removeEventListener("resize", on);
-    };
-  }, [bp]);
-  return c;
-}
 var FEATURED_ADDRS = window.MO_FEATURED_ADDRS || ["0x01", "0x03", "0x04", "0x06"];
 var WORKS = FEATURED_ADDRS.map(function (addr) {
   return (window.MO_PROJECTS || []).find(function (p) {
     return p.addr === addr;
   });
 }).filter(Boolean);
+function workReelGeometry(viewportWidth, count) {
+  var compact = viewportWidth <= 700;
+  var mid = viewportWidth <= 1100;
+  var titleSlot = compact ? 100 : mid ? 80 : 56;
+  var cardSlot = compact ? 78 : mid ? 70 : 52;
+  var showAllSlot = compact ? 96 : mid ? 70 : 52;
+  var titleGutter = compact ? "var(--s-5)" : "var(--gutter)";
+  var centers = [titleSlot / 2];
+  var cursor = titleSlot;
+  for (var i = 0; i < count; i++) {
+    centers.push(cursor + cardSlot / 2);
+    cursor += cardSlot;
+  }
+  centers.push(cursor + showAllSlot / 2);
+  return {
+    titleSlot: titleSlot,
+    cardSlot: cardSlot,
+    showAllSlot: showAllSlot,
+    titleLeft: "calc(".concat(titleGutter, " - ").concat((50 - titleSlot / 2).toFixed(2), "vw)"),
+    centers: centers
+  };
+}
 function Work(_ref) {
   var onHoverWork = _ref.onHoverWork;
   var sectionRef = useR(null);
-  var _useL3 = useL(0),
+  var bgRef = useR(null);
+  var railRef = useR(null);
+  var fillRef = useR(null);
+  var cardsRef = useR([]);
+  var showAllRef = useR(null);
+  var layoutRef = useR({
+    top: 0,
+    total: 0
+  });
+  var geometryRef = useR(null);
+  var progressRef = useR(0);
+  var applyProgressRef = useR(null);
+  var activeStopRef = useR(0);
+  var _useL = useL(0),
+    _useL2 = _slicedToArray(_useL, 2),
+    activeStop = _useL2[0],
+    setActiveStop = _useL2[1];
+  var _useL3 = useL(null),
     _useL4 = _slicedToArray(_useL3, 2),
-    progress = _useL4[0],
-    setProgress = _useL4[1];
-  var _useL5 = useL(null),
-    _useL6 = _slicedToArray(_useL5, 2),
-    focused = _useL6[0],
-    setFocused = _useL6[1];
+    focused = _useL4[0],
+    setFocused = _useL4[1];
   var N = WORKS.length;
   var STOPS = N + 2;
   var PADS = 0.6;
   var TOTAL_V = STOPS + PADS;
-  useE(function () {
-    var el = sectionRef.current;
-    if (!el) return;
-    var raf;
-    var easeInOut = function easeInOut(t) {
-      return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
-    };
-    var update = function update() {
-      var r = el.getBoundingClientRect();
-      var total = el.offsetHeight - window.innerHeight;
-      if (total <= 0) {
-        setProgress(0);
-        return;
-      }
-      var pRaw = Math.max(0, Math.min(1, -r.top / total));
-      var padN = PADS / TOTAL_V;
-      var p = Math.max(0, Math.min(1, (pRaw - padN) / (1 - 2 * padN)));
-      var intervals = STOPS - 1;
-      var local = p * intervals;
-      var idx = Math.floor(local);
-      var frac = local - idx;
-      var eased = easeInOut(frac);
-      var snapped = (idx + eased) / intervals;
-      window.__mo_reel = window.__mo_reel || {};
-      window.__mo_reel.pos = snapped * intervals;
-      setProgress(snapped);
-    };
-    var onScroll = function onScroll() {
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(update);
-    };
-    onScroll();
-    window.addEventListener("scroll", onScroll, {
-      passive: true
-    });
-    window.addEventListener("resize", onScroll);
-    return function () {
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-      cancelAnimationFrame(raf);
-    };
-  }, [STOPS, PADS, TOTAL_V]);
-  var activeStop = Math.round(progress * (STOPS - 1));
   var activeCardIdx = Math.max(0, activeStop - 1);
   var activeWork = activeStop === 0 || activeStop > N ? null : WORKS[activeCardIdx];
   useE(function () {
@@ -8766,37 +9066,134 @@ function Work(_ref) {
       }));
     } catch (_) {}
   }, [activeStop]);
-  var compactReel = useCompact(700);
-  var midReel = useCompact(1100);
-  var TITLE_SLOT_VW = compactReel ? 100 : midReel ? 80 : 56;
-  var CARD_SLOT_VW = compactReel ? 78 : midReel ? 70 : 52;
-  var SHOWALL_SLOT_VW = compactReel ? 96 : midReel ? 70 : 52;
-  var TITLE_GUTTER = compactReel ? "var(--s-5)" : "var(--gutter)";
-  var titleInnerLeft = "calc(".concat(TITLE_GUTTER, " - ").concat((50 - TITLE_SLOT_VW / 2).toFixed(2), "vw)");
-  var slotCentersVW = function () {
-    var out = [TITLE_SLOT_VW / 2];
-    var cursor = TITLE_SLOT_VW;
-    for (var i = 0; i < N; i++) {
-      out.push(cursor + CARD_SLOT_VW / 2);
-      cursor += CARD_SLOT_VW;
+  var renderGeometry = workReelGeometry(window.innerWidth, N);
+  geometryRef.current = renderGeometry;
+  useE(function () {
+    var el = sectionRef.current;
+    if (!el) return;
+    var raf = 0;
+    var resizeObserver = null;
+    var disposed = false;
+    var intervals = STOPS - 1;
+    var padN = PADS / TOTAL_V;
+    var easeInOut = function easeInOut(t) {
+      return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+    };
+    var applyProgress = function applyProgress(snapped) {
+      var centers = geometryRef.current.centers;
+      var pp = snapped * intervals;
+      var idx0 = Math.max(0, Math.min(STOPS - 2, Math.floor(pp)));
+      var tt = pp - idx0;
+      var centerVW = centers[idx0] * (1 - tt) + centers[idx0 + 1] * tt;
+      var railShiftVW = 50 - centerVW;
+      if (railRef.current) railRef.current.style.transform = "translateX(".concat(railShiftVW, "vw)");
+      if (bgRef.current) bgRef.current.style.transform = "translateX(".concat(railShiftVW * 0.35, "vw)");
+      if (fillRef.current) fillRef.current.style.transform = "scaleX(".concat(snapped.toFixed(4), ")");
+      cardsRef.current.forEach(function (card, i) {
+        if (!card) return;
+        var stopIdx = i + 1;
+        var delta = snapped - stopIdx / intervals;
+        var absD = Math.min(1, Math.abs(delta) * intervals);
+        var locked = activeStopRef.current === stopIdx && Math.abs(delta) < 0.5 / intervals;
+        card.style.transform = "scale(".concat((locked ? 1.025 : 1 - absD * 0.06).toFixed(3), ")");
+        card.style.opacity = (1 - absD * 0.4).toFixed(3);
+        card.classList.toggle("rcard--locked", locked);
+      });
+      var gate = showAllRef.current;
+      if (gate) {
+        var stopIdx = N + 1;
+        var delta = snapped - stopIdx / intervals;
+        var absD = Math.min(1, Math.abs(delta) * intervals);
+        var locked = activeStopRef.current === stopIdx && Math.abs(delta) < 0.5 / intervals;
+        gate.style.transform = "scale(".concat((locked ? 1.02 : 1 - absD * 0.06).toFixed(3), ")");
+        gate.style.opacity = (1 - absD * 0.4).toFixed(3);
+        gate.classList.toggle("showAllGate--locked", locked);
+      }
+    };
+    applyProgressRef.current = applyProgress;
+    var update = function update() {
+      raf = 0;
+      if (disposed) return;
+      var _layoutRef$current = layoutRef.current,
+        top = _layoutRef$current.top,
+        total = _layoutRef$current.total;
+      var pageY = Number.isFinite(window.__mo_scrollY) ? window.__mo_scrollY : window.scrollY;
+      var pRaw = total > 0 ? Math.max(0, Math.min(1, (pageY - top) / total)) : 0;
+      var p = Math.max(0, Math.min(1, (pRaw - padN) / (1 - 2 * padN)));
+      var local = p * intervals;
+      var idx = Math.floor(local);
+      var frac = local - idx;
+      var snapped = (idx + easeInOut(frac)) / intervals;
+      var nextStop = Math.round(snapped * intervals);
+      progressRef.current = snapped;
+      window.__mo_reel = window.__mo_reel || {};
+      window.__mo_reel.pos = snapped * intervals;
+      if (activeStopRef.current !== nextStop) {
+        activeStopRef.current = nextStop;
+        setActiveStop(nextStop);
+      }
+      applyProgress(snapped);
+    };
+    var scheduleUpdate = function scheduleUpdate() {
+      if (!raf) raf = requestAnimationFrame(update);
+    };
+    var measure = function measure() {
+      if (disposed) return;
+      var geometry = workReelGeometry(window.innerWidth, N);
+      var rect = el.getBoundingClientRect();
+      geometryRef.current = geometry;
+      layoutRef.current.top = rect.top + window.scrollY;
+      layoutRef.current.total = Math.max(0, el.offsetHeight - window.innerHeight);
+      el.style.setProperty("--work-title-slot", "".concat(geometry.titleSlot, "vw"));
+      el.style.setProperty("--work-card-slot", "".concat(geometry.cardSlot, "vw"));
+      el.style.setProperty("--work-showall-slot", "".concat(geometry.showAllSlot, "vw"));
+      el.style.setProperty("--work-title-left", geometry.titleLeft);
+      scheduleUpdate();
+    };
+    measure();
+    window.addEventListener("scroll", scheduleUpdate, {
+      passive: true
+    });
+    window.addEventListener("resize", measure);
+    if (window.ResizeObserver) {
+      resizeObserver = new ResizeObserver(measure);
+      resizeObserver.observe(el);
     }
-    out.push(cursor + SHOWALL_SLOT_VW / 2);
-    return out;
-  }();
-  var pp = progress * (STOPS - 1);
-  var idx0 = Math.max(0, Math.min(STOPS - 2, Math.floor(pp)));
-  var tt = pp - idx0;
-  var centerVW = slotCentersVW[idx0] * (1 - tt) + slotCentersVW[idx0 + 1] * tt;
-  var railShiftVW = 50 - centerVW;
-  var bgShiftVW = railShiftVW * 0.35;
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure)["catch"](function () {});
+    return function () {
+      disposed = true;
+      window.removeEventListener("scroll", scheduleUpdate);
+      window.removeEventListener("resize", measure);
+      if (resizeObserver) resizeObserver.disconnect();
+      cancelAnimationFrame(raf);
+      if (applyProgressRef.current === applyProgress) applyProgressRef.current = null;
+    };
+  }, [N, STOPS, PADS, TOTAL_V]);
+  useLE(function () {
+    if (applyProgressRef.current) applyProgressRef.current(progressRef.current);
+  }, [activeStop, focused]);
+  var initialCenterVW = renderGeometry.centers[0];
+  var initialRailShiftVW = 50 - initialCenterVW;
   var jumpToStop = function jumpToStop(stopIdx) {
     var el = sectionRef.current;
     if (!el) return;
-    var total = el.offsetHeight - window.innerHeight;
+    var _layoutRef$current2 = layoutRef.current,
+      top = _layoutRef$current2.top,
+      total = _layoutRef$current2.total;
+    if (total <= 0) {
+      var rect = el.getBoundingClientRect();
+      top = rect.top + window.scrollY;
+      total = Math.max(0, el.offsetHeight - window.innerHeight);
+      layoutRef.current = {
+        top: top,
+        total: total
+      };
+    }
+    if (total <= 0) return;
     var padN = PADS / TOTAL_V;
     var target = padN + stopIdx / (STOPS - 1) * (1 - 2 * padN);
     window.scrollTo({
-      top: el.offsetTop + target * total,
+      top: top + target * total,
       behavior: "smooth"
     });
   };
@@ -8806,30 +9203,30 @@ function Work(_ref) {
     id: "work",
     "data-screen-label": "02 Work",
     style: {
-      height: "calc(".concat(TOTAL_V, " * 100vh)")
+      height: "calc(".concat(TOTAL_V, " * 100vh)"),
+      "--work-title-slot": "".concat(renderGeometry.titleSlot, "vw"),
+      "--work-card-slot": "".concat(renderGeometry.cardSlot, "vw"),
+      "--work-showall-slot": "".concat(renderGeometry.showAllSlot, "vw"),
+      "--work-title-left": renderGeometry.titleLeft
     }
   }, React.createElement("div", {
     className: "lp-workReel__sticky"
   }, React.createElement("div", {
+    ref: bgRef,
     className: "lp-workReel__bg",
     style: {
-      transform: "translateX(".concat(bgShiftVW, "vw)")
+      transform: "translateX(".concat(initialRailShiftVW * 0.35, "vw)")
     }
   }), React.createElement("div", {
+    ref: railRef,
     className: "lp-workReel__rail",
     style: {
-      transform: "translateX(".concat(railShiftVW, "vw)")
+      transform: "translateX(".concat(initialRailShiftVW, "vw)")
     }
   }, React.createElement("div", {
-    className: "lp-workReel__slot lp-workReel__slot--title",
-    style: {
-      flex: "0 0 ".concat(TITLE_SLOT_VW, "vw")
-    }
+    className: "lp-workReel__slot lp-workReel__slot--title"
   }, React.createElement("div", {
-    className: "lp-workReel__titleInner",
-    style: {
-      left: titleInnerLeft
-    }
+    className: "lp-workReel__titleInner"
   }, React.createElement("div", {
     className: "lp-workReel__titleNum"
   }, React.createElement("span", {
@@ -8847,82 +9244,64 @@ function Work(_ref) {
     "data-mo-cursor-mirror": true,
     "data-mo-cursor-opacity": ".lp-workReel__sticky,.lp"
   }, "Scroll \u2014 each node resolves at the lens.")))), WORKS.map(function (w, i) {
-    var stopIdx = i + 1;
-    var slotCenter = stopIdx / (STOPS - 1);
-    var delta = progress - slotCenter;
-    var absD = Math.min(1, Math.abs(delta) * (STOPS - 1));
-    var isLocked = activeStop === stopIdx && Math.abs(delta) < 0.5 / (STOPS - 1);
     return React.createElement("div", {
       className: "lp-workReel__slot",
-      key: w.addr,
-      style: {
-        flex: "0 0 ".concat(CARD_SLOT_VW, "vw")
-      }
+      key: w.addr
     }, React.createElement(NodeCard, {
       work: w,
       i: i,
       total: N,
-      absD: absD,
-      locked: isLocked,
+      nodeRef: function nodeRef(node) {
+        cardsRef.current[i] = node;
+      },
       focused: focused === w.addr,
       onFocus: setFocused
     }));
-  }), function () {
-    var stopIdx = N + 1;
-    var slotCenter = stopIdx / (STOPS - 1);
-    var delta = progress - slotCenter;
-    var absD = Math.min(1, Math.abs(delta) * (STOPS - 1));
-    var isLocked = activeStop === stopIdx && Math.abs(delta) < 0.5 / (STOPS - 1);
-    var popScale = isLocked ? 1.02 : 1 - absD * 0.06;
-    var popOp = 1 - absD * 0.4;
-    return React.createElement("div", {
-      className: "lp-workReel__slot lp-workReel__slot--showAll",
-      style: {
-        flex: "0 0 ".concat(SHOWALL_SLOT_VW, "vw")
-      }
-    }, React.createElement("div", {
-      className: "showAllGate " + (isLocked ? "showAllGate--locked" : ""),
-      "data-screen-label": "06 All projects gate",
-      style: {
-        transform: "scale(".concat(popScale.toFixed(3), ")"),
-        opacity: popOp.toFixed(3)
-      }
-    }, React.createElement("span", {
-      className: "showAllGate__spine",
-      "aria-hidden": "true"
-    }), React.createElement("div", {
-      className: "showAllGate__body"
-    }, React.createElement("div", {
-      className: "showAllGate__overline",
+  }), React.createElement("div", {
+    className: "lp-workReel__slot lp-workReel__slot--showAll"
+  }, React.createElement("div", {
+    ref: showAllRef,
+    className: "showAllGate",
+    "data-screen-label": "06 All projects gate",
+    style: {
+      transform: "scale(0.940)",
+      opacity: "0.600"
+    }
+  }, React.createElement("span", {
+    className: "showAllGate__spine",
+    "aria-hidden": "true"
+  }), React.createElement("div", {
+    className: "showAllGate__body"
+  }, React.createElement("div", {
+    className: "showAllGate__overline",
+    "data-mo-cursor-mirror": true,
+    "data-mo-cursor-opacity": ".showAllGate,.lp-workReel__sticky,.lp"
+  }, "04 / END \xB7 PASSAGE"), React.createElement("h3", {
+    className: "showAllGate__name",
+    "data-mo-cursor-mirror": true,
+    "data-mo-cursor-opacity": ".showAllGate,.lp-workReel__sticky,.lp"
+  }, "Open the universe", React.createElement("em", null, ".")), React.createElement("div", {
+    className: "showAllGate__sub",
+    "data-mo-cursor-mirror": true,
+    "data-mo-cursor-opacity": ".showAllGate,.lp-workReel__sticky,.lp"
+  }, (window.MO_PROJECTS || []).length, " nodes \u2014 products, systems, modules and studies. Enter the full field. ESC returns here.")), React.createElement("div", {
+    className: "showAllGate__key"
+  }, React.createElement(KeyButton, {
+    legend: React.createElement("span", {
       "data-mo-cursor-mirror": true,
       "data-mo-cursor-opacity": ".showAllGate,.lp-workReel__sticky,.lp"
-    }, "04 / END \xB7 PASSAGE"), React.createElement("h3", {
-      className: "showAllGate__name",
-      "data-mo-cursor-mirror": true,
-      "data-mo-cursor-opacity": ".showAllGate,.lp-workReel__sticky,.lp"
-    }, "Open the universe", React.createElement("em", null, ".")), React.createElement("div", {
-      className: "showAllGate__sub",
-      "data-mo-cursor-mirror": true,
-      "data-mo-cursor-opacity": ".showAllGate,.lp-workReel__sticky,.lp"
-    }, (window.MO_PROJECTS || []).length, " nodes \u2014 products, systems, modules and studies. Enter the full field. ESC returns here.")), React.createElement("div", {
-      className: "showAllGate__key"
-    }, React.createElement(KeyButton, {
-      legend: React.createElement("span", {
-        "data-mo-cursor-mirror": true,
-        "data-mo-cursor-opacity": ".showAllGate,.lp-workReel__sticky,.lp"
-      }, "A"),
-      primary: true,
-      onPress: function onPress() {
-        document.body.classList.add("landing-exit");
-        setTimeout(function () {
-          window.location.href = "All Projects.html";
-        }, 380);
-      }
-    }, React.createElement("span", {
-      "data-mo-cursor-mirror": true,
-      "data-mo-cursor-opacity": ".showAllGate,.lp-workReel__sticky,.lp"
-    }, "SHOW ALL")))));
-  }()), React.createElement("div", {
+    }, "A"),
+    primary: true,
+    onPress: function onPress() {
+      document.body.classList.add("landing-exit");
+      setTimeout(function () {
+        window.location.href = "All Projects.html";
+      }, 380);
+    }
+  }, React.createElement("span", {
+    "data-mo-cursor-mirror": true,
+    "data-mo-cursor-opacity": ".showAllGate,.lp-workReel__sticky,.lp"
+  }, "SHOW ALL")))))), React.createElement("div", {
     className: "lp-workReel__vignette"
   }), React.createElement("div", {
     className: "lp-workReel__stops"
@@ -8965,9 +9344,10 @@ function Work(_ref) {
   }, (N + 1).toString().padStart(2, "0"), " \xB7 ALL \u2197"))), React.createElement("div", {
     className: "lp-workReel__progressRail"
   }, React.createElement("div", {
+    ref: fillRef,
     className: "lp-workReel__progressFill",
     style: {
-      width: "".concat((progress * 100).toFixed(2), "%")
+      transform: "scaleX(0)"
     }
   }))));
 }
@@ -8975,8 +9355,7 @@ function NodeCard(_ref2) {
   var work = _ref2.work,
     i = _ref2.i,
     total = _ref2.total,
-    absD = _ref2.absD,
-    locked = _ref2.locked,
+    nodeRef = _ref2.nodeRef,
     focused = _ref2.focused,
     _onFocus = _ref2.onFocus;
   var cardRef = useR(null);
@@ -9016,11 +9395,12 @@ function NodeCard(_ref2) {
       openNode();
     }
   };
-  var popScale = locked ? 1.025 : 1 - absD * 0.06;
-  var popOp = 1 - absD * 0.4;
   return React.createElement("article", _extends({
-    ref: cardRef,
-    className: "rcard " + (locked ? "rcard--locked " : "") + (focused ? "rcard--focused" : ""),
+    ref: function ref(node) {
+      cardRef.current = node;
+      if (nodeRef) nodeRef(node);
+    },
+    className: "rcard " + (focused ? "rcard--focused" : ""),
     "data-addr": work.addr
   }, hasPage ? {
     "data-hot": ""
@@ -9042,8 +9422,8 @@ function NodeCard(_ref2) {
     onKeyDown: onKey,
     tabIndex: 0,
     style: {
-      transform: "scale(".concat(popScale.toFixed(3), ")"),
-      opacity: popOp.toFixed(3)
+      transform: "scale(0.940)",
+      opacity: "0.600"
     }
   }), React.createElement("span", {
     className: "rcard__spine",
@@ -9081,6 +9461,7 @@ window.WORKS = WORKS;
 window.FEATURED_ADDRS = FEATURED_ADDRS;
 
 /* ---- app/landing/app.jsx ---- */
+function _createForOfIteratorHelper(r, e) { var t = "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (!t) { if (Array.isArray(r) || (t = _unsupportedIterableToArray(r)) || e && r && "number" == typeof r.length) { t && (r = t); var _n = 0, F = function F() {}; return { s: F, n: function n() { return _n >= r.length ? { done: !0 } : { done: !1, value: r[_n++] }; }, e: function e(r) { throw r; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var o, a = !0, u = !1; return { s: function s() { t = t.call(r); }, n: function n() { var r = t.next(); return a = r.done, r; }, e: function e(r) { u = !0, o = r; }, f: function f() { try { a || null == t["return"] || t["return"](); } finally { if (u) throw o; } } }; }
 function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
 function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
 function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
@@ -9099,32 +9480,55 @@ function LandingApp() {
     _useLA4 = _slicedToArray(_useLA3, 2),
     hoverAddr = _useLA4[0],
     setHoverAddr = _useLA4[1];
-  var _useLA5 = useLA(null),
-    _useLA6 = _slicedToArray(_useLA5, 2),
-    activeProject = _useLA6[0],
-    setActiveProject = _useLA6[1];
+  useEA(function () {
+    var id = decodeURIComponent(window.location.hash.slice(1));
+    if (!id) return;
+    var secondRaf = 0;
+    var firstRaf = requestAnimationFrame(function () {
+      secondRaf = requestAnimationFrame(function () {
+        var target = document.getElementById(id);
+        if (target) target.scrollIntoView({
+          block: "start",
+          behavior: "auto"
+        });
+      });
+    });
+    return function () {
+      cancelAnimationFrame(firstRaf);
+      cancelAnimationFrame(secondRaf);
+    };
+  }, []);
   useEA(function () {
     var ORDER = ["title", "intro", "work", "about"];
-    var raf = 0;
+    var raf = 0,
+      measureRaf = 0,
+      dead = false;
+    var bounds = [];
     var resolve = function resolve() {
       raf = 0;
-      var mid = window.innerHeight / 2;
+      var pageY = Number.isFinite(window.__mo_scrollY) ? window.__mo_scrollY : window.scrollY;
+      var mid = pageY + window.innerHeight / 2;
       var pick = null,
         nearest = Infinity;
-      for (var _i = 0, _ORDER = ORDER; _i < _ORDER.length; _i++) {
-        var id = _ORDER[_i];
-        var el = document.getElementById(id);
-        if (!el) continue;
-        var r = el.getBoundingClientRect();
-        if (r.top <= mid && r.bottom >= mid) {
-          pick = id;
-          break;
+      var _iterator = _createForOfIteratorHelper(bounds),
+        _step;
+      try {
+        for (_iterator.s(); !(_step = _iterator.n()).done;) {
+          var bound = _step.value;
+          if (bound.top <= mid && bound.bottom >= mid) {
+            pick = bound.id;
+            break;
+          }
+          var d = bound.top > mid ? bound.top - mid : mid - bound.bottom;
+          if (d < nearest) {
+            nearest = d;
+            pick = bound.id;
+          }
         }
-        var d = r.top > mid ? r.top - mid : mid - r.bottom;
-        if (d < nearest) {
-          nearest = d;
-          pick = id;
-        }
+      } catch (err) {
+        _iterator.e(err);
+      } finally {
+        _iterator.f();
       }
       if (!pick) return;
       if (pick === "about" && window.__mo_bf && window.__mo_bf.footer) pick = "contact";
@@ -9132,18 +9536,46 @@ function LandingApp() {
         return prev === pick ? prev : pick;
       });
     };
+    var measure = function measure() {
+      measureRaf = 0;
+      if (dead) return;
+      var pageY = window.scrollY;
+      bounds = ORDER.map(function (id) {
+        var el = document.getElementById(id);
+        if (!el) return null;
+        var rect = el.getBoundingClientRect();
+        return {
+          id: id,
+          top: rect.top + pageY,
+          bottom: rect.bottom + pageY
+        };
+      }).filter(Boolean);
+      resolve();
+    };
+    var scheduleMeasure = function scheduleMeasure() {
+      if (!measureRaf) measureRaf = requestAnimationFrame(measure);
+    };
     var onScroll = function onScroll() {
       if (!raf) raf = requestAnimationFrame(resolve);
     };
-    resolve();
+    var ro = window.ResizeObserver ? new ResizeObserver(scheduleMeasure) : null;
+    if (ro) ORDER.forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) ro.observe(el);
+    });
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(scheduleMeasure, function () {});
+    measure();
     window.addEventListener("scroll", onScroll, {
       passive: true
     });
-    window.addEventListener("resize", onScroll);
+    window.addEventListener("resize", scheduleMeasure);
     return function () {
+      dead = true;
       window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
+      window.removeEventListener("resize", scheduleMeasure);
+      if (ro) ro.disconnect();
       if (raf) cancelAnimationFrame(raf);
+      if (measureRaf) cancelAnimationFrame(measureRaf);
     };
   }, []);
   var mode = section === "work" ? "reel" : section === "intro" ? "origin" : section === "about" ? "drift" : section === "contact" ? "drift" : "drift";
@@ -9164,8 +9596,7 @@ function LandingApp() {
   }, React.createElement(Universe, {
     projects: window.UNIVERSE_PROJECTS,
     mode: mode,
-    focusAddr: hoverAddr,
-    onActive: setActiveProject
+    focusAddr: hoverAddr
   })), React.createElement(ShellLanding, {
     section: section
   }), window.NodeHandoff ? React.createElement(NodeHandoff, null) : null, React.createElement("main", {
@@ -9176,10 +9607,10 @@ function LandingApp() {
 }
 function ShellLanding(_ref) {
   var section = _ref.section;
-  var _useLA7 = useLA("--:--"),
-    _useLA8 = _slicedToArray(_useLA7, 2),
-    time = _useLA8[0],
-    setTime = _useLA8[1];
+  var _useLA5 = useLA("--:--"),
+    _useLA6 = _slicedToArray(_useLA5, 2),
+    time = _useLA6[0],
+    setTime = _useLA6[1];
   useEA(function () {
     var tick = function tick() {
       return setTime(new Date().toTimeString().slice(0, 5));

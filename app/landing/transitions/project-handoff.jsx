@@ -59,6 +59,29 @@ function NodeHandoff() {
   const rigRef = useNHR(null);
   const rafRef = useNHR(0);
 
+  /* The shared core clears persisted CSS/global exit state. This component
+     also owns React and WebGL state, so reset that state when Back restores a
+     landing snapshot captured after a project flight had already started. */
+  useNHE(() => {
+    const onRestore = () => {
+      cancelAnimationFrame(rafRef.current);
+      if (rigRef.current) {
+        try { rigRef.current.dispose(); } catch (_) {}
+        rigRef.current = null;
+      }
+      const mount = mountRef.current;
+      if (mount) while (mount.firstChild) mount.removeChild(mount.firstChild);
+      const wf = document.querySelector(".wf");
+      if (wf) wf.classList.remove("wf--dissolve");
+      returningRef.current = false;
+      setHolding(false);
+      setHud({ addr: "", name: "" });
+      setMode("idle");
+    };
+    window.addEventListener("mo:page-restored", onRestore);
+    return () => window.removeEventListener("mo:page-restored", onRestore);
+  }, []);
+
   /* Universe tiles route through the SAME event — no per-address checks. */
   useNHE(() => {
     window.__mo_open_project = (p, originRect) => {

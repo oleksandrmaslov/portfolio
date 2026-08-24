@@ -11,17 +11,7 @@
    Exports: WORKS, Work.
    ============================================================ */
 
-const { useState: useL, useEffect: useE, useRef: useR } = React;
-
-function useCompact(bp = 700) {
-  const [c, setC] = useL(() => window.innerWidth <= bp);
-  useE(() => {
-    const on = () => setC(window.innerWidth <= bp);
-    window.addEventListener("resize", on);
-    return () => window.removeEventListener("resize", on);
-  }, [bp]);
-  return c;
-}
+const { useState: useL, useEffect: useE, useLayoutEffect: useLE, useRef: useR } = React;
 
 /* ── featured nodes — one source of truth ─────────────────── */
 const FEATURED_ADDRS = window.MO_FEATURED_ADDRS || ["0x01", "0x03", "0x04", "0x06"];
@@ -29,9 +19,42 @@ const WORKS = FEATURED_ADDRS
   .map(addr => (window.MO_PROJECTS || []).find(p => p.addr === addr))
   .filter(Boolean);
 
+function workReelGeometry(viewportWidth, count) {
+  const compact = viewportWidth <= 700;
+  const mid = viewportWidth <= 1100;
+  const titleSlot = compact ? 100 : mid ? 80 : 56;
+  const cardSlot = compact ? 78 : mid ? 70 : 52;
+  const showAllSlot = compact ? 96 : mid ? 70 : 52;
+  const titleGutter = compact ? "var(--s-5)" : "var(--gutter)";
+  const centers = [titleSlot / 2];
+  let cursor = titleSlot;
+  for (let i = 0; i < count; i++) {
+    centers.push(cursor + cardSlot / 2);
+    cursor += cardSlot;
+  }
+  centers.push(cursor + showAllSlot / 2);
+  return {
+    titleSlot,
+    cardSlot,
+    showAllSlot,
+    titleLeft: `calc(${titleGutter} - ${(50 - titleSlot / 2).toFixed(2)}vw)`,
+    centers,
+  };
+}
+
 function Work({ onHoverWork }) {
   const sectionRef = useR(null);
-  const [progress, setProgress] = useL(0);
+  const bgRef      = useR(null);
+  const railRef    = useR(null);
+  const fillRef    = useR(null);
+  const cardsRef   = useR([]);
+  const showAllRef = useR(null);
+  const layoutRef  = useR({ top: 0, total: 0 });
+  const geometryRef = useR(null);
+  const progressRef = useR(0);
+  const applyProgressRef = useR(null);
+  const activeStopRef = useR(0);
+  const [activeStop, setActiveStop] = useL(0);
   const [focused,  setFocused]  = useL(null);
 
   const N      = WORKS.length;
@@ -39,41 +62,6 @@ function Work({ onHoverWork }) {
   const PADS   = 0.6;
   const TOTAL_V = STOPS + PADS;
 
-  /* ── scroll progress + snap-by-easing (unchanged mechanics) ── */
-  useE(() => {
-    const el = sectionRef.current;
-    if (!el) return;
-    let raf;
-    const easeInOut = t => t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t+2, 2)/2;
-    const update = () => {
-      const r = el.getBoundingClientRect();
-      const total = el.offsetHeight - window.innerHeight;
-      if (total <= 0) { setProgress(0); return; }
-      const pRaw = Math.max(0, Math.min(1, (-r.top) / total));
-      const padN = (PADS / TOTAL_V);
-      const p = Math.max(0, Math.min(1, (pRaw - padN) / (1 - 2*padN)));
-      const intervals = STOPS - 1;
-      const local = p * intervals;
-      const idx   = Math.floor(local);
-      const frac  = local - idx;
-      const eased = easeInOut(frac);
-      const snapped = (idx + eased) / intervals;
-      window.__mo_reel = window.__mo_reel || {};
-      window.__mo_reel.pos = snapped * intervals;
-      setProgress(snapped);
-    };
-    const onScroll = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(update); };
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-      cancelAnimationFrame(raf);
-    };
-  }, [STOPS, PADS, TOTAL_V]);
-
-  const activeStop = Math.round(progress * (STOPS - 1));
   const activeCardIdx = Math.max(0, activeStop - 1);
   const activeWork = activeStop === 0 || activeStop > N ? null : WORKS[activeCardIdx];
 
@@ -90,41 +78,150 @@ function Work({ onHoverWork }) {
     } catch (_) {}
   }, [activeStop]);
 
-  /* ── geometry — JSX is the single source of truth ── */
-  const compactReel = useCompact(700);
-  const midReel     = useCompact(1100);
-  const TITLE_SLOT_VW   = compactReel ? 100 : midReel ? 80 : 56;
-  const CARD_SLOT_VW    = compactReel ? 78  : midReel ? 70 : 52;
-  const SHOWALL_SLOT_VW = compactReel ? 96  : midReel ? 70 : 52;
-  // The giant reel title starts on the shared window gutter (tokens.css), so
-  // it lines up with the shell brand directly above it. Referencing the custom
-  // property instead of a px literal keeps the two from drifting apart.
-  const TITLE_GUTTER    = compactReel ? "var(--s-5)" : "var(--gutter)";
-  const titleInnerLeft  = `calc(${TITLE_GUTTER} - ${(50 - TITLE_SLOT_VW / 2).toFixed(2)}vw)`;
-  const slotCentersVW = (() => {
-    const out = [TITLE_SLOT_VW / 2];
-    let cursor = TITLE_SLOT_VW;
-    for (let i = 0; i < N; i++) {
-      out.push(cursor + CARD_SLOT_VW / 2);
-      cursor += CARD_SLOT_VW;
+  /* JSX publishes the exact responsive slot values as CSS variables, while
+     the scroll loop consumes the same geometry object. There is no second
+     breakpoint table for motion and no resize-driven React render. */
+  const renderGeometry = workReelGeometry(window.innerWidth, N);
+  geometryRef.current = renderGeometry;
+
+  /* ── scroll progress + snap-by-easing (unchanged mechanics) ──
+     Continuous reel motion is intentionally kept out of React. The section's
+     document position is measured only when layout can change, then scroll
+     frames write the existing transforms/opacities straight to stable nodes.
+     React still owns the discrete active-stop and focus semantics. */
+  useE(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+
+    let raf = 0;
+    let resizeObserver = null;
+    let disposed = false;
+    const intervals = STOPS - 1;
+    const padN = PADS / TOTAL_V;
+    const easeInOut = t => t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t+2, 2)/2;
+
+    const applyProgress = (snapped) => {
+      const centers = geometryRef.current.centers;
+      const pp = snapped * intervals;
+      const idx0 = Math.max(0, Math.min(STOPS - 2, Math.floor(pp)));
+      const tt = pp - idx0;
+      const centerVW = centers[idx0] * (1 - tt) + centers[idx0 + 1] * tt;
+      const railShiftVW = 50 - centerVW;
+
+      if (railRef.current) railRef.current.style.transform = `translateX(${railShiftVW}vw)`;
+      if (bgRef.current) bgRef.current.style.transform = `translateX(${railShiftVW * 0.35}vw)`;
+      if (fillRef.current) fillRef.current.style.transform = `scaleX(${snapped.toFixed(4)})`;
+
+      cardsRef.current.forEach((card, i) => {
+        if (!card) return;
+        const stopIdx = i + 1;
+        const delta = snapped - stopIdx / intervals;
+        const absD = Math.min(1, Math.abs(delta) * intervals);
+        const locked = activeStopRef.current === stopIdx && Math.abs(delta) < 0.5 / intervals;
+        card.style.transform = `scale(${(locked ? 1.025 : 1 - absD * 0.06).toFixed(3)})`;
+        card.style.opacity = (1 - absD * 0.4).toFixed(3);
+        card.classList.toggle("rcard--locked", locked);
+      });
+
+      const gate = showAllRef.current;
+      if (gate) {
+        const stopIdx = N + 1;
+        const delta = snapped - stopIdx / intervals;
+        const absD = Math.min(1, Math.abs(delta) * intervals);
+        const locked = activeStopRef.current === stopIdx && Math.abs(delta) < 0.5 / intervals;
+        gate.style.transform = `scale(${(locked ? 1.02 : 1 - absD * 0.06).toFixed(3)})`;
+        gate.style.opacity = (1 - absD * 0.4).toFixed(3);
+        gate.classList.toggle("showAllGate--locked", locked);
+      }
+    };
+    applyProgressRef.current = applyProgress;
+
+    const update = () => {
+      raf = 0;
+      if (disposed) return;
+      const { top, total } = layoutRef.current;
+      const pageY = Number.isFinite(window.__mo_scrollY) ? window.__mo_scrollY : window.scrollY;
+      const pRaw = total > 0
+        ? Math.max(0, Math.min(1, (pageY - top) / total))
+        : 0;
+      const p = Math.max(0, Math.min(1, (pRaw - padN) / (1 - 2 * padN)));
+      const local = p * intervals;
+      const idx = Math.floor(local);
+      const frac = local - idx;
+      const snapped = (idx + easeInOut(frac)) / intervals;
+      const nextStop = Math.round(snapped * intervals);
+
+      progressRef.current = snapped;
+      window.__mo_reel = window.__mo_reel || {};
+      window.__mo_reel.pos = snapped * intervals;
+
+      if (activeStopRef.current !== nextStop) {
+        activeStopRef.current = nextStop;
+        setActiveStop(nextStop);
+      }
+      applyProgress(snapped);
+    };
+    const scheduleUpdate = () => {
+      if (!raf) raf = requestAnimationFrame(update);
+    };
+    const measure = () => {
+      if (disposed) return;
+      const geometry = workReelGeometry(window.innerWidth, N);
+      const rect = el.getBoundingClientRect();
+      geometryRef.current = geometry;
+      layoutRef.current.top = rect.top + window.scrollY;
+      layoutRef.current.total = Math.max(0, el.offsetHeight - window.innerHeight);
+      el.style.setProperty("--work-title-slot", `${geometry.titleSlot}vw`);
+      el.style.setProperty("--work-card-slot", `${geometry.cardSlot}vw`);
+      el.style.setProperty("--work-showall-slot", `${geometry.showAllSlot}vw`);
+      el.style.setProperty("--work-title-left", geometry.titleLeft);
+      scheduleUpdate();
+    };
+
+    measure();
+    window.addEventListener("scroll", scheduleUpdate, { passive: true });
+    window.addEventListener("resize", measure);
+    if (window.ResizeObserver) {
+      resizeObserver = new ResizeObserver(measure);
+      resizeObserver.observe(el);
     }
-    out.push(cursor + SHOWALL_SLOT_VW / 2);
-    return out;
-  })();
-  const pp = progress * (STOPS - 1);
-  const idx0 = Math.max(0, Math.min(STOPS - 2, Math.floor(pp)));
-  const tt   = pp - idx0;
-  const centerVW = slotCentersVW[idx0] * (1 - tt) + slotCentersVW[idx0 + 1] * tt;
-  const railShiftVW = 50 - centerVW;
-  const bgShiftVW   = railShiftVW * 0.35;
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure).catch(() => {});
+
+    return () => {
+      disposed = true;
+      window.removeEventListener("scroll", scheduleUpdate);
+      window.removeEventListener("resize", measure);
+      if (resizeObserver) resizeObserver.disconnect();
+      cancelAnimationFrame(raf);
+      if (applyProgressRef.current === applyProgress) applyProgressRef.current = null;
+    };
+  }, [N, STOPS, PADS, TOTAL_V]);
+
+  /* Focus and stop changes can make React rewrite a card's class attribute.
+     Re-assert the continuous presentation in the same commit, before paint. */
+  useLE(() => {
+    if (applyProgressRef.current) applyProgressRef.current(progressRef.current);
+  }, [activeStop, focused]);
+
+  const initialCenterVW = renderGeometry.centers[0];
+  const initialRailShiftVW = 50 - initialCenterVW;
 
   const jumpToStop = (stopIdx) => {
     const el = sectionRef.current;
     if (!el) return;
-    const total = el.offsetHeight - window.innerHeight;
+    let { top, total } = layoutRef.current;
+    // The passive effect normally owns this cache. Keep keyboard/mouse stop
+    // controls usable even in the narrow first-commit window before it runs.
+    if (total <= 0) {
+      const rect = el.getBoundingClientRect();
+      top = rect.top + window.scrollY;
+      total = Math.max(0, el.offsetHeight - window.innerHeight);
+      layoutRef.current = { top, total };
+    }
+    if (total <= 0) return;
     const padN = PADS / TOTAL_V;
     const target = padN + (stopIdx / (STOPS - 1)) * (1 - 2 * padN);
-    window.scrollTo({ top: el.offsetTop + target * total, behavior: "smooth" });
+    window.scrollTo({ top: top + target * total, behavior: "smooth" });
   };
 
   return (
@@ -133,17 +230,24 @@ function Work({ onHoverWork }) {
       className="lp-section lp-workReel"
       id="work"
       data-screen-label="02 Work"
-      style={{ height: `calc(${TOTAL_V} * 100vh)` }}
+      style={{
+        height: `calc(${TOTAL_V} * 100vh)`,
+        "--work-title-slot": `${renderGeometry.titleSlot}vw`,
+        "--work-card-slot": `${renderGeometry.cardSlot}vw`,
+        "--work-showall-slot": `${renderGeometry.showAllSlot}vw`,
+        "--work-title-left": renderGeometry.titleLeft,
+      }}
     >
       <div className="lp-workReel__sticky">
         <div
+          ref={bgRef}
           className="lp-workReel__bg"
-          style={{ transform: `translateX(${bgShiftVW}vw)` }}
+          style={{ transform: `translateX(${initialRailShiftVW * 0.35}vw)` }}
         />
 
-        <div className="lp-workReel__rail" style={{ transform: `translateX(${railShiftVW}vw)` }}>
-          <div className="lp-workReel__slot lp-workReel__slot--title" style={{ flex: `0 0 ${TITLE_SLOT_VW}vw` }}>
-            <div className="lp-workReel__titleInner" style={{ left: titleInnerLeft }}>
+        <div ref={railRef} className="lp-workReel__rail" style={{ transform: `translateX(${initialRailShiftVW}vw)` }}>
+          <div className="lp-workReel__slot lp-workReel__slot--title">
+            <div className="lp-workReel__titleInner">
               <div className="lp-workReel__titleNum"><span data-mo-cursor-mirror data-mo-cursor-opacity=".lp-workReel__sticky,.lp">02</span></div>
               <h2 className="lp-workReel__title" data-mo-cursor-mirror data-mo-cursor-opacity=".lp-workReel__sticky,.lp">Selected nodes<em>.</em></h2>
               <div className="lp-workReel__titleSub">
@@ -154,17 +258,11 @@ function Work({ onHoverWork }) {
           </div>
 
           {WORKS.map((w, i) => {
-            const stopIdx = i + 1;
-            const slotCenter = stopIdx / (STOPS - 1);
-            const delta = progress - slotCenter;
-            const absD  = Math.min(1, Math.abs(delta) * (STOPS - 1));
-            const isLocked = activeStop === stopIdx && Math.abs(delta) < 0.5 / (STOPS - 1);
             return (
-              <div className="lp-workReel__slot" key={w.addr} style={{ flex: `0 0 ${CARD_SLOT_VW}vw` }}>
+              <div className="lp-workReel__slot" key={w.addr}>
                 <NodeCard
                   work={w} i={i} total={N}
-                  absD={absD}
-                  locked={isLocked}
+                  nodeRef={node => { cardsRef.current[i] = node; }}
                   focused={focused === w.addr}
                   onFocus={setFocused}
                 />
@@ -172,24 +270,13 @@ function Work({ onHoverWork }) {
             );
           })}
 
-          {(() => {
-            const stopIdx = N + 1;
-            const slotCenter = stopIdx / (STOPS - 1);
-            const delta = progress - slotCenter;
-            const absD  = Math.min(1, Math.abs(delta) * (STOPS - 1));
-            const isLocked = activeStop === stopIdx && Math.abs(delta) < 0.5 / (STOPS - 1);
-            const popScale = isLocked ? 1.02 : (1 - absD * 0.06);
-            const popOp    = 1 - absD * 0.4;
-            return (
-              <div className="lp-workReel__slot lp-workReel__slot--showAll" style={{ flex: `0 0 ${SHOWALL_SLOT_VW}vw` }}>
-                <div
-                  className={"showAllGate " + (isLocked ? "showAllGate--locked" : "")}
-                  data-screen-label="06 All projects gate"
-                  style={{
-                    transform: `scale(${popScale.toFixed(3)})`,
-                    opacity: popOp.toFixed(3),
-                  }}
-                >
+          <div className="lp-workReel__slot lp-workReel__slot--showAll">
+              <div
+                ref={showAllRef}
+                className="showAllGate"
+                data-screen-label="06 All projects gate"
+                style={{ transform: "scale(0.940)", opacity: "0.600" }}
+              >
                   <span className="showAllGate__spine" aria-hidden="true" />
                   <div className="showAllGate__body">
                     <div className="showAllGate__overline" data-mo-cursor-mirror data-mo-cursor-opacity=".showAllGate,.lp-workReel__sticky,.lp">04 / END · PASSAGE</div>
@@ -206,10 +293,8 @@ function Work({ onHoverWork }) {
                       <span data-mo-cursor-mirror data-mo-cursor-opacity=".showAllGate,.lp-workReel__sticky,.lp">SHOW ALL</span>
                     </KeyButton>
                   </div>
-                </div>
               </div>
-            );
-          })()}
+            </div>
         </div>
 
         <div className="lp-workReel__vignette" />
@@ -246,8 +331,9 @@ function Work({ onHoverWork }) {
 
         <div className="lp-workReel__progressRail">
           <div
+            ref={fillRef}
             className="lp-workReel__progressFill"
-            style={{ width: `${(progress * 100).toFixed(2)}%` }}
+            style={{ transform: "scaleX(0)" }}
           />
         </div>
       </div>
@@ -257,7 +343,7 @@ function Work({ onHoverWork }) {
 }
 
 /* ── NODE CARD — the original caption bar; opens through mo:nodeFlight ── */
-function NodeCard({ work, i, total, absD, locked, focused, onFocus }) {
+function NodeCard({ work, i, total, nodeRef, focused, onFocus }) {
   const cardRef = useR(null);
   const hasPage = !!work.file;
 
@@ -283,15 +369,14 @@ function NodeCard({ work, i, total, absD, locked, focused, onFocus }) {
     if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openNode(); }
   };
 
-  const popScale = locked ? 1.025 : (1 - absD * 0.06);
-  const popOp    = 1 - absD * 0.4;
-
   return (
     <article
-      ref={cardRef}
+      ref={node => {
+        cardRef.current = node;
+        if (nodeRef) nodeRef(node);
+      }}
       className={
         "rcard " +
-        (locked ? "rcard--locked " : "") +
         (focused ? "rcard--focused" : "")
       }
       data-addr={work.addr}
@@ -304,10 +389,7 @@ function NodeCard({ work, i, total, absD, locked, focused, onFocus }) {
       onClick={openNode}
       onKeyDown={onKey}
       tabIndex={0}
-      style={{
-        transform: `scale(${popScale.toFixed(3)})`,
-        opacity: popOp.toFixed(3),
-      }}
+      style={{ transform: "scale(0.940)", opacity: "0.600" }}
     >
       <span className="rcard__spine" aria-hidden="true" />
 
