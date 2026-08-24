@@ -7989,12 +7989,13 @@ function BoardFlight(_ref) {
     var held = i === 0 && prog <= center || i === N - 1 && prog >= center;
     var ramp = held ? 1 : _bfClamp((0.5 - d) / 0.17, 0, 1);
     var vis = ramp * ramp * (3 - 2 * ramp);
-    var isOn = (held || d < 0.5) && foot < 0.4;
+    var cardOp = vis * (1 - _bfClamp(foot * 1.6, 0, 1)) * openGate;
+    var isOn = cardOp > 0.02 && (held || d < 0.5) && foot < 0.4;
     return React.createElement("article", {
       key: i,
       className: "bf-ch " + (isOn ? "is-on" : ""),
       style: {
-        opacity: (vis * (1 - _bfClamp(foot * 1.6, 0, 1)) * openGate).toFixed(3),
+        opacity: cardOp.toFixed(3),
         transform: "translateY(".concat(((prog - center) * N * 24).toFixed(1), "px)"),
         pointerEvents: isOn ? "auto" : "none"
       },

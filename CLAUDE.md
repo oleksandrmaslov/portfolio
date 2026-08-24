@@ -148,6 +148,17 @@ composition problem. The work reel's giant title is positioned from JS and
 passes `var(--gutter)` into its `calc()` rather than a px literal, for the same
 reason.
 
+**When a drag near the M.O. wordmark does nothing, suspect `.bf-layer`, not
+the wordmark.** `.bf-layer` is a FIXED full-viewport layer that exists from
+first paint at `opacity: 0`, and `.bf-ch` is anchored to the bottom-left
+corner — the same corner as the wordmark, and taller than it. Anything inside
+that layer which hit-tests while invisible reads exactly like an oversized
+wordmark. `title.css` keeps a `body:not(.fl-titleGone)` guard list for this;
+add every new board overlay to it, and gate any inline `pointerEvents` on the
+element's real computed opacity rather than on which chapter owns the scroll.
+`.bf-ch` set its own inline `pointer-events` and was missed by both — the card
+sat invisible over the hero swallowing drags.
+
 `app/shared/styles/key.css` is the single definition of the `.key` keycap and
 is loaded by every route. It was previously duplicated declaration-for-
 declaration in `shell.css` and `components.css`; do not re-inline it.

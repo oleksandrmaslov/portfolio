@@ -75,6 +75,7 @@ body:not(.fl-titleGone) .bf-prog,
 body:not(.fl-titleGone) .bf-cue,
 body:not(.fl-titleGone) .bf-foot,
 body:not(.fl-titleGone) .bf-foot *,
+body:not(.fl-titleGone) .bf-ch,
 body:not(.fl-titleGone) .bf-ch__card,
 .bf-ch:not(.is-on) .bf-ch__card { pointer-events: none !important; }
 

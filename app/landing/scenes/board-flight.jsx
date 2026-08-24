@@ -467,13 +467,21 @@ function BoardFlight({ onEnter, onContact }) {
             const held = (i === 0 && prog <= center) || (i === N - 1 && prog >= center);
             const ramp = held ? 1 : _bfClamp((0.5 - d) / 0.17, 0, 1);
             const vis = ramp * ramp * (3 - 2 * ramp);   // smoothstep, no linear edge
-            const isOn = (held || d < 0.5) && foot < 0.4;
+            // Gate hit-testing on what is actually ON SCREEN, not just on which
+            // chapter owns the scroll. .bf-layer is a FIXED full-viewport layer
+            // that exists from first paint at opacity 0, and openGate is what
+            // holds it closed until the board takes over — so an ungated card
+            // sat invisible over the title's bottom-left corner and swallowed
+            // drags meant for the universe. The end caps above made chapter 0
+            // own prog 0, which is exactly when the title is on screen.
+            const cardOp = vis * (1 - _bfClamp(foot * 1.6, 0, 1)) * openGate;
+            const isOn = cardOp > 0.02 && (held || d < 0.5) && foot < 0.4;
             return (
               <article
                 key={i}
                 className={"bf-ch " + (isOn ? "is-on" : "")}
                 style={{
-                  opacity: (vis * (1 - _bfClamp(foot * 1.6, 0, 1)) * openGate).toFixed(3),
+                  opacity: cardOp.toFixed(3),
                   transform: `translateY(${((prog - center) * N * 24).toFixed(1)}px)`,
                   pointerEvents: isOn ? "auto" : "none",
                 }}
