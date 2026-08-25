@@ -3149,6 +3149,7 @@ function Universe(_ref) {
     mount.addEventListener("pointerleave", function () {
       hoverObjRef.current = null;
       setHover(null);
+      emitTileHover(null);
       if (window.MOSound && MOSound.unhover) MOSound.unhover();
     });
     var hoverRaf = 0,
@@ -3181,6 +3182,7 @@ function Universe(_ref) {
           if (!dragMoved) fireInteract();
           dragMoved = true;
         }
+        if (modeRef.current !== "drift") return;
         if (exploreOn) {
           applyExploreDrag(dx, dy);
         } else {
@@ -3561,9 +3563,22 @@ function Universe(_ref) {
       }
       return _tscOut;
     }
+    var lastEmittedHover = null;
+    function emitTileHover(addr) {
+      if (addr === lastEmittedHover) return;
+      lastEmittedHover = addr;
+      try {
+        window.dispatchEvent(new CustomEvent("mo:tileHover", {
+          detail: {
+            addr: addr
+          }
+        }));
+      } catch (_) {}
+    }
     function handleHover(cx, cy) {
       var hit = pickAt(cx, cy);
       if (!hit) {
+        emitTileHover(null);
         if (hoverObjRef.current) {
           hoverObjRef.current = null;
           setHover(null);
@@ -3580,6 +3595,7 @@ function Universe(_ref) {
         project: m.userData.project,
         screen: screen
       });
+      emitTileHover(m.userData.project.addr);
       if (window.__mo_disturb) window.__mo_disturb(cx, cy, 0.3);
       if (window.MOSound && MOSound.hover) {
         MOSound.unhover();
@@ -3613,6 +3629,17 @@ function Universe(_ref) {
       stopDrift();
     }
     function navigateToProject(p, originRect) {
+      if (modeRef.current === "reel") {
+        var project = window.MO_PROJECT_BY_ADDR && window.MO_PROJECT_BY_ADDR[p.addr] || p.mo || p;
+        window.dispatchEvent(new CustomEvent("mo:nodeFlight", {
+          detail: {
+            project: project,
+            originRect: originRect,
+            origin: "work"
+          }
+        }));
+        return;
+      }
       if (typeof window.__mo_open_project === "function") {
         window.__mo_open_project(p, originRect);
         return;
@@ -4968,13 +4995,25 @@ function NodeHandoff() {
           setMode("idle");
         }, 760);
       };
-      var dissolveTimer = setTimeout(dissolve, HOLD);
+      var t0 = performance.now();
+      var painted = 0;
+      var readyToDissolve = function readyToDissolve(now) {
+        var elapsed = now - t0;
+        if (elapsed >= HOLD + NH_HOLD_MAX) return true;
+        return painted >= 2 && elapsed >= HOLD;
+      };
+      var dissolveTimer = setTimeout(dissolve, HOLD + NH_HOLD_MAX + 400);
       var _loop2 = function loop(now) {
         var dt = now - last;
         last = now;
         if (!NH_REDUCED) rig.nudgeYaw(Math.min(50, dt) * hp.spinSpeed);
         rig.update(dt);
         rig.render();
+        if (rig.ready) painted++;
+        if (!dissolved && readyToDissolve(now)) {
+          clearTimeout(dissolveTimer);
+          dissolve();
+        }
         if (!dissolved) rafRef.current = requestAnimationFrame(_loop2);else rig.render();
       };
       rafRef.current = requestAnimationFrame(_loop2);
@@ -8842,6 +8881,16 @@ function Work(_ref) {
   useE(function () {
     onHoverWork && onHoverWork(focused || (activeWork === null || activeWork === void 0 ? void 0 : activeWork.addr) || null);
   }, [focused, activeWork, onHoverWork]);
+  useE(function () {
+    var onTileHover = function onTileHover(e) {
+      var addr = e && e.detail ? e.detail.addr : null;
+      setFocused(addr || null);
+    };
+    window.addEventListener("mo:tileHover", onTileHover);
+    return function () {
+      return window.removeEventListener("mo:tileHover", onTileHover);
+    };
+  }, []);
   useE(function () {
     try {
       window.dispatchEvent(new CustomEvent("mo:reelStop", {

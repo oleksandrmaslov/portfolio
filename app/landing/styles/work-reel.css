@@ -22,6 +22,19 @@
   overflow: hidden;
 }
 
+/* THE REEL MUST NOT SWALLOW THE FIELD.
+   `.lp` in base.css is pointer-events:none so empty page area falls through to
+   the fixed universe, and `.lp > *` turns them back on for each direct child.
+   This section IS such a child, and its sticky stage is a full-viewport layer —
+   so for the whole reel the universe behind it became unhittable. The visible
+   "card" a visitor points at is the 3D tile; the DOM .rcard is only its caption
+   bar. That is why the card read as dead while the strip under it worked.
+   Give the empty area back and let the real controls opt in one at a time. */
+.lp-workReel { pointer-events: none; }
+.rcard,
+.lp-workReel__stopBtn,
+.showAllGate { pointer-events: auto; }
+
 /* ── parallax background grid ───────────────────────────── */
 .lp-workReel__bg {
   position: absolute;
@@ -168,8 +181,15 @@
   background: var(--hairline);
   transition: background var(--d-fast) var(--e-out), box-shadow var(--d-fast);
 }
-.rcard--locked .rcard__spine,
+/* Hover is not selection. The spine marks the ACTIVE stop, so a merely hovered
+   card gets a dimmed one — sharing the full signal spine made pointing at any
+   card read as "this is the current stop". `--locked` is declared second so a
+   card that is both hovered and active still reads as active. */
 .rcard--focused .rcard__spine {
+  background: var(--signal-dim);
+  box-shadow: none;
+}
+.rcard--locked .rcard__spine {
   background: var(--signal);
   box-shadow: 0 0 12px var(--signal);
 }

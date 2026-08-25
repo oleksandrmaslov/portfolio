@@ -69,6 +69,20 @@ function Work({ onHoverWork }) {
     onHoverWork && onHoverWork(focused || activeWork?.addr || null);
   }, [focused, activeWork, onHoverWork]);
 
+  /* A visitor points at the 3D tile, not at the caption bar under it — those
+     are one card to them. The reel already pushes its own hover down to the
+     field through onHoverWork; this picks up the other direction so pointing
+     at the tile lights the matching caption. Converges rather than loops:
+     setting `focused` re-emits the same address the universe already has. */
+  useE(() => {
+    const onTileHover = (e) => {
+      const addr = e && e.detail ? e.detail.addr : null;
+      setFocused(addr || null);
+    };
+    window.addEventListener("mo:tileHover", onTileHover);
+    return () => window.removeEventListener("mo:tileHover", onTileHover);
+  }, []);
+
   /* announce reel stop changes — sound score AND the shared model stage listen */
   useE(() => {
     try {

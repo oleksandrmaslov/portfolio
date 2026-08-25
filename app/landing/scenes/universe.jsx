@@ -1607,6 +1607,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     mount.addEventListener("pointerleave", () => {
       hoverObjRef.current = null;
       setHover(null);
+      emitTileHover(null);
       if (window.MOSound && MOSound.unhover) MOSound.unhover();
     });
     // hover hit-test is throttled to one raycast per frame — high-frequency
@@ -1631,6 +1632,11 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         const dy = e.clientY - lastY;
         lastX = e.clientX; lastY = e.clientY;
         if (Math.abs(e.clientX - downX) + Math.abs(e.clientY - downY) > 6) { if (!dragMoved) fireInteract(); dragMoved = true; }
+        // The reel composes the field from scroll position, so spinning the
+        // camera mid-parade would fight it. `dragging` stays true so pointerup
+        // still resolves a click - only the rotation is withheld. Same gate the
+        // wheel handler already uses.
+        if (modeRef.current !== "drift") return;
         if (exploreOn) {
           applyExploreDrag(dx, dy);
         } else {
@@ -2026,9 +2032,20 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       return _tscOut;
     }
 
+    /* The 3D tile and the reel's caption bar are the same card to a visitor,
+       so hovering either has to light both. The reel already pushes its hover
+       DOWN through the focusAddr prop; this is the missing direction back UP. */
+    let lastEmittedHover = null;
+    function emitTileHover(addr) {
+      if (addr === lastEmittedHover) return;
+      lastEmittedHover = addr;
+      try { window.dispatchEvent(new CustomEvent("mo:tileHover", { detail: { addr } })); } catch (_) {}
+    }
+
     function handleHover(cx, cy) {
       const hit = pickAt(cx, cy);
       if (!hit) {
+        emitTileHover(null);
         if (hoverObjRef.current) { hoverObjRef.current = null; setHover(null); if (window.MOSound && MOSound.unhover) MOSound.unhover(); }
         return;
       }
@@ -2041,6 +2058,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       if (!screen) return;
       hoverObjRef.current = m;
       setHover({ project: m.userData.project, screen });
+      emitTileHover(m.userData.project.addr);
       // the touch disturbs the field — a soft ripple spreads from the node
       if (window.__mo_disturb) window.__mo_disturb(cx, cy, 0.3);
       // sonify: the hovered node sings its sideband against the 0x00 carrier
@@ -2083,6 +2101,15 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     }
 
     function navigateToProject(p, originRect) {
+      // Where the visitor came FROM decides where leaving the project page puts
+      // them back. __mo_open_project hardcodes "universe", which is right for a
+      // floating node and wrong for a tile picked out of the reel - that one
+      // has to land back on its reel stop.
+      if (modeRef.current === "reel") {
+        const project = (window.MO_PROJECT_BY_ADDR && window.MO_PROJECT_BY_ADDR[p.addr]) || p.mo || p;
+        window.dispatchEvent(new CustomEvent("mo:nodeFlight", { detail: { project, originRect, origin: "work" } }));
+        return;
+      }
       // The handoff layer installs window.__mo_open_project. Direct navigation
       // remains the fallback when that transition is unavailable.
       if (typeof window.__mo_open_project === "function") {

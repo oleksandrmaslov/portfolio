@@ -28,11 +28,17 @@
        renderTweaks: (t, set) => <></>,
      };
 
-   Standard-page behavior by design:
-     · no landing seam-bridge (the flight arrives on Wafer only)
+   Standard-page behavior:
+     · the node flight lands here like it does on every other route, and the
+       arrival CONTINUES it — boot at the rest layout and at the yaw the
+       flight ended on, then carry the turn forward. Do not go back to an
+       unconditional beginHandoff(): that puts an arriving model in the
+       centre of the screen and slides it right, which reads as the model
+       drifting in from the left.
+     · no seam-bridge script in the page HTML yet, so the flight's last frame
+       is not painted over the boot gap the way it is on Wafer and the
+       handoff routes. The arrival itself is correct either way.
      · footer prev/next follows the canonical data.file route
-     · leave → straight fade back to the landing page (no return-flight
-       protocol — that contract is wafer-specific)
    ============================================================ */
 const { useState: usePC, useEffect: useEPC, useRef: useRPC } = React;
 
@@ -359,13 +365,51 @@ function ProjectPageApp() {
     window.__pageRig = rig;
     if (!rig) { setReady(true); return; }
 
-    rig.beginHandoff();                       // appear centered, then settle
-    setTimeout(() => {
-      rig.resetOrbit();
+    // The flight lands on THESE routes too — every universe tile and every reel
+    // card can open one. This template used to read none of the arrival keys and
+    // unconditionally replayed the centred handoff, so an arriving model was put
+    // back in the middle of the screen and then slid right to its rest layout.
+    // That slide is what reads as "the model comes in from the left". Wafer and
+    // the handoff pages already continue the flight; this now matches them.
+    const arrived = sessionStorage.getItem("mo_node_arrive") === "1"
+                 && sessionStorage.getItem("mo_node_addr") === PC.addr;
+    sessionStorage.removeItem("mo_node_arrive");
+
+    const settleToRest = (yawTarget) => {
+      if (yawTarget != null && rig.setYawTarget) rig.setYawTarget(yawTarget);
+      else rig.resetOrbit();
       pcApplyHeroLayout(rig);
       if (PC_IDLE_DRIFT) rig.setIdle(true);
       setReady(true);
-    }, 460);
+    };
+
+    if (arrived) {
+      // Boot AT the rest layout and at the angle the flight ended on, then
+      // carry the turn forward — the model never travels across the screen.
+      const RG = window.WAFER_RIG;
+      const seamYaw = parseFloat(sessionStorage.getItem("mo_node_yaw"));
+      sessionStorage.removeItem("mo_node_yaw");
+      let bootYaw, restYaw;
+      if (isFinite(seamYaw)) {
+        bootYaw = seamYaw;
+        restYaw = RG.arriveYaw;
+        while (restYaw < bootYaw + 0.25) restYaw += Math.PI * 2;
+      } else {
+        bootYaw = RG.arriveYaw - 0.6;
+        restYaw = RG.arriveYaw;
+      }
+      const P = pcHeroLayoutParams();
+      rig.snapToLayout(P.fracX, P.scale, P.offY, bootYaw);
+      if (rig.setYawRate) rig.setYawRate(0.045);
+      setReady(true);
+      requestAnimationFrame(() => requestAnimationFrame(() => settleToRest(restYaw)));
+      setTimeout(() => { if (rig.setYawRate) rig.setYawRate(0.22); }, 1100);
+    } else {
+      // Direct load — there was no flight, so the centred entrance is correct.
+      sessionStorage.removeItem("mo_node_yaw");
+      rig.beginHandoff();
+      setTimeout(settleToRest, 460);
+    }
 
     let raf, last = performance.now();
     const loop = (now) => {

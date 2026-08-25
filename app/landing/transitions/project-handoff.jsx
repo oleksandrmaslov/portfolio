@@ -323,12 +323,31 @@ function NodeHandoff() {
           setMode("idle");
         }, 760);
       };
-      const dissolveTimer = setTimeout(dissolve, HOLD);
+      /* HOLD is a MINIMUM, not a schedule. The forward flight already waits for
+         the model to paint before it releases; the return leg used to dissolve
+         on a flat timer, so on a cold landing boot - which is exactly what a
+         return is - a heavy GLB could still be decoding when the flight ended
+         and the visitor saw the field come back with nothing flying home.
+         models/wafer_demo.glb is 802 KB with 94k triangles and KTX2 textures,
+         so it is the one that loses that race first. Hold until it has actually
+         painted a couple of frames, capped so a failed load cannot strand the
+         transition. */
+      const t0 = performance.now();
+      let painted = 0;
+      const readyToDissolve = (now) => {
+        const elapsed = now - t0;
+        if (elapsed >= HOLD + NH_HOLD_MAX) return true;   // give up waiting
+        return painted >= 2 && elapsed >= HOLD;
+      };
+      // rAF stops in a hidden tab; this guarantees the transition still ends.
+      const dissolveTimer = setTimeout(dissolve, HOLD + NH_HOLD_MAX + 400);
       const loop = (now) => {
         const dt = now - last; last = now;
         if (!NH_REDUCED) rig.nudgeYaw(Math.min(50, dt) * hp.spinSpeed);
         rig.update(dt);
         rig.render();
+        if (rig.ready) painted++;
+        if (!dissolved && readyToDissolve(now)) { clearTimeout(dissolveTimer); dissolve(); }
         if (!dissolved) rafRef.current = requestAnimationFrame(loop);
         else rig.render();
       };
