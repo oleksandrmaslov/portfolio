@@ -77,6 +77,22 @@ body.landing-exit .universeBg {
   transform: scale(1.08);
   transition: filter 420ms var(--e-out), transform 420ms var(--e-out);
 }
+/* Leaving for All Projects. Unlike `landing-exit` this deliberately does
+   NOT blur or scale the universe: the field is sorting its tiles into a
+   column and that collapse is the transition, so it has to stay sharp and
+   visible while the page content fades off the top of it. */
+body.lp-toIndex .lp {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 420ms var(--e-out);
+}
+body.lp-toIndex .lp-shell {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 300ms var(--e-out);
+}
+body.lp-toIndex .universeBg { filter: none; }
+
 @keyframes lpFlyOut {
   from { opacity: 1; transform: scale(1); }
   to   { opacity: 0; transform: scale(1.06); }

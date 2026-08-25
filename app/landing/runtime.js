@@ -2601,7 +2601,15 @@ function Universe(_ref) {
       var ang = i / Math.max(1, projects.length) * Math.PI * 2;
       return tileTargets[i].set(Math.cos(ang) * R, Math.sin(ang) * Y, Z + Math.sin(ang * 2) * D);
     }
+    var RING_R = 8.0;
+    var listCollapse = false;
+    var listCollapseAt = 0;
+    function indexRingTarget(i, count, t) {
+      var ang = i / Math.max(1, count) * Math.PI * 2 + (t - listCollapseAt) * 0.00028;
+      return tileTargets[i].set(camera.position.x + Math.cos(ang) * RING_R, camera.position.y + Math.sin(ang * 2) * 0.42, camera.position.z + Math.sin(ang) * RING_R);
+    }
     function targetForTile(mode, i, t) {
+      if (listCollapse) return indexRingTarget(i, tileTargets.length, t);
       var target = tileTargets[i];
       if (mode === "origin") {
         var concept = window.__mo_origin && window.__mo_origin.concept || "assembly";
@@ -3328,7 +3336,13 @@ function Universe(_ref) {
       window.screen.orientation.addEventListener("change", onGyroFrameChange);
     }
     document.addEventListener("visibilitychange", onGyroVisibility);
+    var INDEX_COLLAPSE_MS = 620;
     window.__mo_universe = {
+      toIndex: function toIndex() {
+        listCollapse = true;
+        listCollapseAt = performance.now();
+        return INDEX_COLLAPSE_MS;
+      },
       tileBounds: function tileBounds(addr) {
         if (!addr) return null;
         var mb = modelViewportBounds(addr);
@@ -4052,7 +4066,7 @@ function Universe(_ref) {
           var _m3 = _step14.value;
           var target = targetForTile(mode, _m3.userData.index, now);
           if (target) {
-            var _rate = mode === "reel" ? 0.18 : 0.025;
+            var _rate = listCollapse ? 0.155 : mode === "reel" ? 0.18 : 0.025;
             _m3.position.lerp(target, 1 - Math.pow(1 - _rate, dt / 16));
           }
           _lookM.lookAt(camera.position, _m3.position, camera.up);
@@ -9065,10 +9079,12 @@ function Work(_ref) {
     }, "A"),
     primary: true,
     onPress: function onPress() {
-      document.body.classList.add("landing-exit");
-      setTimeout(function () {
-        window.location.href = "All Projects.html";
-      }, 380);
+      if (window.moLeaveToIndex) window.moLeaveToIndex();else {
+        document.body.classList.add("landing-exit");
+        setTimeout(function () {
+          window.location.href = "All Projects.html";
+        }, 380);
+      }
     }
   }, React.createElement("span", {
     "data-mo-cursor-mirror": true,
@@ -9417,13 +9433,25 @@ function ShellLanding(_ref) {
     className: section === "contact" ? "is-active" : "",
     "aria-current": section === "contact" ? "location" : undefined
   }, "CONTACT"), React.createElement("a", {
-    href: "All Projects.html"
+    href: "All Projects.html",
+    onClick: moLeaveToIndex
   }, "INDEX \u2197")), React.createElement("div", {
     className: "shell__status"
   }, React.createElement("span", {
     className: "shell__dot"
   }), React.createElement("span", null, "MUC \xB7 ", time, " GMT+1"), React.createElement(VolumeToggle, null)));
 }
+function moLeaveToIndex(e) {
+  if (e && e.preventDefault) e.preventDefault();
+  if (document.body.classList.contains("lp-toIndex")) return;
+  var uni = window.__mo_universe;
+  var wait = uni && typeof uni.toIndex === "function" ? uni.toIndex() : 380;
+  document.body.classList.add("lp-toIndex");
+  setTimeout(function () {
+    window.location.href = "All Projects.html";
+  }, wait);
+}
+window.moLeaveToIndex = moLeaveToIndex;
 function VolumeToggle() {
   var _React2 = React,
     useState = _React2.useState,

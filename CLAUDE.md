@@ -501,6 +501,36 @@ concepts and the work-reel background are three calls to it at three scales.
 `x` and `y` come from the ring angle, so two nodes can only share a screen
 position if they share an index.
 
+**The field has two ring shapes, and the difference is load-bearing.**
+`scatter()` draws a ring in the XY plane, in *front* of the camera, around
+whatever the beat is about. `indexRingTarget()` draws one in the XZ plane
+centred *on* the camera, so the cards encircle the viewer — that is the All
+Projects handoff.
+
+It was a vertical column first, on the theory that All Projects is a table.
+That clipped, and the reason generalises: **tiles billboard toward the camera,
+so any arrangement that stacks them along one axis puts co-planar quads at the
+same screen position and they z-fight through each other.** Give cards their
+own bearing, not their own offset.
+
+`RING_R` (8.0) is derived, not tuned. Twelve cards of `TILE_W` need
+`2π·R / 12 > TILE_W` of arc each to stay clear; 8.0 gives 4.19 against a 3.0
+card, so 1.19 units of gap. It also sits at 0.44 of `TILE_BOX`'s 18.2
+half-extent, well inside the drift wrap-fade. Re-derive it if the card count or
+`TILE_W` changes — do not nudge it.
+
+Both landing entrances to All Projects run through `moLeaveToIndex()` in
+`app/landing/app.jsx`: the shell's `INDEX ↗` and the work reel's `SHOW ALL`
+keycap. The universe owns the duration and returns it from
+`window.__mo_universe.toIndex()` — do not copy that number into a call site.
+The handoff uses `body.lp-toIndex`, **not** `landing-exit`, because
+`landing-exit` blurs and scales the universe and the collapse has to stay sharp
+and visible underneath the fading page. `landing-exit` still owns every
+project-page exit.
+
+Before this, `INDEX ↗` was a bare anchor that hard-cut — the one landing exit
+with no transition at all. A third shape needs a reason, not a copy.
+
 **The Universe has three modes, and only three.** `app/landing/app.jsx` derives
 `mode` from the active section and can only ever emit `reel`, `origin` or
 `drift`. It is mounted once and there is no mode setter on

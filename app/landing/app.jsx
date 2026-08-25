@@ -156,7 +156,7 @@ function ShellLanding({ section }) {
         <a href="#work" className={section === "work" ? "is-active" : ""} aria-current={section === "work" ? "location" : undefined}>WORK</a>
         <a href="#about" className={section === "about" ? "is-active" : ""} aria-current={section === "about" ? "location" : undefined}>ABOUT</a>
         <a href="#contact" className={section === "contact" ? "is-active" : ""} aria-current={section === "contact" ? "location" : undefined}>CONTACT</a>
-        <a href="All Projects.html">INDEX ↗</a>
+        <a href="All Projects.html" onClick={moLeaveToIndex}>INDEX ↗</a>
       </nav>
       <div className="shell__status">
         <span className="shell__dot" />
@@ -166,6 +166,28 @@ function ShellLanding({ section }) {
     </header>
   );
 }
+
+/* ============================================================
+   LANDING → ALL PROJECTS
+   ------------------------------------------------------------
+   Both ways in here run the same handoff: the universe sorts its
+   tiles into a column, the page content fades on top of it, and
+   only then do we navigate — so All Projects' staggered rows pick
+   the motion up where the field left it.
+
+   The shell's INDEX link used to be a bare anchor and hard-cut,
+   which is the one landing exit that had no transition at all.
+   The universe owns the duration; do not re-copy a number here.
+   ============================================================ */
+function moLeaveToIndex(e) {
+  if (e && e.preventDefault) e.preventDefault();
+  if (document.body.classList.contains("lp-toIndex")) return;
+  const uni = window.__mo_universe;
+  const wait = (uni && typeof uni.toIndex === "function") ? uni.toIndex() : 380;
+  document.body.classList.add("lp-toIndex");
+  setTimeout(() => { window.location.href = "All Projects.html"; }, wait);
+}
+window.moLeaveToIndex = moLeaveToIndex;
 
 /* volume toggle — an animated SINEWAVE (replaces [G] grid).
    The wave's amplitude rides the real master-output level and its

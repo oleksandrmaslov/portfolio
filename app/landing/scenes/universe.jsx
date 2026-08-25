@@ -1020,7 +1020,43 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       );
     }
 
+    /* ---------- the index handoff: a ring AROUND the camera ----------
+       Two ring shapes now, and the difference is load-bearing:
+
+         scatter()        a ring in the XY plane, in FRONT of the camera,
+                          around whatever the beat is about.
+         indexRingTarget() a ring in the XZ plane, centred ON the camera —
+                          the cards encircle you.
+
+       This started as a vertical column, on the theory that All Projects is
+       a table. It clipped: the tiles billboard toward the camera, so any
+       arrangement that stacks them on one axis puts twelve co-planar quads
+       at the same screen position and they z-fight through each other. A
+       horizontal ring gives every card its own bearing instead.
+
+       RING_R is not a taste value. Twelve cards of TILE_W (3.0) need
+       2*PI*R/12 > 3.0 of arc each to stay clear; at 8.0 each gets 4.19, so
+       1.19 units of gap. It is also well inside TILE_BOX's 18.2 half-extent,
+       so the drift wrap-fade never touches the ring. Re-derive it if the
+       card count or TILE_W changes - do not nudge it. */
+    const RING_R = 8.0;          // camera-centred radius; see the arc note above
+    let listCollapse = false;    // one-way: set on the way to All Projects
+    let listCollapseAt = 0;
+
+    function indexRingTarget(i, count, t) {
+      // Anchored to the camera every frame so the cards stay around YOU while
+      // the field keeps drifting, and turning slowly so the ring reads as a
+      // carousel rather than a frozen diagram.
+      const ang = (i / Math.max(1, count)) * Math.PI * 2 + (t - listCollapseAt) * 0.00028;
+      return tileTargets[i].set(
+        camera.position.x + Math.cos(ang) * RING_R,
+        camera.position.y + Math.sin(ang * 2) * 0.42,   // gentle lift, same idiom as scatter's D
+        camera.position.z + Math.sin(ang) * RING_R,
+      );
+    }
+
     function targetForTile(mode, i, t) {
+      if (listCollapse) return indexRingTarget(i, tileTargets.length, t);
       const target = tileTargets[i];
       if (mode === "origin") {
         const concept = (window.__mo_origin && window.__mo_origin.concept) || "assembly";
@@ -1771,7 +1807,22 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       window.screen.orientation.addEventListener("change", onGyroFrameChange);
     }
     document.addEventListener("visibilitychange", onGyroVisibility);
+    /* How long a caller should hold before navigating to All Projects.
+       Long enough for the deck to read as sorted, short enough that the
+       page swap still feels like one gesture. */
+    const INDEX_COLLAPSE_MS = 620;
+
     window.__mo_universe = {
+      /* Sweep the field into a ring around the camera for the All Projects
+         handoff - the cards close in around you, then the page swaps. Returns
+         the delay the caller should wait before navigating, so the timing
+         lives here with the animation rather than being copied into every
+         call site. One-way by design: the landing is leaving. */
+      toIndex() {
+        listCollapse = true;
+        listCollapseAt = performance.now();
+        return INDEX_COLLAPSE_MS;
+      },
       /* Screen box of the tile carrying this project, in viewport space, or
          null when it is hidden or behind the camera. The work reel uses this
          so the handoff lifts out of the card that is already showing the
@@ -2460,7 +2511,9 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
           // ease toward target; rate depends on distance for snappy arrange
           // reel must track the scrubbed scroll position tightly — a slow lerp
           // would let the parade lag the captions.
-          const rate = mode === "reel" ? 0.18 : 0.025;
+          // The collapse has to visibly complete inside the navigation
+          // delay, so it eases faster than drift and faster than the reel.
+          const rate = listCollapse ? 0.155 : mode === "reel" ? 0.18 : 0.025;
           m.position.lerp(target, 1 - Math.pow(1 - rate, dt / 16));
         }
 

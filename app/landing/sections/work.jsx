@@ -287,8 +287,15 @@ function Work({ onHoverWork }) {
                   </div>
                   <div className="showAllGate__key">
                     <KeyButton legend={<span data-mo-cursor-mirror data-mo-cursor-opacity=".showAllGate,.lp-workReel__sticky,.lp">A</span>} primary onPress={() => {
-                      document.body.classList.add("landing-exit");
-                      setTimeout(() => { window.location.href = "All Projects.html"; }, 380);
+                      // Same handoff as the shell's INDEX link — the field
+                      // sorts into a column before the page swaps. Defined in
+                      // app.jsx, which owns the shell; it is on window by the
+                      // time anyone can click this.
+                      if (window.moLeaveToIndex) window.moLeaveToIndex();
+                      else {
+                        document.body.classList.add("landing-exit");
+                        setTimeout(() => { window.location.href = "All Projects.html"; }, 380);
+                      }
                     }}>
                       <span data-mo-cursor-mirror data-mo-cursor-opacity=".showAllGate,.lp-workReel__sticky,.lp">SHOW ALL</span>
                     </KeyButton>
