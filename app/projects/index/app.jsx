@@ -123,7 +123,6 @@ function ManifestApp() {
 
   return (
     <>
-      {window.FibGrid ? React.createElement(window.FibGrid) : null}
       {window.Cursor  ? React.createElement(window.Cursor)  : null}
 
       <header className="shell m-shell">

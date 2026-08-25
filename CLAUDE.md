@@ -479,6 +479,50 @@ ambient debris and the star parallax, which still live in the small `BOX`, so
 it is not the cards' constant to retune — drifting cards now reach it, which
 reads as depth.
 
+## The project hero rig
+
+`app/projects/rendering/solid-hero-rig.jsx` is the **only** project hero rig.
+Every project route and the landing handoff call its `window.makeWaferRig`.
+
+It used to have a fork, `basic-hero-rig.jsx`, which Kerfur, Tactical Flashlight,
+Split HID Display and ZMK-PointAccel loaded. The two files were the same rig —
+identical damping model, identical `HANDOFF`/arrival poses, identical
+`applyToScene` — differing only in lighting (ambient 0.5 vs 0.85, key 1.35 vs
+2.3, rim 1.7 vs 3.0, no fourth top light, exposure 1.05 vs 1.18), in defaults
+(`modelFit` 4.1 vs 4.0, `pose.x` +1.02 vs -0.92) and in the material pass. Four
+routes therefore drew their hero visibly dimmer and flatter than the rest for no
+stated reason. It was retired on 2026-08-25 and its two unique capabilities were
+folded into the survivor. **If a model needs different handling, give it an
+option here — do not fork the rig again.**
+
+The material route is three-way and each page must pick the right one:
+
+- `assignMaterial: { … }` — a GLB that ships **no materials of its own**.
+  `models/tactical_flashlight.glb` is the only one: 7 meshes, 0 materials.
+  Without it the rig draws Three's default flat white. Keep the spec equal to
+  `assignMaterial` for the same node in `app/data/projects.js`, or the mark
+  changes colour halfway through the flight.
+- `keepMaterials: true` — a **procedural** hero that authored its own materials,
+  i.e. anything using `buildModel`. Kerfur is the one. The default path clones
+  every material and forces `envMapIntensity` to 1.9, which both washes out a
+  body that was lit without an environment and hands the builder's own
+  per-frame code a material object the scene no longer draws.
+- default — a real GLB, tuned by `tuneRealMaterials` to read on the void. This
+  lifts any base colour below 0.04 linear luma; `keyboard-display.opt.glb`'s
+  near-black `module-body` is deliberately lifted by it.
+
+`buildModel` may return a bare `Object3D` **or** a `{ group, update }`
+descriptor. The descriptor's `update(now, dt)` is driven by the rig's own loop,
+so it inherits the visibility gate instead of holding a second permanent RAF
+open for the life of the page. Kerfur's OLED face engine depends on this: lose
+the hook and the face never ticks, `tex.needsUpdate` is never set, and the
+screen-spill light stays dark.
+
+Both page templates must forward the whole hero option set. `standard-page.jsx`
+and `handoff-page.jsx` each build the rig from `PAGE_CONFIG.hero`, and a key
+they do not forward is a key that silently does nothing — that is how
+`assignMaterial` and `keepMaterials` can look set and not be.
+
 ## Models and live demos
 
 Place shared GLBs in `models/`, then update the matching record in

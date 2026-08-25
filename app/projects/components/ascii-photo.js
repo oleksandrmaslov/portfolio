@@ -26,7 +26,6 @@
   const SIGNAL = [0x00 / 255, 0xf0 / 255, 0xc8 / 255];   // --signal
   const SIGNAL_DIM = [0x00 / 255, 0xa8 / 255, 0x8c / 255]; // --signal-dim
   const BONE = [0xe6 / 255, 0xe8 / 255, 0xee / 255];     // --bone
-  const BONE_DIM = [0.18, 0.20, 0.24];
 
   const VERT = `
     attribute vec2 aPos;

@@ -243,12 +243,6 @@ html.custom-cursor, html.custom-cursor * { cursor: none !important; }
   letter-spacing: var(--tr-mono);
 }
 
-.t-num {
-  font-family: var(--ff-serif);
-  font-style: italic;
-  font-feature-settings: "lnum", "tnum";
-}
-
 /* Signal underline used on links */
 .t-link {
   display: inline;

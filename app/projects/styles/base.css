@@ -401,17 +401,6 @@ body {
   background: var(--space);
   aspect-ratio: 4 / 5;
 }
-.ph__phStripes {
-  position: absolute;
-  inset: 0;
-  background-image: repeating-linear-gradient(
-    -45deg,
-    rgba(255, 255, 255, 0.022) 0,
-    rgba(255, 255, 255, 0.022) 1px,
-    transparent 1px,
-    transparent 12px
-  );
-}
 .ph__phCorner {
   position: absolute;
   width: 14px; height: 14px;
@@ -422,26 +411,6 @@ body {
 .ph__phCorner--tr { top: 8px;   right: 8px;   border-left: 0;  border-bottom: 0; }
 .ph__phCorner--bl { bottom: 8px; left: 8px;   border-right: 0; border-top: 0; }
 .ph__phCorner--br { bottom: 8px; right: 8px;  border-left: 0;  border-top: 0; }
-.ph__phCross {
-  position: absolute;
-  left: 50%; top: 50%;
-  width: 18px; height: 18px;
-  transform: translate(-50%, -50%);
-  background:
-    linear-gradient(var(--signal), var(--signal)) center/1px 100% no-repeat,
-    linear-gradient(var(--signal), var(--signal)) center/100% 1px no-repeat;
-  opacity: 0.55;
-}
-.ph__phNote {
-  position: absolute;
-  bottom: 14px; left: 50%;
-  transform: translateX(-50%);
-  font-family: var(--ff-mono);
-  font-size: var(--fs-nano);
-  letter-spacing: var(--tr-caps);
-  text-transform: uppercase;
-  color: var(--ghost);
-}
 .ph__cap {
   display: grid;
   grid-template-columns: 28px 1fr;

@@ -48,7 +48,7 @@
   <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" integrity="sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 
-  <!-- Shared system (FibGrid, Cursor) -->
+  <!-- Shared system (Cursor, shell) -->
   <script type="text/babel" data-presets="env,react" src="app/shared/core.jsx"></script>
 
   <!-- PLAY DEMO · field core + kerfur palette + face/emotion/body engines + controller -->
@@ -65,7 +65,8 @@
   <!-- Project pieces -->
   <script type="text/babel" data-presets="env,react" src="app/projects/data.jsx"></script>
   <script type="text/babel" data-presets="env,react" src="app/projects/rendering/model-viewer.jsx"></script>
-  <script type="text/babel" data-presets="env,react" src="app/projects/rendering/basic-hero-rig.jsx"></script>
+  <script src="app/projects/rendering/solid-materials.js"></script>
+  <script type="text/babel" data-presets="env,react" src="app/projects/rendering/solid-hero-rig.jsx"></script>
   <script type="text/babel" data-presets="env,react" src="app/projects/components/tweak-panel.jsx"></script>
   <script type="text/babel" data-presets="env,react" src="app/projects/components/ascii-photo.jsx"></script>
   <script type="text/babel" data-presets="env,react" src="demo/kerfur-hud.jsx"></script>
@@ -79,7 +80,7 @@
         /* procedural cat-pebble with the LIVE face engine on its OLED —
            the page hero is already alive before the demo starts.
            A production GLB can replace the procedural body without changing the page contract. */
-        matcap: false,
+        keepMaterials: true,
         modelFit: 3.4,
         pose: { x: 0.06, y: -0.38, z: 0 },
         buildModel: (THREE) => {

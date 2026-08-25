@@ -464,7 +464,6 @@
   .motionGrid { grid-template-columns: repeat(2, 1fr); }
   .durations { grid-template-columns: 1fr; }
   .componentsGrid { grid-template-columns: 1fr; }
-  .hero__row { grid-template-columns: 1fr; }
   .voiceGrid { grid-template-columns: 1fr; }
   .lexicon { grid-template-columns: 1fr; }
   .lexicon__row > * { border-bottom: none; padding: var(--s-3) 0; }

@@ -748,15 +748,8 @@ body.mo-explore .lp-shell {
    ============================================================ */
 @media (min-width: 1720px) {
   :root {
-    --fs-micro:   0.64vw;
-    --fs-meta:    0.76vw;
-    --fs-body:    0.93vw;
-    --fs-lead:    1.22vw;
     --fs-h4:      1.63vw;
     --fs-h3:      2.44vw;
     --fs-h2:      3.72vw;
-    --fs-h1:      5.58vw;
-    --fs-display: 8.37vw;
-    --fs-hero:    12.8vw;
   }
 }

@@ -47,7 +47,7 @@
   <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" integrity="sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 
-  <!-- Shared interface foundation (FibGrid, Cursor) -->
+  <!-- Shared interface foundation (Cursor, shell) -->
   <script type="text/babel" data-presets="env,react" src="app/shared/core.jsx"></script>
 
   <!-- ASCII photo reveal lens -->
@@ -56,7 +56,8 @@
   <!-- Project pieces (no demo scripts — this node links to its GitHub source) -->
   <script type="text/babel" data-presets="env,react" src="app/projects/data.jsx"></script>
   <script type="text/babel" data-presets="env,react" src="app/projects/rendering/model-viewer.jsx"></script>
-  <script type="text/babel" data-presets="env,react" src="app/projects/rendering/basic-hero-rig.jsx"></script>
+  <script src="app/projects/rendering/solid-materials.js"></script>
+  <script type="text/babel" data-presets="env,react" src="app/projects/rendering/solid-hero-rig.jsx"></script>
   <script type="text/babel" data-presets="env,react" src="app/projects/components/tweak-panel.jsx"></script>
   <script type="text/babel" data-presets="env,react" src="app/projects/components/ascii-photo.jsx"></script>
 
@@ -67,9 +68,9 @@
       docTitle: "Split HID Display — Maslov Oleksandr",
       hero: {
         /* The production Raw HID display frame. The GLB keeps the front/back
-           faces and lit-pixel material authored in the source model. */
+           faces and lit-pixel material authored in the source model; the shared
+           rig only lifts the near-black module body off the void. */
         model: "models/keyboard-display.opt.glb",
-        matcap: false,
         modelFit: 2.8,
         pose: { x: -0.08, y: -0.24, z: 0 },
       },

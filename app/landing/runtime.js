@@ -12,9 +12,7 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
 var _React = React,
   useState = _React.useState,
   useEffect = _React.useEffect,
-  useRef = _React.useRef,
-  useMemo = _React.useMemo,
-  useCallback = _React.useCallback;
+  useRef = _React.useRef;
 (function restorePersistedPage() {
   window.addEventListener("pageshow", function (event) {
     if (!event.persisted) return;
@@ -45,78 +43,13 @@ var _React = React,
     if (urls.size) window.preloadModels(Array.from(urls));
   }, 0);
 })();
-function FibGrid() {
-  var _useState = useState(false),
-    _useState2 = _slicedToArray(_useState, 2),
-    on = _useState2[0],
-    setOn = _useState2[1];
-  useEffect(function () {
-    var onKey = function onKey(e) {
-      if (e.key !== "g" && e.key !== "G") return;
-      if (e.target && /input|textarea/i.test(e.target.tagName || "")) return;
-      setOn(function (v) {
-        return !v;
-      });
-    };
-    window.addEventListener("keydown", onKey);
-    return function () {
-      return window.removeEventListener("keydown", onKey);
-    };
-  }, []);
-  var cols = [1, 1, 2, 3, 5, 8, 13];
-  var total = cols.reduce(function (a, b) {
-    return a + b;
-  }, 0);
-  var acc = 0;
-  var verticals = cols.slice(0, -1).map(function (c) {
-    acc += c;
-    return acc / total * 100;
-  });
-  var rows = [1, 2, 3, 5, 8, 13];
-  var totalR = rows.reduce(function (a, b) {
-    return a + b;
-  }, 0);
-  var accR = 0;
-  var horizontals = rows.slice(0, -1).map(function (r) {
-    accR += r;
-    return accR / totalR * 100;
-  });
-  return React.createElement("div", {
-    className: "fibGrid " + (on ? "fibGrid--on" : ""),
-    "aria-hidden": "true"
-  }, React.createElement("div", {
-    className: "fibGrid__rails"
-  }, verticals.map(function (v, i) {
-    return React.createElement("div", {
-      key: "v" + i,
-      className: "fibGrid__v",
-      style: {
-        left: v + "%"
-      }
-    }, React.createElement("span", {
-      className: "fibGrid__tick"
-    }, cols[i]));
-  }), horizontals.map(function (h, i) {
-    return React.createElement("div", {
-      key: "h" + i,
-      className: "fibGrid__h",
-      style: {
-        top: h + "%"
-      }
-    });
-  })), React.createElement("div", {
-    className: "fibGrid__legend"
-  }, React.createElement("span", {
-    className: "fibGrid__legendDot"
-  }), React.createElement("span", null, "FIB GRID \xB7 ", on ? "VISIBLE" : "PRESS G")));
-}
 function Cursor() {
   var ref = useRef(null);
   var coordRef = useRef(null);
-  var _useState3 = useState("idle"),
-    _useState4 = _slicedToArray(_useState3, 2),
-    mode = _useState4[0],
-    setMode = _useState4[1];
+  var _useState = useState("idle"),
+    _useState2 = _slicedToArray(_useState, 2),
+    mode = _useState2[0],
+    setMode = _useState2[1];
   useEffect(function () {
     document.documentElement.classList.add("custom-cursor");
     var node = ref.current;
@@ -218,10 +151,10 @@ function Cursor() {
   }, "0000 / 0000"), mode === "grab" && React.createElement("span", null, "drag to rotate"), mode === "probe" && React.createElement("span", null, "inspect \u2316"), mode === "hot" && React.createElement("span", null, "open \u2192")));
 }
 function Shell() {
-  var _useState5 = useState("--:--"),
-    _useState6 = _slicedToArray(_useState5, 2),
-    time = _useState6[0],
-    setTime = _useState6[1];
+  var _useState3 = useState("--:--"),
+    _useState4 = _slicedToArray(_useState3, 2),
+    time = _useState4[0],
+    setTime = _useState4[1];
   useEffect(function () {
     var tick = function tick() {
       return setTime(new Date().toTimeString().slice(0, 5));
@@ -258,11 +191,8 @@ function Shell() {
     className: "shell__status"
   }, React.createElement("span", {
     className: "shell__dot"
-  }), React.createElement("span", null, "ONLINE \xB7 MUC \xB7 ", time), React.createElement("span", {
-    className: "shell__hint"
-  }, "[G] grid")));
+  }), React.createElement("span", null, "ONLINE \xB7 MUC \xB7 ", time)));
 }
-window.FibGrid = FibGrid;
 window.Cursor = Cursor;
 window.Shell = Shell;
 
@@ -792,92 +722,6 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     root.scale.multiplyScalar(s);
     return box;
   };
-  var _matcapTexture = null;
-  window.makeMatcapTexture = function (THREE) {
-    if (_matcapTexture) return _matcapTexture;
-    var SZ = 256;
-    var c = document.createElement("canvas");
-    c.width = c.height = SZ;
-    var x = c.getContext("2d");
-    var grad = x.createRadialGradient(SZ * 0.34, SZ * 0.30, SZ * 0.04, SZ * 0.50, SZ * 0.50, SZ * 0.62);
-    grad.addColorStop(0.00, "#f4f6fa");
-    grad.addColorStop(0.18, "#9aa3b3");
-    grad.addColorStop(0.45, "#3a4250");
-    grad.addColorStop(0.78, "#161a22");
-    grad.addColorStop(1.00, "#05070b");
-    x.fillStyle = grad;
-    x.beginPath();
-    x.arc(SZ / 2, SZ / 2, SZ / 2, 0, Math.PI * 2);
-    x.fill();
-    var rim = x.createRadialGradient(SZ / 2, SZ / 2, SZ * 0.42, SZ / 2, SZ / 2, SZ / 2);
-    rim.addColorStop(0.00, "rgba(0, 240, 200, 0)");
-    rim.addColorStop(0.82, "rgba(0, 240, 200, 0)");
-    rim.addColorStop(0.97, "rgba(0, 240, 200, 0.55)");
-    rim.addColorStop(1.00, "rgba(0, 240, 200, 0)");
-    x.fillStyle = rim;
-    x.beginPath();
-    x.arc(SZ / 2, SZ / 2, SZ / 2, 0, Math.PI * 2);
-    x.fill();
-    var spec = x.createRadialGradient(SZ * 0.32, SZ * 0.26, 0, SZ * 0.32, SZ * 0.26, SZ * 0.18);
-    spec.addColorStop(0.0, "rgba(255,255,255,0.85)");
-    spec.addColorStop(1.0, "rgba(255,255,255,0)");
-    x.fillStyle = spec;
-    x.beginPath();
-    x.arc(SZ / 2, SZ / 2, SZ / 2, 0, Math.PI * 2);
-    x.fill();
-    var tex = new THREE.CanvasTexture(c);
-    tex.colorSpace = THREE.SRGBColorSpace;
-    tex.needsUpdate = true;
-    _matcapTexture = tex;
-    return tex;
-  };
-  window.applyWireframeToModel = function (root, THREE) {
-    var _opts$color, _opts$opacity, _opts$threshold;
-    var opts = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
-    var color = (_opts$color = opts.color) !== null && _opts$color !== void 0 ? _opts$color : SIGNAL;
-    var opacity = (_opts$opacity = opts.opacity) !== null && _opts$opacity !== void 0 ? _opts$opacity : 0.9;
-    var threshold = (_opts$threshold = opts.threshold) !== null && _opts$threshold !== void 0 ? _opts$threshold : 25;
-    var meshes = [];
-    root.traverse(function (obj) {
-      if (obj.isMesh) meshes.push(obj);
-    });
-    for (var _i = 0, _meshes = meshes; _i < _meshes.length; _i++) {
-      var m = _meshes[_i];
-      if (!m.geometry) continue;
-      var edges = new THREE.EdgesGeometry(m.geometry, threshold);
-      var mat = new THREE.LineBasicMaterial({
-        color: color,
-        transparent: true,
-        opacity: opacity,
-        depthWrite: false
-      });
-      var line = new THREE.LineSegments(edges, mat);
-      line.position.copy(m.position);
-      line.quaternion.copy(m.quaternion);
-      line.scale.copy(m.scale);
-      var parent = m.parent;
-      if (parent) {
-        parent.add(line);
-        parent.remove(m);
-      }
-      m.geometry.dispose();
-      if (m.material && m.material.dispose) m.material.dispose();
-    }
-  };
-  window.applyMatcapToModel = function (root, THREE) {
-    var matcap = window.makeMatcapTexture(THREE);
-    root.traverse(function (obj) {
-      if (!obj.isMesh) return;
-      var prev = obj.material;
-      obj.material = new THREE.MeshMatcapMaterial({
-        matcap: matcap,
-        transparent: true,
-        opacity: 1,
-        depthWrite: true
-      });
-      if (prev && prev.dispose) prev.dispose();
-    });
-  };
   function makePrimitiveGeometry(kind, THREE) {
     switch (kind) {
       case "slab":
@@ -900,12 +744,12 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     var wire = !!opts.wireframe;
     var geo = makePrimitiveGeometry(kind, THREE);
     if (wire) {
-      var _opts$color2, _opts$opacity2;
+      var _opts$color, _opts$opacity;
       var wireGeo = new THREE.EdgesGeometry(geo, 25);
       var mat = new THREE.LineBasicMaterial({
-        color: (_opts$color2 = opts.color) !== null && _opts$color2 !== void 0 ? _opts$color2 : SIGNAL,
+        color: (_opts$color = opts.color) !== null && _opts$color !== void 0 ? _opts$color : SIGNAL,
         transparent: true,
-        opacity: (_opts$opacity2 = opts.opacity) !== null && _opts$opacity2 !== void 0 ? _opts$opacity2 : 0.9,
+        opacity: (_opts$opacity = opts.opacity) !== null && _opts$opacity !== void 0 ? _opts$opacity : 0.9,
         depthWrite: false
       });
       var line = new THREE.LineSegments(wireGeo, mat);
@@ -937,7 +781,6 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     if (kind === "torus") mesh.rotation.set(Math.PI * 0.32, 0.4, 0);
     if (kind === "slab") mesh.rotation.set(0.22, 0.6, 0);
   }
-  window.orientPrimitive = orientForKind;
   function ProjectViewer3D(_ref) {
     var primitive = _ref.primitive,
       dims = _ref.dims,
@@ -1341,11 +1184,12 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e 
     scene.add(pivot);
     var parts = [];
     var modelReady = false;
+    var modelUpdate = null;
     function ingest(root) {
       window.fitModelToSize(root, THREE, opts.modelFit || RIG.modelFit);
       if (opts.assignMaterial && window.applySolidMaterials) {
         window.applySolidMaterials(root, THREE, opts.assignMaterial);
-      } else if (window.tuneRealMaterials) {
+      } else if (opts.keepMaterials !== true && window.tuneRealMaterials) {
         window.tuneRealMaterials(root, THREE, {
           envMapIntensity: 1.9
         });
@@ -1372,7 +1216,11 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e 
     }
     if (typeof opts.buildModel === "function") {
       try {
-        ingest(opts.buildModel(THREE));
+        var built = opts.buildModel(THREE);
+        if (built && built.group && built.group.isObject3D) {
+          modelUpdate = typeof built.update === "function" ? built.update : null;
+          ingest(built.group);
+        } else ingest(built);
       } catch (e) {
         console.warn("[wafer-rig] buildModel failed", e);
       }
@@ -1452,6 +1300,14 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e 
     applyToScene();
     function update(dt) {
       dt = Math.min(50, dt);
+      if (modelUpdate) {
+        try {
+          modelUpdate(performance.now(), dt);
+        } catch (error) {
+          console.warn("[wafer-rig] procedural model update failed", error);
+          modelUpdate = null;
+        }
+      }
       var R = easeRate;
       cur.entry = damp(cur.entry, tgt.entry, R, dt);
       cur.offX = damp(cur.offX, tgt.offX, R, dt);
@@ -1635,6 +1491,7 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e 
         try {
           mount.removeChild(renderer.domElement);
         } catch (_) {}
+        modelUpdate = null;
         if (envTarget) envTarget.dispose();
         if (renderer.renderLists) renderer.renderLists.dispose();
         renderer.dispose();
@@ -2219,41 +2076,6 @@ function makeAmbientAtlas(labels, THREE) {
     cells: cells,
     cropRatio: cropH / 128
   };
-}
-var ASCII_CHAR_W = 5.4;
-var ASCII_CHAR_H = 9.5;
-var ASCII_RAMP = " .·:-=+*#%@";
-function asciiBody(project, screen) {
-  var cols = Math.max(14, Math.floor(screen.w / ASCII_CHAR_W));
-  var rows = Math.max(10, Math.floor(screen.h / ASCII_CHAR_H));
-  var out = [];
-  var t1 = "■ " + project.addr;
-  var t2 = project.year.toUpperCase();
-  var headerSpace = Math.max(1, cols - t1.length - t2.length);
-  out.push((t1 + " ".repeat(headerSpace) + t2).slice(0, cols));
-  out.push("─".repeat(cols));
-  var innerR = Math.max(2, rows - 6);
-  var seed = project.addr.charCodeAt(2) + project.addr.charCodeAt(3);
-  for (var r = 0; r < innerR; r++) {
-    var line = "";
-    for (var c = 0; c < cols; c++) {
-      var cx = (cols - 1) / 2;
-      var cy = (innerR - 1) / 2;
-      var dx = (c - cx) / (cx || 1);
-      var dy = (r - cy) / (cy || 1);
-      var d = Math.sqrt(dx * dx * 0.5 + dy * dy);
-      var n = Math.sin(c * 0.5 + r * 0.7 + seed) * 0.15;
-      var v = Math.max(0, Math.min(1, 1 - d * 1.1 + n));
-      var idx = Math.floor(v * (ASCII_RAMP.length - 1));
-      line += ASCII_RAMP[idx];
-    }
-    out.push(line);
-  }
-  out.push("─".repeat(cols));
-  out.push(project.name.toUpperCase().slice(0, cols).padEnd(cols, " "));
-  out.push(project.sub.slice(0, cols).padEnd(cols, " "));
-  out.push("OPEN →".padEnd(cols, " "));
-  return out.slice(0, rows).join("\n");
 }
 function Universe(_ref) {
   var _ref$projects = _ref.projects,

@@ -10,11 +10,15 @@
      window.PAGE_CONFIG = {
        addr: "0x04",
        docTitle: "Tactical Flashlight — Maslov Oleksandr",
-       hero: {                      // passed to makeWaferRig
-         model: "models/x.glb",     //   GLB path …
-         buildModel: (THREE)=>grp,  //   … or procedural builder
-         pose: { x, y, z },         //   rest orientation override
-         modelFit: 4.1, matcap: true,
+       hero: {                        // passed to makeWaferRig
+         model: "models/x.glb",       //   GLB path …
+         buildModel: (THREE)=>grp,    //   … or procedural builder, which may
+                                      //   return { group, update } to tick
+                                      //   inside the rig's own loop
+         pose: { x, y, z },           //   rest orientation override
+         modelFit: 2.1,               //   longest edge; omit for the rig's 4.0
+         assignMaterial: { … },       //   ONLY for a GLB with no materials
+         keepMaterials: true,         //   ONLY for a procedural hero
        },
        photoSrc: "app/projects/components/wafer-sample.webp",
        demo: {                      // bespoke PLAY DEMO …
@@ -346,7 +350,13 @@ function ProjectPageApp() {
       buildModel: H.buildModel,
       pose: H.pose,
       modelFit: H.modelFit,
-      matcap: H.matcap,
+      // Material route for the shared solid rig. assignMaterial is for a GLB
+      // that ships none of its own; keepMaterials is for a procedural hero
+      // that authored its own. Both MUST be forwarded — a hero config that
+      // sets one and is not passed it renders flat white or gets its
+      // materials cloned out from under its own per-frame code.
+      assignMaterial: H.assignMaterial,
+      keepMaterials: H.keepMaterials,
     });
     rigRef.current = rig;
     window.__pageRig = rig;
@@ -474,7 +484,6 @@ function ProjectPageApp() {
 
   return (
     <>
-      <FibGrid />
       <Cursor />
 
       <div className="hv-stage"><div className="hv-stage__mount" ref={stageRef} /></div>

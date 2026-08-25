@@ -145,117 +145,6 @@
     return box;
   };
 
-  /* ============================================================
-     Procedural matcap — dark-chrome with a subtle signal-teal rim
-     ============================================================
-     Generated as a canvas texture so we don't have to ship a PNG.
-     Returns the same THREE.CanvasTexture on every call (cached).
-     Swap for a real .png later by replacing the canvas data. */
-  let _matcapTexture = null;
-  window.makeMatcapTexture = function (THREE) {
-    if (_matcapTexture) return _matcapTexture;
-    const SZ = 256;
-    const c = document.createElement("canvas");
-    c.width = c.height = SZ;
-    const x = c.getContext("2d");
-
-    // Base sphere lighting — bright top-left, dark bottom-right
-    const grad = x.createRadialGradient(
-      SZ * 0.34, SZ * 0.30, SZ * 0.04,
-      SZ * 0.50, SZ * 0.50, SZ * 0.62,
-    );
-    grad.addColorStop(0.00, "#f4f6fa");
-    grad.addColorStop(0.18, "#9aa3b3");
-    grad.addColorStop(0.45, "#3a4250");
-    grad.addColorStop(0.78, "#161a22");
-    grad.addColorStop(1.00, "#05070b");
-    x.fillStyle = grad;
-    x.beginPath(); x.arc(SZ / 2, SZ / 2, SZ / 2, 0, Math.PI * 2); x.fill();
-
-    // Signal-teal rim — picks up the silhouette edge
-    const rim = x.createRadialGradient(
-      SZ / 2, SZ / 2, SZ * 0.42,
-      SZ / 2, SZ / 2, SZ / 2,
-    );
-    rim.addColorStop(0.00, "rgba(0, 240, 200, 0)");
-    rim.addColorStop(0.82, "rgba(0, 240, 200, 0)");
-    rim.addColorStop(0.97, "rgba(0, 240, 200, 0.55)");
-    rim.addColorStop(1.00, "rgba(0, 240, 200, 0)");
-    x.fillStyle = rim;
-    x.beginPath(); x.arc(SZ / 2, SZ / 2, SZ / 2, 0, Math.PI * 2); x.fill();
-
-    // Specular hot-spot
-    const spec = x.createRadialGradient(
-      SZ * 0.32, SZ * 0.26, 0,
-      SZ * 0.32, SZ * 0.26, SZ * 0.18,
-    );
-    spec.addColorStop(0.0, "rgba(255,255,255,0.85)");
-    spec.addColorStop(1.0, "rgba(255,255,255,0)");
-    x.fillStyle = spec;
-    x.beginPath(); x.arc(SZ / 2, SZ / 2, SZ / 2, 0, Math.PI * 2); x.fill();
-
-    const tex = new THREE.CanvasTexture(c);
-    tex.colorSpace = THREE.SRGBColorSpace;
-    tex.needsUpdate = true;
-    _matcapTexture = tex;
-    return tex;
-  };
-
-  /* Walk a loaded GLB scene and replace every mesh with LineSegments built
-     from its EdgesGeometry. Preserves the local transforms (position /
-     rotation / scale) so the line-converted model occupies the exact same
-     space as the original mesh. Used by the page-entry FlyInOverlay to keep
-     the existing line-style intro while showing the real model shape. */
-  window.applyWireframeToModel = function (root, THREE, opts = {}) {
-    const color     = opts.color     ?? SIGNAL;
-    const opacity   = opts.opacity   ?? 0.9;
-    const threshold = opts.threshold ?? 25;       // hard-edge angle threshold
-
-    // Collect first, mutate after — modifying a tree while traversing it is bad.
-    const meshes = [];
-    root.traverse((obj) => { if (obj.isMesh) meshes.push(obj); });
-
-    for (const m of meshes) {
-      if (!m.geometry) continue;
-      const edges = new THREE.EdgesGeometry(m.geometry, threshold);
-      const mat = new THREE.LineBasicMaterial({
-        color, transparent: true, opacity, depthWrite: false,
-      });
-      const line = new THREE.LineSegments(edges, mat);
-      line.position.copy(m.position);
-      line.quaternion.copy(m.quaternion);
-      line.scale.copy(m.scale);
-      const parent = m.parent;
-      if (parent) {
-        parent.add(line);
-        parent.remove(m);
-      }
-      // dispose the original mesh's GPU resources — we're replacing them
-      m.geometry.dispose();
-      if (m.material && m.material.dispose) m.material.dispose();
-    }
-  };
-
-  /* Walk a loaded GLB scene and replace every mesh's material with a
-     shared MeshMatcapMaterial. Used for the small universe-card overlays
-     where we want a consistent, performance-friendly look across all 12
-     cards regardless of how the model was textured in Spline. */
-  window.applyMatcapToModel = function (root, THREE) {
-    const matcap = window.makeMatcapTexture(THREE);
-    root.traverse((obj) => {
-      if (!obj.isMesh) return;
-      // dispose previous material (Spline export) to avoid GPU leaks
-      const prev = obj.material;
-      obj.material = new THREE.MeshMatcapMaterial({
-        matcap,
-        transparent: true,
-        opacity: 1,
-        depthWrite: true,
-      });
-      if (prev && prev.dispose) prev.dispose();
-    });
-  };
-
   /* ---------- geometry per primitive kind ---------- */
   function makePrimitiveGeometry(kind, THREE) {
     switch (kind) {
@@ -322,7 +211,6 @@
     if (kind === "torus") mesh.rotation.set(Math.PI * 0.32, 0.4, 0);
     if (kind === "slab")  mesh.rotation.set(0.22, 0.6, 0);
   }
-  window.orientPrimitive = orientForKind;
 
   /* ============================================================
      React component — <ProjectViewer3D primitive=... dims=... />

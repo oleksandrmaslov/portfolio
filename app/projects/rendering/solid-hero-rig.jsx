@@ -1,7 +1,13 @@
 /* ============================================================
-   M.O. SYSTEM — Solid-material project hero rig
+   M.O. SYSTEM — Project hero rig
    ------------------------------------------------------------
-   Production GLB rig shared by the landing handoff and Wafer page.
+   THE project hero rig: every project route and the landing handoff
+   run this one. It absorbed basic-hero-rig.jsx, which was a fork of
+   this file differing only in its lighting, its matcap material pass
+   and its pose/modelFit defaults — so four routes drew their hero
+   dimmer and flatter than the rest for no stated reason. If a model
+   needs different handling, give it an OPTION here; do not fork the
+   rig again.
    Same renderer/scene/camera + the canonical arrival pose so the
    landing→page seam stays one continuous shot — but:
 
@@ -14,7 +20,10 @@
      · lighting is pushed a little harder so the near-black
        anodized metal is defined by the key + signal rim.
 
-   Primitive and material-preserving models use separate semantic rigs.
+   Material route, in priority order:
+     assignMaterial → a GLB that ships none of its own (the flashlight)
+     keepMaterials  → a procedural hero that authored its own (Kerfur)
+     default        → real GLB materials, tuned to read on the void
    ============================================================ */
 (function () {
   const SIGNAL = 0x00f0c8;
@@ -110,14 +119,21 @@
     /* explode bookkeeping — per-mesh base local position + out vector */
     const parts = [];
     let modelReady = false;
+    let modelUpdate = null;
 
     function ingest(root) {
       window.fitModelToSize(root, THREE, opts.modelFit || RIG.modelFit);
-      // NO matcap. Keep the model's real materials (just make them read on the
-      // void); material-less models get a solid house material instead.
+      // NO matcap. Three material paths, in priority order:
+      //   assignMaterial  → material-less GLB gets one solid house material
+      //   keepMaterials   → procedural hero authored its own; leave it alone
+      //   default         → real GLB materials, nudged to read on the void
+      // keepMaterials exists because tuneRealMaterials clones every material
+      // and raises envMapIntensity. A procedural body was lit without an
+      // environment, so that both washes it out and hands the builder's own
+      // per-frame code a material object the scene no longer draws.
       if (opts.assignMaterial && window.applySolidMaterials) {
         window.applySolidMaterials(root, THREE, opts.assignMaterial);
-      } else if (window.tuneRealMaterials) {
+      } else if (opts.keepMaterials !== true && window.tuneRealMaterials) {
         window.tuneRealMaterials(root, THREE, { envMapIntensity: 1.9 });
       }
       holder.add(root);
@@ -139,7 +155,17 @@
     }
 
     if (typeof opts.buildModel === "function") {
-      try { ingest(opts.buildModel(THREE)); }
+      // Procedural hero (no GLB yet). A builder may return a bare Object3D, or
+      // a { group, update } descriptor whose update runs inside THIS rig's
+      // loop — so it inherits the shared visibility gate instead of holding a
+      // second permanent RAF open for the lifetime of the page.
+      try {
+        const built = opts.buildModel(THREE);
+        if (built && built.group && built.group.isObject3D) {
+          modelUpdate = typeof built.update === "function" ? built.update : null;
+          ingest(built.group);
+        } else ingest(built);
+      }
       catch (e) { console.warn("[wafer-rig] buildModel failed", e); }
     } else if (window.loadProjectModel) {
       window.loadProjectModel(modelUrl, THREE)
@@ -191,6 +217,13 @@
 
     function update(dt) {
       dt = Math.min(50, dt);
+      if (modelUpdate) {
+        try { modelUpdate(performance.now(), dt); }
+        catch (error) {
+          console.warn("[wafer-rig] procedural model update failed", error);
+          modelUpdate = null;
+        }
+      }
       const R = easeRate;
       cur.entry   = damp(cur.entry,   tgt.entry,   R, dt);
       cur.offX    = damp(cur.offX,    tgt.offX,    R, dt);
@@ -286,6 +319,7 @@
       get explode() { return tgt.explode; },
       dispose() {
         try { mount.removeChild(renderer.domElement); } catch (_) {}
+        modelUpdate = null;
         if (envTarget) envTarget.dispose();
         if (renderer.renderLists) renderer.renderLists.dispose();
         renderer.dispose();

@@ -51,34 +51,6 @@ function applyHeroLayout(rig) {
    Reused long-form sections shared with the canonical project pages;
    app/projects/styles/base.css styles them consistently.
    ============================================================ */
-function PhotoHolder({ caption, label = "PHOTO · PLACEHOLDER", id }) {
-  return (
-    <figure className="ph">
-      <div className="ph__chrome">
-        <span className="ph__chromeDot" />
-        <span>{label}</span>
-        <span className="ph__chromeSep" />
-        <span>{id || "—"}</span>
-      </div>
-      <div className="ph__photo">
-        <div className="ph__phStripes" />
-        <div className="ph__phCorner ph__phCorner--tl" />
-        <div className="ph__phCorner ph__phCorner--tr" />
-        <div className="ph__phCorner ph__phCorner--bl" />
-        <div className="ph__phCorner ph__phCorner--br" />
-        <div className="ph__phCross" />
-        <div className="ph__phNote">[ drop image · 4:5 · jpg ]</div>
-      </div>
-      {caption && (
-        <figcaption className="ph__cap">
-          <span className="ph__capK">CAP</span>
-          <span className="ph__capV">{caption}</span>
-        </figcaption>
-      )}
-    </figure>
-  );
-}
-
 /* "1 CLIPS" reads like a bug. Count only what a story actually contains and
    agree the noun with it. */
 function pcStoryMeta(project) {
@@ -461,7 +433,6 @@ function WaferProjectApp() {
 
   return (
     <>
-      <FibGrid />
       <Cursor />
 
       {/* persistent model stage (behind content; raised during inspect) */}

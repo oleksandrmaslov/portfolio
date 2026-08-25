@@ -7,7 +7,6 @@ const { useState: useStateA, useEffect: useEffectA } = React;
 function App() {
   return (
     <>
-      <FibGrid />
       <Cursor />
       <Shell />
       <main className="page">

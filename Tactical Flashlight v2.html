@@ -49,7 +49,7 @@
   <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" integrity="sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 
-  <!-- Shared system (FibGrid, Cursor) -->
+  <!-- Shared system (Cursor, shell) -->
   <script type="text/babel" data-presets="env,react" src="app/shared/core.jsx"></script>
 
   <!-- PLAY DEMO · field sound core + torch palette + procedural torch + controller -->
@@ -64,7 +64,8 @@
   <!-- Project pieces -->
   <script type="text/babel" data-presets="env,react" src="app/projects/data.jsx"></script>
   <script type="text/babel" data-presets="env,react" src="app/projects/rendering/model-viewer.jsx"></script>
-  <script type="text/babel" data-presets="env,react" src="app/projects/rendering/basic-hero-rig.jsx"></script>
+  <script src="app/projects/rendering/solid-materials.js"></script>
+  <script type="text/babel" data-presets="env,react" src="app/projects/rendering/solid-hero-rig.jsx"></script>
   <script type="text/babel" data-presets="env,react" src="app/projects/components/tweak-panel.jsx"></script>
   <script type="text/babel" data-presets="env,react" src="app/projects/components/ascii-photo.jsx"></script>
   <script type="text/babel" data-presets="env,react" src="demo/torch-hud.jsx"></script>
@@ -76,6 +77,16 @@
       docTitle: "Ci-Clop — Maslov Oleksandr",
       hero: {
         model: "models/tactical_flashlight.glb",
+        /* This GLB ships no materials at all — 7 meshes, 0 materials — so it
+           takes the house solid instead of the real-material tuner. Without
+           it the shared rig draws flat white. The spec is the one the landing
+           flight already feeds 0x04 (assignMaterial for 0x04 in
+           app/data/projects.js) — keep the two equal or the seam changes
+           colour mid-flight. */
+        assignMaterial: { color: 0x4b5a32, metalness: 0.28, roughness: 0.62 },
+        /* modelFit is deliberately absent: the shared rig's 4.0 default is
+           what rigFit for 0x04 in app/data/projects.js already claims to
+           match. The retired rig defaulted to 4.1, so that claim was false. */
         pose: { x: 0.5, y: 0.35, z: -0.5 },   // lies at a ready angle, head toward camera
       },
       demo: {

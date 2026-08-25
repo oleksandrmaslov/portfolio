@@ -2,88 +2,6 @@
    M.O. SYSTEM — Shared components
    ============================================================ */
 
-/* ============================================================
-   FIB GRID — Fibonacci column overlay
-   ============================================================ */
-.fibGrid {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 2;
-  opacity: 0;
-  transition: opacity var(--d-base) var(--e-out);
-}
-.fibGrid--on { opacity: 1; }
-
-.fibGrid__rails {
-  position: absolute;
-  inset: 0;
-  margin: 0 auto;
-  max-width: var(--w-canvas);
-  padding: 0 var(--s-7);
-}
-.fibGrid__v {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 2px;
-  background: var(--signal);
-  opacity: 0.65;
-  box-shadow: 0 0 10px var(--signal-glow);
-}
-.fibGrid__v::after {
-  content: "";
-  position: absolute;
-  top: 0; bottom: 0; left: 50%;
-  width: 1px;
-  background: var(--signal);
-  box-shadow: 0 0 14px var(--signal);
-  opacity: 0.8;
-  transform: translateX(-50%);
-}
-.fibGrid__h {
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: var(--signal);
-  opacity: 0.45;
-  box-shadow: 0 0 8px var(--signal-glow);
-}
-.fibGrid__tick {
-  position: absolute;
-  top: 78px;
-  left: 8px;
-  font-family: var(--ff-mono);
-  font-size: var(--fs-meta);
-  font-weight: 500;
-  letter-spacing: var(--tr-wider);
-  color: var(--signal);
-  opacity: 0.95;
-  text-shadow: 0 0 10px var(--signal-glow);
-}
-.fibGrid__legend {
-  position: fixed;
-  bottom: var(--s-6);
-  left: var(--s-7);
-  display: flex;
-  align-items: center;
-  gap: var(--s-4);
-  font-family: var(--ff-mono);
-  font-size: var(--fs-micro);
-  letter-spacing: var(--tr-caps);
-  text-transform: uppercase;
-  color: var(--signal);
-  opacity: 0;
-  transition: opacity var(--d-base);
-}
-.fibGrid--on .fibGrid__legend { opacity: 1; }
-.fibGrid__legendDot {
-  width: 6px; height: 6px; border-radius: 50%;
-  background: var(--signal);
-  box-shadow: 0 0 10px var(--signal);
-}
-
 /* keyboard hint in the shell */
 .shell__hint {
   font-family: var(--ff-mono);
@@ -95,30 +13,6 @@
   border-left: 1px solid var(--hairline);
   margin-left: var(--s-3);
 }
-
-/* volume toggle — equalizer bars (replaces the grid hint) */
-.volBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  cursor: pointer;
-  background: none;
-  border: 0;
-  padding: 0 0 0 var(--s-4);
-  border-left: 1px solid var(--hairline);
-  margin-left: var(--s-3);
-  font-family: var(--ff-mono);
-  font-size: var(--fs-micro);
-  letter-spacing: var(--tr-caps);
-  text-transform: uppercase;
-  color: var(--ghost);
-  transition: color var(--d-fast);
-}
-.volBtn:hover { color: var(--signal); }
-.volBtn.is-on { color: var(--signal); }
-.volBtn__wave { display: block; overflow: visible; opacity: 0.85; transition: opacity var(--d-fast); }
-.volBtn.is-off .volBtn__wave { opacity: 0.5; }
-.volBtn:hover .volBtn__wave { opacity: 1; }
 
 /* ============================================================
    HERO — updated stage with 3D bus
@@ -306,12 +200,8 @@
 .photoTile__year  { color: var(--ghost); }
 
 /* ============================================================
-   ALIGN TO FIB GRID — section-head matches column 1+2 of grid
+   SECTION HEAD — proportional side columns
    ============================================================ */
-/* Existing section__head columns are 144px / 1fr / 144px which
-   roughly map onto the Fib grid's column 1 (3%) and final column.
-   No structural change needed — but here's a small numeric tweak
-   to bring it closer. */
 .section__head {
   grid-template-columns: minmax(120px, 9.9%) 1fr minmax(120px, 9.9%);
 }
@@ -323,5 +213,4 @@
   .photoGrid { grid-template-columns: 1fr; }
   .hero__stage { grid-template-columns: 1fr; }
   .hero__stageBus { aspect-ratio: 4 / 3; }
-  .fibGrid { display: none; }
 }

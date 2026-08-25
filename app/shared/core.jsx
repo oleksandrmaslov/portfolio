@@ -2,7 +2,7 @@
    M.O. SYSTEM — Shared site core (boot, grid, cursor, shell)
    ============================================================ */
 
-const { useState, useEffect, useRef, useMemo, useCallback } = React;
+const { useState, useEffect, useRef } = React;
 
 /* A page restored from the back/forward cache keeps the exact DOM and global
    flags it had at navigation time. Clear one-way exit state before the saved
@@ -48,53 +48,6 @@ const { useState, useEffect, useRef, useMemo, useCallback } = React;
     if (urls.size) window.preloadModels(Array.from(urls));
   }, 0);
 })();
-
-/* ============================================================
-   FIB GRID — proportional column overlay (press G to reveal)
-   ============================================================ */
-function FibGrid() {
-  const [on, setOn] = useState(false);
-
-  useEffect(() => {
-    const onKey = (e) => {
-      if (e.key !== "g" && e.key !== "G") return;
-      if (e.target && /input|textarea/i.test(e.target.tagName || "")) return;
-      setOn(v => !v);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
-
-  // Fibonacci column widths — content aligns to cumulative percentages.
-  const cols = [1, 1, 2, 3, 5, 8, 13];
-  const total = cols.reduce((a, b) => a + b, 0);
-  let acc = 0;
-  const verticals = cols.slice(0, -1).map(c => { acc += c; return acc / total * 100; });
-
-  const rows = [1, 2, 3, 5, 8, 13];
-  const totalR = rows.reduce((a, b) => a + b, 0);
-  let accR = 0;
-  const horizontals = rows.slice(0, -1).map(r => { accR += r; return accR / totalR * 100; });
-
-  return (
-    <div className={"fibGrid " + (on ? "fibGrid--on" : "")} aria-hidden="true">
-      <div className="fibGrid__rails">
-        {verticals.map((v, i) => (
-          <div key={"v" + i} className="fibGrid__v" style={{ left: v + "%" }}>
-            <span className="fibGrid__tick">{cols[i]}</span>
-          </div>
-        ))}
-        {horizontals.map((h, i) => (
-          <div key={"h" + i} className="fibGrid__h" style={{ top: h + "%" }} />
-        ))}
-      </div>
-      <div className="fibGrid__legend">
-        <span className="fibGrid__legendDot" />
-        <span>FIB GRID · {on ? "VISIBLE" : "PRESS G"}</span>
-      </div>
-    </div>
-  );
-}
 
 /* ============================================================
    CURSOR — adaptive probe
@@ -244,12 +197,10 @@ function Shell() {
       <div className="shell__status">
         <span className="shell__dot" />
         <span>ONLINE · MUC · {time}</span>
-        <span className="shell__hint">[G] grid</span>
       </div>
     </header>
   );
 }
 
-window.FibGrid = FibGrid;
 window.Cursor = Cursor;
 window.Shell = Shell;

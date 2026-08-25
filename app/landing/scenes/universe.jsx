@@ -298,48 +298,6 @@ function makeAmbientAtlas(labels, THREE) {
 }
 
 /* ============================================================
-   Hover ASCII helpers
-   ============================================================ */
-const ASCII_CHAR_W = 5.4;
-const ASCII_CHAR_H = 9.5;
-const ASCII_RAMP   = " .·:-=+*#%@";
-
-function asciiBody(project, screen) {
-  const cols = Math.max(14, Math.floor(screen.w / ASCII_CHAR_W));
-  const rows = Math.max(10, Math.floor(screen.h / ASCII_CHAR_H));
-
-  const out = [];
-  const t1 = "■ " + project.addr;
-  const t2 = project.year.toUpperCase();
-  const headerSpace = Math.max(1, cols - t1.length - t2.length);
-  out.push((t1 + " ".repeat(headerSpace) + t2).slice(0, cols));
-  out.push("─".repeat(cols));
-
-  const innerR = Math.max(2, rows - 6);
-  const seed = project.addr.charCodeAt(2) + project.addr.charCodeAt(3);
-  for (let r = 0; r < innerR; r++) {
-    let line = "";
-    for (let c = 0; c < cols; c++) {
-      const cx = (cols - 1) / 2;
-      const cy = (innerR - 1) / 2;
-      const dx = (c - cx) / (cx || 1);
-      const dy = (r - cy) / (cy || 1);
-      const d = Math.sqrt(dx * dx * 0.5 + dy * dy);
-      const n = Math.sin(c * 0.5 + r * 0.7 + seed) * 0.15;
-      const v = Math.max(0, Math.min(1, 1 - d * 1.1 + n));
-      const idx = Math.floor(v * (ASCII_RAMP.length - 1));
-      line += ASCII_RAMP[idx];
-    }
-    out.push(line);
-  }
-  out.push("─".repeat(cols));
-  out.push(project.name.toUpperCase().slice(0, cols).padEnd(cols, " "));
-  out.push(project.sub.slice(0, cols).padEnd(cols, " "));
-  out.push("OPEN →".padEnd(cols, " "));
-  return out.slice(0, rows).join("\n");
-}
-
-/* ============================================================
    Universe — wrapping infinite torus space
    ============================================================ */
 function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = null }) {
@@ -948,7 +906,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
 
       // ---- per-tile 3D overlay
       // Two paths:
-      //   (a) project has a `model` URL → load the GLB, apply matcap, drop it in
+      //   (a) project has a `model` URL → load the GLB with its real materials
       //   (b) otherwise → procedural wireframe primitive as before
       // Both paths register a single "wire" entry in tileWires so the existing
       // follow/rotate/visibility logic in the frame loop works unchanged.
@@ -2488,13 +2446,13 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         const tileOp = parent.material.opacity;
         const overlayOp = Math.min(0.95, tileOp * 1.15);
         if (isModel) {
-          // Loaded GLB — fade every matcap material in the subtree, and hide
+          // Loaded GLB — fade every material in the subtree, and hide
           // the whole group below a threshold so we don't pay for invisible draws.
           if (wire.userData.loaded) {
             // Soft fade-in from the moment the GLB lands, so the model eases up
             // instead of popping (the parent tile may already be fully visible).
             const mFade = THREE.MathUtils.smoothstep(now - (wire.userData.loadedAt || now), 0, 600);
-            // Per request: loaded matcap models render FULLY SOLID at rest —
+            // Per request: loaded GLB models render FULLY SOLID at rest —
             //  (1) no 0.95 cap (use the full distance opacity, clamped to 1), and
             //  (2) no mode dimming (use the tile's pre-dim base opacity).
             // Distance fade and the load fade-in are preserved.
@@ -2601,7 +2559,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
           farOut  = THREE.MathUtils.smoothstep(dist, 34, 48);
         }
         let opacity = nearIn * (1 - farOut);
-        // Loaded matcap models intentionally ignore mode dimming (per request):
+        // Loaded GLB models intentionally ignore mode dimming (per request):
         // capture the distance-only opacity BEFORE the ambient/grid multipliers so
         // models read equally solid in every mode. Focus is applied below to both.
         let modelOpacityBase = opacity;
