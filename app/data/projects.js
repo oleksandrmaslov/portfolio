@@ -25,7 +25,7 @@
     {
       addr: "0x01", slug: "wafer", name: "Wafer",
       nodeClass: "OBJECT", state: "WORKING PROTOTYPE", featured: true,
-      file: "Wafer v3.html",
+      file: "Wafer.html",
       statement: "An ultrathin wireless split keyboard built as one complete portable product system.",
       short: "Ultrathin wireless split keyboard",
       tags: ["Hardware", "ZMK", "Zephyr", "Product Design"],
@@ -41,7 +41,7 @@
     {
       addr: "0x02", slug: "kerfur", name: "Kerfur",
       nodeClass: "BEHAVIORAL OBJECT", state: "ACTIVE DEVELOPMENT", featured: true,
-      file: "Kerfur v2.html",
+      file: "Kerfur.html",
       statement: "A networked embedded companion inspired by Voices of the Void.",
       short: "Networked embedded companion",
       tags: ["Hardware", "Zephyr", "BLE", "Open Source"],
@@ -50,7 +50,7 @@
     {
       addr: "0x03", slug: "iskra", name: "Iskra",
       nodeClass: "PRODUCTION SYSTEM", state: "ACTIVE", featured: true,
-      file: "Iskra v3.html",
+      file: "Iskra.html",
       statement: "A guided flashing environment for people who should never need a command line or toolchain.",
       short: "Guided flashing environment",
       tags: ["Firmware", "Desktop", "Volunteer", "Open Source"],
@@ -64,13 +64,13 @@
     {
       addr: "0x04", slug: "ci-clop", name: "Ci-Clop",
       nodeClass: "EMBEDDED HARDWARE", state: "WORKING PROTOTYPE", featured: true,
-      file: "Tactical Flashlight v2.html",
+      file: "Ci-Clop.html",
       statement: "A tactical light interface designed for immediate control under stress.",
       short: "Tactical light interface",
       tags: ["Hardware", "Firmware", "Volunteer"],
       model: mdl({
-        ready: true, src: "models/tactical_flashlight.glb", proxy: null,
-        rigFit: 4.0,   // matches this project's page hero
+        ready: true, src: "models/ci-clop-mark.glb", proxy: null,
+        rigFit: 2.6,   // matches this project's page hero
         rigPose: { x: 0, y: 0, z: 1.5708 },
         cardPose: { scale: 1, yaw: 0.6, pitch: 0.1, offsetY: 0, fit: 1.25, pose: { x: 0, y: 0, z: 1.5708 } },
         assignMaterial: { color: 0x4b5a32, metalness: 0.28, roughness: 0.62 },
@@ -102,9 +102,9 @@
       }),
     },
     {
-      addr: "0x07", slug: "zmk-split-hid", name: "ZMK Split HID Display",
+      addr: "0x07", slug: "zmk-split-hid", name: "Split HID Display",
       nodeClass: "FIRMWARE SYSTEM", state: "ACTIVE", featured: true,
-      file: "Split HID Display v2.html",
+      file: "Split HID Display.html",
       statement: "Host information synchronized across both halves of a wireless split keyboard.",
       short: "Split-synchronized host display",
       tags: ["ZMK", "Zephyr", "Displays"],
@@ -116,9 +116,9 @@
       }),
     },
     {
-      addr: "0x08", slug: "zmk-pointaccel", name: "ZMK Pointing Acceleration",
+      addr: "0x08", slug: "zmk-pointaccel", name: "ZMK PointAccel",
       nodeClass: "OPEN-SOURCE MODULE", state: "ACTIVE", featured: false,
-      file: "ZMK-PointAccel v2.html",
+      file: "ZMK-PointAccel.html",
       statement: "Configurable acceleration curves for embedded pointing devices.",
       short: "Pointer acceleration module",
       tags: ["ZMK", "Zephyr", "Open Source"],

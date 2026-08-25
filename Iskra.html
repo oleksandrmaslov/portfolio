@@ -57,7 +57,7 @@
   <script src="app/projects/components/ascii-photo.js"></script>
 
   <!-- Project pieces -->
-  <script type="text/babel" data-presets="env,react" src="app/projects/data.jsx"></script>
+  <script type="text/babel" data-presets="env,react" src="app/projects/data.jsx?v=7b6bfa82fd1c"></script>
   <script type="text/babel" data-presets="env,react" src="app/projects/rendering/model-viewer.jsx"></script>
   <script src="app/projects/rendering/solid-materials.js"></script>
   <script type="text/babel" data-presets="env,react" src="app/projects/rendering/solid-hero-rig.jsx"></script>
@@ -74,13 +74,6 @@
         model: "models/iskra-mark.glb",
         modelFit: 2.1,
         pose: { x: -0.2, y: 0, z: 0 },
-      },
-      /* the mark is a wide solid shape — it sits further right and higher than
-         the default so the metrics row and stack meta stay on clean ground. */
-      heroLayout: {
-        desktop: { fracX: 0.46, scale: 0.78, offY: 0.22 },
-        tablet:  { fracX: 0.26, scale: 0.66, offY: 0.30 },
-        mobile:  { fracX: 0,    scale: 0.50, offY: 1.05 },
       },
       link: {
         label: "VIEW ON GITHUB",

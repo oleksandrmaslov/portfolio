@@ -2593,11 +2593,6 @@ function Universe(_ref) {
         tileWires.push(wire);
       }
     });
-    var GRID_COLS = 4;
-    var GRID_ROWS = 3;
-    var GRID_SPACING_X = 5.4;
-    var GRID_SPACING_Y = 4.3;
-    var GRID_Z = -16;
     var tileTargets = projects.map(function () {
       return new THREE.Vector3();
     });
@@ -2608,9 +2603,6 @@ function Universe(_ref) {
     }
     function targetForTile(mode, i, t) {
       var target = tileTargets[i];
-      if (mode === "dive") {
-        return scatter(i, 22, 13, -26, 6);
-      }
       if (mode === "origin") {
         var concept = window.__mo_origin && window.__mo_origin.concept || "assembly";
         var m = tiles[i];
@@ -2648,14 +2640,6 @@ function Universe(_ref) {
           target.lerp(carouselTarget, g * g * (3 - 2 * g));
         }
         return target;
-      }
-      if (mode === "grid") {
-        var col = i % GRID_COLS;
-        var row = Math.floor(i / GRID_COLS);
-        return target.set((col - (GRID_COLS - 1) / 2) * GRID_SPACING_X, ((GRID_ROWS - 1) / 2 - row) * GRID_SPACING_Y, GRID_Z);
-      }
-      if (mode === "ambient") {
-        return scatter(i, 13, 8, -4, 3);
       }
       return null;
     }
@@ -2945,7 +2929,7 @@ function Universe(_ref) {
     function updateTopology(dt, mode, focusAddrNow, formP, arrFade) {
       var fx = window.__mo_fx.topology != null ? window.__mo_fx.topology : 1;
       var gatherG = mode === "reel" ? Math.max(0, Math.min(1, ((window.__mo_reel || {}).pos || 0) - MO_FEATURED.length)) : 0;
-      var modeVis = mode === "drift" ? 1 : mode === "reel" ? 0.6 + gatherG * 0.9 : mode === "grid" ? 0.5 : 0;
+      var modeVis = mode === "drift" ? 1 : mode === "reel" ? 0.6 + gatherG * 0.9 : 0;
       var vis = fx * modeVis * (1 - formP) * arrFade;
       constUniforms.uTime.value = performance.now() % 100000 * 0.001;
       constUniforms.uVis.value = vis;
@@ -3782,7 +3766,7 @@ function Universe(_ref) {
       last = now;
       var mode = modeRef.current;
       var focusAddrNow = focusRef.current;
-      var isArranged = mode === "grid" || mode === "reel" || mode === "ambient" || mode === "origin" || mode === "dive";
+      var isArranged = mode === "reel" || mode === "origin";
       var lvlT = window.MOSound && window.MOSound.getLevel && !window.MOSound.isMuted() ? window.MOSound.getLevel() : 0;
       _lvlS += (lvlT - _lvlS) * (1 - Math.pow(0.86, dt / 16));
       var arrFade = 1,
@@ -3837,7 +3821,7 @@ function Universe(_ref) {
         }, 6000);
       }
       if (mode !== prevMode) {
-        if (mode === "drift" && (prevMode === "grid" || prevMode === "reel" || prevMode === "ambient" || prevMode === "origin" || prevMode === "dive")) {
+        if (mode === "drift" && (prevMode === "reel" || prevMode === "origin")) {
           scatterTiles();
         }
         prevMode = mode;
@@ -4068,29 +4052,23 @@ function Universe(_ref) {
           var _m3 = _step14.value;
           var target = targetForTile(mode, _m3.userData.index, now);
           if (target) {
-            var _rate = mode === "reel" ? 0.18 : mode === "grid" ? 0.055 : 0.025;
+            var _rate = mode === "reel" ? 0.18 : 0.025;
             _m3.position.lerp(target, 1 - Math.pow(1 - _rate, dt / 16));
           }
           _lookM.lookAt(camera.position, _m3.position, camera.up);
           _baseQ.setFromRotationMatrix(_lookM);
-          var offFactor = mode === "grid" || mode === "reel" ? 0.15 : 1.0;
+          var offFactor = mode === "reel" ? 0.15 : 1.0;
           _euler.set(_m3.userData.offsetPitch * offFactor, _m3.userData.offsetYaw * offFactor, (_m3.userData.offsetRoll + Math.sin(now * 0.0006 + _m3.userData.wobble.p * 6) * 0.04) * offFactor, "YXZ");
           _offQ.setFromEuler(_euler);
           _baseQ.multiply(_offQ);
-          _m3.quaternion.slerp(_baseQ, frameLerp(mode === "grid" || mode === "reel" ? 0.12 : 0.06, dt));
+          _m3.quaternion.slerp(_baseQ, frameLerp(mode === "reel" ? 0.12 : 0.06, dt));
           var dist = _m3.position.distanceTo(camera.position);
           var nearIn = void 0,
             farOut = void 0;
-          if (mode === "grid") {
-            nearIn = THREE.MathUtils.smoothstep(dist, 2.0, 6.0);
-            farOut = THREE.MathUtils.smoothstep(dist, 26, 40);
-          } else if (mode === "reel") {
+          if (mode === "reel") {
             var rg = Math.max(0, Math.min(1, ((window.__mo_reel || {}).pos || 0) - MO_FEATURED.length));
             nearIn = THREE.MathUtils.smoothstep(dist, 2.0, 6.0);
             farOut = THREE.MathUtils.smoothstep(dist, 13 + rg * 4, 16.5 + rg * 9.5);
-          } else if (mode === "ambient") {
-            nearIn = THREE.MathUtils.smoothstep(dist, 2.5, 6.0);
-            farOut = THREE.MathUtils.smoothstep(dist, 18, 28);
           } else if (mode === "drift") {
             nearIn = THREE.MathUtils.smoothstep(dist, 2.5, 6.0);
             var ex = Math.abs(_m3.position.x - camera.position.x) / (TILE_BOX.x / 2);
@@ -4098,17 +4076,12 @@ function Universe(_ref) {
             var ez = Math.abs(_m3.position.z - camera.position.z) / (TILE_BOX.z / 2);
             var edge = Math.max(ex, ey, ez);
             farOut = THREE.MathUtils.smoothstep(edge, 0.95, 1.0);
-          } else if (mode === "dive") {
-            nearIn = THREE.MathUtils.smoothstep(dist, 2.5, 6.0);
-            farOut = THREE.MathUtils.smoothstep(dist, 20, 32);
           } else {
             nearIn = THREE.MathUtils.smoothstep(dist, 2.5, 6.0);
             farOut = THREE.MathUtils.smoothstep(dist, 34, 48);
           }
           var _opacity = nearIn * (1 - farOut);
           var modelOpacityBase = _opacity;
-          if (mode === "ambient") _opacity *= 0.38;
-          if (mode === "grid") _opacity *= 0.92;
           if (mode === "reel") _opacity *= 0.96;
           var _isFocused = focusAddrNow && _m3.userData.project.addr === focusAddrNow;
           if (_isFocused) {
@@ -4301,25 +4274,8 @@ function Universe(_ref) {
             _iterator18.f();
           }
         }
-        var inDive = mode === "dive";
-        var igE = 0,
-          eD = 0;
-        if (inDive) {
-          var db = window.__mo_dive || {
-            p: 0,
-            igniting: false
-          };
-          var dp = Math.max(0, Math.min(1, db.p || 0));
-          eD = dp < 0.5 ? 2 * dp * dp : 1 - Math.pow(-2 * dp + 2, 2) / 2;
-          if (db.igniting && !db._t0) db._t0 = now;
-          var igT = db._t0 ? Math.max(0, Math.min(1, (now - db._t0) / 720)) : 0;
-          igE = igT * igT;
-        } else if (window.__mo_dive && window.__mo_dive._t0) {
-          window.__mo_dive._t0 = 0;
-          window.__mo_dive.igniting = false;
-        }
         var formTarget = 0;
-        if (inDive) formTarget = 0.35 + eD * 0.65;else if (ob.active && concept !== "hub") formTarget = eP;
+        if (ob.active && concept !== "hub") formTarget = eP;
         formActual += (formTarget - formActual) * frameLerp(0.09, dt);
         if (formActual < 0.0015 && formTarget === 0) formActual = 0;
         var formP = formActual;
@@ -4383,9 +4339,9 @@ function Universe(_ref) {
         } else {
           _glyphC.copy(cam.pos).add(ORIGIN_CENTER);
           var wob = Math.max(0, 1 - formP * 1.2);
-          var assemblyYaw = inDive ? now * 0.00024 : Math.sin(now * 0.00045) * 0.5 * wob;
-          var restYaw = inDive ? 0 : Math.sin(now * 0.00038) * 0.20 * formP;
-          var restPitch = inDive ? 0 : Math.sin(now * 0.00029 + 1.0) * 0.10 * formP;
+          var assemblyYaw = Math.sin(now * 0.00045) * 0.5 * wob;
+          var restYaw = Math.sin(now * 0.00038) * 0.20 * formP;
+          var restPitch = Math.sin(now * 0.00029 + 1.0) * 0.10 * formP;
           var ang = assemblyYaw + restYaw;
           var ca = Math.cos(ang),
             sa = Math.sin(ang);
@@ -4415,17 +4371,11 @@ function Universe(_ref) {
           }
         }
         assemblyPts.geometry.attributes.position.needsUpdate = true;
-        var fieldOp = mode === "ambient" || mode === "grid" || mode === "reel" ? 0.34 : 0.55;
-        assemblyPts.material.opacity = Math.min(1, Math.max(fieldOp, 0.2 + formP * 0.8) + igE * 0.4 + arrCollapse * 0.45 + _lvlS * 0.16);
-        assemblyPts.material.size = 0.1 + formP * 0.015 + igE * 0.5 + arrCollapse * 0.07 + _lvlS * 0.04;
-        if (inDive) {
-          assemblyGroup.position.set(0, 1.5, igE * (Math.abs(ORIGIN_CENTER.z) + 6));
-          var gs = 1 + igE * 4.5;
-          assemblyGroup.scale.set(gs, gs, gs);
-        } else {
-          assemblyGroup.position.set(0, 0, 0);
-          assemblyGroup.scale.set(1, 1, 1);
-        }
+        var fieldOp = mode === "reel" ? 0.34 : 0.55;
+        assemblyPts.material.opacity = Math.min(1, Math.max(fieldOp, 0.2 + formP * 0.8) + arrCollapse * 0.45 + _lvlS * 0.16);
+        assemblyPts.material.size = 0.1 + formP * 0.015 + arrCollapse * 0.07 + _lvlS * 0.04;
+        assemblyGroup.position.set(0, 0, 0);
+        assemblyGroup.scale.set(1, 1, 1);
         var debugState = window.__mo_debug || (window.__mo_debug = {});
         debugState.mode = mode;
         debugState.active = !!ob.active;

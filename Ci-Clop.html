@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Ci-Clop — Maslov Oleksandr</title>
-  <meta name="description" content="Tactical Flashlight · project case file · Maslov Oleksandr · volunteer firmware · PY32F002A · Energy for Ukraine." />
+  <meta name="description" content="Ci-Clop · project case file · Maslov Oleksandr · volunteer firmware · PY32F002A · Energy for Ukraine." />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -62,7 +62,7 @@
   <script src="app/projects/components/ascii-photo.js"></script>
 
   <!-- Project pieces -->
-  <script type="text/babel" data-presets="env,react" src="app/projects/data.jsx"></script>
+  <script type="text/babel" data-presets="env,react" src="app/projects/data.jsx?v=7b6bfa82fd1c"></script>
   <script type="text/babel" data-presets="env,react" src="app/projects/rendering/model-viewer.jsx"></script>
   <script src="app/projects/rendering/solid-materials.js"></script>
   <script type="text/babel" data-presets="env,react" src="app/projects/rendering/solid-hero-rig.jsx"></script>
@@ -76,7 +76,7 @@
       addr: "0x04",
       docTitle: "Ci-Clop — Maslov Oleksandr",
       hero: {
-        model: "models/tactical_flashlight.glb",
+        model: "models/ci-clop-mark.glb",
         /* This GLB ships no materials at all — 7 meshes, 0 materials — so it
            takes the house solid instead of the real-material tuner. Without
            it the shared rig draws flat white. The spec is the one the landing
@@ -84,9 +84,12 @@
            app/data/projects.js) — keep the two equal or the seam changes
            colour mid-flight. */
         assignMaterial: { color: 0x4b5a32, metalness: 0.28, roughness: 0.62 },
-        /* modelFit is deliberately absent: the shared rig's 4.0 default is
-           what rigFit for 0x04 in app/data/projects.js already claims to
-           match. The retired rig defaulted to 4.1, so that claim was false. */
+        /* The rig's 4.0 default is Wafer's — a full split keyboard — and it
+           made this light the largest object on the site. 2.6 puts it with the
+           other handhelds (Venovisor 2.6, Split HID 2.8). rigFit for 0x04 in
+           app/data/projects.js mirrors this; keep the two equal or the mark
+           changes size halfway through the flight. */
+        modelFit: 2.6,
         pose: { x: 0.5, y: 0.35, z: -0.5 },   // lies at a ready angle, head toward camera
       },
       demo: {

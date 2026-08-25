@@ -6,7 +6,7 @@
 
      window.PAGE_CONFIG = {
        addr: "0x04",
-       docTitle: "Tactical Flashlight — Maslov Oleksandr",
+       docTitle: "Ci-Clop — Maslov Oleksandr",
        hero: {                        // passed to makeWaferRig
          model: "models/x.glb",       //   GLB path …
          buildModel: (THREE)=>grp,    //   … or procedural builder, which may
@@ -169,9 +169,19 @@ function pcLeaveToUniverse() {
   if (document.body.classList.contains("hv-exit")) return;
   window.__hv_leaving = true;
   document.documentElement.style.setProperty("--hv-stage-op", "1");
-  if (window.__pageRig) { window.__pageRig.setIdle(false); window.__pageRig.setExplode(0); window.__pageRig.toHandoff(); window.__hv_exitSpin = true; }
+  const rig = window.__pageRig;
+  if (rig) { rig.setIdle(false); rig.setExplode(0); rig.toHandoff(); window.__hv_exitSpin = true; }
   document.body.classList.remove("hv-inspecting");
   document.body.classList.add("hv-exit");
+  // Hand the model's live yaw to the landing so the reverse flight CONTINUES
+  // this page's rotation instead of snapping. The landing does
+  // `if (isFinite(seamYaw)) rig.setYaw(seamYaw)` — with the key absent that
+  // parseFloat is NaN, snapHandoff()'s arriveYaw-0.85 stands, and the mark
+  // visibly jumps at the seam. Every route must write this, not just the
+  // handoff pages.
+  try {
+    if (rig && rig.yaw != null) sessionStorage.setItem("mo_node_yaw", String(rig.yaw));
+  } catch (_) {}
   const returnTo = sessionStorage.getItem("mo_node_return_origin") || "work";
   sessionStorage.removeItem("mo_node_return_origin");
   sessionStorage.setItem("mo_node_return", "1");

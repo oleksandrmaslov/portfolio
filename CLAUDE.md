@@ -7,17 +7,43 @@ The deployed root HTML filenames are public URLs and must remain stable.
 It was renamed from `Landing Final 5.html` on 2026-08-22 as a clean break: the
 old URL is gone and no redirect stub was kept. Inbound links to the landing use
 the relative form `./` (and `./#work`, `./#about`, `./#contact`) so they resolve
-correctly under the GitHub Pages project subpath. The other public pages are:
+correctly under the GitHub Pages project subpath.
+
+Six routes were renamed the same way on 2026-08-25 — again a clean break, no
+stubs, the old URLs are gone:
+
+| was | is |
+| --- | --- |
+| `Wafer v3.html` | `Wafer.html` |
+| `Kerfur v2.html` | `Kerfur.html` |
+| `Iskra v3.html` | `Iskra.html` |
+| `Tactical Flashlight v2.html` | `Ci-Clop.html` |
+| `Split HID Display v2.html` | `Split HID Display.html` |
+| `ZMK-PointAccel v2.html` | `ZMK-PointAccel.html` |
+
+The version suffixes were build history leaking into public URLs. `Ci-Clop` was
+already the node's `name` and `slug` in both registries and the name of its
+media folder — only the filename still said "Tactical Flashlight", so the route
+was the last place the retired name survived. `models/tactical_flashlight.glb`
+became `models/ci-clop-mark.glb` in the same pass, which also puts it on the
+`<slug>-mark.glb` convention every other mark follows.
+
+Nothing links to a route by literal filename except the two registries: pages
+navigate through `project.file`. That is the whole migration surface — plus one
+`<link rel="prefetch">` in `index.html`. Verify a rename by executing both
+registries and walking the ring in both directions, not by grepping.
+
+The other public pages are:
 
 - `All Projects.html`
-- `Wafer v3.html`
-- `Kerfur v2.html`
-- `Iskra v3.html`
-- `Tactical Flashlight v2.html`
+- `Wafer.html`
+- `Kerfur.html`
+- `Iskra.html`
+- `Ci-Clop.html`
 - `Venovisor.html`
 - `Wafer Studio.html`
-- `Split HID Display v2.html`
-- `ZMK-PointAccel v2.html`
+- `Split HID Display.html`
+- `ZMK-PointAccel.html`
 - `ZMK Soft Off Plus.html`
 - `Sightseeing.html`
 - `Silent Depth.html`
@@ -384,6 +410,19 @@ and `Object3D.clone()` **shares** materials with the cached root — so that
 freed GPU state every later consumer of the same URL still pointed at.
 `tuneRealMaterials` in the same file shows the correct pattern.
 
+## Shared registries are cache-busted
+
+`app/data/projects.js` and `app/projects/data.jsx` decide every project route.
+They used to load with a bare `src`, so a browser holding a cached copy across
+a route rename kept navigating to filenames that no longer existed — the
+landing and All Projects both went dead while the source on disk was correct.
+That is not a hypothetical; it is what happened on 2026-08-25.
+
+`tools/landing-runtime/build.cjs` now stamps `?v=<content-hash>` on both files
+in **every** root HTML page, the same way it already stamped the landing
+runtime, and `npm run check` fails on a stale stamp. Run the build after
+editing either registry — a rename is not finished until the stamp moves.
+
 ## Runtime and validation
 
 - Keep the landing loader and `mo:preloader-done` contract intact. That is the
@@ -456,10 +495,23 @@ out with them: it is pinned to the card plane, so leaving it behind would have
 put the whole field outside the depth of field.
 
 **Every beat that clears the field uses one function.** `scatter(i, R, Y, Z, D)`
-puts the cards on a ring around whatever the beat is about, and dive, both
-origin concepts and the work-reel background are four calls to it at four
-scales. Both `x` and `y` come from the ring angle, so two nodes can only share
-a screen position if they share an index.
+puts the cards on a ring around whatever the beat is about, and both origin
+concepts and the work-reel background are three calls to it at three scales.
+(There was a fourth, `dive`, until 2026-08-25 — see the mode note below.) Both
+`x` and `y` come from the ring angle, so two nodes can only share a screen
+position if they share an index.
+
+**The Universe has three modes, and only three.** `app/landing/app.jsx` derives
+`mode` from the active section and can only ever emit `reel`, `origin` or
+`drift`. It is mounted once and there is no mode setter on
+`window.__mo_universe`. Three further modes — `grid`, `ambient` and `dive` —
+were carried as unreachable branches across roughly twenty comparison sites
+plus five `GRID_*` constants, two `.universeBg--` filters, an inert
+`window.__mo_dive` state block and a 420 ms `setInterval` in `score.js` whose
+arming condition could never be true. They were removed on 2026-08-25 once the
+scroll reel replaced what they were held for. If a new arrangement is added,
+give it a `scatter()` call and a real `mode` value that `app.jsx` actually
+emits — do not reintroduce a branch nothing can reach.
 
 That is the whole point of the shape, and it replaced four copies of a form
 that took `x` from a golden-angle spiral and `y` from a linear index ramp.
@@ -484,7 +536,7 @@ reads as depth.
 `app/projects/rendering/solid-hero-rig.jsx` is the **only** project hero rig.
 Every project route and the landing handoff call its `window.makeWaferRig`.
 
-It used to have a fork, `basic-hero-rig.jsx`, which Kerfur, Tactical Flashlight,
+It used to have a fork, `basic-hero-rig.jsx`, which Kerfur, Ci-Clop,
 Split HID Display and ZMK-PointAccel loaded. The two files were the same rig —
 identical damping model, identical `HANDOFF`/arrival poses, identical
 `applyToScene` — differing only in lighting (ambient 0.5 vs 0.85, key 1.35 vs
@@ -498,7 +550,7 @@ option here — do not fork the rig again.**
 The material route is three-way and each page must pick the right one:
 
 - `assignMaterial: { … }` — a GLB that ships **no materials of its own**.
-  `models/tactical_flashlight.glb` is the only one: 7 meshes, 0 materials.
+  `models/ci-clop-mark.glb` is the only one: 7 meshes, 0 materials.
   Without it the rig draws Three's default flat white. Keep the spec equal to
   `assignMaterial` for the same node in `app/data/projects.js`, or the mark
   changes colour halfway through the flight.

@@ -55,6 +55,45 @@ function compile(relativePath) {
   return `\n/* ---- ${relativePath} ---- */\n${result.code}\n`;
 }
 
+/* ------------------------------------------------------------------
+   SHARED DATA REGISTRIES — cache-busted the same way the runtime is.
+   These two files decide every project route. They were loaded with a
+   bare src, so a browser holding a cached copy across a route rename
+   kept navigating to filenames that no longer exist — the landing and
+   All Projects both went dead while the source on disk was correct.
+   Stamped into EVERY root page that loads them, not just index.html.
+   ------------------------------------------------------------------ */
+const dataAssets = [
+  "app/data/projects.js",
+  "app/projects/data.jsx",
+];
+
+function assetHash(relativePath) {
+  const bytes = fs.readFileSync(path.join(root, relativePath));
+  return crypto.createHash("sha256").update(bytes).digest("hex").slice(0, 12);
+}
+
+function stampDataAssets(html) {
+  for (const relativePath of dataAssets) {
+    const stamped = `src="${relativePath}?v=${assetHash(relativePath)}"`;
+    // Plain string surgery rather than a built regex: these paths contain
+    // regex metacharacters and the escaping is not worth the risk.
+    const parts = html.split(`src="${relativePath}`);
+    if (parts.length < 2) continue;
+    html = parts.reduce((acc, part, i) => {
+      if (i === 0) return part;
+      const close = part.indexOf('"');
+      const rest = part.slice(close + 1);
+      return acc + stamped + rest;
+    }, "");
+  }
+  return html;
+}
+
+function rootHtmlFiles() {
+  return fs.readdirSync(root).filter((name) => name.endsWith(".html")).sort();
+}
+
 function expectedHtml(runtimeHash) {
   const html = fs.readFileSync(htmlPath, "utf8");
   if (/@babel\/standalone|text\/babel|data-presets=/.test(html)) {
@@ -65,10 +104,10 @@ function expectedHtml(runtimeHash) {
   if (matches.length !== 1) {
     throw new Error(`Expected one versioned landing runtime tag; found ${matches.length}.`);
   }
-  return html.replace(
+  return stampDataAssets(html.replace(
     runtimeTag,
     `<script src="app/landing/runtime.js?v=${runtimeHash}"></script>`,
-  );
+  ));
 }
 
 function sameFile(filePath, expected) {
@@ -93,16 +132,31 @@ const html = expectedHtml(runtimeHash);
 const runtimeFresh = sameFile(runtimePath, runtime);
 const htmlFresh = sameFile(htmlPath, html);
 
+/* Every other root page gets the data-asset stamp too. index.html is
+   handled above, together with its runtime tag. */
+const otherPages = rootHtmlFiles()
+  .filter((name) => name !== "index.html")
+  .map((name) => {
+    const filePath = path.join(root, name);
+    const current = fs.readFileSync(filePath, "utf8");
+    return { name, filePath, current, stamped: stampDataAssets(current) };
+  });
+const stalePages = otherPages.filter((page) => page.current !== page.stamped);
+
 if (checkOnly) {
-  if (!runtimeFresh || !htmlFresh) {
+  if (!runtimeFresh || !htmlFresh || stalePages.length) {
     if (!runtimeFresh) console.error("app/landing/runtime.js is stale or missing.");
-    if (!htmlFresh) console.error("index.html has a stale runtime version.");
+    if (!htmlFresh) console.error("index.html has a stale runtime or data version.");
+    for (const page of stalePages) console.error(`${page.name} has a stale data-registry version.`);
     console.error("Run: npm run build --prefix tools/landing-runtime");
     process.exit(1);
   }
   console.log(`Landing runtime is current (${runtimeHash}, ${sourceFiles.length} source units).`);
+  console.log(`Data registries are current on ${otherPages.length + 1} root pages.`);
 } else {
   if (!runtimeFresh) fs.writeFileSync(runtimePath, runtime, "utf8");
   if (!htmlFresh) fs.writeFileSync(htmlPath, html, "utf8");
+  for (const page of stalePages) fs.writeFileSync(page.filePath, page.stamped, "utf8");
   console.log(`Built app/landing/runtime.js (${runtimeHash}, ${sourceFiles.length} source units).`);
+  console.log(`Stamped data registries on ${stalePages.length + (htmlFresh ? 0 : 1)} page(s).`);
 }

@@ -138,6 +138,15 @@ function leaveToUniverse() {
   if (window.__waferRig) { window.__waferRig.setIdle(false); window.__waferRig.setExplode(0); window.__waferRig.toHandoff(); window.__hv_exitSpin = true; }
   document.body.classList.remove("hv-inspecting");
   document.body.classList.add("hv-exit");            // page content fades; the model stage stays
+  // Hand the model's live yaw to the landing so the reverse flight CONTINUES
+  // this page's rotation instead of snapping. The landing does
+  // `if (isFinite(seamYaw)) rig.setYaw(seamYaw)` — with the key absent that
+  // parseFloat is NaN, snapHandoff()'s arriveYaw-0.85 stands, and the mark
+  // visibly jumps at the seam. Every route must write this, not just the
+  // handoff pages.
+  try {
+    if (window.__waferRig && window.__waferRig.yaw != null) sessionStorage.setItem("mo_node_yaw", String(window.__waferRig.yaw));
+  } catch (_) {}
   // return to wherever the user opened the project FROM: universe title screen
   // (clicked a floating node) or the work reel (clicked a work card).
   const returnTo = sessionStorage.getItem("mo_node_return_origin") || "work";

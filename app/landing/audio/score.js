@@ -121,13 +121,4 @@
     }, 560);
   });
 
-  /* ── ABOUT / DIVE — a slow heartbeat while the lock is armed ── */
-  var hb = null;
-  setInterval(function () {
-    var dv = window.__mo_dive || {};
-    var armed = cur === "about" && (dv.p || 0) > 0.62;
-    if (armed && !hb) hb = setInterval(function () { if (on()) CF.carrierAccent(0.22); }, 1700);
-    if (!armed && hb) { clearInterval(hb); hb = null; }
-  }, 420);
-
 })();

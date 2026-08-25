@@ -81,27 +81,13 @@
   function applyMaster() { if (muted) disable(); else enable(); }
   function setMuted(b) { muted = !!b; applyMaster(); save(); emit(); }
   function toggleMute() { setMuted(!muted); }
-  function setVolume(v) {
-    volume = Math.max(0, Math.min(1, v));
-    if (volume > 0 && muted) muted = false;
-    applyMaster(); save(); emit();
-  }
 
   function init() { return CF.ctx && CF.ctx(); }     // no autostart; toggle unlocks
   function unlock() { if (!muted) enable(); }
 
   function getLevel() { return Math.min(1, (CF.state.level || 0) * 3.2); }
-  function getWave(a) {
-    var an = CF.getAnalyser && CF.getAnalyser();
-    if (!an) return a || new Float32Array(1024);
-    var buf = a || new Float32Array(an.fftSize);
-    an.getFloatTimeDomainData(buf);
-    return buf;
-  }
 
   // ---- node + carrier events --------------------------------------------
-  function nodePing(addr, opts) { if (!active()) return; var s = addrOf(addr); if (s) CF.pingNode(s, (opts && opts.vel != null ? opts.vel : 0.8) * 0.13); }
-  function nodeLock(addr, opts) { if (!active()) return; var s = addrOf(addr); if (s) CF.strikeNode(s); }
   function hover(addr) { if (!active()) return; var s = addrOf(addr); if (s) CF.hoverNode(s); }
   function unhover(addr) { if (!CF.isWoken()) return; if (addr == null) { CF.ADDRS.forEach(function (a) { CF.unhoverNode(a); }); } else { var s = addrOf(addr); if (s) CF.unhoverNode(s); } }
   // card click → strike the node AND let the 0x00 carrier make itself heard
@@ -113,34 +99,20 @@
   }
 
   function gather() { if (!active()) return; var i, A = CF.ADDRS; for (i = 0; i < 6; i++) (function (k) { setTimeout(function () { CF.pingNode(A[(Math.random() * A.length) | 0], 0.06); }, k * 70); })(i); setTimeout(function () { CF.carrierAccent(0.9); }, 480); }
-  function scatter() { if (!active()) return; var A = CF.ADDRS, i; for (i = 0; i < 5; i++) (function (k) { setTimeout(function () { CF.pingNode(A[(Math.random() * A.length) | 0], 0.05); }, k * 50); })(i); }
-  function constellation(on) { if (CF.isWoken()) CF.setIdleLife(on ? 0.45 : 0.3); }
-  function bootEnumerate(i, total) { if (!active()) return; if (i >= total - 1) { gather(); return; } CF.pingNode(CF.ADDRS[i % CF.ADDRS.length], 0.06); }
-  function scroll(velocity) { if (active()) CF.scrollTrickle(velocity * 1.2); }
 
-  function noop() {}
   function thock(opts) { if (active()) CF.thock(opts && opts.vel); }
   function thockUp() { if (active()) CF.thockUp(); }
-  function tick() { if (active()) CF.tick(); }
 
   window.MOSound = {
     init: init, unlock: unlock,
     isMuted: function () { return muted; }, getVolume: function () { return volume; },
-    setMuted: setMuted, toggleMute: toggleMute, setVolume: setVolume,
+    toggleMute: toggleMute,
     onState: function (cb) { listeners.push(cb); try { cb({ muted: muted, volume: volume }); } catch (e) {} },
-    getLevel: getLevel, getWave: getWave,
+    getLevel: getLevel,
     carrier: function (on) { if (on) { enable(); } else { disable(); } },
-    carrierOn: function () { return active(); },
-    nodePing: nodePing, nodeLock: nodeLock, hover: hover, unhover: unhover, open: open,
-    gather: gather, scatter: scatter, constellation: constellation, constellationOn: function () { return active(); },
-    bootEnumerate: bootEnumerate, scroll: scroll,
-    thock: thock, thockUp: thockUp, tick: tick,
-    // recorded-sample hook (drop the user's keyboard in later)
-    injectSampleFromBlob: function (name, blob) { return CF.injectSampleFromBlob(name, blob); },
-    // voicing API kept as harmless stubs for any legacy caller
-    setVoicing: noop, getVoicings: function () { return [{ name: "carrier", label: "Carrier Field", blurb: "0x00 heterodyne field" }]; }, currentVoicing: function () { return "carrier"; },
-    nodeFreq: function (addr) { var s = addrOf(addr); return s && CF.RATIOS[s] ? CF.F0 * CF.RATIOS[s] : CF.F0; },
-    get ROOT() { return CF.F0; },
+    hover: hover, unhover: unhover, open: open,
+    gather: gather,
+    thock: thock, thockUp: thockUp,
     get ctx() { return CF.ctx && CF.ctx(); },
   };
 })();

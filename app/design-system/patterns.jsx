@@ -222,8 +222,8 @@ function ComponentsSection() {
             {[
               { addr: "0x01", name: "Wafer", desc: "36-key ultrathin split keyboard. 4–8 mm aluminium case, magnetic mechanism, NPM1300 PMIC, Sharp memory display.", status: "ACTIVE", year: "2025", stack: "ZMK · KiCad · nRF52840" },
               { addr: "0x02", name: "Kerfur", desc: "Event-driven firmware on nRF52840. 10,000+ LoC C, behaviour engine, IMU motion stack, OLED face, BLE peer encounters.", status: "ACTIVE", year: "2025—", stack: "Zephyr · LVGL · ANCS" },
-              { addr: "0x03", name: "ZMK Pointing Accel.", desc: "Public ZMK input processor for smooth, configurable pointer acceleration on trackpads. ★ 25 · ⑂ 10.", status: "OSS", year: "2025", stack: "C · Devicetree" },
-              { addr: "0x05", name: "Tactical Flashlight", desc: "Volunteer for Energy for Ukraine. Firmware in C for ARM Cortex-M0 (PY32F002A). Two modes, SOS, battery indication.", status: "LIVE", year: "12/2025", stack: "C · ARM · KiCad" },
+              { addr: "0x08", name: "ZMK Pointing Accel.", desc: "Public ZMK input processor for smooth, configurable pointer acceleration on trackpads. ★ 25 · ⑂ 10.", status: "OSS", year: "2025", stack: "C · Devicetree" },
+              { addr: "0x04", name: "Ci-Clop", desc: "Volunteer for Energy for Ukraine. Firmware in C for ARM Cortex-M0 (PY32F002A). Two modes, SOS, battery indication.", status: "LIVE", year: "12/2025", stack: "C · ARM · KiCad" },
             ].map((n, i) => (
               <div key={i} className="node">
                 <div className="node__head">

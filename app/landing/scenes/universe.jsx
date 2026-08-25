@@ -998,14 +998,9 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     });
 
     /* ---------- Arranged-mode target positions ----------
-       grid     : 4×3 wall in front of camera (z=-16)
-       ambient  : 12 tiles on a Fibonacci sphere shell — slow ambient rotation
-       drift    : null (free) */
-    const GRID_COLS = 4;
-    const GRID_ROWS = 3;
-    const GRID_SPACING_X = 5.4;
-    const GRID_SPACING_Y = 4.3;
-    const GRID_Z = -16;
+       reel   : the project parade
+       origin : the field assembles into 0x00
+       drift  : null (free) */
     const tileTargets = projects.map(() => new THREE.Vector3());
     const carouselTarget = new THREE.Vector3();
     /* CLEARED FIELD — one ring, four scales.
@@ -1027,10 +1022,6 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
 
     function targetForTile(mode, i, t) {
       const target = tileTargets[i];
-      if (mode === "dive") {
-        // Everything clears far out — only node 0x00 (the hub) remains, centered.
-        return scatter(i, 22, 13, -26, 6);
-      }
       if (mode === "origin") {
         const concept = (window.__mo_origin && window.__mo_origin.concept) || "assembly";
         const m = tiles[i];
@@ -1090,23 +1081,6 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
           target.lerp(carouselTarget, g * g * (3 - 2 * g));  // smooth gather
         }
         return target;
-      }
-      if (mode === "grid") {
-        const col = i % GRID_COLS;
-        const row = Math.floor(i / GRID_COLS);
-        return target.set(
-          (col - (GRID_COLS - 1) / 2) * GRID_SPACING_X,
-          ((GRID_ROWS - 1) / 2 - row) * GRID_SPACING_Y,
-          GRID_Z,
-        );
-      }
-      if (mode === "ambient") {
-        // A slow shell to drift around. Unreachable from the current landing —
-        // app.jsx only ever emits reel / origin / drift — but it kept the last
-        // copy of the pole-collapsing spiral, so it goes through scatter() like
-        // every other cleared-field placement rather than sitting here as a
-        // trap for whoever wires this mode back up.
-        return scatter(i, 13, 8, -4, 3);
       }
       return null; // drift
     }
@@ -1429,7 +1403,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       // During the reel's final "Open the universe" gather, the network
       // IGNITES — every node in one disc, every edge alive.
       const gatherG = mode === "reel" ? Math.max(0, Math.min(1, ((window.__mo_reel || {}).pos || 0) - MO_FEATURED.length)) : 0;
-      const modeVis = mode === "drift" ? 1 : mode === "reel" ? 0.6 + gatherG * 0.9 : mode === "grid" ? 0.5 : 0;
+      const modeVis = mode === "drift" ? 1 : mode === "reel" ? 0.6 + gatherG * 0.9 : 0;
       const vis = fx * modeVis * (1 - formP) * arrFade;
       constUniforms.uTime.value = (performance.now() % 100000) * 0.001;
       constUniforms.uVis.value = vis;
@@ -2193,7 +2167,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       const dt = Math.max(0, Math.min(50, now - last)); last = now;
       const mode = modeRef.current;
       const focusAddrNow = focusRef.current;
-      const isArranged = (mode === "grid" || mode === "reel" || mode === "ambient" || mode === "origin" || mode === "dive");
+      const isArranged = (mode === "reel" || mode === "origin");
 
       /* ── per-frame effects state ── */
       // real audio output level → the field visibly breathes with the sound
@@ -2239,7 +2213,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       // Detect mode change. Going from an arranged mode back to drift needs
       // a fresh scatter — otherwise the cards stay locked forever.
       if (mode !== prevMode) {
-        if (mode === "drift" && (prevMode === "grid" || prevMode === "reel" || prevMode === "ambient" || prevMode === "origin" || prevMode === "dive")) {
+        if (mode === "drift" && (prevMode === "reel" || prevMode === "origin")) {
           scatterTiles();
         }
         prevMode = mode;
@@ -2486,7 +2460,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
           // ease toward target; rate depends on distance for snappy arrange
           // reel must track the scrubbed scroll position tightly — a slow lerp
           // would let the parade lag the captions.
-          const rate = mode === "reel" ? 0.18 : mode === "grid" ? 0.055 : 0.025;
+          const rate = mode === "reel" ? 0.18 : 0.025;
           m.position.lerp(target, 1 - Math.pow(1 - rate, dt / 16));
         }
 
@@ -2496,7 +2470,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         _baseQ.setFromRotationMatrix(_lookM);
 
         // Per-card constant offset so each tile floats at its own angle (suppressed in grid)
-        const offFactor = (mode === "grid" || mode === "reel") ? 0.15 : 1.0;
+        const offFactor = mode === "reel" ? 0.15 : 1.0;
         _euler.set(
           m.userData.offsetPitch * offFactor,
           m.userData.offsetYaw   * offFactor,
@@ -2507,15 +2481,12 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         _baseQ.multiply(_offQ);
 
         // SOFT slerp — cards re-orient slowly so they feel like floating objects
-        m.quaternion.slerp(_baseQ, frameLerp((mode === "grid" || mode === "reel") ? 0.12 : 0.06, dt));
+        m.quaternion.slerp(_baseQ, frameLerp(mode === "reel" ? 0.12 : 0.06, dt));
 
         // Band-pass visibility per mode
         const dist = m.position.distanceTo(camera.position);
         let nearIn, farOut;
-        if (mode === "grid") {
-          nearIn  = THREE.MathUtils.smoothstep(dist, 2.0, 6.0);
-          farOut  = THREE.MathUtils.smoothstep(dist, 26, 40);
-        } else if (mode === "reel") {
+        if (mode === "reel") {
           // Keep non-featured scatter tiles outside the reel's visibility
           // band, not the parade spacing: non-featured tiles park on a scatter
           // ring 20–24u out, dead centre of the old 17→26 far-fade — so they
@@ -2527,9 +2498,6 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
           const rg = Math.max(0, Math.min(1, ((window.__mo_reel || {}).pos || 0) - MO_FEATURED.length));
           nearIn  = THREE.MathUtils.smoothstep(dist, 2.0, 6.0);
           farOut  = THREE.MathUtils.smoothstep(dist, 13 + rg * 4, 16.5 + rg * 9.5);
-        } else if (mode === "ambient") {
-          nearIn  = THREE.MathUtils.smoothstep(dist, 2.5, 6.0);
-          farOut  = THREE.MathUtils.smoothstep(dist, 18, 28);
         } else if (mode === "drift") {
           // DRIFT is the ONLY mode where the tile pool wraps around the camera
           // inside BOX. A spherical far-fade sat almost entirely OUTSIDE the box
@@ -2544,11 +2512,6 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
           const ez = Math.abs(m.position.z - camera.position.z) / (TILE_BOX.z / 2);
           const edge = Math.max(ex, ey, ez);
           farOut = THREE.MathUtils.smoothstep(edge, 0.95, 1.0);
-        } else if (mode === "dive") {
-          // DIVE deliberately clears the field far out so only the hub remains —
-          // keep the original aggressive far-fade so distant tiles dissolve.
-          nearIn  = THREE.MathUtils.smoothstep(dist, 2.5, 6.0);
-          farOut  = THREE.MathUtils.smoothstep(dist, 20, 32);
         } else {
           // origin — tiles arrange on a ring (~16–26u). Part of that ring is now
           // INSIDE the wrap box (TILE_BOX half-depth 18.2), so a box-edge fade
@@ -2560,11 +2523,9 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         }
         let opacity = nearIn * (1 - farOut);
         // Loaded GLB models intentionally ignore mode dimming (per request):
-        // capture the distance-only opacity BEFORE the ambient/grid multipliers so
+        // capture the distance-only opacity BEFORE the reel multiplier so
         // models read equally solid in every mode. Focus is applied below to both.
         let modelOpacityBase = opacity;
-        if (mode === "ambient") opacity *= 0.38;   // recede behind content
-        if (mode === "grid"   ) opacity *= 0.92;   // slightly tame so HUD reads
         if (mode === "reel"   ) opacity *= 0.96;   // the tiles ARE the reel — keep them hot
 
         // Focus highlight — pop the matching tile
@@ -2739,25 +2700,12 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         }
 
         // ---- DIVE ignition (about gateway → board) ----
-        const inDive = (mode === "dive");
-        let igE = 0, eD = 0;
-        if (inDive) {
-          const db = window.__mo_dive || { p: 0, igniting: false };
-          const dp = Math.max(0, Math.min(1, db.p || 0));
-          eD = dp < 0.5 ? 2*dp*dp : 1 - Math.pow(-2*dp+2, 2)/2;
-          if (db.igniting && !db._t0) db._t0 = now;
-          const igT = db._t0 ? Math.max(0, Math.min(1, (now - db._t0) / 720)) : 0;
-          igE = igT * igT;  // easeIn — accelerates into the board
-        } else if (window.__mo_dive && window.__mo_dive._t0) {
-          window.__mo_dive._t0 = 0; window.__mo_dive.igniting = false;
-        }
 
         // ---- target formedness (0 = pure field, 1 = full glyph) ----
         // Continuous: rises with origin-section scroll whenever the section is in
-        // its active band; the dive holds a partial form. Never keyed to `mode`.
+        // its active band. Never keyed to `mode`.
         let formTarget = 0;
-        if (inDive)                              formTarget = 0.35 + eD * 0.65;
-        else if (ob.active && concept !== "hub") formTarget = eP;
+        if (ob.active && concept !== "hub") formTarget = eP;
         // Ease toward the target so entry/exit is always gradual (no pop when the
         // section's active flag toggles mid-scroll).
         formActual += (formTarget - formActual) * frameLerp(0.09, dt);
@@ -2859,13 +2807,11 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
           // perspective make it shimmer in 3D. All resting motion scales with
           // formP, so during assembly the looser swing below still dominates.
           const wob = Math.max(0, 1 - formP * 1.2);
-          const assemblyYaw = inDive
-            ? now * 0.00024
-            : Math.sin(now * 0.00045) * 0.5 * wob;
+          const assemblyYaw = Math.sin(now * 0.00045) * 0.5 * wob;
           // Bounded rock — yaw ≤ ~11°, pitch ≤ ~6°, on different periods so it
           // drifts in a slow Lissajous instead of an obvious back-and-forth.
-          const restYaw   = inDive ? 0 : Math.sin(now * 0.00038) * 0.20 * formP;
-          const restPitch = inDive ? 0 : Math.sin(now * 0.00029 + 1.0) * 0.10 * formP;
+          const restYaw   = Math.sin(now * 0.00038) * 0.20 * formP;
+          const restPitch = Math.sin(now * 0.00029 + 1.0) * 0.10 * formP;
           const ang = assemblyYaw + restYaw;
           const ca = Math.cos(ang), sa = Math.sin(ang);
           const cp = Math.cos(restPitch), sp = Math.sin(restPitch);
@@ -2897,21 +2843,14 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         assemblyPts.geometry.attributes.position.needsUpdate = true;
 
         // Always visible as field; brighter + larger as it forms / ignites.
-        const fieldOp = (mode === "ambient" || mode === "grid" || mode === "reel") ? 0.34 : 0.55;
-        assemblyPts.material.opacity = Math.min(1, Math.max(fieldOp, 0.2 + formP * 0.8) + igE * 0.4 + arrCollapse * 0.45 + _lvlS * 0.16);
+        const fieldOp = mode === "reel" ? 0.34 : 0.55;
+        assemblyPts.material.opacity = Math.min(1, Math.max(fieldOp, 0.2 + formP * 0.8) + arrCollapse * 0.45 + _lvlS * 0.16);
         // The formed glyph keeps its near-field particle size; additional
         // +0.055 growth made "0x00" read as soft blobs up close.
-        assemblyPts.material.size = 0.1 + formP * 0.015 + igE * 0.5 + arrCollapse * 0.07 + _lvlS * 0.04;
+        assemblyPts.material.size = 0.1 + formP * 0.015 + arrCollapse * 0.07 + _lvlS * 0.04;
 
-        // Dive ignition rushes the formed node toward the camera.
-        if (inDive) {
-          assemblyGroup.position.set(0, 1.5, igE * (Math.abs(ORIGIN_CENTER.z) + 6));
-          const gs = 1 + igE * 4.5;
-          assemblyGroup.scale.set(gs, gs, gs);
-        } else {
-          assemblyGroup.position.set(0, 0, 0);
-          assemblyGroup.scale.set(1, 1, 1);
-        }
+        assemblyGroup.position.set(0, 0, 0);
+        assemblyGroup.scale.set(1, 1, 1);
 
         const debugState = window.__mo_debug || (window.__mo_debug = {});
         debugState.mode = mode;

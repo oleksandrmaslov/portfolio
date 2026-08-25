@@ -78,8 +78,6 @@
     let master, limiter, analyser, wetIn, convolver, wetGain, fbDelay, fbGain;
     let carrierBus, carrierLP, carrierBreath;      // duckable carrier path
     let probeOsc, probeGain, probeBP, probePan;     // cursor probe (persistent)
-    let proxOsc, proxOsc2, proxGain, proxPan, proxLP; // proximity "gravity" voice (persistent)
-    let proxTargetF = F0 * 2, proxTargetG = 0, proxTargetPan = 0;
     let airSrc, airBP, airGain;                     // air layer (persistent)
     let padGain, padFilter, pulseLFOGain;           // warm harmonic pad + musical pulse
     let padVoices = null, chordIdx = 0, chordTimer = null;
@@ -89,13 +87,12 @@
     let masterTarget = 0.85, temperature = 0.6, cursorAmount = 0.7, idleLife = 0.3;
     let idleTimer = null;
     const hoverVoices = new Map();                  // addr -> voice
-    const samples = {};                             // injected AudioBuffers (e.g. "lock")
     let transient = 0;                              // live transient voice count
 
     // smoothed cursor state
     const cur = { x: 0.5, y: 0.5, vx: 0, vy: 0, sx: 0.5, sy: 0.5, sv: 0 };
     // tuning-dial accumulator for scroll sweep
-    let dial = 0, lastStation = 0;
+    let dial = 0;
 
     const state = {
       f0: F0, woken: false, active: [], beat: 0, level: 0, dial: 0,
@@ -241,21 +238,6 @@
       probeGain = ctx.createGain(); probeGain.gain.value = 0.0001;
       probeOsc.connect(probeBP); probeBP.connect(probePan); probePan.connect(probeGain);
       probeGain.connect(master); probeGain.connect(wetIn); probeOsc.start(t);
-
-      // ---- PROXIMITY "GRAVITY" voice (persistent, single, cheap) --------
-      // A warm two-sine voice that glides to whatever node you're NEAREST and
-      // swells with closeness — so the field sings faintly before you hover,
-      // sensing your presence. One voice retuned per frame = no allocation.
-      proxOsc = ctx.createOscillator(); proxOsc.type = "sine"; proxOsc.frequency.value = proxTargetF;
-      proxOsc2 = ctx.createOscillator(); proxOsc2.type = "sine"; proxOsc2.frequency.value = proxTargetF * 2;
-      const proxOsc2G = ctx.createGain(); proxOsc2G.gain.value = 0.3;
-      proxLP = ctx.createBiquadFilter(); proxLP.type = "lowpass"; proxLP.frequency.value = 1200; proxLP.Q.value = 0.5;
-      proxPan = ctx.createStereoPanner(); proxPan.pan.value = 0;
-      proxGain = ctx.createGain(); proxGain.gain.value = 0.0001;
-      proxOsc.connect(proxLP); proxOsc2.connect(proxOsc2G); proxOsc2G.connect(proxLP);
-      proxLP.connect(proxPan); proxPan.connect(proxGain);
-      proxGain.connect(master); proxGain.connect(wetIn);
-      proxOsc.start(t); proxOsc2.start(t);
 
       applyTemperature();
     }
@@ -528,14 +510,7 @@
       let ended = 0, parts = [];
       const done = () => { if (++ended >= parts.length) { try { out.disconnect(); } catch (e) {} transient--; } };
 
-      if (samples.lock) {
-        // USER-RECORDED keyboard/relay sample wins if present
-        const s = ctx.createBufferSource(); s.buffer = samples.lock;
-        s.playbackRate.value = 0.92 + ratio * 0.05;
-        const g = ctx.createGain(); g.gain.value = 0.9;
-        s.connect(g); g.connect(out); s.start(t); s.stop(t + samples.lock.duration + 0.05);
-        parts.push(s); s.onended = done;
-      } else {
+      {
         // synth relay: a click transient + a short pitched body.
         // ±5% per-strike variation — "if you hit a brick twice with the same
         // speed on the same spot, the sound will never be exactly the same."
@@ -561,25 +536,6 @@
         body.start(t); body.stop(t + 0.2); parts.push(body); body.onended = done;
       }
       duck(0.34, t);
-    }
-
-    // ---- a soft "passed a station" blip (scroll sweep) ------------------
-    function blip(ratio, pan) {
-      if (transient >= MAX_VOICES) return;
-      const t = now(ctx);
-      const f = F0 * ratio;
-      const o = ctx.createOscillator(); o.type = "sine"; o.frequency.value = f;
-      const bp = ctx.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = f; bp.Q.value = 4;
-      const g = ctx.createGain(); g.gain.value = 0.0001;
-      const p = ctx.createStereoPanner(); p.pan.value = pan || 0;
-      o.connect(bp); bp.connect(g); g.connect(p);
-      p.connect(master); p.connect(wetIn);
-      g.gain.exponentialRampToValueAtTime(0.07 * loudnessGain(f), t + 0.025);  // softer, no ping
-      g.gain.exponentialRampToValueAtTime(0.0004, t + 0.4);
-      transient++;
-      o.start(t); o.stop(t + 0.46);
-      o.onended = () => { try { p.disconnect(); } catch (e) {} transient--; };
-      duck(0.14, t);
     }
 
     // ---- hover voice: sideband that BEATS, then RESOLVES on lock --------
@@ -669,14 +625,6 @@
       probePan.pan.setTargetAtTime((cur.sx - 0.5) * 1.4, t, 0.1);
       probeGain.gain.setTargetAtTime(cur.sv * 0.05 * cursorAmount, t, 0.06);
 
-      // proximity gravity: glide the single prox voice to the nearest node
-      proxOsc.frequency.setTargetAtTime(proxTargetF, t, 0.12);
-      proxOsc2.frequency.setTargetAtTime(proxTargetF * 2, t, 0.12);
-      proxLP.frequency.setTargetAtTime(700 + proxTargetG * 2600, t, 0.12);
-      proxPan.pan.setTargetAtTime(proxTargetPan, t, 0.12);
-      proxGain.gain.setTargetAtTime(proxTargetG * 0.08 * cursorAmount, t, 0.1);
-      proxTargetG *= 0.92;   // decays unless refreshed each move
-
       // the field changes with where you are: pad brightness tracks cursor Y
       // (up = brighter) blended with temperature.
       if (padFilter) {
@@ -760,7 +708,6 @@
         scheduleChord();                                      // harmony slowly evolves
       },
 
-      getAnalyser() { return analyser; },
       isWoken() { return state.woken; },
 
       // suspend / resume the whole audio context — the honest on/off. When
@@ -779,26 +726,15 @@
         masterTarget = clamp(v, 0, 1);
         if (ctx && started) master.gain.setTargetAtTime(Math.max(0.0001, masterTarget), now(ctx), 0.05);
       },
-      getMaster() { return masterTarget; },
 
       setTemperature(v) { temperature = clamp(v, 0, 1); applyTemperature(); },
       setCursorAmount(v) { cursorAmount = clamp(v, 0, 1); },
       setIdleLife(v) { idleLife = clamp(v, 0, 1); },
-      setTrickleMode(m) { trickleMode = m | 0; },
-      trickleTest(mode) { if (mode != null) trickleMode = mode | 0; trickle(0.8, (Math.random() * 2 - 1) * 0.5); },
       reward() { reward(); },
 
       hoverNode(addr) { if (started) startHover(addr); },
       unhoverNode(addr) { stopHover(addr); },
       lockNode(addr) { if (started) lockHover(addr); },
-
-      // proximity gravity — lab calls this with the nearest node + closeness 0..1
-      proximity(addr, closeness) {
-        if (!started || !RATIOS[addr]) return;
-        proxTargetF = F0 * RATIOS[addr];
-        proxTargetG = clamp(closeness, 0, 1);
-        proxTargetPan = panFor(addr);
-      },
 
       // soft pulse of a single node — used by ripple wavefront + keyboard play
       pingNode(addr, amp) {
@@ -833,8 +769,6 @@
         transient++; nb.start(t); nb.stop(t + 0.05);
         nb.onended = () => { try { p.disconnect(); } catch (e) {} transient--; };
       },
-      // soft UI tick — a single bell, mid register
-      tick() { if (started) { const f = F0 * RATIOS["0x04"]; bell(f, 0.07 * loudnessGain(f), 0.5, 0, 0.4); } },
       // a 0x00 CARRIER accent — the root makes itself heard (card click, etc.)
       carrierAccent(strength) {
         if (!started) return;
@@ -862,34 +796,6 @@
         cur.x = clamp(x, 0, 1); cur.y = clamp(y, 0, 1);
         cur.vx = vx || 0; cur.vy = vy || 0;
       },
-
-      // scroll sweeps the tuning dial; passing a station marks softly, and a
-      // granular trickle shimmers under the motion (satisfying, not friction).
-      scrollBy(delta) {
-        if (!started) return;
-        dial += delta * 0.0016;
-        const intensity = clamp(Math.abs(delta) / 110, 0.1, 1);
-        const ms = performance.now();
-        if (ms - lastTrickle > 45) { trickle(intensity, (cur.sx - 0.5) * 1.2); lastTrickle = ms; }
-        const station = Math.round(dial);
-        if (station !== lastStation) {
-          const idx = ((station % ADDRS.length) + ADDRS.length) % ADDRS.length;
-          blip(RATIOS[ADDRS[idx]], panFor(ADDRS[idx]));
-          lastStation = station;
-        }
-      },
-
-      // inject a recorded sample, e.g. injectSample('lock', audioBuffer)
-      async injectSampleFromBlob(name, blob) {
-        if (!ctx) build();
-        const ab = await blob.arrayBuffer();
-        const buf = await ctx.decodeAudioData(ab);
-        samples[name] = buf;
-        return buf.duration;
-      },
-      injectSample(name, buffer) { samples[name] = buffer; },
-      hasSample(name) { return !!samples[name]; },
-      clearSample(name) { delete samples[name]; },
 
       ctx() { return ctx; },
     };

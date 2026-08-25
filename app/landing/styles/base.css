@@ -98,8 +98,6 @@ body.landing-exit .universeBg {
 
 /* mode-specific visual treatment */
 .universeBg--drift   { filter: none;                       }
-.universeBg--grid    { filter: saturate(1.1);              }
-.universeBg--ambient { filter: blur(2px) saturate(0.65); opacity: 0.55; }
 
 /* universe HUD lives under content (zindex 4) but above bg (0).
    Hide on all sections — we have section-specific framing (title corners, etc.).

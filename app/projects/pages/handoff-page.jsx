@@ -9,7 +9,7 @@
 
      window.PAGE_CONFIG = {
        addr: "0x04",
-       docTitle: "Tactical Flashlight — Maslov Oleksandr",
+       docTitle: "Ci-Clop — Maslov Oleksandr",
        hero: {                        // passed to makeWaferRig
          model: "models/x.glb",       //   GLB path …
          buildModel: (THREE)=>grp,    //   … or procedural builder, which may
@@ -180,9 +180,15 @@ function pcLeaveToUniverse() {
   if (rig) { rig.setIdle(false); rig.setExplode(0); rig.toHandoff(); window.__hv_exitSpin = true; }
   document.body.classList.remove("hv-inspecting");
   document.body.classList.add("hv-exit");
+  // Yaw only. There is deliberately no seam capture on the way OUT: the seam
+  // bridges in the page HTML are gated on `mo_node_arrive`, which only the
+  // forward flight sets, and the landing's return path removes `mo_node_seam`
+  // without ever reading it. The capture here could never be painted — and it
+  // never ran anyway, because captureFrame is attached by makeNodeRig and this
+  // page builds its rig from makeWaferRig directly, so the guard was always
+  // false. Restoring it would mean preserveDrawingBuffer on all seven handoff
+  // routes to feed a frame nothing reads.
   try {
-    const seam = rig && rig.captureFrame ? rig.captureFrame() : null;
-    if (seam) sessionStorage.setItem("mo_node_seam", seam);
     if (rig && rig.yaw != null) sessionStorage.setItem("mo_node_yaw", String(rig.yaw));
   } catch (_) {}
   const returnTo = sessionStorage.getItem("mo_node_return_origin") || "work";

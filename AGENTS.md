@@ -10,14 +10,14 @@ the relative form `./` (and `./#work`, `./#about`, `./#contact`) so they resolve
 correctly under the GitHub Pages project subpath. The other public pages are:
 
 - `All Projects.html`
-- `Wafer v3.html`
-- `Kerfur v2.html`
-- `Iskra v3.html`
-- `Tactical Flashlight v2.html`
+- `Wafer.html`
+- `Kerfur.html`
+- `Iskra.html`
+- `Ci-Clop.html`
 - `Venovisor.html`
 - `Wafer Studio.html`
-- `Split HID Display v2.html`
-- `ZMK-PointAccel v2.html`
+- `Split HID Display.html`
+- `ZMK-PointAccel.html`
 - `ZMK Soft Off Plus.html`
 - `Sightseeing.html`
 - `Silent Depth.html`

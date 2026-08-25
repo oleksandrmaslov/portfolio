@@ -10,7 +10,7 @@ const PROJECT_DATA = {
   "0x01": {
     addr: "0x01",
     slug: "wafer",
-    file: "Wafer v3.html",
+    file: "Wafer.html",
     name: "Wafer",
     tagline: "36-key split built as one object",
     overline: "EMBEDDED · HARDWARE · FIRMWARE",
@@ -180,7 +180,7 @@ const PROJECT_DATA = {
   "0x02": {
     addr: "0x02",
     slug: "kerfur",
-    file: "Kerfur v2.html",
+    file: "Kerfur.html",
     name: "Kerfur",
     tagline: "Embedded pet on nRF52840",
     overline: "EMBEDDED · ARCHITECTURE · BLE",
@@ -231,7 +231,7 @@ const PROJECT_DATA = {
   "0x08": {
     addr: "0x08",
     slug: "zmk-pointaccel",
-    file: "ZMK-PointAccel v2.html",
+    file: "ZMK-PointAccel.html",
     name: "ZMK PointAccel",
     tagline: "Open-source input processor",
     overline: "OPEN SOURCE · INPUT · DEVICETREE",
@@ -277,7 +277,7 @@ const PROJECT_DATA = {
   "0x04": {
     addr: "0x04",
     slug: "ci-clop",
-    file: "Tactical Flashlight v2.html",
+    file: "Ci-Clop.html",
     name: "Ci-Clop",
     tagline: "Field light interface rebuilt around urgency",
     overline: "FIRMWARE · INTERACTION · PRODUCTION",
@@ -286,7 +286,7 @@ const PROJECT_DATA = {
     role: "Embedded firmware · interaction · production integration",
     stack: ["C", "ARM Cortex-M0", "PY32F002A", "Black Magic Probe", "GitHub Actions"],
     primitive: "cone",
-    model: "models/tactical_flashlight.glb",
+    model: "models/ci-clop-mark.glb",
     demoSize: { d: 120, w: 28, h: 28 },
     metrics: [
       { value: "1→2", unit: "physical buttons" },
@@ -354,7 +354,7 @@ const PROJECT_DATA = {
 PROJECT_DATA["0x03"] = {
   addr: "0x03",
   slug: "iskra",
-  file: "Iskra v3.html",
+  file: "Iskra.html",
   name: "Iskra",
   tagline: "Factory flashing without the factory engineer",
   overline: "PRODUCTION SYSTEM · TOOLING · TRUST",
@@ -495,7 +495,7 @@ PROJECT_DATA["0x06"] = {
 PROJECT_DATA["0x07"] = {
   addr: "0x07",
   slug: "zmk-split-hid-display",
-  file: "Split HID Display v2.html",
+  file: "Split HID Display.html",
   name: "Split HID Display",
   tagline: "Live host state on both nice!view halves",
   overline: "OPEN SOURCE · ZMK MODULE · RAW HID",
