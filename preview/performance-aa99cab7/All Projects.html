@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Maslov Oleksandr — ls projects/ · Terminal Manifest</title>
+  <meta name="description" content="Terminal manifest — every node in the M.O. universe. Sort, filter, jump." />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&family=Instrument+Serif:ital@1&display=swap" />
+
+  <!-- Tokens + shared system -->
+  <link rel="stylesheet" href="app/shared/styles/tokens.css" />
+  <link rel="stylesheet" href="app/shared/styles/key.css" />
+  <link rel="stylesheet" href="app/shared/styles/layout.css" />
+  <link rel="stylesheet" href="app/shared/styles/components.css" />
+  <link rel="stylesheet" href="app/projects/index/styles.css" />
+  <!-- Shared shipping cursor and ASCII RAMP scrollbar -->
+  <link rel="stylesheet" href="app/shared/styles/pointer.css?v=20260822-2" />
+  <link rel="stylesheet" href="app/shared/styles/scrollbar.css" />
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- React + Babel -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" integrity="sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" integrity="sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <!-- Shared core (fib grid, cursor, shell) -->
+  <script type="text/babel" data-presets="env,react" src="app/shared/core.jsx"></script>
+
+  <!-- KeyButton — reused from landing -->
+  <script type="text/babel" data-presets="env,react">
+    function KeyButton({ children, legend = "↵", primary, onPress }) {
+      const { useState } = React;
+      const [pressed, setPressed] = useState(false);
+      const [lit, setLit] = useState(false);
+      const fire = () => {
+        setPressed(true); setLit(true);
+        onPress && onPress();
+        setTimeout(() => setPressed(false), 140);
+        setTimeout(() => setLit(false), 520);
+      };
+      const onKey = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fire(); } };
+      return (
+        <button
+          className={"key " + (pressed ? "key--down " : "") + (lit ? "key--lit " : "") + (primary ? "key--primary" : "")}
+          onClick={fire} onKeyDown={onKey}
+        >
+          <span className="key__cap">
+            <span className="key__legendTop">{legend}</span>
+            <span className="key__label">{children}</span>
+          </span>
+          <span className="key__shadow" aria-hidden="true" />
+        </button>
+      );
+    }
+    window.KeyButton = KeyButton;
+  </script>
+
+  <!-- The node dataset — SINGLE SOURCE OF TRUTH, shared with the landing -->
+  <script src="app/data/projects.js?v=769387971478"></script>
+  <script>
+    /* Adapt MO_PROJECTS into the manifest row shape. The manifest is a table,
+       so it only needs the text columns — no models, no poses. */
+    window.UNIVERSE_PROJECTS = (window.MO_PROJECTS || []).map(function (p) {
+      return {
+        addr: p.addr, kind: p.slug, file: p.file, name: p.name,
+        sub: p.short || p.statement,
+        year: p.state || "",
+        nodeClass: p.nodeClass || "",
+        stack: (p.tags || []).join(" · ").toUpperCase(),
+        mo: p,
+      };
+    });
+    if (!window.UNIVERSE_PROJECTS.length) console.warn("[manifest] MO_PROJECTS missing");
+  </script>
+
+  <!-- Manifest page -->
+  <script type="text/babel" data-presets="env,react" src="app/projects/index/app.jsx"></script>
+
+  <!-- ASCII RAMP scrollbar -->
+  <script src="app/shared/scrollbar.js"></script>
+</body>
+</html>

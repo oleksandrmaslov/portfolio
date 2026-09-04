@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>M.O. ∥ System v0.1 — Design Foundation</title>
+  <meta name="description" content="Design system foundation for Maslov Oleksandr's portfolio. Deep space substrate, signal cyan, invisible Fibonacci scaffold, event-bus metaphor." />
+
+  <!-- Fonts: Geist, Geist Mono, Instrument Serif -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&family=Instrument+Serif:ital@1&display=swap" />
+
+  <link rel="stylesheet" href="app/shared/styles/tokens.css" />
+  <link rel="stylesheet" href="app/shared/styles/key.css" />
+  <link rel="stylesheet" href="app/shared/styles/layout.css" />
+  <link rel="stylesheet" href="app/shared/styles/components.css" />
+  <!-- page sheet loads AFTER the shared ones, matching every other route:
+       before, its mobile .section__head override lost to components.css and
+       the section heads never collapsed to one column on a phone. -->
+  <link rel="stylesheet" href="app/design-system/styles.css" />
+  <link rel="stylesheet" href="app/shared/styles/scrollbar.css" />
+  <link rel="stylesheet" href="app/shared/styles/pointer.css?v=20260822-2" />
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- Three.js -->
+  <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+
+  <!-- React + Babel -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" integrity="sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" integrity="sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <script type="text/babel" data-presets="env,react" src="app/shared/core.jsx"></script>
+  <script type="text/babel" data-presets="env,react" src="app/design-system/event-bus.jsx"></script>
+  <script type="text/babel" data-presets="env,react" src="app/design-system/foundations.jsx"></script>
+  <script type="text/babel" data-presets="env,react" src="app/design-system/patterns.jsx"></script>
+  <script type="text/babel" data-presets="env,react" src="app/design-system/app.jsx"></script>
+
+  <script src="app/shared/scrollbar.js"></script>
+</body>
+</html>

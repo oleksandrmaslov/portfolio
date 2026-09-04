@@ -1,0 +1,123 @@
+/* ============================================================
+   M.O. — CONTINUOUS SCROLL FLIGHT · presentation layer
+   ------------------------------------------------------------
+   Sticky-stage presentation and compositor-synced fades.
+   · title stage is FIXED and dissolves in place (--flt-* stagger)
+     while the camera surges forward
+   · origin / work sticky stages fade before they ever un-stick,
+     so no section is ever seen "sliding away" like a page
+   · tunnel-style iris for seam transits
+   ============================================================ */
+
+/* ---------- TITLE — fixed stage, staggered lift-off ---------- */
+.lp-title { height: 100vh; min-height: 100vh; }
+.lp-title > .title__stage {
+  position: fixed;
+  inset: 0;
+  z-index: 5;                    /* over cin-grade(1), under the shell header */
+  pointer-events: none;          /* pass through to the universe by default */
+  opacity: var(--fl-title, 1);
+}
+/* Only the actual controls catch the pointer — everything else lets the
+   visitor keep flying the universe. (Shields + ctl carry pointer-events:auto
+   from landing.css already.) The wordmark is deliberately NOT one of them: it
+   has no control in it, and its box covered the bottom of the hero. It tracks
+   the pointer from a window listener instead — see base.css. */
+.title__stage .title__wordmark { pointer-events: none; }
+
+/* exit choreography — flight.js writes --flt-a/b/c (0..1, staggered) */
+.title__stage .title__wordmark .asciiHero { transform: translateY(calc(var(--flt-a, 0) * -6vh)) scale(calc(1 - var(--flt-a, 0) * 0.04)); }
+.title__stage .title__wordmarkSub { opacity: calc(1 - var(--flt-b, 0) * 1.3); transform: translateY(calc(var(--flt-b, 0) * -18px)); }
+.title__stage .title__idTop { opacity: calc(1 - var(--flt-b, 0) * 1.25); transform: translateY(calc(var(--flt-b, 0) * -34px)); filter: blur(calc(var(--flt-b, 0) * 4px)); }
+.title__stage .title__ctl { opacity: calc(1 - var(--flt-c, 0) * 1.5); transform: translateY(calc(var(--flt-c, 0) * 30px)); filter: blur(calc(var(--flt-c, 0) * 3px)); }
+.title__stage .title__frame { opacity: calc(1 - var(--flt-b, 0) * 1.4); transform: scale(calc(1 + var(--flt-b, 0) * 0.05)); }
+
+/* iOS WebKit can expose the edge of this filtered transparent layer as a
+   bright horizontal compositor seam. Keep the authored lift + fade on touch
+   iOS, but leave this one small blur to the desktop/Android render paths. */
+@supports (-webkit-touch-callout: none) {
+  @media (hover: none) and (pointer: coarse) {
+    .title__stage .title__idTop { filter: none; }
+  }
+}
+
+/* once the exit engages, the controls stop catching the pointer */
+body.fl-titleDim .title__stage .title__shield,
+body.fl-titleDim .title__stage .title__wordmark,
+body.fl-titleDim .title__stage .title__ctl { pointer-events: none; }
+body.fl-titleGone .title__stage { visibility: hidden; }
+
+/* ---------- STICKY STAGES — never visible while sliding ----------
+   The origin statement and the work reel live in `position: sticky`
+   stages inside tall scroll tracks. A sticky stage is pinned for the
+   whole beat and then physically SLIDES away in the track's last
+   viewport — the plain page scroll the flight is meant to hide.
+
+   flight.js still computes the presence and writes --fl-origin /
+   --fl-work every frame, and that is the fallback below. But a value
+   written in requestAnimationFrame lands on the NEXT paint: when the
+   frame rate drops (or a wheel notch jumps several hundred px), the
+   browser paints the un-pinned, sliding stage with the PREVIOUS,
+   still-opaque value — that is the "page scrolled up instead of
+   dissolving" flash (most visible on the reel's SHOW ALL plate).
+
+   So where the browser supports scroll-driven animations, the fade is
+   handed to the compositor instead: the timing is derived from the
+   scroll offset at paint time, so it can never be a frame behind, at
+   any frame rate. Ranges below reproduce flight.js's stagePresence()
+   exactly — fade in over the last 0.5vh of the stage's arrival, fade
+   out over 0.5vh → 0.06vh of remaining track before the un-stick. */
+.origin__stage { opacity: var(--fl-origin, 1); }
+.lp-workReel__sticky { opacity: var(--fl-work, 1); }
+
+/* Both feature tests matter. If `animation-range` could not take the calc()
+   form, the whole shorthand would be dropped and BOTH animations would span
+   the entire cover range — the stage would be invisible for most of the beat.
+   Testing for it here means an unsupporting browser simply keeps the
+   JS-driven fallback above instead. */
+@supports (animation-timeline: view()) and (animation-range: cover calc(100% - 150vh)) {
+  /* the tall tracks are the timeline subjects; their sticky children read them */
+  .origin { view-timeline-name: --flOriginTrack; }
+  .lp-workReel { view-timeline-name: --flWorkTrack; }
+
+  /* cover 0 → 100vh spans track-top vh → 0; presence stays 0 for the
+     first half of that (track top above 0.5vh), then resolves. */
+  @keyframes flStageIn { 0% { opacity: 0 } 50% { opacity: 0 } 100% { opacity: 1 } }
+  /* the last 1.5vh of the cover range: track bottom 1.5vh → 0. Presence
+     hits 0 at 0.44vh in (bottom 1.06vh) = 29.33%, well before the slide. */
+  @keyframes flStageOut { 0% { opacity: 1 } 29.33% { opacity: 0 } 100% { opacity: 0 } }
+
+  .origin__stage,
+  .lp-workReel__sticky {
+    animation-name: flStageIn, flStageOut;
+    animation-duration: auto;
+    animation-timing-function: linear;
+    /* Entry owns only the pre-entry hidden state; exit owns only the
+       post-exit hidden state. Between the ranges the JS presence value still
+       owns the pinned middle. Keeping the exit's zero is what prevents a
+       stale rAF value from revealing the stage after sticky has released. */
+    animation-fill-mode: backwards, forwards;
+    animation-range: cover 0 cover 100vh, cover calc(100% - 150vh) cover 100%;
+  }
+  .origin__stage { animation-timeline: --flOriginTrack; }
+  .lp-workReel__sticky { animation-timeline: --flWorkTrack; }
+}
+
+/* ---------- TUNNEL IRIS — seam style "tunnel" ---------- */
+.fl-iris {
+  position: fixed;
+  inset: -2vmax;
+  z-index: 6;
+  pointer-events: none;
+  opacity: var(--fl-iris, 0);
+  background: radial-gradient(ellipse at 50% 50%, rgba(2, 4, 10, 0) 44%, rgba(2, 4, 10, 0.85) 76%, #02040a 95%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .title__stage .title__wordmark .asciiHero,
+  .title__stage .title__wordmarkSub,
+  .title__stage .title__idTop,
+  .title__stage .title__ctl,
+  .title__stage .title__frame { transform: none; filter: none; }
+  .fl-iris { display: none; }
+}

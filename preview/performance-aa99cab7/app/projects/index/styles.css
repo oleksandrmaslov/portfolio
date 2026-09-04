@@ -1,0 +1,643 @@
+/* ============================================================
+   M.O. SYSTEM — All Projects · Terminal Manifest styles
+   `$ ls -laR projects/` — a console-grounded directory listing.
+   Same design tokens as the rest of the system: deep void, hairlines,
+   signal cyan as the single accent, mono labels.
+   ============================================================ */
+
+.m-page {
+  position: relative;
+  z-index: 1;
+  max-width: var(--w-canvas);
+  margin: 0 auto;
+  padding: 120px var(--s-7) var(--s-9);
+}
+
+/* ============================================================
+   HERO BLOCK
+   ============================================================ */
+.m-hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  gap: var(--s-6);
+  padding-bottom: var(--s-7);
+  border-bottom: 1px solid var(--hairline);
+  margin-bottom: var(--s-7);
+}
+.m-hero__rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding-top: 8px;
+}
+.m-hero__railTick {
+  width: 16px;
+  height: 1px;
+  background: var(--signal);
+  box-shadow: 0 0 8px var(--signal-glow);
+}
+.m-hero__railTick:nth-child(2) { width: 8px; opacity: 0.65; }
+.m-hero__railTick:nth-child(3) { width: 4px; opacity: 0.4; }
+
+.m-hero__overline {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-4);
+  font-family: var(--ff-mono);
+  font-size: var(--fs-micro);
+  letter-spacing: var(--tr-mono);
+  text-transform: uppercase;
+  color: var(--ash);
+  margin-bottom: var(--s-4);
+}
+.m-hero__overlineDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--signal);
+  box-shadow: 0 0 8px var(--signal);
+}
+.m-hero__overlineSep { color: var(--ghost); }
+
+.m-hero__title {
+  font-family: var(--ff-mono);
+  font-size: var(--fs-d2);
+  font-weight: 500;
+  line-height: var(--lh-tight);
+  letter-spacing: var(--tr-head);
+  color: var(--bone);
+  margin: 0 0 var(--s-5);
+}
+.m-hero__title em {
+  font-family: var(--ff-serif);
+  font-style: italic;
+  color: var(--signal);
+}
+.m-hero__titleSep {
+  color: var(--ghost);
+  margin: 0 0.02em;
+  font-weight: 400;
+}
+
+.m-hero__sub {
+  font-family: var(--ff-display);
+  font-size: var(--fs-lead);
+  line-height: var(--lh-text);
+  color: var(--ash);
+  max-width: 64ch;
+  text-wrap: pretty;
+  margin-bottom: var(--s-6);
+}
+.m-hero__sub kbd {
+  display: inline-block;
+  padding: 1px 6px;
+  margin: 0 2px;
+  font-family: var(--ff-mono);
+  font-size: var(--fs-micro);
+  color: var(--bone);
+  background: var(--carbon);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-1);
+  vertical-align: 1px;
+}
+
+.m-hero__bar {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-4);
+  padding: 10px 14px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-2);
+  background: rgba(13, 16, 24, 0.55);
+  font-family: var(--ff-mono);
+  font-size: var(--fs-micro);
+  color: var(--ash);
+  text-transform: uppercase;
+  letter-spacing: var(--tr-mono);
+}
+.m-hero__bar b { color: var(--bone); font-weight: 500; }
+.m-hero__barLive b { color: var(--signal); }
+.m-hero__barPending b { color: var(--copper); }
+.m-hero__barSep {
+  width: 1px;
+  height: 12px;
+  background: var(--hairline);
+}
+
+/* ============================================================
+   CONTROLS BLOCK
+   ============================================================ */
+.m-controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  padding-bottom: var(--s-6);
+  margin-bottom: var(--s-5);
+  border-bottom: 1px dashed var(--hairline);
+}
+
+.m-controls__row {
+  display: grid;
+  grid-template-columns: 72px 1fr;
+  align-items: center;
+  gap: var(--s-5);
+  min-height: 32px;
+}
+.m-controls__rowK {
+  font-family: var(--ff-mono);
+  font-size: var(--fs-micro);
+  letter-spacing: var(--tr-caps);
+  text-transform: uppercase;
+  color: var(--ghost);
+}
+.m-controls__rowV {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.m-controls__rowV--wrap {
+  flex-wrap: wrap;
+}
+
+/* --- search row --- */
+.m-search {
+  grid-template-columns: auto 1fr auto;
+  gap: 10px;
+  align-items: stretch;
+  padding-bottom: var(--s-4);
+  border-bottom: 1px solid var(--hairline);
+  position: relative;
+}
+.m-search__caret {
+  font-family: var(--ff-mono);
+  font-size: var(--fs-lead);
+  color: var(--signal);
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 9px;
+  font-weight: 500;
+}
+/* block cursor rides in the caret's flex row — never over the placeholder */
+.m-search__caret::after {
+  content: "";
+  display: block;
+  width: 9px;
+  height: 1.05em;
+  background: var(--signal);
+  opacity: 0;
+}
+.m-search:has(.m-search__input:placeholder-shown) .m-search__caret::after {
+  animation: m-blink 1.05s steps(1) infinite;
+}
+.m-search__input {
+  flex: 1;
+  background: transparent;
+  border: 0;
+  color: var(--bone);
+  font-family: var(--ff-mono);
+  font-size: var(--fs-lead);
+  letter-spacing: var(--tr-tight);
+  padding: 6px 0;
+  outline: none;
+  caret-color: var(--signal);
+}
+.m-search__input::placeholder {
+  color: var(--ghost);
+  font-weight: 400;
+}
+.m-search__clear {
+  align-self: center;
+  font-family: var(--ff-mono);
+  font-size: var(--fs-micro);
+  text-transform: uppercase;
+  letter-spacing: var(--tr-mono);
+  color: var(--ghost);
+  padding: 4px 8px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-1);
+  background: transparent;
+  transition: color var(--d-fast), border-color var(--d-fast);
+}
+.m-search__clear:hover {
+  color: var(--pulse);
+  border-color: var(--pulse-dim);
+}
+@keyframes m-blink {
+  0%, 49%   { opacity: 0.7; }
+  50%, 100% { opacity: 0;   }
+}
+
+/* --- pills --- */
+.m-pill {
+  font-family: var(--ff-mono);
+  font-size: var(--fs-nano);
+  letter-spacing: var(--tr-mono);
+  text-transform: uppercase;
+  padding: 5px 10px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-pill);
+  color: var(--ghost);
+  background: transparent;
+  transition:
+    color var(--d-fast),
+    border-color var(--d-fast),
+    background var(--d-fast);
+  cursor: pointer;
+}
+.m-pill:hover { color: var(--ash); border-color: var(--trace); }
+.m-pill.is-active {
+  color: var(--signal);
+  border-color: var(--signal-dim);
+  background: var(--signal-ghost);
+}
+
+.m-pill--family { gap: 6px; display: inline-flex; align-items: center; }
+.m-pill__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  opacity: 0.6;
+  transition: opacity var(--d-fast), box-shadow var(--d-fast);
+}
+.m-pill--family:hover .m-pill__dot { opacity: 1; }
+.m-pill--family.is-active {
+  color: var(--bone);
+  border-color: var(--pillColor, var(--signal));
+  background: rgba(255, 255, 255, 0.02);
+}
+.m-pill--family.is-active .m-pill__dot {
+  opacity: 1;
+  box-shadow: 0 0 8px var(--pillColor, var(--signal));
+}
+
+/* ============================================================
+   MANIFEST TABLE
+   ============================================================ */
+.m-manifest {
+  margin-top: var(--s-5);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-2);
+  background: rgba(7, 9, 15, 0.55);
+  overflow: hidden;
+}
+
+/* shared column grid for head + rows */
+.m-manifest__head,
+.m-row {
+  display: grid;
+  grid-template-columns:
+    72px       /* addr */
+    96px       /* state */
+    1.4fr      /* name + fams */
+    1.6fr      /* descriptor */
+    132px      /* state */
+    1.4fr      /* stack */
+    72px;      /* jump */
+  gap: var(--s-5);
+  padding: 10px var(--s-5);
+  align-items: center;
+}
+
+.m-manifest__head {
+  font-family: var(--ff-mono);
+  font-size: var(--fs-nano);
+  letter-spacing: var(--tr-caps);
+  text-transform: uppercase;
+  color: var(--ghost);
+  background: rgba(13, 16, 24, 0.8);
+  border-bottom: 1px solid var(--hairline);
+}
+.m-manifest__head > * { display: flex; align-items: center; }
+
+.m-rows {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.m-row {
+  position: relative;
+  border-bottom: 1px solid rgba(30, 37, 54, 0.5);
+  font-family: var(--ff-mono);
+  font-size: var(--fs-meta);
+  color: var(--ash);
+  cursor: pointer;
+  transition: background var(--d-fast), color var(--d-fast);
+  opacity: 0;
+  animation: m-row-in 380ms var(--e-out) forwards;
+}
+@keyframes m-row-in {
+  from { opacity: 0; transform: translateX(-8px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* ============================================================
+   ARRIVAL
+   ------------------------------------------------------------
+   This page has no loader. React, Babel and the in-browser JSX
+   compile decide when it can paint, and a synthetic boot log
+   rendered after all of that only delays a page that is already
+   finished — so the arrival IS the transition.
+
+   The chrome fades up once; the rows already carry their own
+   staggered `m-row-in` (28ms apart, set inline from the row
+   index), and that stagger only became visible when the overlay
+   that used to cover it was removed. Keep the chrome shorter
+   than the row stagger so the table is what the eye lands on.
+   ============================================================ */
+.m-shell,
+.m-page {
+  animation: m-arrive 420ms var(--e-out) both;
+}
+.m-page { animation-delay: 60ms; }
+/* `to` resolves to `none`, not `translateY(0)`: .m-shell is position:fixed and
+   `both` keeps the final keyframe, so a lingering transform would leave it a
+   containing block for anything fixed inside it. */
+@keyframes m-arrive {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .m-shell,
+  .m-page,
+  .m-row { animation: none; opacity: 1; transform: none; }
+}
+.m-row:last-child { border-bottom: 0; }
+.m-row:hover,
+.m-row--focus {
+  background: rgba(255, 255, 255, 0.025);
+  color: var(--bone);
+}
+.m-row--focus {
+  background: rgba(0, 240, 200, 0.05);
+}
+.m-row--focus::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--rowColor);
+  box-shadow: 0 0 8px var(--rowColor);
+}
+.m-row--pending { cursor: default; }
+.m-row--pending:hover { background: rgba(255, 255, 255, 0.012); }
+
+.m-col-addr {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.m-row__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px var(--void);
+  transition: box-shadow var(--d-fast);
+}
+.m-row--focus .m-row__dot {
+  box-shadow: 0 0 0 2px var(--void), 0 0 10px var(--rowColor);
+}
+.m-row__addrText {
+  color: var(--signal-dim);
+  font-weight: 500;
+}
+.m-row--focus .m-row__addrText { color: var(--signal); }
+
+.m-state {
+  font-size: var(--fs-nano);
+  letter-spacing: var(--tr-mono);
+  text-transform: uppercase;
+}
+.m-state--live    { color: var(--signal); }
+.m-state--pending { color: var(--ghost); }
+
+.m-col-name {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.m-row__name {
+  font-family: var(--ff-display);
+  font-size: var(--fs-meta);
+  font-weight: 500;
+  color: var(--bone);
+  letter-spacing: var(--tr-body);
+}
+.m-row__fams {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.m-row__fam {
+  font-family: var(--ff-mono);
+  font-size: var(--fs-nano);
+  letter-spacing: var(--tr-caps);
+  text-transform: uppercase;
+  padding: 1px 5px;
+  border: 1px solid var(--famColor);
+  border-radius: var(--r-pill);
+  color: var(--famColor);
+  background: rgba(7, 9, 15, 0.5);
+  opacity: 0.7;
+  transition: opacity var(--d-fast);
+}
+.m-row:hover .m-row__fam,
+.m-row--focus .m-row__fam { opacity: 1; }
+
+.m-col-sub,
+.m-col-stack {
+  font-size: var(--fs-micro);
+  color: var(--ash);
+  text-transform: uppercase;
+  letter-spacing: var(--tr-wide);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.m-col-year {
+  font-size: var(--fs-micro);
+  color: var(--ghost);
+}
+.m-col-open {
+  text-align: right;
+}
+.m-jump {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--fs-nano);
+  letter-spacing: var(--tr-mono);
+  text-transform: uppercase;
+  color: var(--signal);
+  transition: color var(--d-fast), transform var(--d-fast);
+}
+.m-row:hover .m-jump,
+.m-row--focus .m-jump {
+  transform: translateX(2px);
+}
+.m-jump__arr { transition: transform var(--d-fast); }
+.m-row--focus .m-jump__arr { transform: translate(2px, -2px); }
+.m-jump--mute { color: var(--ghost); }
+
+/* empty state */
+.m-empty {
+  padding: var(--s-7) var(--s-5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--ff-mono);
+  font-size: var(--fs-meta);
+  color: var(--ghost);
+  text-transform: uppercase;
+  letter-spacing: var(--tr-mono);
+}
+.m-empty__caret { color: var(--signal); font-weight: 500; }
+.m-empty button {
+  color: var(--signal);
+  text-decoration: underline;
+  font: inherit;
+}
+
+/* footer */
+.m-manifest__foot {
+  display: flex;
+  align-items: center;
+  gap: var(--s-5);
+  padding: 10px var(--s-5);
+  border-top: 1px solid var(--hairline);
+  background: rgba(13, 16, 24, 0.5);
+  font-family: var(--ff-mono);
+  font-size: var(--fs-micro);
+  color: var(--ghost);
+  text-transform: uppercase;
+  letter-spacing: var(--tr-mono);
+}
+.m-manifest__footSep {
+  flex: 1;
+  height: 1px;
+  background: var(--hairline);
+  min-width: 16px;
+}
+.m-manifest__footLink {
+  color: var(--signal);
+  transition: color var(--d-fast);
+}
+.m-manifest__footLink:hover { color: var(--bone); }
+
+/* ============================================================
+   BOTTOM CTA — back to universe
+   ============================================================ */
+.m-cta {
+  margin-top: var(--s-8);
+  padding: var(--s-7) 0 0;
+  border-top: 1px solid var(--hairline);
+}
+.m-cta__inner {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: var(--s-7);
+  padding: var(--s-6);
+  background: linear-gradient(135deg,
+    rgba(13, 16, 24, 0.65) 0%,
+    rgba(7, 9, 15, 0.9) 100%);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-2);
+}
+.m-cta__copy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+.m-cta__over {
+  font-family: var(--ff-mono);
+  font-size: var(--fs-micro);
+  letter-spacing: var(--tr-caps);
+  text-transform: uppercase;
+  color: var(--signal);
+}
+.m-cta__head {
+  font-family: var(--ff-display);
+  font-size: var(--fs-h4);
+  font-weight: 400;
+  letter-spacing: var(--tr-head);
+  color: var(--bone);
+  line-height: var(--lh-tight);
+}
+.m-cta__head em {
+  font-family: var(--ff-serif);
+  font-style: italic;
+  color: var(--signal);
+}
+.m-cta__sub {
+  font-family: var(--ff-display);
+  font-size: var(--fs-meta);
+  line-height: var(--lh-text);
+  color: var(--ash);
+  max-width: 60ch;
+  text-wrap: pretty;
+}
+
+/* ============================================================
+   M-SHELL — local override for the page-level top bar
+   ============================================================ */
+.m-shell {
+  /* The base .shell already pins it; nothing structural changes,
+     this hook is here in case we want to differentiate later. */
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 1200px) {
+  .m-manifest__head,
+  .m-row {
+    grid-template-columns:
+      64px         /* addr */
+      72px         /* state */
+      1.4fr        /* name */
+      1.4fr        /* descriptor */
+      104px        /* state */
+      1.2fr        /* stack */
+      56px;        /* jump */
+    gap: var(--s-4);
+  }
+}
+@media (max-width: 900px) {
+  .m-manifest__head { display: none; }
+  .m-row {
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto auto;
+    grid-template-areas:
+      "addr    state"
+      "name    jump"
+      "stack   year";
+    padding: var(--s-5);
+    gap: 6px var(--s-4);
+  }
+  .m-col-addr   { grid-area: addr;  }
+  .m-col-state  { grid-area: state; justify-self: end; }
+  .m-col-name   { grid-area: name;  }
+  .m-col-sub    { display: none; }
+  .m-col-year   { grid-area: year;  justify-self: end; }
+  .m-col-stack  { grid-area: stack; }
+  .m-col-open   { grid-area: jump;  justify-self: end; }
+
+  .m-controls__row { grid-template-columns: 56px 1fr; }
+  .m-search        { grid-template-columns: auto 1fr auto; }
+
+  .m-cta__inner { grid-template-columns: 1fr; gap: var(--s-5); }
+}
+@media (max-width: 600px) {
+  .m-page { padding: 100px var(--s-5) var(--s-7); }
+  .m-hero { grid-template-columns: 1fr; }
+  .m-hero__rail { flex-direction: row; }
+  .m-hero__bar { flex-wrap: wrap; }
+}
