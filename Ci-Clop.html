@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Ci-Clop — Maslov Oleksandr</title>
+  <link rel="icon" href="data:," />
   <meta name="description" content="Ci-Clop · project case file · Maslov Oleksandr · volunteer firmware · PY32F002A · Energy for Ukraine." />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -44,34 +45,33 @@
     window.THREE = Object.assign({}, THREE, { GLTFLoader, MeshoptDecoder, RoomEnvironment, RoundedBoxGeometry });
   </script>
 
-  <!-- React + Babel -->
+  <!-- React + precompiled page runtime -->
   <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" integrity="sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" integrity="sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1" crossorigin="anonymous"></script>
-  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 
   <!-- Shared system (Cursor, shell) -->
-  <script type="text/babel" data-presets="env,react" src="app/shared/core.jsx"></script>
+  <script defer src="app/page-runtimes/ci-clop-page.js?v=4e5fb0a5e3e8"></script>
 
   <!-- PLAY DEMO · field sound core + torch palette + procedural torch + controller -->
-  <script src="demo/field-core.js"></script>
-  <script src="demo/torch-sound.js"></script>
-  <script src="demo/torch-model.js"></script>
-  <script src="demo/torch-demo.js"></script>
+
+
+
+
 
   <!-- ASCII photo reveal-lens (lab engine + React figure wrapper) -->
-  <script src="app/projects/components/ascii-photo.js"></script>
+
 
   <!-- Project pieces -->
-  <script type="text/babel" data-presets="env,react" src="app/projects/data.jsx?v=7b6bfa82fd1c"></script>
-  <script type="text/babel" data-presets="env,react" src="app/projects/rendering/model-viewer.jsx"></script>
-  <script src="app/projects/rendering/solid-materials.js"></script>
-  <script type="text/babel" data-presets="env,react" src="app/projects/rendering/solid-hero-rig.jsx"></script>
-  <script type="text/babel" data-presets="env,react" src="app/projects/components/tweak-panel.jsx"></script>
-  <script type="text/babel" data-presets="env,react" src="app/projects/components/ascii-photo.jsx"></script>
-  <script type="text/babel" data-presets="env,react" src="demo/torch-hud.jsx"></script>
+
+
+
+
+
+
+
 
   <!-- Page config — everything project-specific lives here -->
-  <script type="text/babel" data-presets="env,react">
+  <script type="text/plain" data-page-runtime-source="ci-clop-config">
     window.PAGE_CONFIG = {
       addr: "0x04",
       docTitle: "Ci-Clop — Maslov Oleksandr",
@@ -127,10 +127,10 @@
   </script>
 
   <!-- Shared project page and pointer effects -->
-  <script src="app/shared/pointer-effects.js"></script>
-  <script type="text/babel" data-presets="env,react" src="app/projects/pages/standard-page.jsx"></script>
+
+
 
   <!-- Shared ASCII RAMP scrollbar -->
-  <script src="app/shared/scrollbar.js"></script>
+
 </body>
 </html>

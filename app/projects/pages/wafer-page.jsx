@@ -136,7 +136,6 @@ function leaveToUniverse() {
   document.documentElement.style.setProperty("--hv-stage-op", "1");
   // model stays on screen: ease back to CENTER + keep spinning (no shrink-away)
   if (window.__waferRig) { window.__waferRig.setIdle(false); window.__waferRig.setExplode(0); window.__waferRig.toHandoff(); window.__hv_exitSpin = true; }
-  document.body.classList.remove("hv-inspecting");
   document.body.classList.add("hv-exit");            // page content fades; the model stage stays
   // Hand the model's live yaw to the landing so the reverse flight CONTINUES
   // this page's rotation instead of snapping. The landing does
@@ -239,7 +238,7 @@ function WaferShell({ project }) {
 /* ============================================================
    HERO — title aligned to the framed anchors, model behind
    ============================================================ */
-function WaferHero({ project, layout, onInspect }) {
+function WaferHero({ project, layout }) {
   return (
     <section className={"hv hv--" + layout} data-screen-label="01 Hero">
       <div className="hv__frame" aria-hidden="true">
@@ -302,7 +301,7 @@ function WaferProjectApp() {
       selector: "[data-mo-cursor-mirror]",
       zIndex: 20,
       dprCap: 1,
-      disabledClasses: ["hv-exit", "hv-inspecting", "hv-demoing"],
+      disabledClasses: ["hv-exit", "hv-demoing"],
     });
     return () => {
       if (cursorFx && typeof cursorFx.destroy === "function") cursorFx.destroy();
@@ -377,8 +376,7 @@ function WaferProjectApp() {
     const loop = (now) => {
       const dt = now - last; last = now;
       const stageVisible = window.scrollY < window.innerHeight * 0.74
-        || window.__hv_exitSpin
-        || document.body.classList.contains("hv-inspecting");
+        || window.__hv_exitSpin;
       if (!document.hidden && stageVisible) {
         if (window.__hv_exitSpin) rig.nudgeYaw(Math.min(50, dt) * 0.0019);   // graceful exit turn
         rig.update(dt); rig.render();
@@ -451,7 +449,7 @@ function WaferProjectApp() {
       <div className={"hv-page " + (ready ? "hv-page--ready" : "")}>
         <WaferShell project={project} />
         <main className="pp">
-          <WaferHero project={project} layout={HERO_LAYOUT} onInspect={enterDemo} />
+          <WaferHero project={project} layout={HERO_LAYOUT} />
           <ProjectStory project={project} />
           <ProjectLinks project={project} />
           <ProjectFooterNav project={project} />

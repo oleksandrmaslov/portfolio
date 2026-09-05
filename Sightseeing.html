@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Sightseeing.inc — Maslov Oleksandr</title>
+  <link rel="icon" href="data:," />
   <meta name="description" content="Sightseeing.inc · project case file · an adaptive city exploration and route-building application." />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -67,25 +68,24 @@
 
   <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" integrity="sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" integrity="sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1" crossorigin="anonymous"></script>
-  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 
-  <script type="text/babel" data-presets="env,react" src="app/shared/core.jsx"></script>
+  <script defer src="app/page-runtimes/sightseeing-project.js?v=37e1ed2a3aad"></script>
 
   <!-- ASCII photo reveal-lens -->
-  <script src="app/projects/components/ascii-photo.js"></script>
+
 
   <!-- Solid-material tuning for production GLBs -->
-  <script src="app/projects/rendering/solid-materials.js"></script>
+
 
   <!-- Project rendering and shared components -->
-  <script type="text/babel" data-presets="env,react" src="app/projects/data.jsx?v=7b6bfa82fd1c"></script>
-  <script type="text/babel" data-presets="env,react" src="app/projects/rendering/model-viewer.jsx"></script>
-  <script type="text/babel" data-presets="env,react" src="app/projects/rendering/solid-hero-rig.jsx"></script>
-  <script type="text/babel" data-presets="env,react" src="app/projects/components/tweak-panel.jsx"></script>
-  <script type="text/babel" data-presets="env,react" src="app/projects/components/ascii-photo.jsx"></script>
+
+
+
+
+
 
   <!-- Page config — everything project-specific lives here -->
-  <script type="text/babel" data-presets="env,react">
+  <script>
     window.PAGE_CONFIG = {
       addr: "0x0A",
       docTitle: "Sightseeing.inc — Maslov Oleksandr",
@@ -104,9 +104,9 @@
   </script>
 
   <!-- Project page with the generic node-handoff protocol -->
-  <script src="app/shared/pointer-effects.js"></script>
-  <script type="text/babel" data-presets="env,react" src="app/projects/pages/handoff-page.jsx"></script>
+  <script defer src="app/page-runtimes/sightseeing-page.js?v=e1dabeb31867"></script>
 
-  <script src="app/shared/scrollbar.js"></script>
+
+
 </body>
 </html>

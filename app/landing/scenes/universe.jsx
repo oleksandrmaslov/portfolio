@@ -349,11 +349,15 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     mount.appendChild(renderer.domElement);
 
     // Visibility gate — the universe is a full-screen hero background, so once
-    // the user scrolls past it there's no reason to keep driving the GPU. We
-    // pause the render (animation state still advances via dt on resume).
+    // the user scrolls past it there's no reason to keep driving the GPU. The
+    // observer stops the RAF chain entirely; re-entry starts one fresh frame.
     let uniOnScreen = true;
     const uniIO = new IntersectionObserver(
-      (entries) => { uniOnScreen = entries[0].isIntersecting; },
+      (entries) => {
+        uniOnScreen = entries[0].isIntersecting;
+        if (uniOnScreen) wakeUniverseLoop();
+        else sleepUniverseLoop();
+      },
       { threshold: 0 }
     );
     uniIO.observe(mount);
@@ -658,10 +662,18 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     // ARRIVAL overture — void → the field condenses into "0x00" → pulse → scatter
     const ARR = { t0: 0, dur: 2600, burst: false };
     const _arrR = new THREE.Vector3(), _arrU = new THREE.Vector3(), _arrUP = new THREE.Vector3(0, 1, 0);
-    window.__mo_arrival_start = () => { ARR.t0 = performance.now(); ARR.burst = false; };
+    window.__mo_arrival_start = () => {
+      ARR.t0 = performance.now();
+      ARR.burst = false;
+      wakeUniverseLoop();
+    };
     // idle attention — after 30s of stillness the field notices you
     let _lastAct = performance.now(), _idleFired = false;
-    const onAnyAct = () => { _lastAct = performance.now(); _idleFired = false; };
+    const onAnyAct = () => {
+      _lastAct = performance.now();
+      _idleFired = false;
+      wakeUniverseLoop();
+    };
     const onActSkipArrival = () => { onAnyAct(); ARR.t0 = 0; };
     window.addEventListener("pointermove", onAnyAct, { passive: true });
     window.addEventListener("pointerdown", onActSkipArrival, { passive: true });
@@ -890,7 +902,6 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     const modelJobByAddr = new Map();
     let modelLoadsActive = 0;
     let modelIdleHandle = 0;
-    let modelRetryHandle = 0;
     const BACKGROUND_MODEL_LOADS = 2;
     const requestModelIdle = window.requestIdleCallback
       ? (callback) => window.requestIdleCallback(callback, { timeout: 900 })
@@ -905,23 +916,16 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
        bounded speculative jobs in flight and start each in an idle slice; a
        hover, focused reel card, or click still promotes its model immediately. */
     function scheduleModelPump() {
-      if (universeDisposed || modelIdleHandle || modelRetryHandle || modelLoadsActive >= BACKGROUND_MODEL_LOADS) return;
+      if (universeDisposed || modelIdleHandle || modelLoadsActive >= BACKGROUND_MODEL_LOADS) return;
       const next = modelJobs.find((job) => job.state === "queued");
       if (!next) return;
-      if (document.hidden || window.__mo_universe_pause) {
-        modelRetryHandle = window.setTimeout(() => {
-          modelRetryHandle = 0;
-          scheduleModelPump();
-        }, 500);
-        return;
-      }
+      // Visibility and Board Flight edges explicitly restart this pump. A
+      // half-second polling timer here kept waking an otherwise dormant page.
+      if (document.hidden || window.__mo_universe_pause) return;
       modelIdleHandle = requestModelIdle(() => {
         modelIdleHandle = 0;
         if (universeDisposed) return;
-        if (document.hidden || window.__mo_universe_pause) {
-          scheduleModelPump();
-          return;
-        }
+        if (document.hidden || window.__mo_universe_pause) return;
         if (modelLoadsActive >= BACKGROUND_MODEL_LOADS) {
           scheduleModelPump();
           return;
@@ -1225,6 +1229,10 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       "0x" + (0x10 + i).toString(16).toUpperCase().padStart(2, "0")
     ));
     const ambientAtlas = makeAmbientAtlas(ambientLabels, THREE);
+    const ambientClockUniform = { value: new THREE.Vector2(1, 0) };
+    const ambientModeOpacityUniform = { value: 1 };
+    const ambientArrivalFadeUniform = { value: 1 };
+    const ambientBoxHalfUniform = { value: BOX_HALF };
     const ambientMat = new THREE.MeshBasicMaterial({
       map: ambientAtlas.texture,
       transparent: true,
@@ -1233,11 +1241,42 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       fog: true,
     });
     ambientMat.onBeforeCompile = (shader) => {
+      shader.uniforms.moAmbientClock = ambientClockUniform;
+      shader.uniforms.moAmbientModeOpacity = ambientModeOpacityUniform;
+      shader.uniforms.moAmbientArrivalFade = ambientArrivalFadeUniform;
+      shader.uniforms.moAmbientBoxHalf = ambientBoxHalfUniform;
       shader.vertexShader =
-        "attribute float aAmbientOpacity; varying float vAmbientOpacity;\n" +
+        [
+          "attribute vec2 aAmbientCorner;",
+          "attribute vec2 aAmbientPhase;",
+          "uniform vec2 moAmbientClock;",
+          "uniform float moAmbientModeOpacity;",
+          "uniform float moAmbientArrivalFade;",
+          "uniform vec3 moAmbientBoxHalf;",
+          "varying float vAmbientOpacity;",
+        ].join("\n") + "\n" +
         shader.vertexShader.replace(
           "#include <begin_vertex>",
-          "#include <begin_vertex>\nvAmbientOpacity = aAmbientOpacity;",
+          [
+            "vec3 transformed = vec3(position);",
+            "vec3 ambientDelta = position - cameraPosition;",
+            "float ambientDistance = length(ambientDelta);",
+            "float ambientNear = smoothstep(1.5, 5.0, ambientDistance);",
+            "vec3 ambientEdge3 = abs(ambientDelta) / moAmbientBoxHalf;",
+            "float ambientFar = smoothstep(0.95, 1.0, max(max(ambientEdge3.x, ambientEdge3.y), ambientEdge3.z));",
+            "float ambientPulse = 0.65 + dot(aAmbientPhase, moAmbientClock) * 0.20;",
+            "vAmbientOpacity = ambientPulse * ambientNear * (1.0 - ambientFar)" +
+              " * moAmbientModeOpacity * moAmbientArrivalFade;",
+          ].join("\n"),
+        ).replace(
+          "#include <project_vertex>",
+          [
+            // `position` is an absolute world-space centre. The mesh transform
+            // exists only so Three.js sorts each depth batch with the cards.
+            "vec4 mvPosition = viewMatrix * vec4(position, 1.0);",
+            "mvPosition.xy += aAmbientCorner;",
+            "gl_Position = projectionMatrix * mvPosition;",
+          ].join("\n"),
         );
       shader.fragmentShader =
         "varying float vAmbientOpacity;\n" +
@@ -1246,14 +1285,17 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
           "#include <map_fragment>\ndiffuseColor.a *= vAmbientOpacity;",
         );
     };
-    ambientMat.customProgramCacheKey = () => "mo-ambient-atlas-v1";
+    ambientMat.customProgramCacheKey = () => "mo-ambient-atlas-billboard-v2";
 
     const ambientBatches = [];
+    const ambientHalfW = AMB_SCALE * 0.5;
+    const ambientHalfH = AMB_SCALE * ambientAtlas.cropRatio * 0.5;
     for (let b = 0; b < AMB_BATCH_N; b++) {
       const maxVerts = AMB_N * 4;
       const positions = new Float32Array(maxVerts * 3);
       const uvs = new Float32Array(maxVerts * 2);
-      const opacity = new Float32Array(maxVerts);
+      const phases = new Float32Array(maxVerts * 2);
+      const corners = new Float32Array(maxVerts * 2);
       const indices = new Uint16Array(AMB_N * 6);
       for (let i = 0; i < AMB_N; i++) {
         const v = i * 4;
@@ -1264,12 +1306,18 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         indices[q + 3] = v + 2;
         indices[q + 4] = v + 3;
         indices[q + 5] = v + 1;
+        const c = i * 8;
+        corners[c] = -ambientHalfW;     corners[c + 1] = ambientHalfH;
+        corners[c + 2] = ambientHalfW; corners[c + 3] = ambientHalfH;
+        corners[c + 4] = -ambientHalfW; corners[c + 5] = -ambientHalfH;
+        corners[c + 6] = ambientHalfW; corners[c + 7] = -ambientHalfH;
       }
       const geo = new THREE.BufferGeometry();
       geo.setIndex(new THREE.BufferAttribute(indices, 1));
       geo.setAttribute("position", new THREE.BufferAttribute(positions, 3).setUsage(THREE.DynamicDrawUsage));
       geo.setAttribute("uv", new THREE.BufferAttribute(uvs, 2).setUsage(THREE.DynamicDrawUsage));
-      geo.setAttribute("aAmbientOpacity", new THREE.BufferAttribute(opacity, 1).setUsage(THREE.DynamicDrawUsage));
+      geo.setAttribute("aAmbientPhase", new THREE.BufferAttribute(phases, 2).setUsage(THREE.DynamicDrawUsage));
+      geo.setAttribute("aAmbientCorner", new THREE.BufferAttribute(corners, 2));
       geo.setDrawRange(0, 0);
       const mesh = new THREE.Mesh(geo, ambientMat);
       mesh.frustumCulled = false;
@@ -1277,7 +1325,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       scene.add(mesh);
       const nodeOrder = new Int16Array(AMB_N);
       nodeOrder.fill(-1);
-      ambientBatches.push({ mesh, geo, positions, uvs, opacity, nodes: [], nodeOrder, depthSum: 0 });
+      ambientBatches.push({ mesh, geo, positions, uvs, phases, nodes: [], nodeOrder, depthSum: 0 });
     }
 
     for (let i = 0; i < AMB_N; i++) {
@@ -1301,8 +1349,6 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       });
     }
     const AMB_DEPTH_SPAN = Math.hypot(BOX.x, BOX.y, BOX.z) * 0.5 + AMB_SCALE;
-    const ambientRight = new THREE.Vector3();
-    const ambientUp = new THREE.Vector3();
     const sortAmbientBackToFront = (a, b) => b.userData.depth - a.userData.depth;
 
     /* ---------- ORIGIN hub — node 0x00 (the self) ----------
@@ -1990,7 +2036,15 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       levelExploreTargetFromGyro();
     };
     const onGyroFrameChange = () => { if (gyroOn) resetGyroCalibration(); };
-    const onGyroVisibility = () => { if (!document.hidden && gyroOn) resetGyroCalibration(); };
+    const onGyroVisibility = () => {
+      if (document.hidden) {
+        sleepUniverseLoop();
+        return;
+      }
+      if (gyroOn) resetGyroCalibration();
+      scheduleModelPump();
+      wakeUniverseLoop();
+    };
     window.addEventListener("deviceorientation", onGyro, true);
     window.addEventListener("orientationchange", onGyroFrameChange, { passive: true });
     if (window.screen && window.screen.orientation && window.screen.orientation.addEventListener) {
@@ -2325,13 +2379,14 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       fitGlyphToView();
       if (cursorFx) cursorFx.resize(w, h);
       if (composer) composer.setSize(w, h);
+      wakeUniverseLoop();
     };
     window.addEventListener("resize", onResize);
     const ro = new ResizeObserver(onResize);
     ro.observe(mount);
 
     /* ---------- loop ---------- */
-    let raf;
+    let raf = 0;
     let last = performance.now();
     let frameI = 0;
     let prioritizedModelAddr = null;
@@ -2419,6 +2474,68 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     // is formed we translate the field by the per-frame camera delta so the
     // un-formed scatter stays in NEAR space around the viewer (see frame loop).
     const _fieldCam = new THREE.Vector3();
+
+    /* ---------- render-loop ownership ----------
+       A paused RAF which merely requests another RAF is still a 60 Hz main-
+       thread loop. Own a single callback and cancel the chain whenever the
+       Universe is covered, hidden, or outside the viewport. Board Flight owns
+       `__mo_universe_pause`, so wrap its ordinary data property while mounted
+       and wake on the true -> false edge without changing the public contract. */
+    let universeLoopDisposed = false;
+    const pauseDescriptor = Object.getOwnPropertyDescriptor(window, "__mo_universe_pause");
+    let pauseSignalInstalled = false;
+    let pauseSignalValue = window.__mo_universe_pause;
+
+    function universeCanRender() {
+      return !universeLoopDisposed
+        && !window.__mo_universe_pause
+        && !document.hidden
+        && uniOnScreen;
+    }
+
+    function sleepUniverseLoop() {
+      if (raf) cancelAnimationFrame(raf);
+      raf = 0;
+      // Sleeping freezes all eased state. Reset the clock at the boundary so
+      // the first visible frame cannot integrate an off-screen time gap.
+      last = performance.now();
+    }
+
+    function wakeUniverseLoop() {
+      if (raf || !universeCanRender()) return;
+      last = performance.now();
+      raf = requestAnimationFrame(frame);
+    }
+
+    if (!pauseDescriptor || ("value" in pauseDescriptor && pauseDescriptor.configurable)) {
+      try {
+        Object.defineProperty(window, "__mo_universe_pause", {
+          configurable: true,
+          enumerable: pauseDescriptor ? pauseDescriptor.enumerable : true,
+          get() { return pauseSignalValue; },
+          set(next) {
+            const wasPaused = !!pauseSignalValue;
+            pauseSignalValue = next;
+            if (wasPaused && !next) {
+              scheduleModelPump();
+              wakeUniverseLoop();
+            }
+            else if (!wasPaused && next) sleepUniverseLoop();
+          },
+        });
+        pauseSignalInstalled = true;
+      } catch (_) {}
+    }
+
+    const onUniversePageWake = () => {
+      scheduleModelPump();
+      wakeUniverseLoop();
+    };
+    const onUniversePageHide = () => sleepUniverseLoop();
+    window.addEventListener("pagehide", onUniversePageHide);
+    window.addEventListener("pageshow", onUniversePageWake);
+    window.addEventListener("mo:page-restored", onUniversePageWake);
+
     function scatterTiles() {
       // Hand the field back to free drift. The tile keeps its current position
       // and the drift loop lerps it to this target, so leaving an arranged beat
@@ -2433,10 +2550,11 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     }
 
     function frame(now) {
-      // Paused while the inline board flight covers the viewport — saves the GPU
-      // from rendering two WebGL scenes at once. dt is reset so resume won't jump.
-      // Also pause when the tab/preview is hidden (no point rendering offscreen).
-      if (window.__mo_universe_pause || document.hidden || !uniOnScreen) { last = now; raf = requestAnimationFrame(frame); return; }
+      // Mark the callback consumed before doing work so every wake source can
+      // schedule at most one successor. A state change between callbacks ends
+      // the chain here instead of leaving a polling RAF alive.
+      raf = 0;
+      if (!universeCanRender()) { last = now; return; }
       const dt = Math.max(0, Math.min(50, now - last)); last = now;
       const mode = modeRef.current;
       const focusAddrNow = focusRef.current;
@@ -2846,11 +2964,12 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         batch.nodes.length = 0;
         batch.depthSum = 0;
       }
-      ambientRight.set(1, 0, 0).applyQuaternion(camera.quaternion);
-      ambientUp.set(0, 1, 0).applyQuaternion(camera.quaternion);
       const ambientClock = now * 0.0008;
       const ambientClockSin = Math.sin(ambientClock);
       const ambientClockCos = Math.cos(ambientClock);
+      ambientClockUniform.value.set(ambientClockCos, ambientClockSin);
+      ambientModeOpacityUniform.value = mode === "drift" ? 1 : 0.35;
+      ambientArrivalFadeUniform.value = arrFade;
       const boxHalfX = BOX.x * 0.5, boxHalfY = BOX.y * 0.5, boxHalfZ = BOX.z * 0.5;
       for (const sp of ambient) {
         const dx = sp.position.x - camera.position.x;
@@ -2869,7 +2988,6 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         let aOp = pulse * nearIn * (1 - farOut);
         if (mode !== "drift") aOp *= 0.35;
         aOp *= arrFade;
-        sp.userData.opacity = aOp;
 
         const depth = dx * FORWARD.x + dy * FORWARD.y + dz * FORWARD.z;
         sp.userData.depth = depth;
@@ -2880,10 +2998,6 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         batch.depthSum += depth;
       }
 
-      const halfW = AMB_SCALE * 0.5;
-      const halfH = AMB_SCALE * ambientAtlas.cropRatio * 0.5;
-      const rx = ambientRight.x * halfW, ry = ambientRight.y * halfW, rz = ambientRight.z * halfW;
-      const ux = ambientUp.x * halfH, uy = ambientUp.y * halfH, uz = ambientUp.z * halfH;
       for (const batch of ambientBatches) {
         const count = batch.nodes.length;
         batch.mesh.visible = count > 0;
@@ -2893,27 +3007,28 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         batch.nodes.sort(sortAmbientBackToFront);
         const meanDepth = batch.depthSum / count;
         batch.mesh.position.copy(camera.position).addScaledVector(FORWARD, meanDepth);
-        const ox = batch.mesh.position.x, oy = batch.mesh.position.y, oz = batch.mesh.position.z;
+        let positionDirty = false;
         let uvDirty = false;
+        let phaseDirty = false;
 
         for (let i = 0; i < count; i++) {
           const sp = batch.nodes[i];
           const c = sp.userData.atlas;
-          const x = sp.position.x - ox, y = sp.position.y - oy, z = sp.position.z - oz;
+          // Store the world-space centre at all four indexed vertices. The
+          // shader subtracts the batch's sort-only translation and expands the
+          // fixed corner in view space. Unless a mote wraps/moves or changes
+          // depth order, this buffer is now bit-identical and stays on the GPU.
+          const x = Math.fround(sp.position.x);
+          const y = Math.fround(sp.position.y);
+          const z = Math.fround(sp.position.z);
           const p = i * 12;
-          // top-left, top-right, bottom-left, bottom-right
-          batch.positions[p] = x - rx + ux;
-          batch.positions[p + 1] = y - ry + uy;
-          batch.positions[p + 2] = z - rz + uz;
-          batch.positions[p + 3] = x + rx + ux;
-          batch.positions[p + 4] = y + ry + uy;
-          batch.positions[p + 5] = z + rz + uz;
-          batch.positions[p + 6] = x - rx - ux;
-          batch.positions[p + 7] = y - ry - uy;
-          batch.positions[p + 8] = z - rz - uz;
-          batch.positions[p + 9] = x + rx - ux;
-          batch.positions[p + 10] = y + ry - uy;
-          batch.positions[p + 11] = z + rz - uz;
+          if (batch.positions[p] !== x || batch.positions[p + 1] !== y || batch.positions[p + 2] !== z) {
+            batch.positions[p] = x; batch.positions[p + 1] = y; batch.positions[p + 2] = z;
+            batch.positions[p + 3] = x; batch.positions[p + 4] = y; batch.positions[p + 5] = z;
+            batch.positions[p + 6] = x; batch.positions[p + 7] = y; batch.positions[p + 8] = z;
+            batch.positions[p + 9] = x; batch.positions[p + 10] = y; batch.positions[p + 11] = z;
+            positionDirty = true;
+          }
 
           if (batch.nodeOrder[i] !== sp.userData.index) {
             batch.nodeOrder[i] = sp.userData.index;
@@ -2922,31 +3037,34 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
             batch.uvs[u + 2] = c.u1; batch.uvs[u + 3] = c.v1;
             batch.uvs[u + 4] = c.u0; batch.uvs[u + 5] = c.v0;
             batch.uvs[u + 6] = c.u1; batch.uvs[u + 7] = c.v0;
+            batch.phases[u] = sp.userData.phaseSin; batch.phases[u + 1] = sp.userData.phaseCos;
+            batch.phases[u + 2] = sp.userData.phaseSin; batch.phases[u + 3] = sp.userData.phaseCos;
+            batch.phases[u + 4] = sp.userData.phaseSin; batch.phases[u + 5] = sp.userData.phaseCos;
+            batch.phases[u + 6] = sp.userData.phaseSin; batch.phases[u + 7] = sp.userData.phaseCos;
             uvDirty = true;
+            phaseDirty = true;
           }
-
-          const a = i * 4;
-          batch.opacity[a] = sp.userData.opacity;
-          batch.opacity[a + 1] = sp.userData.opacity;
-          batch.opacity[a + 2] = sp.userData.opacity;
-          batch.opacity[a + 3] = sp.userData.opacity;
         }
         const positionAttr = batch.geo.attributes.position;
         const uvAttr = batch.geo.attributes.uv;
-        const opacityAttr = batch.geo.attributes.aAmbientOpacity;
+        const phaseAttr = batch.geo.attributes.aAmbientPhase;
         if (positionAttr.clearUpdateRanges) {
-          positionAttr.clearUpdateRanges();
-          opacityAttr.clearUpdateRanges();
-          positionAttr.addUpdateRange(0, count * 4 * 3);
-          opacityAttr.addUpdateRange(0, count * 4);
+          if (positionDirty) {
+            positionAttr.clearUpdateRanges();
+            positionAttr.addUpdateRange(0, count * 4 * 3);
+          }
           if (uvDirty) {
             uvAttr.clearUpdateRanges();
             uvAttr.addUpdateRange(0, count * 4 * 2);
           }
+          if (phaseDirty) {
+            phaseAttr.clearUpdateRanges();
+            phaseAttr.addUpdateRange(0, count * 4 * 2);
+          }
         }
-        positionAttr.needsUpdate = true;
+        if (positionDirty) positionAttr.needsUpdate = true;
         if (uvDirty) uvAttr.needsUpdate = true;
-        opacityAttr.needsUpdate = true;
+        if (phaseDirty) phaseAttr.needsUpdate = true;
       }
 
       /* HUD frame tracking — the overlay is sized to the hovered card's
@@ -3248,7 +3366,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         try { window.dispatchEvent(new CustomEvent("mo:first-frame")); } catch (_) {}
       }
       probeDoF(dt);
-      raf = requestAnimationFrame(frame);
+      if (universeCanRender()) raf = requestAnimationFrame(frame);
     }
 
     /* Wrap Points buffer attribute around camera (only modify entries that wrap) */
@@ -3271,15 +3389,16 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       if (dirty) attr.needsUpdate = true;
     }
 
-    raf = requestAnimationFrame(frame);
+    wakeUniverseLoop();
     mount.style.cursor = "grab";
     try { window.dispatchEvent(new CustomEvent("mo:universe-ready")); } catch (_) {}
 
     return () => {
+      universeLoopDisposed = true;
       universeDisposed = true;
       if (modelIdleHandle) cancelModelIdle(modelIdleHandle);
-      if (modelRetryHandle) clearTimeout(modelRetryHandle);
       cancelAnimationFrame(raf);
+      raf = 0;
       clearTimeout(idleTimer);
       if (cursorFx) cursorFx.destroy();
       if (bokehPass && bokehPass.dispose) bokehPass.dispose();
@@ -3328,6 +3447,23 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         window.screen.orientation.removeEventListener("change", onGyroFrameChange);
       }
       document.removeEventListener("visibilitychange", onGyroVisibility);
+      window.removeEventListener("pagehide", onUniversePageHide);
+      window.removeEventListener("pageshow", onUniversePageWake);
+      window.removeEventListener("mo:page-restored", onUniversePageWake);
+      if (pauseSignalInstalled) {
+        const finalPauseValue = pauseSignalValue;
+        try {
+          if (pauseDescriptor) {
+            Object.defineProperty(window, "__mo_universe_pause", {
+              ...pauseDescriptor,
+              value: finalPauseValue,
+            });
+          } else {
+            delete window.__mo_universe_pause;
+            if (finalPauseValue !== undefined) window.__mo_universe_pause = finalPauseValue;
+          }
+        } catch (_) {}
+      }
       delete window.__mo_universe;
       delete window.__mo_arrival_start;
       delete window.__mo_cam;

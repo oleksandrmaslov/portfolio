@@ -44,6 +44,7 @@ const { useState: usePC, useEffect: useEPC, useRef: useRPC } = React;
 
 const PC = window.PAGE_CONFIG || {};
 const PC_IDLE_DRIFT = true;
+const PC_LIFECYCLE = window.MOProjectPageLifecycle;
 
 /* Shared project keycap button. */
 function PCKeyButton({ children, legend = "↵", primary, onPress }) {
@@ -172,29 +173,7 @@ function PCProjectLinks({ project }) {
 
 /* leave — fade the page, keep the model spinning, go home */
 function pcLeaveToUniverse() {
-  if (document.body.classList.contains("hv-exit")) return;
-  window.__hv_leaving = true;
-  document.documentElement.style.setProperty("--hv-stage-op", "1");
-  const rig = window.__pageRig;
-  if (rig) { rig.setIdle(false); rig.setExplode(0); rig.toHandoff(); window.__hv_exitSpin = true; }
-  document.body.classList.remove("hv-inspecting");
-  document.body.classList.add("hv-exit");
-  // Hand the model's live yaw to the landing so the reverse flight CONTINUES
-  // this page's rotation instead of snapping. The landing does
-  // `if (isFinite(seamYaw)) rig.setYaw(seamYaw)` — with the key absent that
-  // parseFloat is NaN, snapHandoff()'s arriveYaw-0.85 stands, and the mark
-  // visibly jumps at the seam. Every route must write this, not just the
-  // handoff pages.
-  try {
-    if (rig && rig.yaw != null) sessionStorage.setItem("mo_node_yaw", String(rig.yaw));
-  } catch (_) {}
-  const returnTo = sessionStorage.getItem("mo_node_return_origin") || "work";
-  sessionStorage.removeItem("mo_node_return_origin");
-  sessionStorage.setItem("mo_node_return", "1");
-  sessionStorage.setItem("mo_node_return_addr", PC.addr);
-  sessionStorage.setItem("mo_node_return_target", returnTo);
-  const dest = returnTo === "universe" ? "./" : "./#work";
-  setTimeout(() => { window.location.href = dest; }, 720);
+  PC_LIFECYCLE.leaveToUniverse(PC);
 }
 
 function PCProjectFooterNav({ project }) {
@@ -328,126 +307,19 @@ function ProjectPageApp() {
   const demoRef  = useRPC(false);
   useEPC(() => { demoRef.current = demo; }, [demo]);
 
-  useEPC(() => {
-    const sharedCursor = window.MOCursorDistortion;
-    if (!sharedCursor || typeof sharedCursor.mountStandalone !== "function") return;
-    const cursorFx = sharedCursor.mountStandalone({
-      THREE: window.THREE,
-      selector: "[data-mo-cursor-mirror]",
-      zIndex: 20,
-      dprCap: 1,
-      disabledClasses: ["hv-exit", "hv-inspecting", "hv-demoing"],
-    });
-    return () => {
-      if (cursorFx && typeof cursorFx.destroy === "function") cursorFx.destroy();
-    };
-  }, []);
-
-  /* build the rig once */
-  useEPC(() => {
-    document.title = PC.docTitle || (project.name + " — Maslov Oleksandr");
-    const mount = stageRef.current;
-    const H = PC.hero || {};
-    const rig = window.makeWaferRig(mount, {
-      model: H.model || project.model,
-      buildModel: H.buildModel,
-      pose: H.pose,
-      modelFit: H.modelFit,
-      // Material route for the shared solid rig. assignMaterial is for a GLB
-      // that ships none of its own; keepMaterials is for a procedural hero
-      // that authored its own. Both MUST be forwarded — a hero config that
-      // sets one and is not passed it renders flat white or gets its
-      // materials cloned out from under its own per-frame code.
-      assignMaterial: H.assignMaterial,
-      keepMaterials: H.keepMaterials,
-    });
-    rigRef.current = rig;
-    window.__pageRig = rig;
-    if (!rig) { setReady(true); return; }
-
-    // The flight lands on THESE routes too — every universe tile and every reel
-    // card can open one. This template used to read none of the arrival keys and
-    // unconditionally replayed the centred handoff, so an arriving model was put
-    // back in the middle of the screen and then slid right to its rest layout.
-    // That slide is what reads as "the model comes in from the left". Wafer and
-    // the handoff pages already continue the flight; this now matches them.
-    const arrived = sessionStorage.getItem("mo_node_arrive") === "1"
-                 && sessionStorage.getItem("mo_node_addr") === PC.addr;
-    sessionStorage.removeItem("mo_node_arrive");
-
-    const settleToRest = (yawTarget) => {
-      if (yawTarget != null && rig.setYawTarget) rig.setYawTarget(yawTarget);
-      else rig.resetOrbit();
-      pcApplyHeroLayout(rig);
-      if (PC_IDLE_DRIFT) rig.setIdle(true);
-      setReady(true);
-    };
-
-    if (arrived) {
-      // Boot AT the rest layout and at the angle the flight ended on, then
-      // carry the turn forward — the model never travels across the screen.
-      const RG = window.WAFER_RIG;
-      const seamYaw = parseFloat(sessionStorage.getItem("mo_node_yaw"));
-      sessionStorage.removeItem("mo_node_yaw");
-      let bootYaw, restYaw;
-      if (isFinite(seamYaw)) {
-        bootYaw = seamYaw;
-        restYaw = RG.arriveYaw;
-        while (restYaw < bootYaw + 0.25) restYaw += Math.PI * 2;
-      } else {
-        bootYaw = RG.arriveYaw - 0.6;
-        restYaw = RG.arriveYaw;
-      }
-      const P = pcHeroLayoutParams();
-      rig.snapToLayout(P.fracX, P.scale, P.offY, bootYaw);
-      if (rig.setYawRate) rig.setYawRate(0.045);
-      setReady(true);
-      requestAnimationFrame(() => requestAnimationFrame(() => settleToRest(restYaw)));
-      setTimeout(() => { if (rig.setYawRate) rig.setYawRate(0.22); }, 1100);
-    } else {
-      // Direct load — there was no flight, so the centred entrance is correct.
-      sessionStorage.removeItem("mo_node_yaw");
-      rig.beginHandoff();
-      setTimeout(settleToRest, 460);
-    }
-
-    let raf, last = performance.now();
-    const loop = (now) => {
-      const dt = now - last; last = now;
-      const stageVisible = window.scrollY < window.innerHeight * 0.74
-        || window.__hv_exitSpin
-        || document.body.classList.contains("hv-inspecting");
-      if (!document.hidden && stageVisible) {
-        if (window.__hv_exitSpin) rig.nudgeYaw(Math.min(50, dt) * 0.0019);
-        rig.update(dt); rig.render();
-      }
-      raf = requestAnimationFrame(loop);
-    };
-    raf = requestAnimationFrame(loop);
-
-    const onResize = () => {
-      if (!mount) return;
-      rig.setSize(mount.clientWidth, mount.clientHeight);
-      if (!demoRef.current && !window.__hv_leaving) pcApplyHeroLayout(rig);
-    };
-    window.addEventListener("resize", onResize);
-    onResize();
-
-    const onScroll = () => {
-      if (demoRef.current || window.__hv_leaving) return;
-      const op = Math.max(0, 1 - window.scrollY / (window.innerHeight * 0.72));
-      document.documentElement.style.setProperty("--hv-stage-op", op.toFixed(3));
-    };
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-
-    return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener("resize", onResize);
-      window.removeEventListener("scroll", onScroll);
-      rig.dispose();
-    };
-  }, []);
+  PC_LIFECYCLE.useCursorEffect();
+  PC_LIFECYCLE.useHeroRigEffect({
+    config: PC,
+    project,
+    stageRef,
+    rigRef,
+    demoRef,
+    setReady,
+    heroLayoutParams: pcHeroLayoutParams,
+    applyHeroLayout: pcApplyHeroLayout,
+    idleDrift: PC_IDLE_DRIFT,
+    bridgeSeam: false,
+  });
 
   const enterDemo = () => {
     if (!PC.demo || demoRef.current) return;
@@ -455,6 +327,7 @@ function ProjectPageApp() {
     document.body.classList.add("hv-demoing");
     const rig = rigRef.current;
     if (rig) rig.setIdle(false);
+    PC_LIFECYCLE.wakeHeroRig();
   };
   const exitDemo = () => {
     setDemo(false);
@@ -465,6 +338,7 @@ function ProjectPageApp() {
       pcApplyHeroLayout(rig);
       if (PC_IDLE_DRIFT) rig.setIdle(true);
     }
+    PC_LIFECYCLE.wakeHeroRig();
     const op = Math.max(0, 1 - window.scrollY / (window.innerHeight * 0.72));
     document.documentElement.style.setProperty("--hv-stage-op", op.toFixed(3));
   };
