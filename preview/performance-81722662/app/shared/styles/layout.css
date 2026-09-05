@@ -1,0 +1,150 @@
+/* Shared layout and site chrome. */
+@keyframes blink { 50% { opacity: 0; } }
+
+/* ============================================================
+   SHELL — fixed nav + status rail
+   ============================================================ */
+.shell {
+  position: fixed;
+  inset: 0 0 auto 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--s-6) var(--gutter);
+  z-index: 50;
+  font-family: var(--ff-mono);
+  font-size: var(--fs-meta);
+  letter-spacing: var(--tr-mono);
+  background: linear-gradient(var(--void), transparent);
+  pointer-events: none;
+}
+.shell > * { pointer-events: auto; }
+.shell__brand { color: var(--bone); font-weight: 500; }
+.shell__nav { display: flex; gap: var(--s-6); }
+.shell__nav a { color: var(--ash); transition: color var(--d-fast); }
+.shell__nav a:hover { color: var(--bone); }
+.shell__status { display: flex; align-items: center; gap: var(--s-4); color: var(--ash); }
+.shell__dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--signal);
+  box-shadow: 0 0 12px var(--signal-glow);
+  animation: pulse 2.2s var(--e-in-out) infinite;
+}
+@keyframes pulse {
+  0%,100% { transform: scale(1); opacity: 1; }
+  50%     { transform: scale(1.4); opacity: 0.55; }
+}
+
+/* ============================================================
+   AMBIENT — signal traces canvas
+   ============================================================ */
+/* ============================================================
+   PAGE / SECTIONS
+   ============================================================ */
+.page { position: relative; z-index: 1; padding-top: 120px; padding-bottom: var(--s-10); }
+
+.section {
+  padding: var(--s-9) 0 var(--s-9);
+  position: relative;
+}
+.section + .section { border-top: 1px solid var(--hairline); }
+.section__head {
+  display: grid;
+  grid-template-columns: 144px 1fr 144px;
+  gap: var(--s-7);
+  align-items: baseline;
+  margin-bottom: var(--s-8);
+}
+.section__num {
+  font-family: var(--ff-mono);
+  font-size: var(--fs-meta);
+  color: var(--signal);
+  letter-spacing: var(--tr-mono);
+}
+.section__title {
+  font-family: var(--ff-display);
+  font-size: var(--fs-h2);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--tr-display);
+  font-weight: 400;
+  color: var(--bone);
+}
+.section__lede {
+  margin-top: var(--s-5);
+  max-width: var(--w-reading);
+  color: var(--ash);
+  font-size: var(--fs-lead);
+  line-height: var(--lh-text);
+  letter-spacing: var(--tr-body);
+}
+.section__meta {
+  text-align: right;
+  font-family: var(--ff-mono);
+  font-size: var(--fs-meta);
+  color: var(--ghost);
+}
+
+/* ============================================================
+   HERO — system brief
+   ============================================================ */
+.hero { padding: var(--s-9) 0 var(--s-8); }
+.hero__overline {
+  font-family: var(--ff-mono);
+  font-size: var(--fs-meta);
+  color: var(--signal);
+  letter-spacing: var(--tr-caps);
+  text-transform: uppercase;
+  margin-bottom: var(--s-6);
+}
+.hero__title {
+  font-family: var(--ff-display);
+  font-size: var(--fs-d1);
+  line-height: var(--lh-flush);
+  letter-spacing: var(--tr-tighter);
+  font-weight: 400;
+  color: var(--bone);
+  margin-bottom: var(--s-6);
+}
+.hero__title em {
+  font-family: var(--ff-serif);
+  font-style: italic;
+  font-weight: 400;
+  color: var(--ash);
+}
+.hero__lede {
+  font-family: var(--ff-display);
+  font-size: var(--fs-lead);
+  color: var(--ash);
+  max-width: 52ch;
+  line-height: var(--lh-text);
+}
+.hero__metaCol { display: flex; flex-direction: column; gap: var(--s-5); align-items: flex-start; }
+.hero__metaRow {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: var(--s-6);
+  font-family: var(--ff-mono);
+  font-size: var(--fs-meta);
+}
+.hero__metaKey { color: var(--ghost); letter-spacing: var(--tr-caps); text-transform: uppercase; }
+.hero__metaVal { color: var(--bone); }
+
+/* ============================================================
+   CARDS / TILES
+   ============================================================ */
+.tile {
+  background: var(--carbon);
+  border: 1px solid var(--hairline);
+  padding: var(--s-6);
+  transition: border-color var(--d-fast) var(--e-out), background var(--d-fast) var(--e-out);
+}
+.tile:hover { border-color: var(--trace); background: var(--carbon-2); }
+
+.tile__label {
+  font-family: var(--ff-mono);
+  font-size: var(--fs-micro);
+  color: var(--ghost);
+  text-transform: uppercase;
+  letter-spacing: var(--tr-caps);
+  margin-bottom: var(--s-5);
+}
