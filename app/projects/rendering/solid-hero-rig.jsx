@@ -49,9 +49,8 @@
   window.makeWaferRig = function (mount, opts = {}) {
     const THREE = window.THREE;
     if (!THREE || !mount) return null;
-    const modelUrl = opts.model || "models/wafer_demo.glb";
-
-    const POSE = opts.pose || RIG.pose;
+    const initialModelUrl = opts.model || "models/wafer_demo.glb";
+    const initialPose = opts.pose || RIG.pose;
 
     const sz = () => ({ w: mount.clientWidth || 1, h: mount.clientHeight || 1 });
     let { w, h } = sz();
@@ -111,7 +110,7 @@
     const pivot  = new THREE.Group();
     const spin   = new THREE.Group();
     const holder = new THREE.Group();
-    holder.rotation.set(POSE.x, POSE.y, POSE.z);
+    holder.rotation.set(initialPose.x, initialPose.y, initialPose.z);
     spin.add(holder);
     pivot.add(spin);
     scene.add(pivot);
@@ -120,9 +119,41 @@
     const parts = [];
     let modelReady = false;
     let modelUpdate = null;
+    let modelRoot = null;
+    let modelOwnsGeometry = false;
+    let modelGeneration = 0;
+    let ownedMaterials = new Set();
 
-    function ingest(root) {
-      window.fitModelToSize(root, THREE, opts.modelFit || RIG.modelFit);
+    function disposeOwnedMaterial(material, disposeTextures) {
+      if (!material) return;
+      if (disposeTextures) {
+        for (const key of Object.keys(material)) {
+          const value = material[key];
+          if (value && value.isTexture && value.dispose) value.dispose();
+        }
+      }
+      if (material.dispose) material.dispose();
+    }
+
+    function clearModel() {
+      if (modelRoot) holder.remove(modelRoot);
+      for (const material of ownedMaterials) disposeOwnedMaterial(material, modelOwnsGeometry);
+      if (modelOwnsGeometry && modelRoot) {
+        modelRoot.traverse((object) => {
+          if (object.geometry && object.geometry.dispose) object.geometry.dispose();
+        });
+      }
+      modelRoot = null;
+      modelOwnsGeometry = false;
+      ownedMaterials = new Set();
+      parts.length = 0;
+      modelReady = false;
+      modelUpdate = null;
+    }
+
+    function ingest(root, config, generation) {
+      if (!root || generation !== modelGeneration) return false;
+      window.fitModelToSize(root, THREE, config.modelFit || RIG.modelFit);
       // NO matcap. Three material paths, in priority order:
       //   assignMaterial  → material-less GLB gets one solid house material
       //   keepMaterials   → procedural hero authored its own; leave it alone
@@ -131,11 +162,29 @@
       // and raises envMapIntensity. A procedural body was lit without an
       // environment, so that both washes it out and hands the builder's own
       // per-frame code a material object the scene no longer draws.
-      if (opts.assignMaterial && window.applySolidMaterials) {
-        window.applySolidMaterials(root, THREE, opts.assignMaterial);
-      } else if (opts.keepMaterials !== true && window.tuneRealMaterials) {
+      const nextOwnedMaterials = new Set();
+      if (config.assignMaterial && window.applySolidMaterials) {
+        const material = window.applySolidMaterials(root, THREE, config.assignMaterial);
+        if (material) nextOwnedMaterials.add(material);
+      } else if (config.keepMaterials !== true && window.tuneRealMaterials) {
         window.tuneRealMaterials(root, THREE, { envMapIntensity: 1.9 });
+        root.traverse((object) => {
+          if (!object.isMesh || !object.material) return;
+          const materials = Array.isArray(object.material) ? object.material : [object.material];
+          for (const material of materials) if (material) nextOwnedMaterials.add(material);
+        });
       }
+      if (config.ownsGeometry && config.keepMaterials) {
+        root.traverse((object) => {
+          if (!object.isMesh && !object.isLine && !object.isPoints) return;
+          if (!object.material) return;
+          const materials = Array.isArray(object.material) ? object.material : [object.material];
+          for (const material of materials) if (material) nextOwnedMaterials.add(material);
+        });
+      }
+      modelRoot = root;
+      modelOwnsGeometry = !!config.ownsGeometry;
+      ownedMaterials = nextOwnedMaterials;
       holder.add(root);
       // collect meshes for the exploded view (radial out-vectors)
       const centre = new THREE.Vector3();
@@ -151,27 +200,64 @@
         parts.push({ mesh: o, base: o.position.clone(), out: dir });
       });
       modelReady = true;
-      if (opts.onReady) opts.onReady();
+      if (config.onReady) config.onReady();
+      return true;
     }
 
-    if (typeof opts.buildModel === "function") {
-      // Procedural hero (no GLB yet). A builder may return a bare Object3D, or
-      // a { group, update } descriptor whose update runs inside THIS rig's
-      // loop — so it inherits the shared visibility gate instead of holding a
-      // second permanent RAF open for the lifetime of the page.
-      try {
-        const built = opts.buildModel(THREE);
-        if (built && built.group && built.group.isObject3D) {
-          modelUpdate = typeof built.update === "function" ? built.update : null;
-          ingest(built.group);
-        } else ingest(built);
+    /* Reuse one renderer/environment across project handoffs. Previously the
+       click path constructed a fresh WebGL context and PMREM target before it
+       could draw frame one. setModel swaps only the project payload; the
+       camera, lights, environment and shader cache stay warm. */
+    function setModel(next = {}) {
+      const generation = ++modelGeneration;
+      clearModel();
+      const pose = next.pose || RIG.pose;
+      holder.rotation.set(pose.x || 0, pose.y || 0, pose.z || 0);
+      const config = {
+        model: next.model || initialModelUrl,
+        modelFit: next.modelFit || RIG.modelFit,
+        assignMaterial: next.assignMaterial,
+        keepMaterials: next.keepMaterials === true,
+        buildModel: next.buildModel,
+        onReady: next.onReady,
+        ownsGeometry: typeof next.buildModel === "function",
+      };
+
+      if (typeof config.buildModel === "function") {
+        // Procedural hero (no GLB yet). A builder may return a bare Object3D,
+        // or a { group, update } descriptor whose update runs inside THIS
+        // rig's loop, inheriting the shared visibility gate.
+        try {
+          const built = config.buildModel(THREE);
+          if (built && built.group && built.group.isObject3D) {
+            modelUpdate = typeof built.update === "function" ? built.update : null;
+            return Promise.resolve(ingest(built.group, config, generation));
+          }
+          return Promise.resolve(ingest(built, config, generation));
+        } catch (error) {
+          console.warn("[wafer-rig] buildModel failed", error);
+          return Promise.resolve(false);
+        }
       }
-      catch (e) { console.warn("[wafer-rig] buildModel failed", e); }
-    } else if (window.loadProjectModel) {
-      window.loadProjectModel(modelUrl, THREE)
-        .then(ingest)
-        .catch((e) => { console.warn("[wafer-rig] model load failed", e); });
+
+      if (!window.loadProjectModel) return Promise.resolve(false);
+      return window.loadProjectModel(config.model, THREE)
+        .then((root) => ingest(root, config, generation))
+        .catch((error) => {
+          if (generation === modelGeneration) console.warn("[wafer-rig] model load failed", error);
+          return false;
+        });
     }
+
+    if (!opts.deferModel) setModel({
+      model: initialModelUrl,
+      modelFit: opts.modelFit,
+      pose: initialPose,
+      assignMaterial: opts.assignMaterial,
+      keepMaterials: opts.keepMaterials,
+      buildModel: opts.buildModel,
+      onReady: opts.onReady,
+    });
 
     /* ---- eased state (cur) toward targets (tgt) ---- */
     const cur = { entry: 1, offX: 0, offY: 0, scale: 1, yaw: RIG.arriveYaw, pitch: RIG.arrivePitch, explode: 0, dist: RIG.camZ };
@@ -251,7 +337,7 @@
     const api = {
       el: renderer.domElement,
       get ready() { return modelReady; },
-      render, update, setSize,
+      render, update, setSize, setModel,
       setEaseRate(r) { easeRate = r; },
       setYawRate(r) { yawRate = r; },
       isAt() { return false; },
@@ -318,8 +404,9 @@
       setExplode(v) { tgt.explode = Math.max(0, Math.min(1, v)); },
       get explode() { return tgt.explode; },
       dispose() {
+        modelGeneration++;
+        clearModel();
         try { mount.removeChild(renderer.domElement); } catch (_) {}
-        modelUpdate = null;
         if (envTarget) envTarget.dispose();
         if (renderer.renderLists) renderer.renderLists.dispose();
         renderer.dispose();

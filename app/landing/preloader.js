@@ -24,7 +24,8 @@
     three: 0.18,
     react: 0.12,
     universe: 0.20,
-    frame: 0.14,
+    frame: 0.08,
+    handoff: 0.06,
     title: 0.08,
   };
 
@@ -41,6 +42,7 @@
   var poll = 0;
   var styleFallback = 0;
   var fontFallback = 0;
+  var handoffFallback = 0;
   var readyTimer = 0;
   var revealTimer = 0;
   var finishTimer = 0;
@@ -59,7 +61,7 @@
   }
 
   function hasCore() {
-    return !!(hit.styles && hit.fonts && hit.three && hit.react && hit.universe && hit.frame && hit.title);
+    return !!(hit.styles && hit.fonts && hit.three && hit.react && hit.universe && hit.frame && hit.handoff && hit.title);
   }
 
   function applyProgress(value) {
@@ -119,7 +121,22 @@
 
   function onStyleReady() { checkStyles(); }
   function onUniverseReady() { mark("universe"); }
-  function onFirstFrame() { mark("frame"); }
+  function onFirstFrame() {
+    mark("frame");
+    if (reduced) {
+      mark("handoff");
+      return;
+    }
+    // The hidden node-flight renderer is prepared after the Universe's first
+    // paint. Keep that one-time context/PMREM/shader work behind this existing
+    // horizon, but never let a failed model or WebGL context hold the page.
+    handoffFallback = window.setTimeout(function () { mark("handoff"); }, 1800);
+  }
+  function onHandoffWarm() {
+    window.clearTimeout(handoffFallback);
+    handoffFallback = 0;
+    mark("handoff");
+  }
   function onTitleReady() { mark("title"); }
 
   function draw(now) {
@@ -145,6 +162,7 @@
     window.clearInterval(poll);
     window.clearTimeout(styleFallback);
     window.clearTimeout(fontFallback);
+    window.clearTimeout(handoffFallback);
     window.clearTimeout(readyTimer);
     window.clearTimeout(revealTimer);
     window.clearTimeout(finishTimer);
@@ -153,6 +171,7 @@
     window.removeEventListener("mo:style-ready", onStyleReady);
     window.removeEventListener("mo:universe-ready", onUniverseReady);
     window.removeEventListener("mo:first-frame", onFirstFrame);
+    window.removeEventListener("mo:handoff-warm", onHandoffWarm);
     window.removeEventListener("mo:title-ready", onTitleReady);
   }
 
@@ -190,6 +209,7 @@
   window.addEventListener("mo:style-ready", onStyleReady);
   window.addEventListener("mo:universe-ready", onUniverseReady, { once: true });
   window.addEventListener("mo:first-frame", onFirstFrame, { once: true });
+  window.addEventListener("mo:handoff-warm", onHandoffWarm, { once: true });
   window.addEventListener("mo:title-ready", onTitleReady, { once: true });
 
   styleLinks.forEach(function (link) {

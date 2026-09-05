@@ -27,19 +27,16 @@ const { useState: useNH, useEffect: useNHE, useRef: useNHR } = React;
 
 const NH_DEFAULTS = { duration: 1200, spinSpeed: 0.0039, scale: 0.92, restX: 0.46, offsetY: 0 };
 const NH_REDUCED = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-/* The rig is built on click: a fresh WebGLRenderer, an env prefilter and a GLB
-   fetch. Measured cold on a laptop that was 380ms to construct and ~1.2s to
-   the first drawn frame. Starting the travel at click time therefore ran the
-   whole flight behind an opaque veil and popped the model in as it ended.
-   The flight now waits for the rig to have actually PAINTED the model, capped
-   so a slow model never holds the reader on the landing. Painted, not merely
-   loaded: rig.ready flips when the GLB is in the scene, but the first render
-   that includes it still compiles its shader program, and that compile was
-   measured at up to 2.5s while the universe renderer was also live. Releasing
-   on `ready` therefore handed the travel a single stalled frame. Waiting one
-   more frame puts the compile inside the hold, where the card is still on
-   screen, and lets the travel run on a warm program. */
+/* The original click path built a fresh WebGLRenderer, environment prefilter
+   and GLB consumer. Measured cold on a laptop, that was 380ms to construct and
+   ~1.2s to the first drawn frame. A single reusable handoff context is now
+   primed behind the entry horizon and retargeted on card intent. The bounded
+   hold remains load-bearing for an uncached/touch-selected model: rig.ready
+   flips when the GLB enters the scene, but the first render that includes it
+   still compiles its program. Waiting for two painted frames keeps that compile
+   on the card instead of releasing a one-frame teleport into the flight. */
 const NH_HOLD_MAX = 900;
+const NH_SEAM_MAX = 1000;
 
 function nhClearStale() {
   for (const k of ["mo_node_arrive", "mo_node_yaw", "mo_node_return", "mo_node_return_addr", "mo_node_return_target"]) sessionStorage.removeItem(k);
@@ -58,6 +55,71 @@ function NodeHandoff() {
   const [holding, setHolding] = useNH(false);   // rig mounted, travel not started yet
   const rigRef = useNHR(null);
   const rafRef = useNHR(0);
+  const prepRafRef = useNHR(0);
+  const prepTokenRef = useNHR(0);
+  const prepRef = useNHR({ addr: "", promise: null });
+  const hoverTimerRef = useNHR(0);
+  const modeRef = useNHR(mode);
+  modeRef.current = mode;
+
+  const stopPrep = () => {
+    prepTokenRef.current += 1;
+    cancelAnimationFrame(prepRafRef.current);
+    prepRafRef.current = 0;
+  };
+
+  /* Prime one reusable transition context after the Universe has painted its
+     first frame. The old path built a WebGLRenderer + PMREM environment inside
+     the click handler, so even a fully cached GLB could not draw without a
+     large first-frame stall. Model payloads can now be swapped into this same
+     context; hover prepares the exact project while the first field node is
+     the loader-time default. */
+  const prepareRig = (project) => {
+    if (!project || returningRef.current || modeRef.current !== "idle") return null;
+    const mount = mountRef.current;
+    if (!mount || !window.makeNodeRig) return null;
+
+    let rig = rigRef.current;
+    if (!rig || typeof rig.setProject !== "function") {
+      if (rig) { try { rig.dispose(); } catch (_) {} }
+      while (mount.firstChild) mount.removeChild(mount.firstChild);
+      rig = window.makeNodeRig(mount, { project, model: project.model, mode: "handoff", deferModel: true });
+      rigRef.current = rig;
+    }
+    if (!rig) return null;
+
+    const current = prepRef.current;
+    if (current.addr === project.addr && current.promise) return current.promise;
+    stopPrep();
+    const token = prepTokenRef.current;
+    const load = rig.getProjectAddr && rig.getProjectAddr() === project.addr
+      ? Promise.resolve(rig.ready)
+      : Promise.resolve(rig.setProject(project));
+    const promise = load.then(() => new Promise((resolve) => {
+      let painted = 0;
+      const paint = () => {
+        if (token !== prepTokenRef.current || modeRef.current !== "idle" || rigRef.current !== rig) {
+          resolve(false);
+          return;
+        }
+        rig.update(16);
+        rig.render();
+        if (rig.ready) painted += 1;
+        if (painted >= 2) {
+          try { window.dispatchEvent(new CustomEvent("mo:handoff-warm", { detail: { addr: project.addr } })); } catch (_) {}
+          resolve(true);
+          return;
+        }
+        prepRafRef.current = requestAnimationFrame(paint);
+      };
+      prepRafRef.current = requestAnimationFrame(paint);
+    })).catch(() => false);
+    prepRef.current = { addr: project.addr, promise };
+    promise.then((ready) => {
+      if (!ready && prepRef.current.promise === promise) prepRef.current = { addr: "", promise: null };
+    });
+    return promise;
+  };
 
   /* The shared core clears persisted CSS/global exit state. This component
      also owns React and WebGL state, so reset that state when Back restores a
@@ -65,21 +127,53 @@ function NodeHandoff() {
   useNHE(() => {
     const onRestore = () => {
       cancelAnimationFrame(rafRef.current);
+      stopPrep();
       if (rigRef.current) {
         try { rigRef.current.dispose(); } catch (_) {}
         rigRef.current = null;
       }
+      prepRef.current = { addr: "", promise: null };
       const mount = mountRef.current;
       if (mount) while (mount.firstChild) mount.removeChild(mount.firstChild);
       const wf = document.querySelector(".wf");
       if (wf) wf.classList.remove("wf--dissolve");
       returningRef.current = false;
+      modeRef.current = "idle";
       setHolding(false);
       setHud({ addr: "", name: "" });
       setMode("idle");
     };
     window.addEventListener("mo:page-restored", onRestore);
     return () => window.removeEventListener("mo:page-restored", onRestore);
+  }, []);
+
+  useNHE(() => {
+    if (returningRef.current) return;
+    const firstProject = () => (window.MO_PROJECTS || []).find((project) => project.universe !== false && project.file);
+    const prime = () => {
+      const project = firstProject();
+      if (project) prepareRig(project);
+    };
+    const onHover = (event) => {
+      const addr = event && event.detail && event.detail.addr;
+      clearTimeout(hoverTimerRef.current);
+      hoverTimerRef.current = 0;
+      if (!addr) return;
+      const project = window.MO_PROJECT_BY_ADDR && window.MO_PROJECT_BY_ADDR[addr];
+      if (!project || !project.file) return;
+      // A short intent delay avoids recompiling as the pointer merely crosses
+      // a card; a deliberate hover still prepares before the click.
+      hoverTimerRef.current = setTimeout(() => prepareRig(project), 90);
+    };
+    window.addEventListener("mo:first-frame", prime, { once: true });
+    window.addEventListener("mo:tileHover", onHover);
+    if (window.__mo_firstFrameAt) prime();
+    return () => {
+      window.removeEventListener("mo:first-frame", prime);
+      window.removeEventListener("mo:tileHover", onHover);
+      clearTimeout(hoverTimerRef.current);
+      stopPrep();
+    };
   }, []);
 
   /* Universe tiles route through the SAME event — no per-address checks. */
@@ -95,10 +189,18 @@ function NodeHandoff() {
     const mount = mountRef.current;
     if (!mount || !window.makeNodeRig) return null;
     cancelAnimationFrame(rafRef.current);
-    if (rigRef.current) { try { rigRef.current.dispose(); } catch (_) {} rigRef.current = null; }
+    stopPrep();
+    let rig = rigRef.current;
+    if (rig && typeof rig.setProject === "function") {
+      if (!rig.getProjectAddr || rig.getProjectAddr() !== project.addr) rig.setProject(project);
+      prepRef.current = { addr: project.addr, promise: Promise.resolve(rig.ready) };
+      return rig;
+    }
+    if (rig) { try { rig.dispose(); } catch (_) {} rigRef.current = null; }
     while (mount.firstChild) mount.removeChild(mount.firstChild);
-    const rig = window.makeNodeRig(mount, { project, model: project.model, mode: "handoff" });
+    rig = window.makeNodeRig(mount, { project, model: project.model, mode: "handoff" });
     rigRef.current = rig;
+    prepRef.current = { addr: project.addr, promise: Promise.resolve(rig && rig.ready) };
     return rig;
   };
 
@@ -139,10 +241,6 @@ function NodeHandoff() {
       requestAnimationFrame(() => {
         const rig = buildRig(project);
         const go = () => {
-          try {
-            const seam = rig && rig.captureFrame && rig.captureFrame();
-            if (seam) sessionStorage.setItem("mo_node_seam", seam);
-          } catch (_) {}
           const yaw = rig && rig.getYaw ? rig.getYaw() : 0;
           sessionStorage.setItem("mo_node_handoff", JSON.stringify({
             addr: project.addr, slug: project.slug, yaw,
@@ -151,7 +249,25 @@ function NodeHandoff() {
           sessionStorage.setItem("mo_node_addr", project.addr);
           sessionStorage.setItem("mo_node_yaw", String(yaw));
           sessionStorage.setItem("mo_node_arrive", "1");
-          window.location.href = project.file;
+          sessionStorage.removeItem("mo_node_seam");
+
+          let capture = Promise.resolve(null);
+          try {
+            if (rig && rig.captureFrameAsync) capture = Promise.resolve(rig.captureFrameAsync());
+            else if (rig && rig.captureFrame) capture = Promise.resolve(rig.captureFrame());
+          } catch (_) {}
+          const timeout = new Promise((resolve) => setTimeout(() => resolve({ timedOut: true, seam: null }), NH_SEAM_MAX));
+          Promise.race([capture.then((seam) => ({ timedOut: false, seam })), timeout]).then((result) => {
+            let seam = result.seam;
+            // Preserve the original seam contract on browsers whose async
+            // canvas encoder is unavailable or stalls. This rare fallback is
+            // the former synchronous path, so quality never degrades.
+            if (!seam) {
+              try { seam = rig && rig.captureFrame ? rig.captureFrame() : null; } catch (_) {}
+            }
+            try { if (seam) sessionStorage.setItem("mo_node_seam", seam); } catch (_) {}
+            window.location.href = project.file;
+          });
         };
         if (!rig) { setHolding(false); setTimeout(go, 200); return; }   // no rig: don't strand the hold
 
@@ -358,6 +474,8 @@ function NodeHandoff() {
 
   useNHE(() => () => {
     cancelAnimationFrame(rafRef.current);
+    stopPrep();
+    clearTimeout(hoverTimerRef.current);
     if (rigRef.current) rigRef.current.dispose();
   }, []);
 

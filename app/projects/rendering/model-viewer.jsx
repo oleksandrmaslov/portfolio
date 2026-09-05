@@ -78,11 +78,13 @@
     return k;
   }
 
-  window.loadProjectModel = function (url, THREE) {
+  /* Resolve the one cached source scene for a URL. Consumers normally need a
+     clone because they change transforms/materials; speculative warm-up does
+     not. Keeping those two jobs separate avoids cloning every model once just
+     to immediately throw that clone away in preloadModels(). */
+  function ensureProjectModel(url, THREE) {
     if (!url) return Promise.reject(new Error("no model url"));
-    if (_gltfCache.has(url)) {
-      return _gltfCache.get(url).then((root) => root.clone(true));
-    }
+    if (_gltfCache.has(url)) return _gltfCache.get(url);
     const LoaderCtor = THREE.GLTFLoader || (window.THREE && window.THREE.GLTFLoader);
     if (!LoaderCtor) {
       return Promise.reject(new Error("GLTFLoader not loaded — add it after three.min.js"));
@@ -107,7 +109,11 @@
     p.catch(() => {
       if (_gltfCache.get(url) === p) _gltfCache.delete(url);
     });
-    return p.then((root) => root.clone(true));
+    return p;
+  }
+
+  window.loadProjectModel = function (url, THREE) {
+    return ensureProjectModel(url, THREE).then((root) => root.clone(true));
   };
 
   /* Preload a list of GLB URLs — kicks off the same cached fetch+parse used
@@ -124,7 +130,7 @@
           const id = setInterval(() => { if (ready()) { clearInterval(id); res(); } }, 30);
         });
     return wait.then(() => Promise.all(
-      urls.map((u) => window.loadProjectModel(u, window.THREE).catch(() => null))
+      urls.map((u) => ensureProjectModel(u, window.THREE).then(() => null).catch(() => null))
     ));
   };
   window.dispatchEvent(new Event("mo:model-loader-ready"));

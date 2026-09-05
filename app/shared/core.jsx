@@ -1,5 +1,5 @@
 /* ============================================================
-   M.O. SYSTEM — Shared site core (boot, grid, cursor, shell)
+   M.O. SYSTEM — Shared site core (grid, cursor, shell)
    ============================================================ */
 
 const { useState, useEffect, useRef } = React;
@@ -32,10 +32,11 @@ const { useState, useEffect, useRef } = React;
    overlay is gone — it could only ever render after React, Babel
    and the in-browser JSX compile had finished, so it masked
    nothing and just held a ready page behind ~3s of synthetic log.
-   Landing and All Projects still benefit from warming their field
-   registry. Project routes deliberately warm only their current
-   model in projects/data.jsx; sweeping PROJECT_DATA here defeated
-   that memory/GPU boundary and parsed every case-study mark.
+   The landing warms only the greeting model. The Universe owns the
+   remaining queue so speculative GLB parsing cannot burst across the
+   first visible seconds. Project routes deliberately warm only their
+   current model in projects/data.jsx; sweeping PROJECT_DATA here
+   defeated that memory/GPU boundary and parsed every case-study mark.
    ============================================================ */
 (function warmModels() {
   let done = false;
@@ -43,9 +44,8 @@ const { useState, useEffect, useRef } = React;
     if (done) return;
     done = true;
     if (typeof window.preloadModels !== "function") return;
-    const urls = new Set();
-    (window.UNIVERSE_PROJECTS || []).forEach(p => p.model && urls.add(p.model));
-    if (urls.size) window.preloadModels(Array.from(urls));
+    const greeting = (window.UNIVERSE_PROJECTS || []).find(p => p.model);
+    if (greeting && greeting.model) window.preloadModels([greeting.model]);
   }, 0);
 })();
 

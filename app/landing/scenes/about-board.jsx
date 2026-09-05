@@ -825,6 +825,9 @@
 
     const curvePts = TRACE_PTS.map(p => new THREE.Vector3(p[0], TOP + 0.05, p[1]));
     const curve = new THREE.CatmullRomCurve3(curvePts, false, "catmullrom", 0.5);
+    const STOP_TS = STOPS.map((stop) => stop.p / (TRACE_PTS.length - 1));
+    const explodeStopIndex = STOPS.findIndex((stop) => stop.explode);
+    const EXPLODE_STOP_T = explodeStopIndex >= 0 ? STOP_TS[explodeStopIndex] : -1;
 
     /* Shared void and emergence. */
     const STAR_N = 380;
@@ -850,6 +853,7 @@
     const asmPos2  = new Float32Array(ASM_N * 3);
     const asmTar2  = new Float32Array(ASM_N * 3);
     const asmSca2  = new Float32Array(ASM_N * 3);
+    const asmDelta2 = new Float64Array(ASM_N * 3);
     const _tp = new THREE.Vector3();
     for (let i = 0; i < ASM_N; i++) {
       if (Math.random() < 0.7) {
@@ -871,6 +875,9 @@
       asmPos2[i*3+0] = asmSca2[i*3+0];
       asmPos2[i*3+1] = asmSca2[i*3+1];
       asmPos2[i*3+2] = asmSca2[i*3+2];
+      asmDelta2[i*3+0] = asmTar2[i*3+0] - asmSca2[i*3+0];
+      asmDelta2[i*3+1] = asmTar2[i*3+1] - asmSca2[i*3+1];
+      asmDelta2[i*3+2] = asmTar2[i*3+2] - asmSca2[i*3+2];
     }
     asmGeo2.setAttribute("position", new THREE.BufferAttribute(asmPos2, 3).setUsage(THREE.DynamicDrawUsage));
     const assembly2 = new THREE.Points(asmGeo2, new THREE.PointsMaterial({
@@ -928,11 +935,14 @@
     const camLook = new THREE.Vector3(0,0,0);
     let curLook = new THREE.Vector3(0,0,0);
 
-    function stopTForIndex(i) { return STOPS[i].p / (TRACE_PTS.length - 1); }
+    function stopTForIndex(i) { return STOP_TS[i]; }
 
     const HERO_POS = new THREE.Vector3(), HERO_LOOK = new THREE.Vector3();
     const NODE_POS = new THREE.Vector3(), NODE_LOOK = new THREE.Vector3();
     const tmpFinalPos = new THREE.Vector3(), tmpFinalLook = new THREE.Vector3();
+    const pathTargetPos = new THREE.Vector3(), pathTargetLook = new THREE.Vector3();
+    let pathCacheT = NaN, pathCacheMode = "";
+    let lastAssemblyCe = NaN;
 
     function update(t, mode, dt, footerMix, introMix, nodeMix) {
       t = Math.max(0, Math.min(1, t));
@@ -943,22 +953,32 @@
       const nowMs = performance.now();
 
       let active = 0, best = 1e9;
-      STOPS.forEach((s, i) => { const d = Math.abs(t - stopTForIndex(i)); if (d < best) { best = d; active = i; } });
-
-      if (mode === "bench") {
-        curve.getPointAt(t, tmpLook);
-        tmpPos.set(tmpLook.x + 6, 26, tmpLook.z + 26);
-        camLook.copy(tmpLook);
-      } else {
-        curve.getPointAt(t, tmpPos);
-        curve.getTangentAt(t, tmpTan);
-        tmpSide.copy(tmpTan).cross(UP).normalize();
-        tmpPos.addScaledVector(tmpTan, -8).addScaledVector(tmpSide, 7);
-        tmpPos.y += 12;
-        curve.getPointAt(Math.min(1, t + 0.05), tmpLook);
-        tmpLook.y += 0.2;
-        camLook.copy(tmpLook);
+      for (let i = 0; i < STOP_TS.length; i++) {
+        const d = Math.abs(t - STOP_TS[i]);
+        if (d < best) { best = d; active = i; }
       }
+
+      // Board render wakes can repeat while the scroll-derived path parameter
+      // is unchanged. CatmullRom getPointAt/getTangentAt perform arc-length
+      // lookup work; reuse their exact result until t or the view mode changes.
+      if (t !== pathCacheT || mode !== pathCacheMode) {
+        if (mode === "bench") {
+          curve.getPointAt(t, pathTargetLook);
+          pathTargetPos.set(pathTargetLook.x + 6, 26, pathTargetLook.z + 26);
+        } else {
+          curve.getPointAt(t, pathTargetPos);
+          curve.getTangentAt(t, tmpTan);
+          tmpSide.copy(tmpTan).cross(UP).normalize();
+          pathTargetPos.addScaledVector(tmpTan, -8).addScaledVector(tmpSide, 7);
+          pathTargetPos.y += 12;
+          curve.getPointAt(Math.min(1, t + 0.05), pathTargetLook);
+          pathTargetLook.y += 0.2;
+        }
+        pathCacheT = t;
+        pathCacheMode = mode;
+      }
+      tmpPos.copy(pathTargetPos);
+      camLook.copy(pathTargetLook);
 
       camPos.lerp(tmpPos, ease);
       curLook.lerp(camLook, ease);
@@ -995,7 +1015,7 @@
       starField2.material.opacity = 0.5 * (1 - nodeMix);
       scene.fog.far = 150 + 260 * nodeMix;
       if (deviceGroup) {
-        const dt2 = Math.abs(t - stopTForIndex(STOPS.findIndex(s => s.explode)));
+        const dt2 = Math.abs(t - EXPLODE_STOP_T);
         const ex = Math.max(0, 1 - dt2 * 9);
         deviceGroup.visible = ex > 0.02 && waferState.parts.length > 0;
         if (deviceGroup.visible) {
@@ -1015,9 +1035,12 @@
       const conv = 1 - introMix;
       if (introMix > 0.001) {
         const ce = conv < 0.5 ? 2*conv*conv : 1 - Math.pow(-2*conv+2, 2)/2;
-        const ap = assembly2.geometry.attributes.position.array;
-        for (let i = 0; i < ASM_N * 3; i++) ap[i] = asmSca2[i] + (asmTar2[i] - asmSca2[i]) * ce;
-        assembly2.geometry.attributes.position.needsUpdate = true;
+        if (ce !== lastAssemblyCe) {
+          const ap = assembly2.geometry.attributes.position.array;
+          for (let i = 0; i < ASM_N * 3; i++) ap[i] = asmSca2[i] + asmDelta2[i] * ce;
+          assembly2.geometry.attributes.position.needsUpdate = true;
+          lastAssemblyCe = ce;
+        }
         assembly2.material.opacity = Math.sin(Math.min(1, conv) * Math.PI) * 0.85;
         assembly2.material.size = 1.4 - conv * 0.5;
         const fo = Math.min(1, conv / 0.55);

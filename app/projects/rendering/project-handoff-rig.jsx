@@ -9,7 +9,8 @@
      · a procedural "node-shell" PROXY for nodes whose GLB isn't
        ready (model.ready === false) — honest, wireframe, address
        + carrier particle, no fake product shape;
-     · getYaw / setYaw / captureFrame on top of the classic API
+     · reusable setProject plus getYaw / setYaw / sync+async seam capture
+       on top of the classic API
        (startFromScreen, setLayout, snapToLayout, setEaseRate,
         nudgeYaw, update, render, dispose).
    The Wafer page continues to use its dedicated solid-material rig.
@@ -73,22 +74,36 @@
   /* ---- generic rig ---- */
   window.makeNodeRig = function (mount, opts = {}) {
     if (!window.makeWaferRig) { console.warn("[node-rig] makeWaferRig missing"); return null; }
-    const project = opts.project || {};
-    const model = opts.model || project.model || {};
-    const base = {
-      modelFit: model.rigFit || 4.0,
-      pose: model.rigPose || { x: -0.35, y: 0, z: 0 },
-      onReady: opts.onReady,
-      preserveDrawingBuffer: true,
+    const modelOptions = (project, explicitModel) => {
+      const model = explicitModel || project.model || {};
+      const config = {
+        modelFit: model.rigFit || 4.0,
+        pose: model.rigPose || { x: -0.35, y: 0, z: 0 },
+        onReady: opts.onReady,
+      };
+      if (model.ready && model.src) {
+        config.model = model.src;
+        if (model.assignMaterial) config.assignMaterial = model.assignMaterial;
+      } else {
+        config.keepMaterials = true;
+        config.buildModel = (THREE) => window.makeNodeProxy(THREE, project);
+      }
+      return config;
     };
-    if (model.ready && model.src) {
-      base.model = model.src;
-      if (model.assignMaterial) base.assignMaterial = model.assignMaterial;
-    } else {
-      base.buildModel = (THREE) => window.makeNodeProxy(THREE, project);
-    }
+    const project = opts.project || {};
+    const base = Object.assign(modelOptions(project, opts.model), {
+      deferModel: opts.deferModel === true,
+      preserveDrawingBuffer: true,
+    });
     const rig = window.makeWaferRig(mount, base);
     if (!rig) return null;
+    let currentAddr = opts.deferModel ? "" : (project.addr || "");
+    rig.setProject = (nextProject) => {
+      const next = nextProject || {};
+      currentAddr = next.addr || "";
+      return rig.setModel(modelOptions(next, next.model));
+    };
+    rig.getProjectAddr = () => currentAddr;
     rig.getYaw = () => rig.yaw;
     rig.setYaw = (y) => { rig.snapToLayout(0, 1, 0, y); };
     rig.captureFrame = (tw = 1100) => {
@@ -99,6 +114,26 @@
         const tc = document.createElement("canvas"); tc.width = tw; tc.height = th;
         tc.getContext("2d").drawImage(cnv, 0, 0, tw, th);
         return tc.toDataURL("image/jpeg", 0.82);
+      } catch (_) { return null; }
+    };
+    rig.captureFrameAsync = async (tw = 1100) => {
+      try {
+        const cnv = rig.el;
+        if (!cnv || !cnv.width) return null;
+        const th = Math.round(tw * cnv.height / cnv.width);
+        const tc = document.createElement("canvas"); tc.width = tw; tc.height = th;
+        // Snapshot the live buffer immediately, then let JPEG encoding happen
+        // through toBlob instead of the synchronous toDataURL hot path.
+        tc.getContext("2d").drawImage(cnv, 0, 0, tw, th);
+        if (!tc.toBlob) return rig.captureFrame(tw);
+        const blob = await new Promise((resolve) => tc.toBlob(resolve, "image/jpeg", 0.82));
+        if (!blob) return null;
+        return await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(typeof reader.result === "string" ? reader.result : null);
+          reader.onerror = () => resolve(null);
+          reader.readAsDataURL(blob);
+        });
       } catch (_) { return null; }
     };
     return rig;

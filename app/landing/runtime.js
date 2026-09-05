@@ -36,11 +36,10 @@ var _React = React,
     if (done) return;
     done = true;
     if (typeof window.preloadModels !== "function") return;
-    var urls = new Set();
-    (window.UNIVERSE_PROJECTS || []).forEach(function (p) {
-      return p.model && urls.add(p.model);
+    var greeting = (window.UNIVERSE_PROJECTS || []).find(function (p) {
+      return p.model;
     });
-    if (urls.size) window.preloadModels(Array.from(urls));
+    if (greeting && greeting.model) window.preloadModels([greeting.model]);
   }, 0);
 })();
 function Cursor() {
@@ -655,13 +654,9 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     _ktx2 = k;
     return k;
   }
-  window.loadProjectModel = function (url, THREE) {
+  function ensureProjectModel(url, THREE) {
     if (!url) return Promise.reject(new Error("no model url"));
-    if (_gltfCache.has(url)) {
-      return _gltfCache.get(url).then(function (root) {
-        return root.clone(true);
-      });
-    }
+    if (_gltfCache.has(url)) return _gltfCache.get(url);
     var LoaderCtor = THREE.GLTFLoader || window.THREE && window.THREE.GLTFLoader;
     if (!LoaderCtor) {
       return Promise.reject(new Error("GLTFLoader not loaded — add it after three.min.js"));
@@ -684,7 +679,10 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     p["catch"](function () {
       if (_gltfCache.get(url) === p) _gltfCache["delete"](url);
     });
-    return p.then(function (root) {
+    return p;
+  }
+  window.loadProjectModel = function (url, THREE) {
+    return ensureProjectModel(url, THREE).then(function (root) {
       return root.clone(true);
     });
   };
@@ -703,7 +701,9 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     });
     return wait.then(function () {
       return Promise.all(urls.map(function (u) {
-        return window.loadProjectModel(u, window.THREE)["catch"](function () {
+        return ensureProjectModel(u, window.THREE).then(function () {
+          return null;
+        })["catch"](function () {
           return null;
         });
       }));
@@ -1076,14 +1076,14 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
 
 /* ---- app/projects/rendering/solid-hero-rig.jsx ---- */
 function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
-function _createForOfIteratorHelper(r, e) { var t = "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (!t) { if (Array.isArray(r) || (t = _unsupportedIterableToArray(r)) || e && r && "number" == typeof r.length) { t && (r = t); var _n = 0, F = function F() {}; return { s: F, n: function n() { return _n >= r.length ? { done: !0 } : { done: !1, value: r[_n++] }; }, e: function e(r) { throw r; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var o, a = !0, u = !1; return { s: function s() { t = t.call(r); }, n: function n() { var r = t.next(); return a = r.done, r; }, e: function e(r) { u = !0, o = r; }, f: function f() { try { a || null == t["return"] || t["return"](); } finally { if (u) throw o; } } }; }
-function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
-function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
 function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
 function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { _defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
 function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
 function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == _typeof(i) ? i : i + ""; }
 function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != _typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+function _createForOfIteratorHelper(r, e) { var t = "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (!t) { if (Array.isArray(r) || (t = _unsupportedIterableToArray(r)) || e && r && "number" == typeof r.length) { t && (r = t); var _n = 0, F = function F() {}; return { s: F, n: function n() { return _n >= r.length ? { done: !0 } : { done: !1, value: r[_n++] }; }, e: function e(r) { throw r; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var o, a = !0, u = !1; return { s: function s() { t = t.call(r); }, n: function n() { var r = t.next(); return a = r.done, r; }, e: function e(r) { u = !0, o = r; }, f: function f() { try { a || null == t["return"] || t["return"](); } finally { if (u) throw o; } } }; }
+function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
+function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
 (function () {
   var SIGNAL = 0x00f0c8;
   var RIG = {
@@ -1111,8 +1111,8 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e 
     var opts = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
     var THREE = window.THREE;
     if (!THREE || !mount) return null;
-    var modelUrl = opts.model || "models/wafer_demo.glb";
-    var POSE = opts.pose || RIG.pose;
+    var initialModelUrl = opts.model || "models/wafer_demo.glb";
+    var initialPose = opts.pose || RIG.pose;
     var sz = function sz() {
       return {
         w: mount.clientWidth || 1,
@@ -1178,22 +1178,104 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e 
     var pivot = new THREE.Group();
     var spin = new THREE.Group();
     var holder = new THREE.Group();
-    holder.rotation.set(POSE.x, POSE.y, POSE.z);
+    holder.rotation.set(initialPose.x, initialPose.y, initialPose.z);
     spin.add(holder);
     pivot.add(spin);
     scene.add(pivot);
     var parts = [];
     var modelReady = false;
     var modelUpdate = null;
-    function ingest(root) {
-      window.fitModelToSize(root, THREE, opts.modelFit || RIG.modelFit);
-      if (opts.assignMaterial && window.applySolidMaterials) {
-        window.applySolidMaterials(root, THREE, opts.assignMaterial);
-      } else if (opts.keepMaterials !== true && window.tuneRealMaterials) {
+    var modelRoot = null;
+    var modelOwnsGeometry = false;
+    var modelGeneration = 0;
+    var ownedMaterials = new Set();
+    function disposeOwnedMaterial(material, disposeTextures) {
+      if (!material) return;
+      if (disposeTextures) {
+        for (var _i = 0, _Object$keys = Object.keys(material); _i < _Object$keys.length; _i++) {
+          var _key = _Object$keys[_i];
+          var value = material[_key];
+          if (value && value.isTexture && value.dispose) value.dispose();
+        }
+      }
+      if (material.dispose) material.dispose();
+    }
+    function clearModel() {
+      if (modelRoot) holder.remove(modelRoot);
+      var _iterator = _createForOfIteratorHelper(ownedMaterials),
+        _step;
+      try {
+        for (_iterator.s(); !(_step = _iterator.n()).done;) {
+          var material = _step.value;
+          disposeOwnedMaterial(material, modelOwnsGeometry);
+        }
+      } catch (err) {
+        _iterator.e(err);
+      } finally {
+        _iterator.f();
+      }
+      if (modelOwnsGeometry && modelRoot) {
+        modelRoot.traverse(function (object) {
+          if (object.geometry && object.geometry.dispose) object.geometry.dispose();
+        });
+      }
+      modelRoot = null;
+      modelOwnsGeometry = false;
+      ownedMaterials = new Set();
+      parts.length = 0;
+      modelReady = false;
+      modelUpdate = null;
+    }
+    function ingest(root, config, generation) {
+      if (!root || generation !== modelGeneration) return false;
+      window.fitModelToSize(root, THREE, config.modelFit || RIG.modelFit);
+      var nextOwnedMaterials = new Set();
+      if (config.assignMaterial && window.applySolidMaterials) {
+        var material = window.applySolidMaterials(root, THREE, config.assignMaterial);
+        if (material) nextOwnedMaterials.add(material);
+      } else if (config.keepMaterials !== true && window.tuneRealMaterials) {
         window.tuneRealMaterials(root, THREE, {
           envMapIntensity: 1.9
         });
+        root.traverse(function (object) {
+          if (!object.isMesh || !object.material) return;
+          var materials = Array.isArray(object.material) ? object.material : [object.material];
+          var _iterator2 = _createForOfIteratorHelper(materials),
+            _step2;
+          try {
+            for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
+              var _material = _step2.value;
+              if (_material) nextOwnedMaterials.add(_material);
+            }
+          } catch (err) {
+            _iterator2.e(err);
+          } finally {
+            _iterator2.f();
+          }
+        });
       }
+      if (config.ownsGeometry && config.keepMaterials) {
+        root.traverse(function (object) {
+          if (!object.isMesh && !object.isLine && !object.isPoints) return;
+          if (!object.material) return;
+          var materials = Array.isArray(object.material) ? object.material : [object.material];
+          var _iterator3 = _createForOfIteratorHelper(materials),
+            _step3;
+          try {
+            for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
+              var _material2 = _step3.value;
+              if (_material2) nextOwnedMaterials.add(_material2);
+            }
+          } catch (err) {
+            _iterator3.e(err);
+          } finally {
+            _iterator3.f();
+          }
+        });
+      }
+      modelRoot = root;
+      modelOwnsGeometry = !!config.ownsGeometry;
+      ownedMaterials = nextOwnedMaterials;
       holder.add(root);
       var centre = new THREE.Vector3();
       var box = new THREE.Box3().setFromObject(root);
@@ -1212,23 +1294,54 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e 
         });
       });
       modelReady = true;
-      if (opts.onReady) opts.onReady();
+      if (config.onReady) config.onReady();
+      return true;
     }
-    if (typeof opts.buildModel === "function") {
-      try {
-        var built = opts.buildModel(THREE);
-        if (built && built.group && built.group.isObject3D) {
-          modelUpdate = typeof built.update === "function" ? built.update : null;
-          ingest(built.group);
-        } else ingest(built);
-      } catch (e) {
-        console.warn("[wafer-rig] buildModel failed", e);
+    function setModel() {
+      var next = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+      var generation = ++modelGeneration;
+      clearModel();
+      var pose = next.pose || RIG.pose;
+      holder.rotation.set(pose.x || 0, pose.y || 0, pose.z || 0);
+      var config = {
+        model: next.model || initialModelUrl,
+        modelFit: next.modelFit || RIG.modelFit,
+        assignMaterial: next.assignMaterial,
+        keepMaterials: next.keepMaterials === true,
+        buildModel: next.buildModel,
+        onReady: next.onReady,
+        ownsGeometry: typeof next.buildModel === "function"
+      };
+      if (typeof config.buildModel === "function") {
+        try {
+          var built = config.buildModel(THREE);
+          if (built && built.group && built.group.isObject3D) {
+            modelUpdate = typeof built.update === "function" ? built.update : null;
+            return Promise.resolve(ingest(built.group, config, generation));
+          }
+          return Promise.resolve(ingest(built, config, generation));
+        } catch (error) {
+          console.warn("[wafer-rig] buildModel failed", error);
+          return Promise.resolve(false);
+        }
       }
-    } else if (window.loadProjectModel) {
-      window.loadProjectModel(modelUrl, THREE).then(ingest)["catch"](function (e) {
-        console.warn("[wafer-rig] model load failed", e);
+      if (!window.loadProjectModel) return Promise.resolve(false);
+      return window.loadProjectModel(config.model, THREE).then(function (root) {
+        return ingest(root, config, generation);
+      })["catch"](function (error) {
+        if (generation === modelGeneration) console.warn("[wafer-rig] model load failed", error);
+        return false;
       });
     }
+    if (!opts.deferModel) setModel({
+      model: initialModelUrl,
+      modelFit: opts.modelFit,
+      pose: initialPose,
+      assignMaterial: opts.assignMaterial,
+      keepMaterials: opts.keepMaterials,
+      buildModel: opts.buildModel,
+      onReady: opts.onReady
+    });
     var cur = {
       entry: 1,
       offX: 0,
@@ -1283,17 +1396,17 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e 
       camera.position.z = cur.dist;
       if (parts.length) {
         var amt = cur.explode * (RIG.modelFit * 0.42);
-        var _iterator = _createForOfIteratorHelper(parts),
-          _step;
+        var _iterator4 = _createForOfIteratorHelper(parts),
+          _step4;
         try {
-          for (_iterator.s(); !(_step = _iterator.n()).done;) {
-            var p = _step.value;
+          for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
+            var p = _step4.value;
             p.mesh.position.set(p.base.x + p.out.x * amt, p.base.y + p.out.y * amt, p.base.z + p.out.z * amt);
           }
         } catch (err) {
-          _iterator.e(err);
+          _iterator4.e(err);
         } finally {
-          _iterator.f();
+          _iterator4.f();
         }
       }
     }
@@ -1339,6 +1452,7 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e 
       render: render,
       update: update,
       setSize: setSize,
+      setModel: setModel,
       setEaseRate: function setEaseRate(r) {
         easeRate = r;
       },
@@ -1488,10 +1602,11 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e 
         return tgt.explode;
       },
       dispose: function dispose() {
+        modelGeneration++;
+        clearModel();
         try {
           mount.removeChild(renderer.domElement);
         } catch (_) {}
-        modelUpdate = null;
         if (envTarget) envTarget.dispose();
         if (renderer.renderLists) renderer.renderLists.dispose();
         renderer.dispose();
@@ -1516,6 +1631,10 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e 
 })();
 
 /* ---- app/projects/rendering/project-handoff-rig.jsx ---- */
+function _regenerator() { var e, t, r = "function" == typeof Symbol ? Symbol : {}, n = r.iterator || "@@iterator", o = r.toStringTag || "@@toStringTag"; function i(r, n, o, i) { var c = n && n.prototype instanceof Generator ? n : Generator, u = Object.create(c.prototype); return _regeneratorDefine2(u, "_invoke", function (r, n, o) { var i, c, u, f = 0, p = o || [], y = !1, G = { p: 0, n: 0, v: e, a: d, f: d.bind(e, 4), d: function d(t, r) { return i = t, c = 0, u = e, G.n = r, a; } }; function d(r, n) { for (c = r, u = n, t = 0; !y && f && !o && t < p.length; t++) { var o, i = p[t], d = G.p, l = i[2]; r > 3 ? (o = l === n) && (u = i[(c = i[4]) ? 5 : (c = 3, 3)], i[4] = i[5] = e) : i[0] <= d && ((o = r < 2 && d < i[1]) ? (c = 0, G.v = n, G.n = i[1]) : d < l && (o = r < 3 || i[0] > n || n > l) && (i[4] = r, i[5] = n, G.n = l, c = 0)); } if (o || r > 1) return a; throw y = !0, n; } return function (o, p, l) { if (f > 1) throw TypeError("Generator is already running"); for (y && 1 === p && d(p, l), c = p, u = l; (t = c < 2 ? e : u) || !y;) { i || (c ? c < 3 ? (c > 1 && (G.n = -1), d(c, u)) : G.n = u : G.v = u); try { if (f = 2, i) { if (c || (o = "next"), t = i[o]) { if (!(t = t.call(i, u))) throw TypeError("iterator result is not an object"); if (!t.done) return t; u = t.value, c < 2 && (c = 0); } else 1 === c && (t = i["return"]) && t.call(i), c < 2 && (u = TypeError("The iterator does not provide a '" + o + "' method"), c = 1); i = e; } else if ((t = (y = G.n < 0) ? u : r.call(n, G)) !== a) break; } catch (t) { i = e, c = 1, u = t; } finally { f = 1; } } return { value: t, done: y }; }; }(r, o, i), !0), u; } var a = {}; function Generator() {} function GeneratorFunction() {} function GeneratorFunctionPrototype() {} t = Object.getPrototypeOf; var c = [][n] ? t(t([][n]())) : (_regeneratorDefine2(t = {}, n, function () { return this; }), t), u = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(c); function f(e) { return Object.setPrototypeOf ? Object.setPrototypeOf(e, GeneratorFunctionPrototype) : (e.__proto__ = GeneratorFunctionPrototype, _regeneratorDefine2(e, o, "GeneratorFunction")), e.prototype = Object.create(u), e; } return GeneratorFunction.prototype = GeneratorFunctionPrototype, _regeneratorDefine2(u, "constructor", GeneratorFunctionPrototype), _regeneratorDefine2(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = "GeneratorFunction", _regeneratorDefine2(GeneratorFunctionPrototype, o, "GeneratorFunction"), _regeneratorDefine2(u), _regeneratorDefine2(u, o, "Generator"), _regeneratorDefine2(u, n, function () { return this; }), _regeneratorDefine2(u, "toString", function () { return "[object Generator]"; }), (_regenerator = function _regenerator() { return { w: i, m: f }; })(); }
+function _regeneratorDefine2(e, r, n, t) { var i = Object.defineProperty; try { i({}, "", {}); } catch (e) { i = 0; } _regeneratorDefine2 = function _regeneratorDefine(e, r, n, t) { function o(r, n) { _regeneratorDefine2(e, r, function (e) { return this._invoke(r, n, e); }); } r ? i ? i(e, r, { value: n, enumerable: !t, configurable: !t, writable: !t }) : e[r] = n : (o("next", 0), o("throw", 1), o("return", 2)); }, _regeneratorDefine2(e, r, n, t); }
+function asyncGeneratorStep(n, t, e, r, o, a, c) { try { var i = n[a](c), u = i.value; } catch (n) { return void e(n); } i.done ? t(u) : Promise.resolve(u).then(r, o); }
+function _asyncToGenerator(n) { return function () { var t = this, e = arguments; return new Promise(function (r, o) { var a = n.apply(t, e); function _next(n) { asyncGeneratorStep(a, r, o, _next, _throw, "next", n); } function _throw(n) { asyncGeneratorStep(a, r, o, _next, _throw, "throw", n); } _next(void 0); }); }; }
 (function () {
   var SIGNAL = 0x00f0c8;
   window.makeNodeProxy = function (THREE, project) {
@@ -1598,28 +1717,44 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e 
       console.warn("[node-rig] makeWaferRig missing");
       return null;
     }
-    var project = opts.project || {};
-    var model = opts.model || project.model || {};
-    var base = {
-      modelFit: model.rigFit || 4.0,
-      pose: model.rigPose || {
-        x: -0.35,
-        y: 0,
-        z: 0
-      },
-      onReady: opts.onReady,
-      preserveDrawingBuffer: true
-    };
-    if (model.ready && model.src) {
-      base.model = model.src;
-      if (model.assignMaterial) base.assignMaterial = model.assignMaterial;
-    } else {
-      base.buildModel = function (THREE) {
-        return window.makeNodeProxy(THREE, project);
+    var modelOptions = function modelOptions(project, explicitModel) {
+      var model = explicitModel || project.model || {};
+      var config = {
+        modelFit: model.rigFit || 4.0,
+        pose: model.rigPose || {
+          x: -0.35,
+          y: 0,
+          z: 0
+        },
+        onReady: opts.onReady
       };
-    }
+      if (model.ready && model.src) {
+        config.model = model.src;
+        if (model.assignMaterial) config.assignMaterial = model.assignMaterial;
+      } else {
+        config.keepMaterials = true;
+        config.buildModel = function (THREE) {
+          return window.makeNodeProxy(THREE, project);
+        };
+      }
+      return config;
+    };
+    var project = opts.project || {};
+    var base = Object.assign(modelOptions(project, opts.model), {
+      deferModel: opts.deferModel === true,
+      preserveDrawingBuffer: true
+    });
     var rig = window.makeWaferRig(mount, base);
     if (!rig) return null;
+    var currentAddr = opts.deferModel ? "" : project.addr || "";
+    rig.setProject = function (nextProject) {
+      var next = nextProject || {};
+      currentAddr = next.addr || "";
+      return rig.setModel(modelOptions(next, next.model));
+    };
+    rig.getProjectAddr = function () {
+      return currentAddr;
+    };
     rig.getYaw = function () {
       return rig.yaw;
     };
@@ -1641,6 +1776,69 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e 
         return null;
       }
     };
+    rig.captureFrameAsync = _asyncToGenerator(_regenerator().m(function _callee() {
+      var tw,
+        cnv,
+        th,
+        tc,
+        blob,
+        _args = arguments,
+        _t;
+      return _regenerator().w(function (_context) {
+        while (1) switch (_context.p = _context.n) {
+          case 0:
+            tw = _args.length > 0 && _args[0] !== undefined ? _args[0] : 1100;
+            _context.p = 1;
+            cnv = rig.el;
+            if (!(!cnv || !cnv.width)) {
+              _context.n = 2;
+              break;
+            }
+            return _context.a(2, null);
+          case 2:
+            th = Math.round(tw * cnv.height / cnv.width);
+            tc = document.createElement("canvas");
+            tc.width = tw;
+            tc.height = th;
+            tc.getContext("2d").drawImage(cnv, 0, 0, tw, th);
+            if (tc.toBlob) {
+              _context.n = 3;
+              break;
+            }
+            return _context.a(2, rig.captureFrame(tw));
+          case 3:
+            _context.n = 4;
+            return new Promise(function (resolve) {
+              return tc.toBlob(resolve, "image/jpeg", 0.82);
+            });
+          case 4:
+            blob = _context.v;
+            if (blob) {
+              _context.n = 5;
+              break;
+            }
+            return _context.a(2, null);
+          case 5:
+            _context.n = 6;
+            return new Promise(function (resolve) {
+              var reader = new FileReader();
+              reader.onload = function () {
+                return resolve(typeof reader.result === "string" ? reader.result : null);
+              };
+              reader.onerror = function () {
+                return resolve(null);
+              };
+              reader.readAsDataURL(blob);
+            });
+          case 6:
+            return _context.a(2, _context.v);
+          case 7:
+            _context.p = 7;
+            _t = _context.v;
+            return _context.a(2, null);
+        }
+      }, _callee, null, [[1, 7]]);
+    }));
     return rig;
   };
 })();
@@ -2395,7 +2593,9 @@ function Universe(_ref) {
       }
     }
     var BOX = new THREE.Vector3(26, 18, 26);
+    var BOX_HALF = BOX.clone().multiplyScalar(0.5);
     var TILE_BOX = BOX.clone().multiplyScalar(1.4);
+    var TILE_BOX_HALF = TILE_BOX.clone().multiplyScalar(0.5);
     var TILE_W = 3.0;
     var TILE_H = 4.0;
     var cam = {
@@ -2500,6 +2700,80 @@ function Universe(_ref) {
       return out;
     }
     var N = projects.length;
+    var universeDisposed = false;
+    var modelJobs = [];
+    var modelJobByAddr = new Map();
+    var modelLoadsActive = 0;
+    var modelIdleHandle = 0;
+    var modelRetryHandle = 0;
+    var BACKGROUND_MODEL_LOADS = 2;
+    var requestModelIdle = window.requestIdleCallback ? function (callback) {
+      return window.requestIdleCallback(callback, {
+        timeout: 900
+      });
+    } : function (callback) {
+      return window.setTimeout(function () {
+        return callback({
+          didTimeout: true,
+          timeRemaining: function timeRemaining() {
+            return 0;
+          }
+        });
+      }, 120);
+    };
+    var cancelModelIdle = window.cancelIdleCallback ? function (handle) {
+      return window.cancelIdleCallback(handle);
+    } : function (handle) {
+      return window.clearTimeout(handle);
+    };
+    function scheduleModelPump() {
+      if (universeDisposed || modelIdleHandle || modelRetryHandle || modelLoadsActive >= BACKGROUND_MODEL_LOADS) return;
+      var next = modelJobs.find(function (job) {
+        return job.state === "queued";
+      });
+      if (!next) return;
+      if (document.hidden || window.__mo_universe_pause) {
+        modelRetryHandle = window.setTimeout(function () {
+          modelRetryHandle = 0;
+          scheduleModelPump();
+        }, 500);
+        return;
+      }
+      modelIdleHandle = requestModelIdle(function () {
+        modelIdleHandle = 0;
+        if (universeDisposed) return;
+        if (document.hidden || window.__mo_universe_pause) {
+          scheduleModelPump();
+          return;
+        }
+        if (modelLoadsActive >= BACKGROUND_MODEL_LOADS) {
+          scheduleModelPump();
+          return;
+        }
+        startModelJob(modelJobs.find(function (job) {
+          return job.state === "queued";
+        }));
+        scheduleModelPump();
+      });
+    }
+    function startModelJob(job) {
+      if (!job || job.state !== "queued" || universeDisposed) return;
+      job.state = "loading";
+      modelLoadsActive += 1;
+      Promise.resolve().then(job.run).then(function () {
+        job.state = "done";
+      })["catch"](function (error) {
+        job.state = "failed";
+        if (!universeDisposed) console.warn("[universe] model load failed for " + job.project.addr, error);
+      })["finally"](function () {
+        modelLoadsActive = Math.max(0, modelLoadsActive - 1);
+        scheduleModelPump();
+      });
+    }
+    function ensureProjectModel(addr) {
+      var job = addr && modelJobByAddr.get(addr);
+      if (job && job.state === "queued") startModelJob(job);
+    }
     projects.forEach(function (p, i) {
       var tex = makeTileTexture(p, THREE);
       var mat = new THREE.MeshBasicMaterial({
@@ -2549,35 +2823,42 @@ function Universe(_ref) {
         holder.visible = false;
         tilesGroup.add(holder);
         tileWires.push(holder);
-        window.loadProjectModel(p.model, THREE).then(function (root) {
-          window.fitModelToSize(root, THREE, p.modelFit || 2);
-          if (p.assignMaterial && window.applySolidMaterials) window.applySolidMaterials(root, THREE, p.assignMaterial);else if (window.tuneRealMaterials) window.tuneRealMaterials(root, THREE, {
-            envMapIntensity: 2.2
-          });
-          var fadeMaterials = [];
-          var seenFadeMaterials = new Set();
-          root.traverse(function (o) {
-            if (!o.isMesh || !o.material) return;
-            (Array.isArray(o.material) ? o.material : [o.material]).forEach(function (m) {
-              m.transparent = true;
-              if (!seenFadeMaterials.has(m)) {
-                seenFadeMaterials.add(m);
-                fadeMaterials.push(m);
-              }
+        var job = {
+          project: p,
+          state: "queued",
+          run: function run() {
+            return window.loadProjectModel(p.model, THREE).then(function (root) {
+              if (universeDisposed) return;
+              window.fitModelToSize(root, THREE, p.modelFit || 2);
+              if (p.assignMaterial && window.applySolidMaterials) window.applySolidMaterials(root, THREE, p.assignMaterial);else if (window.tuneRealMaterials) window.tuneRealMaterials(root, THREE, {
+                envMapIntensity: 2.2
+              });
+              var fadeMaterials = [];
+              var seenFadeMaterials = new Set();
+              root.traverse(function (o) {
+                if (!o.isMesh || !o.material) return;
+                (Array.isArray(o.material) ? o.material : [o.material]).forEach(function (m) {
+                  m.transparent = true;
+                  if (!seenFadeMaterials.has(m)) {
+                    seenFadeMaterials.add(m);
+                    fadeMaterials.push(m);
+                  }
+                });
+              });
+              var poseGroup = new THREE.Group();
+              if (p.modelPose) poseGroup.rotation.set(p.modelPose.x || 0, p.modelPose.y || 0, p.modelPose.z || 0);
+              poseGroup.add(root);
+              holder.add(poseGroup);
+              holder.visible = true;
+              holder.userData.loaded = true;
+              holder.userData.fadeMaterials = fadeMaterials;
+              holder.userData.lastModelOpacity = NaN;
+              holder.userData.loadedAt = performance.now();
             });
-          });
-          var poseGroup = new THREE.Group();
-          if (p.modelPose) poseGroup.rotation.set(p.modelPose.x || 0, p.modelPose.y || 0, p.modelPose.z || 0);
-          poseGroup.add(root);
-          holder.add(poseGroup);
-          holder.visible = true;
-          holder.userData.loaded = true;
-          holder.userData.fadeMaterials = fadeMaterials;
-          holder.userData.lastModelOpacity = NaN;
-          holder.userData.loadedAt = performance.now();
-        })["catch"](function (err) {
-          console.warn("[universe] model load failed for " + p.addr, err);
-        });
+          }
+        };
+        modelJobs.push(job);
+        modelJobByAddr.set(p.addr, job);
       } else if (p.prim && window.makePrimitiveMesh) {
         var wire = window.makePrimitiveMesh(p.prim, THREE, {
           wireframe: true,
@@ -2593,13 +2874,23 @@ function Universe(_ref) {
         tileWires.push(wire);
       }
     });
+    if (modelJobs.length) startModelJob(modelJobs[0]);
+    scheduleModelPump();
     var tileTargets = projects.map(function () {
       return new THREE.Vector3();
     });
     var carouselTarget = new THREE.Vector3();
+    var tilePhaseCos = new Float64Array(projects.length);
+    var tilePhaseSin = new Float64Array(projects.length);
+    var tilePhaseSin2 = new Float64Array(projects.length);
+    for (var _i6 = 0; _i6 < projects.length; _i6++) {
+      var ang = _i6 / Math.max(1, projects.length) * Math.PI * 2;
+      tilePhaseCos[_i6] = Math.cos(ang);
+      tilePhaseSin[_i6] = Math.sin(ang);
+      tilePhaseSin2[_i6] = Math.sin(ang * 2);
+    }
     function scatter(i, R, Y, Z, D) {
-      var ang = i / Math.max(1, projects.length) * Math.PI * 2;
-      return tileTargets[i].set(Math.cos(ang) * R, Math.sin(ang) * Y, Z + Math.sin(ang * 2) * D);
+      return tileTargets[i].set(tilePhaseCos[i] * R, tilePhaseSin[i] * Y, Z + tilePhaseSin2[i] * D);
     }
     var RING_R = 8.0;
     var listCollapse = false;
@@ -2618,8 +2909,8 @@ function Universe(_ref) {
         var fIdx = MO_FEATURED.indexOf(addr || "");
         if (concept === "assembly") return scatter(i, 19, 11, -22, 5);
         if (fIdx >= 0) {
-          var ang = fIdx / Math.max(1, MO_FEATURED.length) * Math.PI * 2 - Math.PI / 2 + t * 0.00004;
-          return target.set(ORIGIN_CENTER.x + Math.cos(ang) * ORIGIN_RING_R, ORIGIN_CENTER.y + Math.sin(ang) * ORIGIN_RING_R * 0.62, ORIGIN_CENTER.z + Math.sin(ang * 1.3) * 1.4);
+          var _ang = fIdx / Math.max(1, MO_FEATURED.length) * Math.PI * 2 - Math.PI / 2 + t * 0.00004;
+          return target.set(ORIGIN_CENTER.x + Math.cos(_ang) * ORIGIN_RING_R, ORIGIN_CENTER.y + Math.sin(_ang) * ORIGIN_RING_R * 0.62, ORIGIN_CENTER.z + Math.sin(_ang * 1.3) * 1.4);
         }
         return scatter(i, 16, 9, -18, 4);
       }
@@ -2642,9 +2933,11 @@ function Universe(_ref) {
           var ang0 = i / Math.max(1, projects.length) * Math.PI * 2;
           var spin = t * 0.00026;
           var entry = (1 - g) * 2.6;
-          var _ang = ang0 + spin + entry;
+          var _ang2 = ang0 + spin + entry;
+          var sinAng = Math.sin(_ang2),
+            cosAng = Math.cos(_ang2);
           var R = 7.4;
-          carouselTarget.set(Math.sin(_ang) * R, 0.55 - Math.cos(_ang) * 0.95, -12.4 + Math.cos(_ang) * R * 0.82);
+          carouselTarget.set(sinAng * R, 0.55 - cosAng * 0.95, -12.4 + cosAng * R * 0.82);
           target.lerp(carouselTarget, g * g * (3 - 2 * g));
         }
         return target;
@@ -2682,9 +2975,9 @@ function Universe(_ref) {
       var uvs = new Float32Array(maxVerts * 2);
       var opacity = new Float32Array(maxVerts);
       var indices = new Uint16Array(AMB_N * 6);
-      for (var _i6 = 0; _i6 < AMB_N; _i6++) {
-        var v = _i6 * 4;
-        var q = _i6 * 6;
+      for (var _i7 = 0; _i7 < AMB_N; _i7++) {
+        var v = _i7 * 4;
+        var q = _i7 * 6;
         indices[q] = v;
         indices[q + 1] = v + 2;
         indices[q + 2] = v + 1;
@@ -2702,6 +2995,8 @@ function Universe(_ref) {
       mesh.frustumCulled = false;
       mesh.visible = false;
       scene.add(mesh);
+      var nodeOrder = new Int16Array(AMB_N);
+      nodeOrder.fill(-1);
       ambientBatches.push({
         mesh: mesh,
         geo: geo,
@@ -2709,16 +3004,23 @@ function Universe(_ref) {
         uvs: uvs,
         opacity: opacity,
         nodes: [],
+        nodeOrder: nodeOrder,
         depthSum: 0
       });
     }
-    for (var _i7 = 0; _i7 < AMB_N; _i7++) {
+    for (var _i8 = 0; _i8 < AMB_N; _i8++) {
+      var px = (Math.random() - 0.5) * BOX.x;
+      var py = (Math.random() - 0.5) * BOX.y;
+      var pz = (Math.random() - 0.5) * BOX.z;
+      var phase = Math.random() * Math.PI * 2;
       ambient.push({
-        position: new THREE.Vector3((Math.random() - 0.5) * BOX.x, (Math.random() - 0.5) * BOX.y, (Math.random() - 0.5) * BOX.z),
+        position: new THREE.Vector3(px, py, pz),
         userData: {
-          phase: Math.random() * Math.PI * 2,
+          index: _i8,
+          phaseSin: Math.sin(phase),
+          phaseCos: Math.cos(phase),
           kind: "ambient",
-          atlas: ambientAtlas.cells[_i7],
+          atlas: ambientAtlas.cells[_i8],
           opacity: 0.55,
           depth: 0
         }
@@ -2727,6 +3029,9 @@ function Universe(_ref) {
     var AMB_DEPTH_SPAN = Math.hypot(BOX.x, BOX.y, BOX.z) * 0.5 + AMB_SCALE;
     var ambientRight = new THREE.Vector3();
     var ambientUp = new THREE.Vector3();
+    var sortAmbientBackToFront = function sortAmbientBackToFront(a, b) {
+      return b.userData.depth - a.userData.depth;
+    };
     var ORIGIN_CENTER = new THREE.Vector3(0, 0, -9);
     var ORIGIN_RING_R = 6.2;
     function makeOriginTexture() {
@@ -2738,11 +3043,11 @@ function Universe(_ref) {
       var cx = 128,
         cy = 128;
       g.strokeStyle = "#00f0c8";
-      for (var _i8 = 0; _i8 < 3; _i8++) {
-        g.globalAlpha = 0.9 - _i8 * 0.28;
-        g.lineWidth = 2 - _i8 * 0.4;
+      for (var _i9 = 0; _i9 < 3; _i9++) {
+        g.globalAlpha = 0.9 - _i9 * 0.28;
+        g.lineWidth = 2 - _i9 * 0.4;
         g.beginPath();
-        g.arc(cx, cy, 30 + _i8 * 26, 0, Math.PI * 2);
+        g.arc(cx, cy, 30 + _i9 * 26, 0, Math.PI * 2);
         g.stroke();
       }
       g.globalAlpha = 1;
@@ -2822,50 +3127,66 @@ function Universe(_ref) {
           if (data[(y * cw + x) * 4] > 128) hits.push([x, y]);
         }
       }
-      for (var _i9 = hits.length - 1; _i9 > 0; _i9--) {
-        var k = Math.floor(Math.random() * (_i9 + 1));
-        var t = hits[_i9];
-        hits[_i9] = hits[k];
+      for (var _i0 = hits.length - 1; _i0 > 0; _i0--) {
+        var k = Math.floor(Math.random() * (_i0 + 1));
+        var t = hits[_i0];
+        hits[_i0] = hits[k];
         hits[k] = t;
       }
       var SCALE = 0.024;
       var out = new Float32Array(count * 3);
-      for (var _i0 = 0; _i0 < count; _i0++) {
-        var _h = hits.length ? hits[_i0 % hits.length] : [cw / 2, ch / 2];
+      for (var _i1 = 0; _i1 < count; _i1++) {
+        var _h = hits.length ? hits[_i1 % hits.length] : [cw / 2, ch / 2];
         var jx = (Math.random() - 0.5) * 1.6;
         var jy = (Math.random() - 0.5) * 1.6;
-        out[_i0 * 3 + 0] = ORIGIN_CENTER.x + (_h[0] + jx - cw / 2) * SCALE;
-        out[_i0 * 3 + 1] = ORIGIN_CENTER.y - (_h[1] + jy - ch / 2) * SCALE;
-        out[_i0 * 3 + 2] = ORIGIN_CENTER.z + Math.sin(_i0 * 12.9898) * 0.22;
+        out[_i1 * 3 + 0] = ORIGIN_CENTER.x + (_h[0] + jx - cw / 2) * SCALE;
+        out[_i1 * 3 + 1] = ORIGIN_CENTER.y - (_h[1] + jy - ch / 2) * SCALE;
+        out[_i1 * 3 + 2] = ORIGIN_CENTER.z + Math.sin(_i1 * 12.9898) * 0.22;
       }
       return out;
     }
     var ASM_N = 820;
     var asmTargets = sampleGlyphTargets("0x00", ASM_N);
     var asmLocal = new Float32Array(ASM_N * 3);
-    for (var _i1 = 0; _i1 < ASM_N; _i1++) {
-      asmLocal[_i1 * 3 + 0] = asmTargets[_i1 * 3 + 0] - ORIGIN_CENTER.x;
-      asmLocal[_i1 * 3 + 1] = asmTargets[_i1 * 3 + 1] - ORIGIN_CENTER.y;
-      asmLocal[_i1 * 3 + 2] = asmTargets[_i1 * 3 + 2] - ORIGIN_CENTER.z;
+    for (var _i10 = 0; _i10 < ASM_N; _i10++) {
+      asmLocal[_i10 * 3 + 0] = asmTargets[_i10 * 3 + 0] - ORIGIN_CENTER.x;
+      asmLocal[_i10 * 3 + 1] = asmTargets[_i10 * 3 + 1] - ORIGIN_CENTER.y;
+      asmLocal[_i10 * 3 + 2] = asmTargets[_i10 * 3 + 2] - ORIGIN_CENTER.z;
     }
     var glyphHalfW = 0;
-    for (var _i10 = 0; _i10 < ASM_N; _i10++) glyphHalfW = Math.max(glyphHalfW, Math.abs(asmLocal[_i10 * 3]));
+    for (var _i11 = 0; _i11 < ASM_N; _i11++) glyphHalfW = Math.max(glyphHalfW, Math.abs(asmLocal[_i11 * 3]));
     var glyphFit = 1;
+    var asmFitLocal = new Float64Array(ASM_N * 3);
+    var asmWaveSin = new Float64Array(ASM_N);
+    var asmWaveCos = new Float64Array(ASM_N);
+    function cacheGlyphPath() {
+      for (var _i12 = 0; _i12 < ASM_N; _i12++) {
+        var j = _i12 * 3;
+        var lx = asmLocal[j] * glyphFit;
+        asmFitLocal[j] = lx;
+        asmFitLocal[j + 1] = asmLocal[j + 1] * glyphFit;
+        asmFitLocal[j + 2] = asmLocal[j + 2] * glyphFit;
+        var _phase = -lx * 1.5;
+        asmWaveSin[_i12] = Math.sin(_phase);
+        asmWaveCos[_i12] = Math.cos(_phase);
+      }
+    }
     function fitGlyphToView() {
       var halfW = Math.tan(camera.fov * Math.PI / 360) * Math.abs(ORIGIN_CENTER.z) * camera.aspect;
       glyphFit = Math.min(1, halfW * 0.84 / glyphHalfW);
+      cacheGlyphPath();
     }
     fitGlyphToView();
     var asmGeo = new THREE.BufferGeometry();
     var asmPos = new Float32Array(ASM_N * 3);
     var asmHome = new Float32Array(ASM_N * 3);
-    for (var _i11 = 0; _i11 < ASM_N; _i11++) {
+    for (var _i13 = 0; _i13 < ASM_N; _i13++) {
       var x = (Math.random() - 0.5) * BOX.x;
       var y = (Math.random() - 0.5) * BOX.y;
       var z = (Math.random() - 0.5) * BOX.z;
-      asmHome[_i11 * 3 + 0] = asmPos[_i11 * 3 + 0] = x;
-      asmHome[_i11 * 3 + 1] = asmPos[_i11 * 3 + 1] = y;
-      asmHome[_i11 * 3 + 2] = asmPos[_i11 * 3 + 2] = z;
+      asmHome[_i13 * 3 + 0] = asmPos[_i13 * 3 + 0] = x;
+      asmHome[_i13 * 3 + 1] = asmPos[_i13 * 3 + 1] = y;
+      asmHome[_i13 * 3 + 2] = asmPos[_i13 * 3 + 2] = z;
     }
     asmGeo.setAttribute("position", new THREE.BufferAttribute(asmPos, 3).setUsage(THREE.DynamicDrawUsage));
     var assemblyPts = new THREE.Points(asmGeo, new THREE.PointsMaterial({
@@ -2932,14 +3253,42 @@ function Universe(_ref) {
     constGroup.renderOrder = -2;
     constGroup.visible = false;
     scene.add(constGroup);
-    var _topoEdges = [];
+    var _topoEdges = Array.from({
+      length: TOPO_MAX_E
+    }, function () {
+      return {
+        A: null,
+        B: null,
+        ai: 0,
+        bi: 0,
+        len: 0,
+        closeness: 0,
+        ax: NaN,
+        ay: NaN,
+        az: NaN,
+        bx: NaN,
+        by: NaN,
+        bz: NaN,
+        alpha: NaN
+      };
+    });
+    var _topoLive = new Array(tiles.length);
+    var TOPO_STRIDE = Math.max(1, tiles.length);
+    var _topoSeen = new Uint8Array(TOPO_STRIDE * TOPO_STRIDE);
+    var _topoLastPos = new Float64Array(Math.max(1, tiles.length * 3));
+    var _topoLastLive = new Uint8Array(Math.max(1, tiles.length));
+    _topoLastPos.fill(NaN);
+    var TOPO_CUT2 = TOPO_CUT * TOPO_CUT;
+    var topoFrac = new Float64Array(TOPO_SEG);
+    for (var _s2 = 0; _s2 < TOPO_SEG; _s2++) topoFrac[_s2] = _s2 / (TOPO_SEG - 1);
+    var _topoEdgeCount = 0;
     var _topoFrame = 0;
-    function updateTopology(dt, mode, focusAddrNow, formP, arrFade) {
+    function updateTopology(now, mode, focusAddrNow, formP, arrFade) {
       var fx = window.__mo_fx.topology != null ? window.__mo_fx.topology : 1;
       var gatherG = mode === "reel" ? Math.max(0, Math.min(1, ((window.__mo_reel || {}).pos || 0) - MO_FEATURED.length)) : 0;
       var modeVis = mode === "drift" ? 1 : mode === "reel" ? 0.6 + gatherG * 0.9 : 0;
       var vis = fx * modeVis * (1 - formP) * arrFade;
-      constUniforms.uTime.value = performance.now() % 100000 * 0.001;
+      constUniforms.uTime.value = now % 100000 * 0.001;
       constUniforms.uVis.value = vis;
       if (vis <= 0.012) {
         constGroup.visible = false;
@@ -2948,108 +3297,147 @@ function Universe(_ref) {
       constGroup.visible = true;
       var hovAddr = hoverObjRef.current && hoverObjRef.current.userData.project.addr || focusAddrNow;
       if (_topoFrame++ % 3 === 0) {
-        _topoEdges.length = 0;
-        var live = [];
-        var _iterator3 = _createForOfIteratorHelper(tiles),
-          _step3;
-        try {
-          for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
-            var m = _step3.value;
-            if (m.material.opacity > 0.12) live.push(m);
-          }
-        } catch (err) {
-          _iterator3.e(err);
-        } finally {
-          _iterator3.f();
+        var graphChanged = false;
+        for (var _i14 = 0; _i14 < tiles.length; _i14++) {
+          var m = tiles[_i14],
+            p = _i14 * 3;
+          var live = m.material.opacity > 0.12 ? 1 : 0;
+          if (_topoLastLive[_i14] !== live || _topoLastPos[p] !== m.position.x || _topoLastPos[p + 1] !== m.position.y || _topoLastPos[p + 2] !== m.position.z) graphChanged = true;
+          _topoLastLive[_i14] = live;
+          _topoLastPos[p] = m.position.x;
+          _topoLastPos[p + 1] = m.position.y;
+          _topoLastPos[p + 2] = m.position.z;
         }
-        for (var _i12 = 0; _i12 < live.length && _topoEdges.length < TOPO_MAX_E; _i12++) {
-          var n1 = -1,
-            n2 = -1,
-            d1 = Infinity,
-            d2 = Infinity;
-          for (var j = 0; j < live.length; j++) {
-            if (j === _i12) continue;
-            var d = live[_i12].position.distanceTo(live[j].position);
-            if (d < d1) {
-              d2 = d1;
-              n2 = n1;
-              d1 = d;
-              n1 = j;
-            } else if (d < d2) {
-              d2 = d;
-              n2 = j;
+        if (graphChanged) {
+          _topoEdgeCount = 0;
+          _topoSeen.fill(0);
+          var liveCount = 0;
+          var _iterator3 = _createForOfIteratorHelper(tiles),
+            _step3;
+          try {
+            for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
+              var _m = _step3.value;
+              if (_m.material.opacity > 0.12) _topoLive[liveCount++] = _m;
+            }
+          } catch (err) {
+            _iterator3.e(err);
+          } finally {
+            _iterator3.f();
+          }
+          for (var _i15 = 0; _i15 < liveCount && _topoEdgeCount < TOPO_MAX_E; _i15++) {
+            var n1 = -1,
+              n2 = -1,
+              d1 = Infinity,
+              d2 = Infinity;
+            var pi = _topoLive[_i15].position;
+            for (var j = 0; j < liveCount; j++) {
+              if (j === _i15) continue;
+              var pj = _topoLive[j].position;
+              var dx = pi.x - pj.x,
+                dy = pi.y - pj.y,
+                dz = pi.z - pj.z;
+              var d = dx * dx + dy * dy + dz * dz;
+              if (d < d1) {
+                d2 = d1;
+                n2 = n1;
+                d1 = d;
+                n1 = j;
+              } else if (d < d2) {
+                d2 = d;
+                n2 = j;
+              }
+            }
+            for (var candidate = 0; candidate < 2; candidate++) {
+              var nj = candidate === 0 ? n1 : n2;
+              var dd2 = candidate === 0 ? d1 : d2;
+              if (nj < 0 || dd2 > TOPO_CUT2) continue;
+              var a = Math.min(_i15, nj),
+                _b = Math.max(_i15, nj);
+              var seenIndex = a * TOPO_STRIDE + _b;
+              if (_topoSeen[seenIndex]) continue;
+              _topoSeen[seenIndex] = 1;
+              var edge = _topoEdges[_topoEdgeCount++];
+              edge.A = _topoLive[a];
+              edge.B = _topoLive[_b];
+              edge.ai = a;
+              edge.bi = _b;
+              edge.len = Math.sqrt(dd2);
+              edge.closeness = Math.pow(Math.max(0, 1 - edge.len / TOPO_CUT), 1.4);
+              edge.ax = edge.ay = edge.az = edge.bx = edge.by = edge.bz = edge.alpha = NaN;
+              if (_topoEdgeCount >= TOPO_MAX_E) break;
             }
           }
-          var _loop = function _loop() {
-              var _arr$_i = _slicedToArray(_arr[_i13], 2),
-                nj = _arr$_i[0],
-                dd = _arr$_i[1];
-              if (nj < 0 || dd > TOPO_CUT) return 0;
-              var a = Math.min(_i12, nj),
-                b = Math.max(_i12, nj);
-              if (_topoEdges.some(function (e) {
-                return e.ai === a && e.bi === b;
-              })) return 0;
-              _topoEdges.push({
-                A: live[a],
-                B: live[b],
-                ai: a,
-                bi: b,
-                len: dd
-              });
-              if (_topoEdges.length >= TOPO_MAX_E) return 1;
-            },
-            _ret;
-          for (var _i13 = 0, _arr = [[n1, d1], [n2, d2]]; _i13 < _arr.length; _i13++) {
-            _ret = _loop();
-            if (_ret === 0) continue;
-            if (_ret === 1) break;
-          }
+          constGeo.setDrawRange(0, _topoEdgeCount * (TOPO_SEG - 1) * 2);
         }
       }
       var breathe = 1 + _lvlS * 1.2;
-      for (var _e = 0; _e < TOPO_MAX_E; _e++) {
+      var positionDirty = false,
+        alphaDirty = false;
+      for (var _e = 0; _e < _topoEdgeCount; _e++) {
         var E = _topoEdges[_e];
         var _base = _e * TOPO_SEG;
-        if (!E) {
-          topoA.fill(0, _base, _base + TOPO_SEG);
-          continue;
-        }
         var A = E.A.position,
           B = E.B.position;
+        if (A.x !== E.ax || A.y !== E.ay || A.z !== E.az || B.x !== E.bx || B.y !== E.by || B.z !== E.bz) {
+          for (var _s3 = 0; _s3 < TOPO_SEG; _s3++) {
+            var t = topoFrac[_s3];
+            var _p = (_base + _s3) * 3;
+            topoPos[_p] = A.x + (B.x - A.x) * t;
+            topoPos[_p + 1] = A.y + (B.y - A.y) * t;
+            topoPos[_p + 2] = A.z + (B.z - A.z) * t;
+          }
+          E.ax = A.x;
+          E.ay = A.y;
+          E.az = A.z;
+          E.bx = B.x;
+          E.by = B.y;
+          E.bz = B.z;
+          positionDirty = true;
+        }
         var depthA = (A.x - camera.position.x) * FORWARD.x + (A.y - camera.position.y) * FORWARD.y + (A.z - camera.position.z) * FORWARD.z;
         var depthB = (B.x - camera.position.x) * FORWARD.x + (B.y - camera.position.y) * FORWARD.y + (B.z - camera.position.z) * FORWARD.z;
-        if (depthA <= TOPO_CAMERA_GUARD || depthB <= TOPO_CAMERA_GUARD) {
-          topoA.fill(0, _base, _base + TOPO_SEG);
-          continue;
+        var alpha = 0;
+        if (depthA > TOPO_CAMERA_GUARD && depthB > TOPO_CAMERA_GUARD) {
+          alpha = E.closeness * breathe;
+          var touches = hovAddr && (E.A.userData.project.addr === hovAddr || E.B.userData.project.addr === hovAddr);
+          if (touches) alpha = alpha * 2.4 + 0.5;
+          alpha *= Math.min(1, Math.min(E.A.material.opacity, E.B.material.opacity) * 1.4);
         }
-        for (var _s2 = 0; _s2 < TOPO_SEG; _s2++) {
-          var t = _s2 / (TOPO_SEG - 1);
-          var p = (_base + _s2) * 3;
-          topoPos[p] = A.x + (B.x - A.x) * t;
-          topoPos[p + 1] = A.y + (B.y - A.y) * t;
-          topoPos[p + 2] = A.z + (B.z - A.z) * t;
+        var alpha32 = Math.fround(alpha);
+        if (alpha32 !== E.alpha) {
+          topoA.fill(alpha32, _base, _base + TOPO_SEG);
+          E.alpha = alpha32;
+          alphaDirty = true;
         }
-        var closeness = Math.pow(Math.max(0, 1 - E.len / TOPO_CUT), 1.4);
-        var alpha = closeness * breathe;
-        var touches = hovAddr && (E.A.userData.project.addr === hovAddr || E.B.userData.project.addr === hovAddr);
-        if (touches) alpha = alpha * 2.4 + 0.5;
-        alpha *= Math.min(1, Math.min(E.A.material.opacity, E.B.material.opacity) * 1.4);
-        topoA.fill(alpha, _base, _base + TOPO_SEG);
       }
-      constGeo.attributes.position.needsUpdate = true;
-      constGeo.attributes.aA.needsUpdate = true;
+      var positionAttr = constGeo.attributes.position;
+      var alphaAttr = constGeo.attributes.aA;
+      if (positionAttr.clearUpdateRanges) {
+        if (positionDirty) {
+          positionAttr.clearUpdateRanges();
+          positionAttr.addUpdateRange(0, _topoEdgeCount * TOPO_SEG * 3);
+        }
+        if (alphaDirty) {
+          alphaAttr.clearUpdateRanges();
+          alphaAttr.addUpdateRange(0, _topoEdgeCount * TOPO_SEG);
+        }
+      }
+      if (positionDirty) positionAttr.needsUpdate = true;
+      if (alphaDirty) alphaAttr.needsUpdate = true;
     }
-    function wrapAroundCamera(obj, box) {
+    function wrapAroundCamera(obj, box, half) {
       var dx = obj.position.x - cam.pos.x;
       var dy = obj.position.y - cam.pos.y;
       var dz = obj.position.z - cam.pos.z;
-      if (dx > box.x / 2) obj.position.x -= box.x;
-      if (dx < -box.x / 2) obj.position.x += box.x;
-      if (dy > box.y / 2) obj.position.y -= box.y;
-      if (dy < -box.y / 2) obj.position.y += box.y;
-      if (dz > box.z / 2) obj.position.z -= box.z;
-      if (dz < -box.z / 2) obj.position.z += box.z;
+      var hx = half.x,
+        hy = half.y,
+        hz = half.z;
+      if (dx > hx) obj.position.x -= box.x;
+      if (dx < -hx) obj.position.x += box.x;
+      if (dy > hy) obj.position.y -= box.y;
+      if (dy < -hy) obj.position.y += box.y;
+      if (dz > hz) obj.position.z -= box.z;
+      if (dz < -hz) obj.position.z += box.z;
     }
     var fireInteract = function fireInteract() {
       try {
@@ -3515,8 +3903,8 @@ function Universe(_ref) {
         minY = Infinity,
         maxX = -Infinity,
         maxY = -Infinity;
-      for (var _i14 = 0; _i14 < 8; _i14++) {
-        v3.set(_i14 & 1 ? _mvbBox.max.x : _mvbBox.min.x, _i14 & 2 ? _mvbBox.max.y : _mvbBox.min.y, _i14 & 4 ? _mvbBox.max.z : _mvbBox.min.z);
+      for (var _i16 = 0; _i16 < 8; _i16++) {
+        v3.set(_i16 & 1 ? _mvbBox.max.x : _mvbBox.min.x, _i16 & 2 ? _mvbBox.max.y : _mvbBox.min.y, _i16 & 4 ? _mvbBox.max.z : _mvbBox.min.z);
         _tsbCamRel.copy(v3).sub(camera.position);
         if (_tsbCamRel.dot(camDirTmp) <= 0) return null;
         v3.project(camera);
@@ -3552,14 +3940,14 @@ function Universe(_ref) {
     function tileScreenCorners(mesh) {
       var rect = mount.getBoundingClientRect();
       camera.getWorldDirection(camDirTmp);
-      for (var _i15 = 0; _i15 < 4; _i15++) {
-        v3.copy(_tscCorners[_i15]);
+      for (var _i17 = 0; _i17 < 4; _i17++) {
+        v3.copy(_tscCorners[_i17]);
         mesh.localToWorld(v3);
         _tsbCamRel.copy(v3).sub(camera.position);
         if (_tsbCamRel.dot(camDirTmp) <= 0) return null;
         v3.project(camera);
-        _tscOut[_i15].x = (v3.x * 0.5 + 0.5) * rect.width;
-        _tscOut[_i15].y = (-v3.y * 0.5 + 0.5) * rect.height;
+        _tscOut[_i17].x = (v3.x * 0.5 + 0.5) * rect.width;
+        _tscOut[_i17].y = (-v3.y * 0.5 + 0.5) * rect.height;
       }
       return _tscOut;
     }
@@ -3587,6 +3975,7 @@ function Universe(_ref) {
         return;
       }
       var m = hit.object;
+      ensureProjectModel(m.userData.project.addr);
       if (hoverObjRef.current === m) return;
       var screen = tileScreenBounds(m);
       if (!screen) return;
@@ -3609,6 +3998,7 @@ function Universe(_ref) {
       if (window.__mo_disturb) window.__mo_disturb(cx, cy, 1.0);
       var m = hit.object;
       var p = m.userData.project;
+      ensureProjectModel(p.addr);
       if (window.MOSound && MOSound.open) MOSound.open(p.addr);
       var rel = m.position.clone().sub(cam.pos);
       var yaw = Math.atan2(rel.x, -rel.z);
@@ -3672,6 +4062,7 @@ function Universe(_ref) {
     var raf;
     var last = performance.now();
     var frameI = 0;
+    var prioritizedModelAddr = null;
     var FORWARD = new THREE.Vector3();
     var frameLerp = function frameLerp(rate, dt) {
       return 1 - Math.pow(1 - rate, dt / 16);
@@ -3685,13 +4076,14 @@ function Universe(_ref) {
     var _euler = new THREE.Euler();
     var _vScale = new THREE.Vector3();
     var SBOX = BOX.clone().multiplyScalar(stars.userData.wrapScale);
+    var SBOX_HALF = SBOX.clone().multiplyScalar(0.5);
     var REBASE_DIST2 = 600 * 600;
     function shiftBufferAttr(attr, sx, sy, sz) {
       var a = attr.array;
-      for (var _i16 = 0; _i16 < a.length; _i16 += 3) {
-        a[_i16] -= sx;
-        a[_i16 + 1] -= sy;
-        a[_i16 + 2] -= sz;
+      for (var _i18 = 0; _i18 < a.length; _i18 += 3) {
+        a[_i18] -= sx;
+        a[_i18 + 1] -= sy;
+        a[_i18 + 2] -= sz;
       }
       attr.needsUpdate = true;
     }
@@ -3737,49 +4129,61 @@ function Universe(_ref) {
       }
       shiftBufferAttr(stars.geometry.attributes.position, sx, sy, sz);
       var aArr = assemblyPts.geometry.attributes.position.array;
-      for (var _i17 = 0; _i17 < aArr.length; _i17 += 3) {
-        aArr[_i17] -= sx;
-        aArr[_i17 + 1] -= sy;
-        aArr[_i17 + 2] -= sz;
-        asmHome[_i17] -= sx;
-        asmHome[_i17 + 1] -= sy;
-        asmHome[_i17 + 2] -= sz;
+      for (var _i19 = 0; _i19 < aArr.length; _i19 += 3) {
+        aArr[_i19] -= sx;
+        aArr[_i19 + 1] -= sy;
+        aArr[_i19 + 2] -= sz;
+        asmHome[_i19] -= sx;
+        asmHome[_i19 + 1] -= sy;
+        asmHome[_i19 + 2] -= sz;
       }
       _fieldCam.set(0, 0, 0);
       assemblyPts.geometry.attributes.position.needsUpdate = true;
     }
-    function wrapAssemblyField(arr, home, box) {
-      for (var _i18 = 0; _i18 < home.length; _i18 += 3) {
-        var dx = home[_i18] - cam.pos.x;
-        var dy = home[_i18 + 1] - cam.pos.y;
-        var dz = home[_i18 + 2] - cam.pos.z;
-        if (dx > box.x / 2) {
-          home[_i18] -= box.x;
-          arr[_i18] -= box.x;
-        } else if (dx < -box.x / 2) {
-          home[_i18] += box.x;
-          arr[_i18] += box.x;
+    function wrapAssemblyField(arr, home, box, half) {
+      var hx = half.x,
+        hy = half.y,
+        hz = half.z;
+      var dirty = false;
+      for (var _i20 = 0; _i20 < home.length; _i20 += 3) {
+        var dx = home[_i20] - cam.pos.x;
+        var dy = home[_i20 + 1] - cam.pos.y;
+        var dz = home[_i20 + 2] - cam.pos.z;
+        if (dx > hx) {
+          home[_i20] -= box.x;
+          arr[_i20] -= box.x;
+          dirty = true;
+        } else if (dx < -hx) {
+          home[_i20] += box.x;
+          arr[_i20] += box.x;
+          dirty = true;
         }
-        if (dy > box.y / 2) {
-          home[_i18 + 1] -= box.y;
-          arr[_i18 + 1] -= box.y;
-        } else if (dy < -box.y / 2) {
-          home[_i18 + 1] += box.y;
-          arr[_i18 + 1] += box.y;
+        if (dy > hy) {
+          home[_i20 + 1] -= box.y;
+          arr[_i20 + 1] -= box.y;
+          dirty = true;
+        } else if (dy < -hy) {
+          home[_i20 + 1] += box.y;
+          arr[_i20 + 1] += box.y;
+          dirty = true;
         }
-        if (dz > box.z / 2) {
-          home[_i18 + 2] -= box.z;
-          arr[_i18 + 2] -= box.z;
-        } else if (dz < -box.z / 2) {
-          home[_i18 + 2] += box.z;
-          arr[_i18 + 2] += box.z;
+        if (dz > hz) {
+          home[_i20 + 2] -= box.z;
+          arr[_i20 + 2] -= box.z;
+          dirty = true;
+        } else if (dz < -hz) {
+          home[_i20 + 2] += box.z;
+          arr[_i20 + 2] += box.z;
+          dirty = true;
         }
       }
+      return dirty;
     }
     var prevMode = mode;
     var flowSm = 0;
     var FLOW_RM = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
     var formActual = 0;
+    var assemblyNeedsSettle = false;
     var _glyphC = new THREE.Vector3();
     var _fieldCam = new THREE.Vector3();
     function scatterTiles() {
@@ -3807,9 +4211,22 @@ function Universe(_ref) {
       last = now;
       var mode = modeRef.current;
       var focusAddrNow = focusRef.current;
+      if (focusAddrNow && focusAddrNow !== prioritizedModelAddr) {
+        prioritizedModelAddr = focusAddrNow;
+        ensureProjectModel(focusAddrNow);
+      }
       var isArranged = mode === "reel" || mode === "origin";
+      var dt16 = dt / 16;
+      var decay86 = Math.pow(0.86, dt16);
+      var decay88 = Math.pow(0.88, dt16);
+      var decay90 = Math.pow(0.90, dt16);
+      var decay91 = Math.pow(0.91, dt16);
+      var decay92 = Math.pow(0.92, dt16);
+      var decay93 = Math.pow(0.93, dt16);
+      var decay94 = Math.pow(0.94, dt16);
+      var ease10 = 1 - decay90;
       var lvlT = window.MOSound && window.MOSound.getLevel && !window.MOSound.isMuted() ? window.MOSound.getLevel() : 0;
-      _lvlS += (lvlT - _lvlS) * (1 - Math.pow(0.86, dt / 16));
+      _lvlS += (lvlT - _lvlS) * (1 - decay86);
       var arrFade = 1,
         arrCollapse = 0;
       if (ARR.t0) {
@@ -3891,15 +4308,14 @@ function Universe(_ref) {
           var legRollMul = window.__mo_fx && window.__mo_fx.legRoll != null ? window.__mo_fx.legRoll : 1;
           rollTarget = legRoll * 0.055 * bell * styleMul * Math.min(1.3, warpMul) * legRollMul;
         }
-        flowSm += (flowTarget - flowSm) * (1 - Math.pow(0.90, dt / 16));
-        camRollFX += (rollTarget - camRollFX) * (1 - Math.pow(0.93, dt / 16));
+        flowSm += (flowTarget - flowSm) * ease10;
+        camRollFX += (rollTarget - camRollFX) * (1 - decay93);
         if (!exploreOn && flowSm > 0.02) {
           var _d = flowSm * dt / 1000;
           _flowDX = -Math.sin(cam.yaw) * _d;
           _flowDZ = -Math.cos(cam.yaw) * _d;
           _flowDY = 0;
           shiftBufferAttr(stars.geometry.attributes.position, _flowDX, _flowDY, _flowDZ);
-          stars.geometry.attributes.position.needsUpdate = true;
           var _iterator1 = _createForOfIteratorHelper(ambient),
             _step1;
           try {
@@ -3918,10 +4334,10 @@ function Universe(_ref) {
               _step10;
             try {
               for (_iterator10.s(); !(_step10 = _iterator10.n()).done;) {
-                var _m = _step10.value;
-                if (_m.userData.driftTarget) continue;
-                _m.position.x -= _flowDX;
-                _m.position.z -= _flowDZ;
+                var _m2 = _step10.value;
+                if (_m2.userData.driftTarget) continue;
+                _m2.position.x -= _flowDX;
+                _m2.position.z -= _flowDZ;
               }
             } catch (err) {
               _iterator10.e(err);
@@ -3938,13 +4354,13 @@ function Universe(_ref) {
         }
       }
       if (!exploreOn && isArranged) {
-        cam.vel *= Math.pow(0.86, dt / 16);
-        camTarget.yaw *= Math.pow(0.92, dt / 16);
-        camTarget.pitch *= Math.pow(0.92, dt / 16);
-        cam.pos.multiplyScalar(Math.pow(0.94, dt / 16));
+        cam.vel *= decay86;
+        camTarget.yaw *= decay92;
+        camTarget.pitch *= decay92;
+        cam.pos.multiplyScalar(decay94);
       }
       if (exploreOn) {
-        cam.vel *= Math.pow(0.92, dt / 16);
+        cam.vel *= decay92;
         if (Math.abs(cam.vel) < 0.04) cam.vel = 0;
         camRollFX = 0;
         cam.pos.copy(exploreAnchor);
@@ -3963,7 +4379,7 @@ function Universe(_ref) {
         cam.pos.copy(exploreAnchor);
         camera.position.copy(exploreAnchor);
       } else {
-        cam.vel *= Math.pow(0.92, dt / 16);
+        cam.vel *= decay92;
         if (Math.abs(cam.vel) < 0.04) cam.vel = 0;
         var k = 1 - Math.pow(0.001, dt / 1000);
         cam.yaw += (camTarget.yaw - cam.yaw) * k;
@@ -3976,15 +4392,15 @@ function Universe(_ref) {
           var wantGain = mode === "drift" && driftActive && !dragging && !activeAddrRef.current && !hoverObjRef.current ? 1 : PDRIFT.focusDamp;
           var gainRate = wantGain < pdriftGain ? 8 : PDRIFT.ease;
           pdriftGain += (wantGain - pdriftGain) * (1 - Math.exp(-gainRate * dt / 1000));
-          var _s3 = dt / 1000;
+          var _s4 = dt / 1000;
           var wx = Math.PI * 2 / PDRIFT.px,
             wy = Math.PI * 2 / PDRIFT.py;
           var vx = Math.cos(now / 1000 * wx) * PDRIFT.amp * pdriftGain;
           var vy = Math.cos(now / 1000 * wy + 1.7) * PDRIFT.amp * 0.55 * pdriftGain;
           _pdR.set(1, 0, 0).applyQuaternion(camera.quaternion);
           _pdU.set(0, 1, 0).applyQuaternion(camera.quaternion);
-          cam.pos.addScaledVector(_pdR, vx * _s3);
-          cam.pos.addScaledVector(_pdU, vy * _s3);
+          cam.pos.addScaledVector(_pdR, vx * _s4);
+          cam.pos.addScaledVector(_pdU, vy * _s4);
         }
         camera.position.copy(cam.pos);
         if (cam.pos.lengthSq() > REBASE_DIST2) rebaseWorld();
@@ -3994,16 +4410,16 @@ function Universe(_ref) {
           _step11;
         try {
           for (_iterator11.s(); !(_step11 = _iterator11.n()).done;) {
-            var _m2 = _step11.value;
-            var dt2 = _m2.userData.driftTarget;
+            var _m3 = _step11.value;
+            var dt2 = _m3.userData.driftTarget;
             if (dt2) {
               var rate = 0.025;
-              _m2.position.lerp(dt2, 1 - Math.pow(1 - rate, dt / 16));
-              if (_m2.position.distanceToSquared(dt2) < 0.09) {
-                _m2.userData.driftTarget = null;
+              _m3.position.lerp(dt2, 1 - Math.pow(1 - rate, dt / 16));
+              if (_m3.position.distanceToSquared(dt2) < 0.09) {
+                _m3.userData.driftTarget = null;
               }
             } else {
-              wrapAroundCamera(_m2, TILE_BOX);
+              wrapAroundCamera(_m3, TILE_BOX, TILE_BOX_HALF);
             }
           }
         } catch (err) {
@@ -4017,14 +4433,14 @@ function Universe(_ref) {
       try {
         for (_iterator12.s(); !(_step12 = _iterator12.n()).done;) {
           var _sp2 = _step12.value;
-          wrapAroundCamera(_sp2, BOX);
+          wrapAroundCamera(_sp2, BOX, BOX_HALF);
         }
       } catch (err) {
         _iterator12.e(err);
       } finally {
         _iterator12.f();
       }
-      wrapPointsAroundCamera(stars, SBOX);
+      wrapPointsAroundCamera(stars, SBOX, SBOX_HALF);
       camera.getWorldDirection(_camDir);
       var _iterator13 = _createForOfIteratorHelper(tileWires),
         _step13;
@@ -4079,7 +4495,7 @@ function Universe(_ref) {
           var baseScale = isModel ? 0.85 : 0.28;
           var focusScale = isModel ? 1.10 : 0.42;
           var targetScale = isFocused ? focusScale : baseScale;
-          wire.scale.lerp(_vScale.set(targetScale, targetScale, targetScale), frameLerp(0.10, dt));
+          wire.scale.lerp(_vScale.set(targetScale, targetScale, targetScale), ease10);
         }
       } catch (err) {
         _iterator13.e(err);
@@ -4090,20 +4506,20 @@ function Universe(_ref) {
         _step14;
       try {
         for (_iterator14.s(); !(_step14 = _iterator14.n()).done;) {
-          var _m3 = _step14.value;
-          var target = targetForTile(mode, _m3.userData.index, now);
+          var _m4 = _step14.value;
+          var target = targetForTile(mode, _m4.userData.index, now);
           if (target) {
             var _rate = listCollapse ? 0.155 : mode === "reel" ? 0.18 : 0.025;
-            _m3.position.lerp(target, 1 - Math.pow(1 - _rate, dt / 16));
+            _m4.position.lerp(target, 1 - Math.pow(1 - _rate, dt / 16));
           }
-          _lookM.lookAt(camera.position, _m3.position, camera.up);
+          _lookM.lookAt(camera.position, _m4.position, camera.up);
           _baseQ.setFromRotationMatrix(_lookM);
           var offFactor = mode === "reel" ? 0.15 : 1.0;
-          _euler.set(_m3.userData.offsetPitch * offFactor, _m3.userData.offsetYaw * offFactor, (_m3.userData.offsetRoll + Math.sin(now * 0.0006 + _m3.userData.wobble.p * 6) * 0.04) * offFactor, "YXZ");
+          _euler.set(_m4.userData.offsetPitch * offFactor, _m4.userData.offsetYaw * offFactor, (_m4.userData.offsetRoll + Math.sin(now * 0.0006 + _m4.userData.wobble.p * 6) * 0.04) * offFactor, "YXZ");
           _offQ.setFromEuler(_euler);
           _baseQ.multiply(_offQ);
-          _m3.quaternion.slerp(_baseQ, frameLerp(mode === "reel" ? 0.12 : 0.06, dt));
-          var dist = _m3.position.distanceTo(camera.position);
+          _m4.quaternion.slerp(_baseQ, mode === "reel" ? 1 - decay88 : 1 - decay94);
+          var dist = _m4.position.distanceTo(camera.position);
           var nearIn = void 0,
             farOut = void 0;
           if (mode === "reel") {
@@ -4112,9 +4528,9 @@ function Universe(_ref) {
             farOut = THREE.MathUtils.smoothstep(dist, 13 + rg * 4, 16.5 + rg * 9.5);
           } else if (mode === "drift") {
             nearIn = THREE.MathUtils.smoothstep(dist, 2.5, 6.0);
-            var ex = Math.abs(_m3.position.x - camera.position.x) / (TILE_BOX.x / 2);
-            var ey = Math.abs(_m3.position.y - camera.position.y) / (TILE_BOX.y / 2);
-            var ez = Math.abs(_m3.position.z - camera.position.z) / (TILE_BOX.z / 2);
+            var ex = Math.abs(_m4.position.x - camera.position.x) / (TILE_BOX.x / 2);
+            var ey = Math.abs(_m4.position.y - camera.position.y) / (TILE_BOX.y / 2);
+            var ez = Math.abs(_m4.position.z - camera.position.z) / (TILE_BOX.z / 2);
             var edge = Math.max(ex, ey, ez);
             farOut = THREE.MathUtils.smoothstep(edge, 0.95, 1.0);
           } else {
@@ -4124,19 +4540,19 @@ function Universe(_ref) {
           var _opacity = nearIn * (1 - farOut);
           var modelOpacityBase = _opacity;
           if (mode === "reel") _opacity *= 0.96;
-          var _isFocused = focusAddrNow && _m3.userData.project.addr === focusAddrNow;
+          var _isFocused = focusAddrNow && _m4.userData.project.addr === focusAddrNow;
           if (_isFocused) {
             _opacity = Math.min(1, _opacity * 1.6 + 0.25);
             modelOpacityBase = Math.min(1, modelOpacityBase * 1.6 + 0.25);
-            _m3.scale.lerp(_vScale.set(1.18, 1.18, 1), frameLerp(0.14, dt));
+            _m4.scale.lerp(_vScale.set(1.18, 1.18, 1), 1 - decay86);
           } else {
-            _m3.scale.lerp(_vScale.set(1, 1, 1), frameLerp(0.10, dt));
+            _m4.scale.lerp(_vScale.set(1, 1, 1), ease10);
           }
-          var uD = _m3.userData;
-          var opK = frameLerp(0.10, dt);
+          var uD = _m4.userData;
+          var opK = ease10;
           uD.opSm = uD.opSm == null ? _opacity : uD.opSm + (_opacity - uD.opSm) * opK;
           uD.mobSm = uD.mobSm == null ? modelOpacityBase : uD.mobSm + (modelOpacityBase - uD.mobSm) * opK;
-          _m3.material.opacity = uD.opSm * arrFade;
+          _m4.material.opacity = uD.opSm * arrFade;
           uD.modelOpacityBase = uD.mobSm * arrFade;
         }
       } catch (err) {
@@ -4159,24 +4575,33 @@ function Universe(_ref) {
       }
       ambientRight.set(1, 0, 0).applyQuaternion(camera.quaternion);
       ambientUp.set(0, 1, 0).applyQuaternion(camera.quaternion);
+      var ambientClock = now * 0.0008;
+      var ambientClockSin = Math.sin(ambientClock);
+      var ambientClockCos = Math.cos(ambientClock);
+      var boxHalfX = BOX.x * 0.5,
+        boxHalfY = BOX.y * 0.5,
+        boxHalfZ = BOX.z * 0.5;
       var _iterator16 = _createForOfIteratorHelper(ambient),
         _step16;
       try {
         for (_iterator16.s(); !(_step16 = _iterator16.n()).done;) {
           var _sp3 = _step16.value;
-          var phase = _sp3.userData.phase + now * 0.0008;
-          var _dist = _sp3.position.distanceTo(camera.position);
+          var dx = _sp3.position.x - camera.position.x;
+          var dy = _sp3.position.y - camera.position.y;
+          var dz = _sp3.position.z - camera.position.z;
+          var _dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
           var _nearIn = THREE.MathUtils.smoothstep(_dist, 1.5, 5.0);
-          var _ex = Math.abs(_sp3.position.x - camera.position.x) / (BOX.x / 2);
-          var _ey = Math.abs(_sp3.position.y - camera.position.y) / (BOX.y / 2);
-          var _ez = Math.abs(_sp3.position.z - camera.position.z) / (BOX.z / 2);
+          var _ex = Math.abs(dx) / boxHalfX;
+          var _ey = Math.abs(dy) / boxHalfY;
+          var _ez = Math.abs(dz) / boxHalfZ;
           var _farOut = THREE.MathUtils.smoothstep(Math.max(_ex, _ey, _ez), 0.95, 1.0);
-          var _pulse = 0.65 + Math.sin(phase) * 0.20;
+          var pulseWave = _sp3.userData.phaseSin * ambientClockCos + _sp3.userData.phaseCos * ambientClockSin;
+          var _pulse = 0.65 + pulseWave * 0.20;
           var aOp = _pulse * _nearIn * (1 - _farOut);
           if (mode !== "drift") aOp *= 0.35;
           aOp *= arrFade;
           _sp3.userData.opacity = aOp;
-          var depth = (_sp3.position.x - camera.position.x) * FORWARD.x + (_sp3.position.y - camera.position.y) * FORWARD.y + (_sp3.position.z - camera.position.z) * FORWARD.z;
+          var depth = dx * FORWARD.x + dy * FORWARD.y + dz * FORWARD.z;
           _sp3.userData.depth = depth;
           if (aOp <= 0.001 || depth <= camera.near) continue;
           var depthT = Math.max(0, Math.min(0.999999, (depth - camera.near) / AMB_DEPTH_SPAN));
@@ -4206,21 +4631,20 @@ function Universe(_ref) {
           _batch2.mesh.visible = count > 0;
           _batch2.geo.setDrawRange(0, count * 6);
           if (!count) continue;
-          _batch2.nodes.sort(function (a, b) {
-            return b.userData.depth - a.userData.depth;
-          });
+          _batch2.nodes.sort(sortAmbientBackToFront);
           var meanDepth = _batch2.depthSum / count;
           _batch2.mesh.position.copy(camera.position).addScaledVector(FORWARD, meanDepth);
           var ox = _batch2.mesh.position.x,
             oy = _batch2.mesh.position.y,
             oz = _batch2.mesh.position.z;
-          for (var _i24 = 0; _i24 < count; _i24++) {
-            var _sp4 = _batch2.nodes[_i24];
+          var uvDirty = false;
+          for (var _i26 = 0; _i26 < count; _i26++) {
+            var _sp4 = _batch2.nodes[_i26];
             var c = _sp4.userData.atlas;
             var _x = _sp4.position.x - ox,
               _y = _sp4.position.y - oy,
               _z = _sp4.position.z - oz;
-            var p = _i24 * 12;
+            var p = _i26 * 12;
             _batch2.positions[p] = _x - rx + ux;
             _batch2.positions[p + 1] = _y - ry + uy;
             _batch2.positions[p + 2] = _z - rz + uz;
@@ -4233,16 +4657,20 @@ function Universe(_ref) {
             _batch2.positions[p + 9] = _x + rx - ux;
             _batch2.positions[p + 10] = _y + ry - uy;
             _batch2.positions[p + 11] = _z + rz - uz;
-            var u = _i24 * 8;
-            _batch2.uvs[u] = c.u0;
-            _batch2.uvs[u + 1] = c.v1;
-            _batch2.uvs[u + 2] = c.u1;
-            _batch2.uvs[u + 3] = c.v1;
-            _batch2.uvs[u + 4] = c.u0;
-            _batch2.uvs[u + 5] = c.v0;
-            _batch2.uvs[u + 6] = c.u1;
-            _batch2.uvs[u + 7] = c.v0;
-            var a = _i24 * 4;
+            if (_batch2.nodeOrder[_i26] !== _sp4.userData.index) {
+              _batch2.nodeOrder[_i26] = _sp4.userData.index;
+              var u = _i26 * 8;
+              _batch2.uvs[u] = c.u0;
+              _batch2.uvs[u + 1] = c.v1;
+              _batch2.uvs[u + 2] = c.u1;
+              _batch2.uvs[u + 3] = c.v1;
+              _batch2.uvs[u + 4] = c.u0;
+              _batch2.uvs[u + 5] = c.v0;
+              _batch2.uvs[u + 6] = c.u1;
+              _batch2.uvs[u + 7] = c.v0;
+              uvDirty = true;
+            }
+            var a = _i26 * 4;
             _batch2.opacity[a] = _sp4.userData.opacity;
             _batch2.opacity[a + 1] = _sp4.userData.opacity;
             _batch2.opacity[a + 2] = _sp4.userData.opacity;
@@ -4253,14 +4681,16 @@ function Universe(_ref) {
           var opacityAttr = _batch2.geo.attributes.aAmbientOpacity;
           if (positionAttr.clearUpdateRanges) {
             positionAttr.clearUpdateRanges();
-            uvAttr.clearUpdateRanges();
             opacityAttr.clearUpdateRanges();
             positionAttr.addUpdateRange(0, count * 4 * 3);
-            uvAttr.addUpdateRange(0, count * 4 * 2);
             opacityAttr.addUpdateRange(0, count * 4);
+            if (uvDirty) {
+              uvAttr.clearUpdateRanges();
+              uvAttr.addUpdateRange(0, count * 4 * 2);
+            }
           }
           positionAttr.needsUpdate = true;
-          uvAttr.needsUpdate = true;
+          if (uvDirty) uvAttr.needsUpdate = true;
           opacityAttr.needsUpdate = true;
         }
       } catch (err) {
@@ -4317,40 +4747,44 @@ function Universe(_ref) {
         }
         var formTarget = 0;
         if (ob.active && concept !== "hub") formTarget = eP;
-        formActual += (formTarget - formActual) * frameLerp(0.09, dt);
+        formActual += (formTarget - formActual) * (1 - decay91);
         if (formActual < 0.0015 && formTarget === 0) formActual = 0;
         var formP = formActual;
         var arr = assemblyPts.geometry.attributes.position.array;
+        var assemblyBufferDirty = false;
         var _fdx = cam.pos.x - _fieldCam.x;
         var _fdy = cam.pos.y - _fieldCam.y;
         var _fdz = cam.pos.z - _fieldCam.z;
         _fieldCam.copy(cam.pos);
         if ((formP >= 0.0015 || isArranged) && (_fdx || _fdy || _fdz)) {
-          for (var _i19 = 0; _i19 < ASM_N * 3; _i19 += 3) {
-            asmHome[_i19] += _fdx;
-            arr[_i19] += _fdx;
-            asmHome[_i19 + 1] += _fdy;
-            arr[_i19 + 1] += _fdy;
-            asmHome[_i19 + 2] += _fdz;
-            arr[_i19 + 2] += _fdz;
+          for (var _i21 = 0; _i21 < ASM_N * 3; _i21 += 3) {
+            asmHome[_i21] += _fdx;
+            arr[_i21] += _fdx;
+            asmHome[_i21 + 1] += _fdy;
+            arr[_i21 + 1] += _fdy;
+            asmHome[_i21 + 2] += _fdz;
+            arr[_i21 + 2] += _fdz;
           }
+          assemblyBufferDirty = true;
         }
         if (_flowDX || _flowDZ) {
           var fw = Math.max(0, 1 - formP * 2.5);
           if (fw > 0.01) {
             var fx = _flowDX * fw,
               fz = _flowDZ * fw;
-            for (var _i20 = 0; _i20 < ASM_N * 3; _i20 += 3) {
-              asmHome[_i20] -= fx;
-              arr[_i20] -= fx;
-              asmHome[_i20 + 2] -= fz;
-              arr[_i20 + 2] -= fz;
+            for (var _i22 = 0; _i22 < ASM_N * 3; _i22 += 3) {
+              asmHome[_i22] -= fx;
+              arr[_i22] -= fx;
+              asmHome[_i22 + 2] -= fz;
+              arr[_i22 + 2] -= fz;
             }
+            assemblyBufferDirty = true;
           }
         }
         if (formP < 0.0015) {
-          wrapAssemblyField(arr, asmHome, BOX);
+          if (wrapAssemblyField(arr, asmHome, BOX, BOX_HALF)) assemblyBufferDirty = true;
           if (arrCollapse > 0.01) {
+            assemblyNeedsSettle = true;
             var kA = frameLerp(0.05 + arrCollapse * 0.16, dt);
             _arrR.crossVectors(FORWARD, _arrUP).normalize();
             _arrU.crossVectors(_arrR, FORWARD).normalize();
@@ -4358,11 +4792,14 @@ function Universe(_ref) {
             var ky = cam.pos.y + FORWARD.y * 9;
             var kz = cam.pos.z + FORWARD.z * 9;
             var wobT = now * 0.0022;
-            for (var _i21 = 0; _i21 < ASM_N; _i21++) {
-              var j = _i21 * 3;
-              var lx = asmLocal[j] * glyphFit;
-              var ly = asmLocal[j + 1] * glyphFit;
-              var lz = asmLocal[j + 2] * glyphFit + 0.10 * Math.sin(wobT - lx * 1.5);
+            var wobSin = Math.sin(wobT),
+              wobCos = Math.cos(wobT);
+            for (var _i23 = 0; _i23 < ASM_N; _i23++) {
+              var j = _i23 * 3;
+              var lx = asmFitLocal[j];
+              var ly = asmFitLocal[j + 1];
+              var wave = wobSin * asmWaveCos[_i23] + wobCos * asmWaveSin[_i23];
+              var lz = asmFitLocal[j + 2] + 0.10 * wave;
               var tx = kx + _arrR.x * lx + _arrU.x * ly + FORWARD.x * lz;
               var ty = ky + _arrR.y * lx + _arrU.y * ly + FORWARD.y * lz;
               var tz = kz + _arrR.z * lx + _arrU.z * ly + FORWARD.z * lz;
@@ -4373,29 +4810,42 @@ function Universe(_ref) {
               arr[j + 1] += (desY - arr[j + 1]) * kA;
               arr[j + 2] += (desZ - arr[j + 2]) * kA;
             }
-          } else {
-            var kField = frameLerp(0.12, dt);
-            for (var _i22 = 0; _i22 < ASM_N * 3; _i22++) arr[_i22] += (asmHome[_i22] - arr[_i22]) * kField;
+            assemblyBufferDirty = true;
+          } else if (assemblyNeedsSettle) {
+            var kField = 1 - decay88;
+            var changed = false;
+            for (var _i24 = 0; _i24 < ASM_N * 3; _i24++) {
+              var before = arr[_i24];
+              arr[_i24] = before + (asmHome[_i24] - before) * kField;
+              if (arr[_i24] !== before) changed = true;
+            }
+            assemblyNeedsSettle = changed;
+            if (changed) assemblyBufferDirty = true;
           }
         } else {
+          assemblyNeedsSettle = true;
           _glyphC.copy(cam.pos).add(ORIGIN_CENTER);
           var wob = Math.max(0, 1 - formP * 1.2);
           var assemblyYaw = Math.sin(now * 0.00045) * 0.5 * wob;
           var restYaw = Math.sin(now * 0.00038) * 0.20 * formP;
           var restPitch = Math.sin(now * 0.00029 + 1.0) * 0.10 * formP;
-          var ang = assemblyYaw + restYaw;
-          var ca = Math.cos(ang),
-            sa = Math.sin(ang);
+          var _ang3 = assemblyYaw + restYaw;
+          var ca = Math.cos(_ang3),
+            sa = Math.sin(_ang3);
           var cp = Math.cos(restPitch),
             _sp = Math.sin(restPitch);
           var rAmp = 0.15 * formP;
           var rPhase = now * 0.0019;
+          var rippleSin = Math.sin(rPhase),
+            rippleCos = Math.cos(rPhase);
+          var rippleScale = rAmp * glyphFit;
           var kForm = frameLerp(0.16 + formP * 0.12, dt);
-          for (var _i23 = 0; _i23 < ASM_N; _i23++) {
-            var _j = _i23 * 3;
-            var _lx = asmLocal[_j] * glyphFit;
-            var _ly = asmLocal[_j + 1] * glyphFit;
-            var _lz = asmLocal[_j + 2] * glyphFit + rAmp * glyphFit * Math.sin(rPhase - _lx * 1.5);
+          for (var _i25 = 0; _i25 < ASM_N; _i25++) {
+            var _j = _i25 * 3;
+            var _lx = asmFitLocal[_j];
+            var _ly = asmFitLocal[_j + 1];
+            var _wave = rippleSin * asmWaveCos[_i25] + rippleCos * asmWaveSin[_i25];
+            var _lz = asmFitLocal[_j + 2] + rippleScale * _wave;
             var ly2 = _ly * cp - _lz * _sp;
             var lz2 = _ly * _sp + _lz * cp;
             var _rx = _lx * ca - lz2 * sa;
@@ -4410,8 +4860,9 @@ function Universe(_ref) {
             arr[_j + 1] += (_desY - arr[_j + 1]) * kForm;
             arr[_j + 2] += (_desZ - arr[_j + 2]) * kForm;
           }
+          assemblyBufferDirty = true;
         }
-        assemblyPts.geometry.attributes.position.needsUpdate = true;
+        if (assemblyBufferDirty) assemblyPts.geometry.attributes.position.needsUpdate = true;
         var fieldOp = mode === "reel" ? 0.34 : 0.55;
         assemblyPts.material.opacity = Math.min(1, Math.max(fieldOp, 0.2 + formP * 0.8) + arrCollapse * 0.45 + _lvlS * 0.16);
         assemblyPts.material.size = 0.1 + formP * 0.015 + arrCollapse * 0.07 + _lvlS * 0.04;
@@ -4423,7 +4874,7 @@ function Universe(_ref) {
         debugState.formP = +formP.toFixed(2);
         debugState.camZ = +cam.pos.z.toFixed(1);
       }
-      updateTopology(dt, mode, focusAddrNow, window.__mo_debug && window.__mo_debug.formP || 0, arrFade);
+      updateTopology(now, mode, focusAddrNow, window.__mo_debug && window.__mo_debug.formP || 0, arrFade);
       var FLbr = window.__mo_flight || {};
       var warpNow = Math.max(0, Math.min(1.4, FLbr.warp || 0));
       var MC = window.__mo_cam = window.__mo_cam || {};
@@ -4456,7 +4907,7 @@ function Universe(_ref) {
         });
       }
       var fovT = 58 + vW * 4 + warpNow * 4.5;
-      camera.fov += (fovT - camera.fov) * frameLerp(0.08, dt);
+      camera.fov += (fovT - camera.fov) * (1 - decay92);
       if (Math.abs(camera.fov - _lastFov) > 0.02) {
         camera.updateProjectionMatrix();
         _lastFov = camera.fov;
@@ -4466,7 +4917,7 @@ function Universe(_ref) {
         if (mode === "reel") focusT = 10.6;
         var formPNow = window.__mo_debug && window.__mo_debug.formP || 0;
         if (formPNow > 0.25) focusT = ORIGIN_CENTER.length();
-        _focusS += (focusT - _focusS) * frameLerp(0.07, dt);
+        _focusS += (focusT - _focusS) * (1 - decay93);
         bokehPass.uniforms.focus.value = _focusS;
         bokehPass.uniforms.aperture.value = GRADE.aperture;
         bokehPass.uniforms.maxblur.value = GRADE.maxblur;
@@ -4475,6 +4926,7 @@ function Universe(_ref) {
         composer.render();
       } else renderer.render(scene, camera);
       if (frameI === 1) {
+        window.__mo_firstFrameAt = now;
         try {
           window.dispatchEvent(new CustomEvent("mo:first-frame"));
         } catch (_) {}
@@ -4482,33 +4934,36 @@ function Universe(_ref) {
       probeDoF(dt);
       raf = requestAnimationFrame(frame);
     }
-    function wrapPointsAroundCamera(points, box) {
+    function wrapPointsAroundCamera(points, box, half) {
       var attr = points.geometry.attributes.position;
       var arr = attr.array;
+      var hx = half.x,
+        hy = half.y,
+        hz = half.z;
       var dirty = false;
-      for (var _i25 = 0; _i25 < arr.length; _i25 += 3) {
-        var dx = arr[_i25 + 0] - cam.pos.x;
-        var dy = arr[_i25 + 1] - cam.pos.y;
-        var dz = arr[_i25 + 2] - cam.pos.z;
-        if (dx > box.x / 2) {
-          arr[_i25 + 0] -= box.x;
+      for (var _i27 = 0; _i27 < arr.length; _i27 += 3) {
+        var dx = arr[_i27 + 0] - cam.pos.x;
+        var dy = arr[_i27 + 1] - cam.pos.y;
+        var dz = arr[_i27 + 2] - cam.pos.z;
+        if (dx > hx) {
+          arr[_i27 + 0] -= box.x;
           dirty = true;
-        } else if (dx < -box.x / 2) {
-          arr[_i25 + 0] += box.x;
-          dirty = true;
-        }
-        if (dy > box.y / 2) {
-          arr[_i25 + 1] -= box.y;
-          dirty = true;
-        } else if (dy < -box.y / 2) {
-          arr[_i25 + 1] += box.y;
+        } else if (dx < -hx) {
+          arr[_i27 + 0] += box.x;
           dirty = true;
         }
-        if (dz > box.z / 2) {
-          arr[_i25 + 2] -= box.z;
+        if (dy > hy) {
+          arr[_i27 + 1] -= box.y;
           dirty = true;
-        } else if (dz < -box.z / 2) {
-          arr[_i25 + 2] += box.z;
+        } else if (dy < -hy) {
+          arr[_i27 + 1] += box.y;
+          dirty = true;
+        }
+        if (dz > hz) {
+          arr[_i27 + 2] -= box.z;
+          dirty = true;
+        } else if (dz < -hz) {
+          arr[_i27 + 2] += box.z;
           dirty = true;
         }
       }
@@ -4521,6 +4976,9 @@ function Universe(_ref) {
     } catch (_) {}
     return function () {
       var _originHub$material$m;
+      universeDisposed = true;
+      if (modelIdleHandle) cancelModelIdle(modelIdleHandle);
+      if (modelRetryHandle) clearTimeout(modelRetryHandle);
       cancelAnimationFrame(raf);
       clearTimeout(idleTimer);
       if (cursorFx) cursorFx.destroy();
@@ -4579,6 +5037,7 @@ function Universe(_ref) {
       window.removeEventListener("wheel", onAnyAct);
       window.removeEventListener("keydown", onAnyAct);
       window.removeEventListener("scroll", onAnyAct);
+      delete window.__mo_firstFrameAt;
       window.removeEventListener("deviceorientation", onGyro, true);
       window.removeEventListener("orientationchange", onGyroFrameChange);
       if (window.screen && window.screen.orientation && window.screen.orientation.removeEventListener) {
@@ -4683,6 +5142,7 @@ var NH_DEFAULTS = {
 };
 var NH_REDUCED = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
 var NH_HOLD_MAX = 900;
+var NH_SEAM_MAX = 1000;
 function nhClearStale() {
   for (var _i = 0, _arr = ["mo_node_arrive", "mo_node_yaw", "mo_node_return", "mo_node_return_addr", "mo_node_return_target"]; _i < _arr.length; _i++) {
     var k = _arr[_i];
@@ -4716,20 +5176,107 @@ function NodeHandoff() {
     setHolding = _useNH6[1];
   var rigRef = useNHR(null);
   var rafRef = useNHR(0);
+  var prepRafRef = useNHR(0);
+  var prepTokenRef = useNHR(0);
+  var prepRef = useNHR({
+    addr: "",
+    promise: null
+  });
+  var hoverTimerRef = useNHR(0);
+  var modeRef = useNHR(mode);
+  modeRef.current = mode;
+  var stopPrep = function stopPrep() {
+    prepTokenRef.current += 1;
+    cancelAnimationFrame(prepRafRef.current);
+    prepRafRef.current = 0;
+  };
+  var prepareRig = function prepareRig(project) {
+    if (!project || returningRef.current || modeRef.current !== "idle") return null;
+    var mount = mountRef.current;
+    if (!mount || !window.makeNodeRig) return null;
+    var rig = rigRef.current;
+    if (!rig || typeof rig.setProject !== "function") {
+      if (rig) {
+        try {
+          rig.dispose();
+        } catch (_) {}
+      }
+      while (mount.firstChild) mount.removeChild(mount.firstChild);
+      rig = window.makeNodeRig(mount, {
+        project: project,
+        model: project.model,
+        mode: "handoff",
+        deferModel: true
+      });
+      rigRef.current = rig;
+    }
+    if (!rig) return null;
+    var current = prepRef.current;
+    if (current.addr === project.addr && current.promise) return current.promise;
+    stopPrep();
+    var token = prepTokenRef.current;
+    var load = rig.getProjectAddr && rig.getProjectAddr() === project.addr ? Promise.resolve(rig.ready) : Promise.resolve(rig.setProject(project));
+    var promise = load.then(function () {
+      return new Promise(function (resolve) {
+        var painted = 0;
+        var _paint = function paint() {
+          if (token !== prepTokenRef.current || modeRef.current !== "idle" || rigRef.current !== rig) {
+            resolve(false);
+            return;
+          }
+          rig.update(16);
+          rig.render();
+          if (rig.ready) painted += 1;
+          if (painted >= 2) {
+            try {
+              window.dispatchEvent(new CustomEvent("mo:handoff-warm", {
+                detail: {
+                  addr: project.addr
+                }
+              }));
+            } catch (_) {}
+            resolve(true);
+            return;
+          }
+          prepRafRef.current = requestAnimationFrame(_paint);
+        };
+        prepRafRef.current = requestAnimationFrame(_paint);
+      });
+    })["catch"](function () {
+      return false;
+    });
+    prepRef.current = {
+      addr: project.addr,
+      promise: promise
+    };
+    promise.then(function (ready) {
+      if (!ready && prepRef.current.promise === promise) prepRef.current = {
+        addr: "",
+        promise: null
+      };
+    });
+    return promise;
+  };
   useNHE(function () {
     var onRestore = function onRestore() {
       cancelAnimationFrame(rafRef.current);
+      stopPrep();
       if (rigRef.current) {
         try {
           rigRef.current.dispose();
         } catch (_) {}
         rigRef.current = null;
       }
+      prepRef.current = {
+        addr: "",
+        promise: null
+      };
       var mount = mountRef.current;
       if (mount) while (mount.firstChild) mount.removeChild(mount.firstChild);
       var wf = document.querySelector(".wf");
       if (wf) wf.classList.remove("wf--dissolve");
       returningRef.current = false;
+      modeRef.current = "idle";
       setHolding(false);
       setHud({
         addr: "",
@@ -4740,6 +5287,40 @@ function NodeHandoff() {
     window.addEventListener("mo:page-restored", onRestore);
     return function () {
       return window.removeEventListener("mo:page-restored", onRestore);
+    };
+  }, []);
+  useNHE(function () {
+    if (returningRef.current) return;
+    var firstProject = function firstProject() {
+      return (window.MO_PROJECTS || []).find(function (project) {
+        return project.universe !== false && project.file;
+      });
+    };
+    var prime = function prime() {
+      var project = firstProject();
+      if (project) prepareRig(project);
+    };
+    var onHover = function onHover(event) {
+      var addr = event && event.detail && event.detail.addr;
+      clearTimeout(hoverTimerRef.current);
+      hoverTimerRef.current = 0;
+      if (!addr) return;
+      var project = window.MO_PROJECT_BY_ADDR && window.MO_PROJECT_BY_ADDR[addr];
+      if (!project || !project.file) return;
+      hoverTimerRef.current = setTimeout(function () {
+        return prepareRig(project);
+      }, 90);
+    };
+    window.addEventListener("mo:first-frame", prime, {
+      once: true
+    });
+    window.addEventListener("mo:tileHover", onHover);
+    if (window.__mo_firstFrameAt) prime();
+    return function () {
+      window.removeEventListener("mo:first-frame", prime);
+      window.removeEventListener("mo:tileHover", onHover);
+      clearTimeout(hoverTimerRef.current);
+      stopPrep();
     };
   }, []);
   useNHE(function () {
@@ -4761,19 +5342,33 @@ function NodeHandoff() {
     var mount = mountRef.current;
     if (!mount || !window.makeNodeRig) return null;
     cancelAnimationFrame(rafRef.current);
-    if (rigRef.current) {
+    stopPrep();
+    var rig = rigRef.current;
+    if (rig && typeof rig.setProject === "function") {
+      if (!rig.getProjectAddr || rig.getProjectAddr() !== project.addr) rig.setProject(project);
+      prepRef.current = {
+        addr: project.addr,
+        promise: Promise.resolve(rig.ready)
+      };
+      return rig;
+    }
+    if (rig) {
       try {
-        rigRef.current.dispose();
+        rig.dispose();
       } catch (_) {}
       rigRef.current = null;
     }
     while (mount.firstChild) mount.removeChild(mount.firstChild);
-    var rig = window.makeNodeRig(mount, {
+    rig = window.makeNodeRig(mount, {
       project: project,
       model: project.model,
       mode: "handoff"
     });
     rigRef.current = rig;
+    prepRef.current = {
+      addr: project.addr,
+      promise: Promise.resolve(rig && rig.ready)
+    };
     return rig;
   };
   var fadeUniverse = function fadeUniverse(toOpacity, ms) {
@@ -4808,10 +5403,6 @@ function NodeHandoff() {
       requestAnimationFrame(function () {
         var rig = buildRig(project);
         var go = function go() {
-          try {
-            var seam = rig && rig.captureFrame && rig.captureFrame();
-            if (seam) sessionStorage.setItem("mo_node_seam", seam);
-          } catch (_) {}
           var yaw = rig && rig.getYaw ? rig.getYaw() : 0;
           sessionStorage.setItem("mo_node_handoff", JSON.stringify({
             addr: project.addr,
@@ -4824,7 +5415,36 @@ function NodeHandoff() {
           sessionStorage.setItem("mo_node_addr", project.addr);
           sessionStorage.setItem("mo_node_yaw", String(yaw));
           sessionStorage.setItem("mo_node_arrive", "1");
-          window.location.href = project.file;
+          sessionStorage.removeItem("mo_node_seam");
+          var capture = Promise.resolve(null);
+          try {
+            if (rig && rig.captureFrameAsync) capture = Promise.resolve(rig.captureFrameAsync());else if (rig && rig.captureFrame) capture = Promise.resolve(rig.captureFrame());
+          } catch (_) {}
+          var timeout = new Promise(function (resolve) {
+            return setTimeout(function () {
+              return resolve({
+                timedOut: true,
+                seam: null
+              });
+            }, NH_SEAM_MAX);
+          });
+          Promise.race([capture.then(function (seam) {
+            return {
+              timedOut: false,
+              seam: seam
+            };
+          }), timeout]).then(function (result) {
+            var seam = result.seam;
+            if (!seam) {
+              try {
+                seam = rig && rig.captureFrame ? rig.captureFrame() : null;
+              } catch (_) {}
+            }
+            try {
+              if (seam) sessionStorage.setItem("mo_node_seam", seam);
+            } catch (_) {}
+            window.location.href = project.file;
+          });
         };
         if (!rig) {
           setHolding(false);
@@ -5023,6 +5643,8 @@ function NodeHandoff() {
   useNHE(function () {
     return function () {
       cancelAnimationFrame(rafRef.current);
+      stopPrep();
+      clearTimeout(hoverTimerRef.current);
       if (rigRef.current) rigRef.current.dispose();
     };
   }, []);
@@ -6994,7 +7616,7 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
   }
   function _buildScene() {
     _buildScene = _asyncToGenerator(_regenerator().m(function _callee(mount, opts, lifecycle) {
-      var LITE, THREE, W, H, renderer, scene, envTarget, pmrem, envScene, camera, key, fill, rim, colorW, detailW, colorTex, specTex, bumpTex, boardMat, edgeMat, board, curvePts, curve, STAR_N, starGeo2, starPos2, i, r, th, ph, starField2, ASM_N, asmGeo2, asmPos2, asmTar2, asmSca2, _tp, _i1, st, _TRACE_PTS$st$p5, px, pz, a, rr2, assembly2, waferState, deviceGroup, formMats, formMatsTransparent, composer, bokeh, tmpPos, tmpLook, tmpTan, tmpSide, UP, camPos, camLook, curLook, stopTForIndex, HERO_POS, HERO_LOOK, NODE_POS, NODE_LOOK, tmpFinalPos, tmpFinalLook, update, render, setSize, dispose, _t;
+      var LITE, THREE, W, H, renderer, scene, envTarget, pmrem, envScene, camera, key, fill, rim, colorW, detailW, colorTex, specTex, bumpTex, boardMat, edgeMat, board, curvePts, curve, STOP_TS, explodeStopIndex, EXPLODE_STOP_T, STAR_N, starGeo2, starPos2, i, r, th, ph, starField2, ASM_N, asmGeo2, asmPos2, asmTar2, asmSca2, asmDelta2, _tp, _i1, st, _TRACE_PTS$st$p5, px, pz, a, rr2, assembly2, waferState, deviceGroup, formMats, formMatsTransparent, composer, bokeh, tmpPos, tmpLook, tmpTan, tmpSide, UP, camPos, camLook, curLook, stopTForIndex, HERO_POS, HERO_LOOK, NODE_POS, NODE_LOOK, tmpFinalPos, tmpFinalLook, pathTargetPos, pathTargetLook, pathCacheT, pathCacheMode, lastAssemblyCe, update, render, setSize, dispose, _t;
       return _regenerator().w(function (_context) {
         while (1) switch (_context.p = _context.n) {
           case 0:
@@ -7054,27 +7676,31 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
               var nowMs = performance.now();
               var active = 0,
                 best = 1e9;
-              STOPS.forEach(function (s, i) {
-                var d = Math.abs(t - stopTForIndex(i));
+              for (var _i10 = 0; _i10 < STOP_TS.length; _i10++) {
+                var d = Math.abs(t - STOP_TS[_i10]);
                 if (d < best) {
                   best = d;
-                  active = i;
+                  active = _i10;
                 }
-              });
-              if (mode === "bench") {
-                curve.getPointAt(t, tmpLook);
-                tmpPos.set(tmpLook.x + 6, 26, tmpLook.z + 26);
-                camLook.copy(tmpLook);
-              } else {
-                curve.getPointAt(t, tmpPos);
-                curve.getTangentAt(t, tmpTan);
-                tmpSide.copy(tmpTan).cross(UP).normalize();
-                tmpPos.addScaledVector(tmpTan, -8).addScaledVector(tmpSide, 7);
-                tmpPos.y += 12;
-                curve.getPointAt(Math.min(1, t + 0.05), tmpLook);
-                tmpLook.y += 0.2;
-                camLook.copy(tmpLook);
               }
+              if (t !== pathCacheT || mode !== pathCacheMode) {
+                if (mode === "bench") {
+                  curve.getPointAt(t, pathTargetLook);
+                  pathTargetPos.set(pathTargetLook.x + 6, 26, pathTargetLook.z + 26);
+                } else {
+                  curve.getPointAt(t, pathTargetPos);
+                  curve.getTangentAt(t, tmpTan);
+                  tmpSide.copy(tmpTan).cross(UP).normalize();
+                  pathTargetPos.addScaledVector(tmpTan, -8).addScaledVector(tmpSide, 7);
+                  pathTargetPos.y += 12;
+                  curve.getPointAt(Math.min(1, t + 0.05), pathTargetLook);
+                  pathTargetLook.y += 0.2;
+                }
+                pathCacheT = t;
+                pathCacheMode = mode;
+              }
+              tmpPos.copy(pathTargetPos);
+              camLook.copy(pathTargetLook);
               camPos.lerp(tmpPos, ease);
               curLook.lerp(camLook, ease);
               tmpFinalPos.copy(camPos);
@@ -7106,9 +7732,7 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
               starField2.material.opacity = 0.5 * (1 - nodeMix);
               scene.fog.far = 150 + 260 * nodeMix;
               if (deviceGroup) {
-                var dt2 = Math.abs(t - stopTForIndex(STOPS.findIndex(function (s) {
-                  return s.explode;
-                })));
+                var dt2 = Math.abs(t - EXPLODE_STOP_T);
                 var ex = Math.max(0, 1 - dt2 * 9);
                 deviceGroup.visible = ex > 0.02 && waferState.parts.length > 0;
                 if (deviceGroup.visible) {
@@ -7145,9 +7769,12 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
               var conv = 1 - introMix;
               if (introMix > 0.001) {
                 var ce = conv < 0.5 ? 2 * conv * conv : 1 - Math.pow(-2 * conv + 2, 2) / 2;
-                var ap = assembly2.geometry.attributes.position.array;
-                for (var _i10 = 0; _i10 < ASM_N * 3; _i10++) ap[_i10] = asmSca2[_i10] + (asmTar2[_i10] - asmSca2[_i10]) * ce;
-                assembly2.geometry.attributes.position.needsUpdate = true;
+                if (ce !== lastAssemblyCe) {
+                  var ap = assembly2.geometry.attributes.position.array;
+                  for (var _i11 = 0; _i11 < ASM_N * 3; _i11++) ap[_i11] = asmSca2[_i11] + asmDelta2[_i11] * ce;
+                  assembly2.geometry.attributes.position.needsUpdate = true;
+                  lastAssemblyCe = ce;
+                }
                 assembly2.material.opacity = Math.sin(Math.min(1, conv) * Math.PI) * 0.85;
                 assembly2.material.size = 1.4 - conv * 0.5;
                 var fo = Math.min(1, conv / 0.55);
@@ -7180,7 +7807,7 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
               return active;
             };
             stopTForIndex = function _stopTForIndex(i) {
-              return STOPS[i].p / (TRACE_PTS.length - 1);
+              return STOP_TS[i];
             };
             LITE = !!(opts && opts.lite);
             THREE = window.THREE;
@@ -7273,6 +7900,13 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
               return new THREE.Vector3(p[0], TOP + 0.05, p[1]);
             });
             curve = new THREE.CatmullRomCurve3(curvePts, false, "catmullrom", 0.5);
+            STOP_TS = STOPS.map(function (stop) {
+              return stop.p / (TRACE_PTS.length - 1);
+            });
+            explodeStopIndex = STOPS.findIndex(function (stop) {
+              return stop.explode;
+            });
+            EXPLODE_STOP_T = explodeStopIndex >= 0 ? STOP_TS[explodeStopIndex] : -1;
             STAR_N = 380;
             starGeo2 = new THREE.BufferGeometry();
             starPos2 = new Float32Array(STAR_N * 3);
@@ -7299,6 +7933,7 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
             asmPos2 = new Float32Array(ASM_N * 3);
             asmTar2 = new Float32Array(ASM_N * 3);
             asmSca2 = new Float32Array(ASM_N * 3);
+            asmDelta2 = new Float64Array(ASM_N * 3);
             _tp = new THREE.Vector3();
             for (_i1 = 0; _i1 < ASM_N; _i1++) {
               if (Math.random() < 0.7) {
@@ -7320,6 +7955,9 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
               asmPos2[_i1 * 3 + 0] = asmSca2[_i1 * 3 + 0];
               asmPos2[_i1 * 3 + 1] = asmSca2[_i1 * 3 + 1];
               asmPos2[_i1 * 3 + 2] = asmSca2[_i1 * 3 + 2];
+              asmDelta2[_i1 * 3 + 0] = asmTar2[_i1 * 3 + 0] - asmSca2[_i1 * 3 + 0];
+              asmDelta2[_i1 * 3 + 1] = asmTar2[_i1 * 3 + 1] - asmSca2[_i1 * 3 + 1];
+              asmDelta2[_i1 * 3 + 2] = asmTar2[_i1 * 3 + 2] - asmSca2[_i1 * 3 + 2];
             }
             asmGeo2.setAttribute("position", new THREE.BufferAttribute(asmPos2, 3).setUsage(THREE.DynamicDrawUsage));
             assembly2 = new THREE.Points(asmGeo2, new THREE.PointsMaterial({
@@ -7389,6 +8027,9 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
             HERO_POS = new THREE.Vector3(), HERO_LOOK = new THREE.Vector3();
             NODE_POS = new THREE.Vector3(), NODE_LOOK = new THREE.Vector3();
             tmpFinalPos = new THREE.Vector3(), tmpFinalLook = new THREE.Vector3();
+            pathTargetPos = new THREE.Vector3(), pathTargetLook = new THREE.Vector3();
+            pathCacheT = NaN, pathCacheMode = "";
+            lastAssemblyCe = NaN;
             _context.p = 8;
             update(0, "probe", 16, 0, 0, 1);
             if (!renderer.compileAsync) {
