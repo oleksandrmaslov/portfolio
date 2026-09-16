@@ -113,6 +113,14 @@ function Work({ onHoverWork }) {
     const intervals = STOPS - 1;
     const padN = PADS / TOTAL_V;
     const easeInOut = t => t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t+2, 2)/2;
+    /* Detent around every stop. Ease-in-out alone never holds a stop: resting
+       a wheel notch or two past one left the locked card and its universe tile
+       off-centre together (≈60px at 1920w, 17% into the interval). The first
+       and last DWELL of each interval now pin to the stop, and the pan plays
+       in the middle. Every scroll-to-stop caller (jumpToStop, the handoff
+       return, the scroll-flight dock) targets the exact stop — the detent's
+       centre — so none of them needs to know. */
+    const DWELL = 0.2;
 
     const applyProgress = (snapped) => {
       const centers = geometryRef.current.centers;
@@ -162,7 +170,8 @@ function Work({ onHoverWork }) {
       const local = p * intervals;
       const idx = Math.floor(local);
       const frac = local - idx;
-      const snapped = (idx + easeInOut(frac)) / intervals;
+      const pan = Math.max(0, Math.min(1, (frac - DWELL) / (1 - 2 * DWELL)));
+      const snapped = (idx + easeInOut(pan)) / intervals;
       const nextStop = Math.round(snapped * intervals);
 
       progressRef.current = snapped;
