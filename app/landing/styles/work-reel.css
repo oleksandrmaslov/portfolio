@@ -14,6 +14,16 @@
   padding: 0;
   /* height set inline */
   background: transparent;
+  /* FULL-BLEED, NOT CANVAS-CAPPED. `.lp-section` caps sections at
+     --w-canvas (1597px) and centres them. Every piece of reel geometry — slot
+     widths, rail translateX, title offset, wide.css card widths — is in vw,
+     and the universe centres the locked tile on the camera. Above 1597px the
+     cap turned the sticky stage into a centred box: rail, grid, vignette and
+     progress hairline clipped at its edges, the locked caption slid
+     (W − 1597) / 2 off its tile, and the stop list left the shell gutter that
+     .bf-rail mirrors. */
+  max-width: none;
+  margin: 0;
 }
 .lp-workReel__sticky {
   position: sticky;
