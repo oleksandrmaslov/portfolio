@@ -117,9 +117,12 @@ function Work({ onHoverWork }) {
        a wheel notch or two past one left the locked card and its universe tile
        off-centre together (≈60px at 1920w, 17% into the interval). The first
        and last DWELL of each interval now pin to the stop, and the pan plays
-       in the middle. Every scroll-to-stop caller (jumpToStop, the handoff
-       return, the scroll-flight dock) targets the exact stop — the detent's
-       centre — so none of them needs to know. */
+       in the middle. jumpToStop, the handoff return and the scroll-flight
+       reelPadN dock target exact stops, so they land mid-detent; the
+       scroll-flight back-dock's typed 0.90 only lands inside the last stop's
+       detent while MO_FEATURED_ADDRS.length <= 5. Interval 0 has no leading
+       detent: the PADS already hold the title, and stacking both left ~750px
+       of scroll with no reel motion. */
     const DWELL = 0.2;
 
     const applyProgress = (snapped) => {
@@ -170,7 +173,8 @@ function Work({ onHoverWork }) {
       const local = p * intervals;
       const idx = Math.floor(local);
       const frac = local - idx;
-      const pan = Math.max(0, Math.min(1, (frac - DWELL) / (1 - 2 * DWELL)));
+      const lead = idx === 0 ? 0 : DWELL;
+      const pan = Math.max(0, Math.min(1, (frac - lead) / (1 - lead - DWELL)));
       const snapped = (idx + easeInOut(pan)) / intervals;
       const nextStop = Math.round(snapped * intervals);
 

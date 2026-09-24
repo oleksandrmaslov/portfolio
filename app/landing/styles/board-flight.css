@@ -127,9 +127,13 @@
   position: absolute; inset: 0; pointer-events: none;
   background: linear-gradient(to top, rgba(4,6,13,0.92) 0%, rgba(4,6,13,0.72) 30%, rgba(4,6,13,0.18) 62%, transparent 100%);
 }
+/* Gutter to gutter, the same insets as the shell header, the chapter card and
+   the rail. It was a centred min(1100px, 90vw) column (64vw above 1720px),
+   which left the contact beat floating mid-screen on wide displays with
+   hundreds of px of dead margin each side and broke the email in two. */
 .bf-foot__inner {
   position: relative; z-index: 1;
-  width: min(1100px, 90vw);
+  width: calc(100% - 2 * var(--gutter));
   padding: 0 0 var(--gutter-bot); display: flex; flex-direction: column; gap: var(--s-6);
   will-change: transform;
 }
@@ -163,6 +167,7 @@
 @media (max-width: 820px) {
   .bf-rail { display: none; }
   .bf-ch { left: var(--s-5); right: var(--s-5); width: auto; bottom: calc(var(--gutter-bot) + var(--s-9)); }
+  .bf-foot__inner { width: calc(100% - 2 * var(--s-5)); }
   .bf-foot__links { grid-template-columns: repeat(2, 1fr); }
 }
 /* Phones: one column of link rows with 44px+ targets and a smaller email line. */

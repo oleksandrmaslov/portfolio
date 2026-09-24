@@ -57,7 +57,6 @@
   .bf-ch__title { font-size: clamp(53px, 3.1vw, 79px); }
   .bf-ch__body { font-size: clamp(17px, 0.99vw, 25px); }
   .bf-ch__refV { font-size: clamp(12px, 0.7vw, 18px); }
-  .bf-foot__inner { width: 64vw; }
   .bf-foot__big { font-size: clamp(88px, 5.1vw, 131px); }
   .bf-foot__linkKey { font-size: clamp(9px, 0.52vw, 13px); }
   .bf-foot__meta { font-size: clamp(9px, 0.52vw, 13px); }
