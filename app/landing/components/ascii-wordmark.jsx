@@ -147,6 +147,9 @@ function AsciiHero({ cols = 108, rows = 20, ramp = " ·:-=+*#%@", className = ""
     let disposed = false;
     let raf = 0;
     let last = 0;
+    // IntersectionObserver does not see the opaque dialog covering this node.
+    // Keep the reveal alive, then sleep once navigation hides the whole root.
+    const covered = () => document.body.classList.contains("mo-menu-settled");
 
     const cancelLoop = () => {
       if (!raf) return;
@@ -154,11 +157,11 @@ function AsciiHero({ cols = 108, rows = 20, ramp = " ·:-=+*#%@", className = ""
       raf = 0;
     };
     const requestLoop = () => {
-      if (disposed || raf || !onScreen || document.hidden) return;
+      if (disposed || raf || !onScreen || document.hidden || covered()) return;
       raf = requestAnimationFrame(frame);
     };
     const syncLoop = () => {
-      if (!onScreen || document.hidden) cancelLoop();
+      if (!onScreen || document.hidden || covered()) cancelLoop();
       else requestLoop();
     };
 
@@ -178,11 +181,13 @@ function AsciiHero({ cols = 108, rows = 20, ramp = " ·:-=+*#%@", className = ""
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onResize);
     document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("mo:menu-settled", syncLoop);
+    window.addEventListener("mo:menu", syncLoop);
 
     /* ---------- render loop — one string per frame ---------- */
     function frame(now) {
       raf = 0;
-      if (disposed || !onScreen || document.hidden) return;
+      if (disposed || !onScreen || document.hidden || covered()) return;
 
       const ex = Math.max(0, Math.min(1, window.__mo_titleExit || 0));
       if (ex >= 0.999) {
@@ -272,6 +277,8 @@ function AsciiHero({ cols = 108, rows = 20, ramp = " ·:-=+*#%@", className = ""
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onResize);
       document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("mo:menu-settled", syncLoop);
+      window.removeEventListener("mo:menu", syncLoop);
       window.removeEventListener("pointermove", onMove);
       document.removeEventListener("mouseout", onOut);
     };

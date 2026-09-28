@@ -13,7 +13,10 @@ function PortfolioHeader({ landing = false, section, className = "", context, ut
   const settleOpening = () => {
     clearTimeout(openingTimerRef.current); openingTimerRef.current = 0;
     universe()?.settleMenu?.();
-    if (menuRef.current?.open) document.body.classList.add("mo-menu-settled");
+    if (menuRef.current?.open) {
+      document.body.classList.add("mo-menu-settled");
+      window.dispatchEvent(new CustomEvent("mo:menu-settled"));
+    }
   };
   const finishClose = () => {
     clearTimeout(exitTimerRef.current); exitTimerRef.current = 0;
