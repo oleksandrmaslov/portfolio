@@ -105,7 +105,7 @@
       #mo-pl * { transition-duration: 80ms !important; }
     }
   </style>
-  <link rel="stylesheet" href="app/shared/styles/pointer.css?v=20260822-2" />
+  <link rel="stylesheet" href="app/shared/styles/pointer.css?v=5244ec5f4bcb" />
   <script>
     document.documentElement.classList.add("mo-origin-on");
     window.__mo_origin_watchdog = setTimeout(function () {
@@ -129,8 +129,8 @@
   <!-- Tokens + shared system -->
   <link rel="stylesheet" media="print" data-app-style href="app/shared/styles/tokens.css" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
   <link rel="stylesheet" media="print" data-app-style href="app/shared/styles/key.css" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
-  <link rel="stylesheet" media="print" data-app-style href="app/landing/styles/shell.css" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
-  <link rel="stylesheet" media="print" data-app-style href="app/landing/styles/base.css" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
+  <link rel="stylesheet" media="print" data-app-style href="app/landing/styles/shell.css?v=e3d5708d1471" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
+  <link rel="stylesheet" media="print" data-app-style href="app/landing/styles/base.css?v=8ebbdbc1eddb" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
   <link rel="stylesheet" media="print" data-app-style href="app/landing/styles/origin.css" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
   <link rel="stylesheet" media="print" data-app-style href="app/landing/styles/board-flight.css" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
   <link rel="stylesheet" media="print" data-app-style href="app/landing/styles/work-reel.css" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
@@ -140,13 +140,13 @@
   <!-- Landing presentation layer: sticky stages fade on the compositor. -->
   <link rel="stylesheet" media="print" data-app-style href="app/landing/styles/scroll-flight.css" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
   <link rel="stylesheet" media="print" data-app-style href="app/landing/styles/wide.css" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
-  <link rel="stylesheet" media="print" data-app-style href="app/landing/styles/title.css" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
+  <link rel="stylesheet" media="print" data-app-style href="app/landing/styles/title.css?v=339adcd790f1" onload="this.onload=null;this.media='all';this.dataset.loaded='1';window.dispatchEvent(new Event('mo:style-ready'))" />
   <noscript>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&family=Instrument+Serif:ital@1&display=swap" />
     <link rel="stylesheet" href="app/shared/styles/tokens.css" />
   <link rel="stylesheet" href="app/shared/styles/key.css" />
-    <link rel="stylesheet" href="app/landing/styles/shell.css" />
-    <link rel="stylesheet" href="app/landing/styles/base.css" />
+    <link rel="stylesheet" href="app/landing/styles/shell.css?v=e3d5708d1471" />
+    <link rel="stylesheet" href="app/landing/styles/base.css?v=8ebbdbc1eddb" />
     <link rel="stylesheet" href="app/landing/styles/origin.css" />
     <link rel="stylesheet" href="app/landing/styles/board-flight.css" />
     <link rel="stylesheet" href="app/landing/styles/work-reel.css" />
@@ -155,14 +155,15 @@
     <link rel="stylesheet" href="app/landing/styles/universe-hud.css" />
     <link rel="stylesheet" href="app/landing/styles/scroll-flight.css" />
     <link rel="stylesheet" href="app/landing/styles/wide.css" />
-    <link rel="stylesheet" href="app/landing/styles/title.css" />
+    <link rel="stylesheet" href="app/landing/styles/title.css?v=339adcd790f1" />
   </noscript>
 
   <!-- Warm the Wafer handoff target so the cross-page seam has no boot gap. -->
   <link rel="prefetch" href="Wafer.html" as="document" />
-  <link rel="prefetch" href="app/page-runtimes/wafer-page.js?v=2c34ed2d566c" as="fetch" crossorigin="anonymous" />
-  <link rel="prefetch" href="app/projects/styles/case-study.css" as="style" />
+  <link rel="prefetch" href="app/page-runtimes/wafer-page.js?v=b0252075a2bc" as="fetch" crossorigin="anonymous" />
+  <link rel="prefetch" href="app/projects/styles/case-study.css?v=ccddb5f52dc2" as="style" />
   <link rel="prefetch" href="models/wafer_demo.glb" as="fetch" crossorigin="anonymous" />
+  <link rel="stylesheet" href="app/shared/styles/navigation.css?v=c12021497f97" />
 </head>
 <body>
   <div id="mo-pl" role="status" aria-live="polite" aria-atomic="true" aria-busy="true" aria-label="Loading Oleksandr Maslov's project universe">
@@ -212,26 +213,26 @@
   <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" integrity="sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1" crossorigin="anonymous"></script>
 
   <!-- Shared project registry -->
-  <script src="app/data/projects.js?v=769387971478"></script>
+  <script src="app/data/projects.js?v=c95097033c03"></script>
 
   <!-- Sound engine + MOSound shell adapter -->
-  <script src="app/landing/audio/carrier-field.js"></script>
-  <script src="app/landing/audio/sound-controller.js"></script>
+  <script src="app/landing/audio/generative-score.js?v=20260925-signal"></script>
+  <script src="app/landing/audio/sample-engine.js?v=20260925-signal"></script>
+  <script src="app/landing/audio/sound-controller.js?v=20260925-signal"></script>
   <!-- Solid materials (plain JS, defined before the rig/cards run) -->
   <script src="app/projects/rendering/solid-materials.js"></script>
   <script src="app/shared/pointer-effects.js"></script>
-  <script src="app/landing/runtime.js?v=61afe38f7f41"></script>
+  <script src="app/landing/runtime.js?v=f3fa1b5e5606"></script>
 
   <!-- Cinematic layer -->
   <script src="app/landing/controllers/cinematic.js"></script>
 
   <!-- Continuous flight — master scroll timeline · unified HUD · doppler wind -->
-  <script src="app/landing/controllers/scroll-flight.js"></script>
+  <script src="app/landing/controllers/scroll-flight.js?v=20260925-restored"></script>
 
   <!-- ASCII RAMP scrollbar -->
   <script src="app/shared/scrollbar.js"></script>
 
-  <!-- Sound score -->
-  <script src="app/landing/audio/score.js"></script>
+  <!-- Clear signal follows the existing universe events through sound-controller.js. -->
 </body>
 </html>

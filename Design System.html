@@ -14,14 +14,15 @@
 
   <link rel="stylesheet" href="app/shared/styles/tokens.css" />
   <link rel="stylesheet" href="app/shared/styles/key.css" />
-  <link rel="stylesheet" href="app/shared/styles/layout.css" />
+  <link rel="stylesheet" href="app/shared/styles/layout.css?v=5f5aa9928092" />
   <link rel="stylesheet" href="app/shared/styles/components.css" />
   <!-- page sheet loads AFTER the shared ones, matching every other route:
        before, its mobile .section__head override lost to components.css and
        the section heads never collapsed to one column on a phone. -->
-  <link rel="stylesheet" href="app/design-system/styles.css" />
+  <link rel="stylesheet" href="app/design-system/styles.css?v=ec85a1cebf48" />
   <link rel="stylesheet" href="app/shared/styles/scrollbar.css" />
-  <link rel="stylesheet" href="app/shared/styles/pointer.css?v=20260822-2" />
+  <link rel="stylesheet" href="app/shared/styles/pointer.css?v=5244ec5f4bcb" />
+  <link rel="stylesheet" href="app/shared/styles/navigation.css?v=c12021497f97" />
 </head>
 <body>
   <div id="root"></div>
@@ -29,11 +30,13 @@
   <!-- Three.js -->
   <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
 
+  <script src="app/data/projects.js?v=c95097033c03"></script>
+
   <!-- React + precompiled page runtime -->
   <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" integrity="sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" integrity="sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1" crossorigin="anonymous"></script>
 
-  <script defer src="app/page-runtimes/design-system-page.js?v=7be0d097c36b"></script>
+  <script defer src="app/page-runtimes/design-system-page.js?v=c759e1daf6b8"></script>
 
 
 

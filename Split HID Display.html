@@ -13,14 +13,15 @@
 
   <link rel="stylesheet" href="app/shared/styles/tokens.css" />
   <link rel="stylesheet" href="app/shared/styles/key.css" />
-  <link rel="stylesheet" href="app/shared/styles/layout.css" />
+  <link rel="stylesheet" href="app/shared/styles/layout.css?v=5f5aa9928092" />
   <link rel="stylesheet" href="app/shared/styles/components.css" />
-  <link rel="stylesheet" href="app/projects/styles/base.css" />
-  <link rel="stylesheet" href="app/projects/styles/case-study.css" />
+  <link rel="stylesheet" href="app/projects/styles/base.css?v=e089f1e66160" />
+  <link rel="stylesheet" href="app/projects/styles/case-study.css?v=ccddb5f52dc2" />
   <link rel="stylesheet" href="demo/base.css" />
   <link rel="stylesheet" href="app/projects/components/ascii-photo.css" />
-  <link rel="stylesheet" href="app/shared/styles/pointer.css?v=20260822-2" />
+  <link rel="stylesheet" href="app/shared/styles/pointer.css?v=5244ec5f4bcb" />
   <link rel="stylesheet" href="app/shared/styles/scrollbar.css" />
+  <link rel="stylesheet" href="app/shared/styles/navigation.css?v=c12021497f97" />
 </head>
 <body>
   <div id="root"></div>
@@ -43,12 +44,14 @@
     window.THREE = Object.assign({}, THREE, { GLTFLoader, MeshoptDecoder, RoomEnvironment, RoundedBoxGeometry });
   </script>
 
+  <script src="app/data/projects.js?v=c95097033c03"></script>
+
   <!-- React + precompiled page runtime -->
   <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" integrity="sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" integrity="sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1" crossorigin="anonymous"></script>
 
   <!-- Shared interface foundation (Cursor, shell) -->
-  <script defer src="app/page-runtimes/split-hid-display-project.js?v=f0ac925b85a8"></script>
+  <script defer src="app/page-runtimes/split-hid-display-project.js?v=af48fd348552"></script>
 
   <!-- ASCII photo reveal lens -->
 
@@ -81,7 +84,7 @@
   </script>
 
   <!-- Shared pointer effects and standard project page -->
-  <script defer src="app/page-runtimes/split-hid-display-page.js?v=9e8456b26f23"></script>
+  <script defer src="app/page-runtimes/split-hid-display-page.js?v=aa4c1f77bc28"></script>
 
 
   <!-- Shared ASCII ramp scrollbar -->

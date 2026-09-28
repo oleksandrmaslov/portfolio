@@ -39,12 +39,14 @@ const HANDOFF_PAGE = "app/projects/pages/handoff-page.jsx";
 // scripts intentionally share browser globals and repeat lexical helper names.
 const landingSourceFiles = [
   "app/shared/core.jsx",
+  "app/shared/navigation.jsx",
   "app/shared/key-button.jsx",
   "app/landing/components/ascii-wordmark.jsx",
   "app/projects/rendering/model-viewer.jsx",
   "app/projects/rendering/solid-hero-rig.jsx",
   "app/projects/rendering/project-handoff-rig.jsx",
   "app/landing/components/project-preview.jsx",
+  "app/landing/scenes/menu-objects.js",
   "app/landing/scenes/universe.jsx",
   "app/landing/transitions/project-handoff.jsx",
   "app/landing/scenes/about-board.jsx",
@@ -56,7 +58,7 @@ const landingSourceFiles = [
 ];
 
 function phase(id, sources) {
-  return { id, runtime: `app/page-runtimes/${id}.js`, sources };
+  return { id, runtime: `app/page-runtimes/${id}.js`, sources: sources.flatMap(source => source.file === CORE ? [source, jsx("app/shared/navigation.jsx")] : [source]) };
 }
 
 function handoffDefinition(html, slug, options = {}) {
