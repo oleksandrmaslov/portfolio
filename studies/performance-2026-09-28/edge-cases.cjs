@@ -20,7 +20,7 @@ const label=process.argv[2]||'before';const result={label};
  const failure=await browser.newContext({viewport:{width:390,height:844}});await failure.route('https://unpkg.com/three@*/**',route=>route.abort());const f=await failure.newPage();await f.goto('http://localhost:8000/');await f.waitForTimeout(13000);
  result.threeFailure=await f.evaluate(()=>({text:document.body.innerText,links:[...document.querySelectorAll('a')].filter(a=>a.getClientRects().length).map(a=>({text:a.textContent,href:a.getAttribute('href')})),loader:!!document.getElementById('mo-pl')}));await failure.close();
  const nogl=await browser.newContext();await nogl.addInitScript(()=>{const get=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(type,...args){return /webgl/.test(type)?null:get.call(this,type,...args);};});const n=await nogl.newPage();await n.goto('http://localhost:8000/');await n.waitForTimeout(13000);result.webglFailure=await n.evaluate(()=>({text:document.body.innerText,links:[...document.querySelectorAll('a')].filter(a=>a.getClientRects().length).map(a=>a.getAttribute('href'))}));await nogl.close();
- if(label === 'after') {
+ if(label !== 'before') {
   assert.ok(Math.abs(result.dof.reported-result.dof.expected)<.1);
   assert.deepEqual(result.reducedBefore,result.reducedAfter);
   assert.equal(result.threeFailure.links.length,7);assert.equal(result.webglFailure.links.length,7);

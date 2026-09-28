@@ -1,0 +1,311 @@
+{
+ "marks": [
+  {
+   "name": "doc",
+   "at": 219
+  },
+  {
+   "name": "styles",
+   "at": 221
+  },
+  {
+   "name": "react",
+   "at": 270
+  },
+  {
+   "name": "fonts",
+   "at": 283
+  },
+  {
+   "name": "three",
+   "at": 1229
+  },
+  {
+   "name": "universe",
+   "at": 1674
+  },
+  {
+   "name": "title",
+   "at": 1686
+  },
+  {
+   "name": "frame",
+   "at": 2165
+  },
+  {
+   "name": "handoff",
+   "at": 5110
+  }
+ ],
+ "ready": 6107,
+ "firstFrameAt": 1294,
+ "handoffs": [
+  5646
+ ],
+ "draws": [
+  {
+   "at": 740,
+   "p": 0.004,
+   "core": false
+  },
+  {
+   "at": 1214,
+   "p": 0.193,
+   "core": false
+  },
+  {
+   "at": 1708,
+   "p": 0.23,
+   "core": false
+  },
+  {
+   "at": 2409,
+   "p": 0.531,
+   "core": false
+  },
+  {
+   "at": 2454,
+   "p": 0.726,
+   "core": false
+  },
+  {
+   "at": 2510,
+   "p": 0.802,
+   "core": false
+  },
+  {
+   "at": 2552,
+   "p": 0.829,
+   "core": false
+  },
+  {
+   "at": 2569,
+   "p": 0.868,
+   "core": false
+  },
+  {
+   "at": 2583,
+   "p": 0.875,
+   "core": false
+  },
+  {
+   "at": 2628,
+   "p": 0.882,
+   "core": false
+  },
+  {
+   "at": 2653,
+   "p": 0.898,
+   "core": false
+  },
+  {
+   "at": 2922,
+   "p": 0.902,
+   "core": false
+  },
+  {
+   "at": 3178,
+   "p": 0.92,
+   "core": false
+  },
+  {
+   "at": 3194,
+   "p": 0.93,
+   "core": false
+  },
+  {
+   "at": 3211,
+   "p": 0.931,
+   "core": false
+  },
+  {
+   "at": 3399,
+   "p": 0.932,
+   "core": false
+  },
+  {
+   "at": 3595,
+   "p": 0.936,
+   "core": false
+  },
+  {
+   "at": 5112,
+   "p": 0.938,
+   "core": true
+  }
+ ],
+ "loaf": [
+  {
+   "start": 34,
+   "dur": 171,
+   "block": 67,
+   "render": 114,
+   "scripts": []
+  },
+  {
+   "start": 206,
+   "dur": 541,
+   "block": 245,
+   "render": 8,
+   "scripts": [
+    {
+     "dur": 23,
+     "inv": "#document.onDOMContentLoaded",
+     "type": "event-listener",
+     "fn": "boot",
+     "src": "scrollbar.js",
+     "pos": 7880
+    },
+    {
+     "dur": 288,
+     "inv": "MessagePort.onmessage",
+     "type": "event-listener",
+     "fn": "U",
+     "src": "react.production.min.js",
+     "pos": 6046
+    }
+   ]
+  },
+  {
+   "start": 752,
+   "dur": 470,
+   "block": 409,
+   "render": 12,
+   "scripts": [
+    {
+     "dur": 447,
+     "inv": "TimerHandler:setInterval",
+     "type": "user-callback",
+     "fn": "",
+     "src": "runtime.js",
+     "pos": 32869
+    }
+   ]
+  },
+  {
+   "start": 1229,
+   "dur": 1129,
+   "block": 1063,
+   "render": 653,
+   "scripts": [
+    {
+     "dur": 460,
+     "inv": "MessagePort.onmessage",
+     "type": "event-listener",
+     "fn": "U",
+     "src": "react.production.min.js",
+     "pos": 6046
+    },
+    {
+     "dur": 40,
+     "inv": "FrameRequestCallback",
+     "type": "user-callback",
+     "fn": "refreshNow",
+     "src": "pointer-effects.js",
+     "pos": 11775
+    },
+    {
+     "dur": 585,
+     "inv": "FrameRequestCallback",
+     "type": "user-callback",
+     "fn": "frame",
+     "src": "runtime.js",
+     "pos": 138584
+    }
+   ]
+  },
+  {
+   "start": 2647,
+   "dur": 271,
+   "block": 220,
+   "render": 265,
+   "scripts": [
+    {
+     "dur": 264,
+     "inv": "FrameRequestCallback",
+     "type": "user-callback",
+     "fn": "frame",
+     "src": "runtime.js",
+     "pos": 138584
+    }
+   ]
+  },
+  {
+   "start": 2919,
+   "dur": 256,
+   "block": 206,
+   "render": 253,
+   "scripts": [
+    {
+     "dur": 249,
+     "inv": "FrameRequestCallback",
+     "type": "user-callback",
+     "fn": "frame",
+     "src": "runtime.js",
+     "pos": 138584
+    }
+   ]
+  },
+  {
+   "start": 3220,
+   "dur": 186,
+   "block": 0,
+   "render": 6,
+   "scripts": []
+  },
+  {
+   "start": 3407,
+   "dur": 1700,
+   "block": 1469,
+   "render": 1512,
+   "scripts": [
+    {
+     "dur": 1505,
+     "inv": "FrameRequestCallback",
+     "type": "user-callback",
+     "fn": "frame",
+     "src": "runtime.js",
+     "pos": 138584
+    }
+   ]
+  },
+  {
+   "start": 5110,
+   "dur": 413,
+   "block": 362,
+   "render": 412,
+   "scripts": [
+    {
+     "dur": 41,
+     "inv": "FrameRequestCallback",
+     "type": "user-callback",
+     "fn": "frame",
+     "src": "runtime.js",
+     "pos": 138584
+    },
+    {
+     "dur": 366,
+     "inv": "FrameRequestCallback",
+     "type": "user-callback",
+     "fn": "paint",
+     "src": "runtime.js",
+     "pos": 170275
+    }
+   ]
+  },
+  {
+   "start": 5892,
+   "dur": 295,
+   "block": 0,
+   "render": 20,
+   "scripts": []
+  }
+ ],
+ "gl": [],
+ "conditions": {
+  "preloaderRef": "working tree",
+  "stopReadyRAF": false,
+  "glTiming": false,
+  "compileHandoff": true
+ }
+}

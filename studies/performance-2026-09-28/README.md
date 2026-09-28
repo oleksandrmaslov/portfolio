@@ -198,3 +198,98 @@ node studies/performance-2026-09-28/startup-loaf.cjs final
 ```
 
 `navigation-qa.cjs` and `back-restore.cjs` run headless with `HEADLESS=1`.
+
+## Startup follow-through — 29 September 2026
+
+Reviewed the four handoff commits through `89ec8a4`, and read the differences
+between `AGENTS.md` and the newer `CLAUDE.md`. Those instruction files were not
+synchronized; the owner has left that decision open. The current routes,
+three-mode Universe and registry-generated fallback remain intact.
+
+### Ready loader delayed by missing animation callbacks
+
+The old trace had every readiness milestone by 5.81s, but completion at 9.71s.
+The loader advances its easing only on RAF and caps each step at 100ms. Once
+the application was ready, stalled frames could still keep it waiting for the
+9s bailout. Two of four new `preloader-clock.test.cjs` tests failed before the
+fix: completed milestones with no subsequent frames, both normal and reduced
+motion. The normal-frame choreography and missing-milestone deadline already
+passed and continue to pass.
+
+`6359036` schedules completion from the easing's remaining duration and minimum
+hold once all core milestones arrive. Normal frames can still complete it;
+both paths use one guarded completion function. The reveal delays, failure
+deadline, arrival start and `mo:preloader-done` contract are preserved. The
+loader's RAF and deadline are cancelled on completion.
+
+In headed Chrome, the same test-only intervention stopped **only the loader's
+RAF after readiness** while the application kept rendering:
+
+| Build | Last milestone | Loader done | Wait after last milestone |
+| --- | ---: | ---: | ---: |
+| Previous loader (`89ec8a4`) | 4.404s | 9.946s | **5.542s** |
+| Updated loader | 6.212s | 7.431s | **1.219s** |
+
+Evidence: `startup-loaf-{before,after}-ready-starved.json`. These are controlled
+scheduler checks, not cold-load benchmark claims. Without the intervention,
+the two diagnostic loads completed at 5.792s and 5.939s respectively; no general
+startup speedup is claimed. A blocked main thread can delay timers too. This
+fix removes dependency on extra animation callbacks; it cannot preempt shader
+or other synchronous work.
+
+### Fallback wording on a slow device
+
+The same fallback serves absent graphics, no JavaScript and a slow first frame.
+Calling the universe “unavailable” asserted a failure the timeout did not
+establish. It now says it “hasn’t opened yet,” with the existing project and
+contact links. The loader announces “Portfolio links ready” when no frame
+exists. The generated link list is unchanged. The no-JavaScript mobile capture
+and delayed-Three recovery capture verify the copy in its actual layout.
+
+This is a wording correction, with no performance claim. Late graphics can
+still replace the fallback with the normal experience; that behavior is
+verified by `late-recovery.cjs`.
+
+### Shader experiment retained only as evidence
+
+The Chrome CPU profile (`startup-cpu-profile.json`) concentrates startup time
+in Three's `onFirstUse`. The pinned [Three r160 implementation](https://github.com/mrdoob/three.js/blob/r160/src/renderers/webgl/WebGLProgram.js#L856)
+checks shader logs and initializes uniforms there. A browser-only experiment
+used [r160 `compileAsync`](https://github.com/mrdoob/three.js/blob/r160/src/renderers/WebGLRenderer.js#L989)
+for the hidden handoff before its two warm paints. It did not alter production
+source, shader quality or the generated runtime.
+
+The handoff warm paint fell from 995ms in the baseline trace to 366ms in the
+experiment, but a Universe frame grew from 828ms to 1505ms and startup did not
+improve (5.79s baseline; 6.11s experiment). A 1.70s long animation frame remained.
+These single-machine runs do not establish causation for the shifted work or
+a repeatable overall gain, so the candidate was **not adopted**. Evidence:
+`startup-loaf-compile-handoff.json`; reproduce with `COMPILE_HANDOFF=1`.
+
+GPU/compiler startup stalls, context construction and model upload remain the
+main initial-load risk. A future compilation change needs tests for the full
+composer, retargeting/cancellation and devices without parallel compilation;
+the handoff alone does not resolve them. No rendering quality was reduced.
+
+### Final validation
+
+- **43/43 tests pass**; runtime check remains current at `ef8c414c10e2`, with 24 bundles and 16 public pages. The loader is its existing standalone script, so no runtime bundle regeneration was needed for this final change.
+- Repeated the 390px DPR2 touch/reduced-motion/manual-video and no-JavaScript checks after the loader fix; menu objects and fallback inspected visually.
+- Final startup failure, reduced-motion idle and DoF assertions: `startup-final-edge.json`. Delayed Three recovery still passes in `late-recovery.json`.
+- Earlier full-route, repeated navigation, demo, memory/context and raw-CDP hidden-audio results remain in this folder. Changes after that coverage are confined to the landing loader and fallback wording.
+- The hero restore fix is verified in Chromium bfcache; Safari remains untested. Wafer still has its own lifecycle, so future lifecycle changes must keep it aligned with the shared implementation. Generated fallback URLs require the existing build/check step. The shared media activity check covers the tab, viewport and menu; it is not general detection of every possible overlay.
+
+Additional reproduction (one browser profiling run at a time):
+
+```sh
+PRELOADER_REF=89ec8a4 STOP_READY_RAF=1 node studies/performance-2026-09-28/startup-loaf.cjs before-ready-starved
+STOP_READY_RAF=1 node studies/performance-2026-09-28/startup-loaf.cjs after-ready-starved
+CPU_PROFILE=1 node studies/performance-2026-09-28/startup-loaf.cjs profile
+COMPILE_HANDOFF=1 node studies/performance-2026-09-28/startup-loaf.cjs compile-handoff
+node studies/performance-2026-09-28/edge-cases.cjs startup-final
+```
+
+`PRELOADER_REF` replaces only the response for the loader script, so the
+comparison uses the same application and assets. The shader experiment checks
+its generated-code match before substituting a test-only response; it is not
+a second shipping implementation. All evidence remains excluded from deploy.

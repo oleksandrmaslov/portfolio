@@ -1,0 +1,434 @@
+{
+ "marks": [
+  {
+   "name": "doc",
+   "at": 223
+  },
+  {
+   "name": "styles",
+   "at": 239
+  },
+  {
+   "name": "react",
+   "at": 279
+  },
+  {
+   "name": "fonts",
+   "at": 311
+  },
+  {
+   "name": "three",
+   "at": 1255
+  },
+  {
+   "name": "universe",
+   "at": 1761
+  },
+  {
+   "name": "title",
+   "at": 1779
+  },
+  {
+   "name": "frame",
+   "at": 2184
+  },
+  {
+   "name": "handoff",
+   "at": 5300
+  }
+ ],
+ "ready": 6304,
+ "firstFrameAt": 1254,
+ "handoffs": [
+  5837
+ ],
+ "draws": [
+  {
+   "at": 338,
+   "p": 0.004,
+   "core": false
+  },
+  {
+   "at": 342,
+   "p": 0.193,
+   "core": false
+  },
+  {
+   "at": 379,
+   "p": 0.214,
+   "core": false
+  },
+  {
+   "at": 392,
+   "p": 0.251,
+   "core": false
+  },
+  {
+   "at": 414,
+   "p": 0.266,
+   "core": false
+  },
+  {
+   "at": 824,
+   "p": 0.28,
+   "core": false
+  },
+  {
+   "at": 1243,
+   "p": 0.337,
+   "core": false
+  },
+  {
+   "at": 1805,
+   "p": 0.367,
+   "core": false
+  },
+  {
+   "at": 2342,
+   "p": 0.603,
+   "core": false
+  },
+  {
+   "at": 2435,
+   "p": 0.764,
+   "core": false
+  },
+  {
+   "at": 2546,
+   "p": 0.848,
+   "core": false
+  },
+  {
+   "at": 2628,
+   "p": 0.892,
+   "core": false
+  },
+  {
+   "at": 2645,
+   "p": 0.915,
+   "core": false
+  },
+  {
+   "at": 2656,
+   "p": 0.918,
+   "core": false
+  },
+  {
+   "at": 2749,
+   "p": 0.92,
+   "core": false
+  },
+  {
+   "at": 3028,
+   "p": 0.928,
+   "core": false
+  },
+  {
+   "at": 3050,
+   "p": 0.934,
+   "core": false
+  },
+  {
+   "at": 3071,
+   "p": 0.935,
+   "core": false
+  },
+  {
+   "at": 3121,
+   "p": 0.936,
+   "core": false
+  },
+  {
+   "at": 3155,
+   "p": 0.937,
+   "core": false
+  },
+  {
+   "at": 4144,
+   "p": 0.937,
+   "core": false
+  },
+  {
+   "at": 5307,
+   "p": 0.939,
+   "core": true
+  },
+  {
+   "at": 5321,
+   "p": 0.968,
+   "core": true
+  },
+  {
+   "at": 5338,
+   "p": 0.971,
+   "core": true
+  },
+  {
+   "at": 5358,
+   "p": 0.974,
+   "core": true
+  },
+  {
+   "at": 5407,
+   "p": 0.977,
+   "core": true
+  },
+  {
+   "at": 5438,
+   "p": 0.983,
+   "core": true
+  },
+  {
+   "at": 5455,
+   "p": 0.987,
+   "core": true
+  }
+ ],
+ "loaf": [
+  {
+   "start": 76,
+   "dur": 265,
+   "block": 12,
+   "render": 3,
+   "scripts": [
+    {
+     "dur": 58,
+     "inv": "http://localhost:8000/app/landing/preloader.js",
+     "type": "classic-script",
+     "fn": "",
+     "src": "preloader.js",
+     "pos": 0
+    },
+    {
+     "dur": 24,
+     "inv": "http://localhost:8000/app/landing/runtime.js?v=ef8c414c10e2",
+     "type": "classic-script",
+     "fn": "",
+     "src": "runtime.js",
+     "pos": 0
+    }
+   ]
+  },
+  {
+   "start": 415,
+   "dur": 422,
+   "block": 318,
+   "render": 35,
+   "scripts": [
+    {
+     "dur": 25,
+     "inv": "http://localhost:8000/",
+     "type": "module-script",
+     "fn": "",
+     "src": "",
+     "pos": 0
+    },
+    {
+     "dur": 37,
+     "inv": "#document.onDOMContentLoaded",
+     "type": "event-listener",
+     "fn": "boot",
+     "src": "scrollbar.js",
+     "pos": 7880
+    },
+    {
+     "dur": 318,
+     "inv": "MessagePort.onmessage",
+     "type": "event-listener",
+     "fn": "U",
+     "src": "react.production.min.js",
+     "pos": 6046
+    }
+   ]
+  },
+  {
+   "start": 844,
+   "dur": 405,
+   "block": 340,
+   "render": 9,
+   "scripts": [
+    {
+     "dur": 382,
+     "inv": "TimerHandler:setInterval",
+     "type": "user-callback",
+     "fn": "",
+     "src": "runtime.js",
+     "pos": 32869
+    }
+   ]
+  },
+  {
+   "start": 1254,
+   "dur": 1037,
+   "block": 969,
+   "render": 489,
+   "scripts": [
+    {
+     "dur": 530,
+     "inv": "MessagePort.onmessage",
+     "type": "event-listener",
+     "fn": "U",
+     "src": "react.production.min.js",
+     "pos": 6046
+    },
+    {
+     "dur": 44,
+     "inv": "FrameRequestCallback",
+     "type": "user-callback",
+     "fn": "refreshNow",
+     "src": "pointer-effects.js",
+     "pos": 11775
+    },
+    {
+     "dur": 432,
+     "inv": "FrameRequestCallback",
+     "type": "user-callback",
+     "fn": "frame",
+     "src": "runtime.js",
+     "pos": 138517
+    }
+   ]
+  },
+  {
+   "start": 2294,
+   "dur": 114,
+   "block": 22,
+   "render": 69,
+   "scripts": [
+    {
+     "dur": 36,
+     "inv": "FrameRequestCallback",
+     "type": "user-callback",
+     "fn": "refreshNow",
+     "src": "pointer-effects.js",
+     "pos": 11775
+    }
+   ]
+  },
+  {
+   "start": 2417,
+   "dur": 90,
+   "block": 32,
+   "render": 73,
+   "scripts": [
+    {
+     "dur": 33,
+     "inv": "FrameRequestCallback",
+     "type": "user-callback",
+     "fn": "frame",
+     "src": "runtime.js",
+     "pos": 138517
+    },
+    {
+     "dur": 32,
+     "inv": "FrameRequestCallback",
+     "type": "user-callback",
+     "fn": "refreshNow",
+     "src": "pointer-effects.js",
+     "pos": 11775
+    }
+   ]
+  },
+  {
+   "start": 2511,
+   "dur": 109,
+   "block": 55,
+   "render": 75,
+   "scripts": [
+    {
+     "dur": 30,
+     "inv": "Response.arrayBuffer.then",
+     "type": "resolve-promise",
+     "fn": "",
+     "src": "three.module.js",
+     "pos": 1070924
+    },
+    {
+     "dur": 67,
+     "inv": "FrameRequestCallback",
+     "type": "user-callback",
+     "fn": "frame",
+     "src": "runtime.js",
+     "pos": 138517
+    }
+   ]
+  },
+  {
+   "start": 2669,
+   "dur": 349,
+   "block": 228,
+   "render": 271,
+   "scripts": [
+    {
+     "dur": 265,
+     "inv": "FrameRequestCallback",
+     "type": "user-callback",
+     "fn": "frame",
+     "src": "runtime.js",
+     "pos": 138517
+    }
+   ]
+  },
+  {
+   "start": 3129,
+   "dur": 1013,
+   "block": 940,
+   "render": 987,
+   "scripts": [
+    {
+     "dur": 976,
+     "inv": "FrameRequestCallback",
+     "type": "user-callback",
+     "fn": "paint",
+     "src": "runtime.js",
+     "pos": 170165
+    }
+   ]
+  },
+  {
+   "start": 4143,
+   "dur": 1160,
+   "block": 1110,
+   "render": 1160,
+   "scripts": [
+    {
+     "dur": 1154,
+     "inv": "FrameRequestCallback",
+     "type": "user-callback",
+     "fn": "frame",
+     "src": "runtime.js",
+     "pos": 138517
+    }
+   ]
+  },
+  {
+   "start": 5454,
+   "dur": 232,
+   "block": 181,
+   "render": 231,
+   "scripts": [
+    {
+     "dur": 230,
+     "inv": "FrameRequestCallback",
+     "type": "user-callback",
+     "fn": "frame",
+     "src": "runtime.js",
+     "pos": 138517
+    }
+   ]
+  },
+  {
+   "start": 6032,
+   "dur": 267,
+   "block": 0,
+   "render": 10,
+   "scripts": []
+  }
+ ],
+ "gl": [],
+ "conditions": {
+  "preloaderRef": "working tree",
+  "stopReadyRAF": false,
+  "glTiming": false
+ }
+}

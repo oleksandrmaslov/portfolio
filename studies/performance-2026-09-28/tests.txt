@@ -1,53 +1,61 @@
-✔ workshop: visitor history changes the future arrangement, beyond direct cues (84.450757ms)
-✔ workshop: valid, bounded notes under rapid input; unknown projects ignored (31.407346ms)
-✔ workshop: silence in interaction keeps a continuous musical foundation (8.015622ms)
-✔ signal: visitor history changes the future arrangement, beyond direct cues (26.600722ms)
-✔ signal: valid, bounded notes under rapid input; unknown projects ignored (21.03934ms)
-✔ signal: silence in interaction keeps a continuous musical foundation (6.038815ms)
-✔ presence: visitor history changes the future arrangement, beyond direct cues (20.859424ms)
-✔ presence: valid, bounded notes under rapid input; unknown projects ignored (8.527862ms)
-✔ presence: silence in interaction keeps a continuous musical foundation (1.90386ms)
-✔ universe: visitor history changes the future arrangement, beyond direct cues (14.794388ms)
-✔ universe: valid, bounded notes under rapid input; unknown projects ignored (12.687569ms)
-✔ universe: silence in interaction keeps a continuous musical foundation (5.551933ms)
-✔ assembly is one phrase until released, with no threshold chatter (6.117201ms)
-✔ reading removes ornament and rhythmic demand while keeping harmony (13.690489ms)
-✔ video uploads follow 24 new frames across 60 display ticks (28.129285ms)
-✔ lens animation remains at display rate between video frames (6.817773ms)
-✔ paused seeking updates the frame once without restarting playback (10.420628ms)
-✔ legacy browsers retain playing updates and paused seeking (7.577568ms)
-✔ disposal cancels video callbacks and ignores late media events (6.763249ms)
-✔ rebinding a video leaves one callback and one upload path (6.906009ms)
-✔ plain paused media sleeps until an interaction or decoded frame wakes it (9.521088ms)
-✔ an offscreen converted figure stops rendering and resumes without another context (8.401531ms)
-✔ interruption during instrument loading stays stopped and can be restarted (41.180907ms)
-✔ cancelling a pending download cannot restart sound or install its bank (8.457614ms)
-✔ cancelling a pending decode cannot restart sound or install its bank (14.005742ms)
-✔ rapid palette switches retain only the last bank and one scheduler (17.237436ms)
-✔ 180 sequential notes reuse one envelope/panner pair and keep one-shot sources (15.21798ms)
-✔ voice pool remains bounded and stale completion cannot release a reused slot (8.714041ms)
-✔ meter polling does not publish React control state on every scheduler tick (18.091947ms)
-(node:569002) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+✔ workshop: visitor history changes the future arrangement, beyond direct cues (30.753453ms)
+✔ workshop: valid, bounded notes under rapid input; unknown projects ignored (10.473911ms)
+✔ workshop: silence in interaction keeps a continuous musical foundation (3.848384ms)
+✔ signal: visitor history changes the future arrangement, beyond direct cues (10.837465ms)
+✔ signal: valid, bounded notes under rapid input; unknown projects ignored (6.97679ms)
+✔ signal: silence in interaction keeps a continuous musical foundation (2.633171ms)
+✔ presence: visitor history changes the future arrangement, beyond direct cues (8.012343ms)
+✔ presence: valid, bounded notes under rapid input; unknown projects ignored (3.412718ms)
+✔ presence: silence in interaction keeps a continuous musical foundation (2.071983ms)
+✔ universe: visitor history changes the future arrangement, beyond direct cues (8.228797ms)
+✔ universe: valid, bounded notes under rapid input; unknown projects ignored (3.420328ms)
+✔ universe: silence in interaction keeps a continuous musical foundation (2.221448ms)
+✔ assembly is one phrase until released, with no threshold chatter (2.508768ms)
+✔ reading removes ornament and rhythmic demand while keeping harmony (6.980048ms)
+✔ video uploads follow 24 new frames across 60 display ticks (12.580867ms)
+✔ lens animation remains at display rate between video frames (4.527243ms)
+✔ paused seeking updates the frame once without restarting playback (5.864492ms)
+✔ legacy browsers retain playing updates and paused seeking (3.813252ms)
+✔ disposal cancels video callbacks and ignores late media events (2.697578ms)
+✔ rebinding a video leaves one callback and one upload path (3.297765ms)
+✔ plain paused media sleeps until an interaction or decoded frame wakes it (4.950749ms)
+✔ an offscreen converted figure stops rendering and resumes without another context (4.217473ms)
+✔ interruption during instrument loading stays stopped and can be restarted (23.189897ms)
+✔ cancelling a pending download cannot restart sound or install its bank (4.776417ms)
+✔ cancelling a pending decode cannot restart sound or install its bank (6.49144ms)
+✔ rapid palette switches retain only the last bank and one scheduler (8.617106ms)
+✔ 180 sequential notes reuse one envelope/panner pair and keep one-shot sources (9.291171ms)
+✔ voice pool remains bounded and stale completion cannot release a reused slot (5.559145ms)
+✔ meter polling does not publish React control state on every scheduler tick (9.699672ms)
+(node:65330) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
 (Use `node --trace-warnings ...` to show where the warning was created)
-✔ tracking a moving card only writes transforms, not layout or SVG geometry (214.870305ms)
-✔ the outline still connects the four projected corners exactly (80.433272ms)
-(node:569003) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+✔ shared project lifecycle: exit spin wakes, Back restores the rest pose and sleeps (97.023954ms)
+✔ Wafer page: no permanent loop, exit spin wakes, Back restores the rest pose and sleeps (74.574431ms)
+(node:65331) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
 (Use `node --trace-warnings ...` to show where the warning was created)
-✔ explicit video pause survives leaving and re-entering the viewport (445.035283ms)
-✔ reduced motion waits for an explicit play and responds to live preference changes (198.918791ms)
-✔ hidden pages pause media and do not override explicit pause on return (161.657445ms)
-✔ ASCII conversion has a named keyboard control and prevents Space scrolling (78.921184ms)
-(node:569004) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+✔ tracking a moving card only writes transforms, not layout or SVG geometry (65.22787ms)
+✔ the outline still connects the four projected corners exactly (22.135425ms)
+(node:65332) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
 (Use `node --trace-warnings ...` to show where the warning was created)
-✔ covered sound indicator sleeps without muting audio and resumes on close (258.641391ms)
-(node:569015) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+✔ explicit video pause survives leaving and re-entering the viewport (89.711391ms)
+✔ reduced motion waits for an explicit play and responds to live preference changes (31.53669ms)
+✔ hidden pages pause media and do not override explicit pause on return (31.58665ms)
+✔ ASCII conversion has a named keyboard control and prevents Space scrolling (38.582787ms)
+✔ ready loader completes in elapsed time even when animation callbacks stop (8.028334ms)
+✔ loader preserves the visible easing, reveal and once-only completion (6.645952ms)
+✔ missing scene milestones still wait for the failure deadline (1.480126ms)
+✔ reduced-motion completion needs no RAF and does not start the arrival motion (1.563679ms)
+(node:65334) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
 (Use `node --trace-warnings ...` to show where the warning was created)
-✔ opaque menu stops hidden wordmark mutations and RAF, closing wakes it once (677.971507ms)
-ℹ tests 37
+✔ covered sound indicator sleeps without muting audio and resumes on close (63.463158ms)
+(node:65340) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ opaque menu stops hidden wordmark mutations and RAF, closing wakes it once (125.663693ms)
+ℹ tests 43
 ℹ suites 0
-ℹ pass 37
+ℹ pass 43
 ℹ fail 0
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 2052.890804
+ℹ duration_ms 686.552074
