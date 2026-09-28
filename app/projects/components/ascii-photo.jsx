@@ -70,6 +70,8 @@ function AsciiMediaFigure({ src, caption, kind = "photo", ratio, tone, poster, l
     let fx = null, io = null, view = null, far = null, started = false;
     let visible = false, ratioInView = 0;
     const motion = matchMedia("(prefers-reduced-motion: reduce)");
+    // On screen, in a visible tab, and not under the settled navigation surface.
+    const active = () => visible && !document.hidden && !document.body.classList.contains("mo-menu-settled");
     const canvas = canvasRef.current;
     const wrap = wrapRef.current;
 
@@ -111,17 +113,17 @@ function AsciiMediaFigure({ src, caption, kind = "photo", ratio, tone, poster, l
         probe.src = src;
       }
       fxRef.current = fx;
-      fx.setVisible(visible && !document.hidden);
+      fx.setVisible(active());
       canvas.__fx = fx;
       (window.__asciiFigs = window.__asciiFigs || []).push(fx);
     };
 
     const syncPlayback = () => {
-      const active = visible && !document.hidden && !document.body.classList.contains("mo-menu-settled");
-      if (fx) fx.setVisible(active);
+      const on = active();
+      if (fx) fx.setVisible(on);
       const v = videoRef.current;
       if (!isVideo || !v) return;
-      if (active && ratioInView > 0.35 && pausedRef.current !== true &&
+      if (on && ratioInView > 0.35 && pausedRef.current !== true &&
           (!motion.matches || pausedRef.current === false)) {
         const pr = v.play();
         if (pr && pr.catch) pr.catch(() => {});
