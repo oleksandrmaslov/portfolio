@@ -2596,7 +2596,8 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         if (menuObjects.frame(now)) raf = requestAnimationFrame(frame);
         return;
       }
-      const dt = Math.max(0, Math.min(50, now - last)); last = now;
+      const rawDt = now - last;
+      const dt = Math.max(0, Math.min(50, rawDt)); last = now;
       const mode = modeRef.current;
       const focusAddrNow = focusRef.current;
       if (focusAddrNow && focusAddrNow !== prioritizedModelAddr) {
@@ -2640,7 +2641,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       // idle attention — after ~30s of stillness the field notices you:
       // the camera turns softly toward the nearest node, a slow ripple
       // crosses the screen, and the field murmurs.
-      if (!exploreOn && mode === "drift" && !_idleFired && now - _lastAct > 30000 && !ARR.t0) {
+      if (!FLOW_RM && !exploreOn && mode === "drift" && !_idleFired && now - _lastAct > 30000 && !ARR.t0) {
         _idleFired = true;
         let nearTile = null, nd = Infinity;
         for (const m of tiles) {
@@ -3406,7 +3407,8 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         window.__mo_firstFrameAt = now;
         try { window.dispatchEvent(new CustomEvent("mo:first-frame")); } catch (_) {}
       }
-      probeDoF(dt);
+      // Motion is clamped to avoid large jumps; device measurement must not be.
+      probeDoF(rawDt);
       if (universeCanRender()) raf = requestAnimationFrame(frame);
     }
 
