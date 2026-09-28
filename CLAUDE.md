@@ -443,7 +443,18 @@ editing either registry — a rename is not finished until the stamp moves.
 - Keep fixed and sticky landing layers outside CSS filters that create new
   containing blocks.
 - Prefer visibility-gated rendering and explicit Three.js disposal; the site
-  targets machines with limited RAM.
+  targets machines with limited RAM. A loop sleeps (owns no animation
+  callback) while its output is scrolled away, in a hidden tab, or under the
+  navigation surface, and wakes on the event that changes that. An
+  IntersectionObserver cannot see the opaque menu, so work beneath it listens
+  for `body.mo-menu-settled` with `mo:menu-settled` / `mo:menu`. Wafer's
+  bespoke page lifecycle follows the same contract as
+  `project-page-lifecycle.jsx`.
+- Back/forward cache restores a project page exactly as it left: hero centred
+  in the handoff pose, idle off, exit spin on. `core.jsx` clears
+  `__hv_exitSpin` with `__hv_leaving`, and both hero lifecycles settle the rig
+  to rest on `mo:page-restored`. Any new one-way exit flag needs the same
+  reset.
 - Build generated landing code with
   `npm.cmd run build --prefix tools/landing-runtime` and verify freshness with
   `npm.cmd run check --prefix tools/landing-runtime`. Never edit
