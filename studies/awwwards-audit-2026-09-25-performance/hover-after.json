@@ -1,0 +1,28 @@
+{
+  "hover": {
+    "frames": {
+      "count": 99,
+      "max": 68,
+      "mean": 30.446464646419493,
+      "p95": 50.900000000001455
+    },
+    "LayoutCount": 69,
+    "LayoutDuration": 0.13685000000000036,
+    "RecalcStyleDuration": 0.19309299999999974,
+    "TaskDuration": 2.2562270000000026,
+    "ScriptDuration": 1.101590999999999
+  },
+  "idle": {
+    "frames": {
+      "count": 111,
+      "max": 51.10000000000582,
+      "mean": 27.306306306292935,
+      "p95": 50.10000000000582
+    },
+    "LayoutCount": 77,
+    "LayoutDuration": 0.15943700000000005,
+    "RecalcStyleDuration": 0.19940400000000036,
+    "TaskDuration": 2.267521000000002,
+    "ScriptDuration": 1.1091949999999997
+  }
+}

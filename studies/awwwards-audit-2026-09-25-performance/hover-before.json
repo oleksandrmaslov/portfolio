@@ -1,0 +1,65 @@
+{
+  "viewport": [
+    1280,
+    720
+  ],
+  "sound": "off",
+  "baseline": {
+    "count": 106,
+    "max": 65.79999999999563,
+    "mean": 28.37452830194305,
+    "p95": 50.19999999999709
+  },
+  "hover": {
+    "frames": {
+      "count": 78,
+      "max": 67.5,
+      "mean": 39.05897435899346,
+      "p95": 66.09999999999127
+    },
+    "LayoutCount": 146,
+    "LayoutDuration": 0.160422,
+    "RecalcStyleDuration": 0.223256,
+    "TaskDuration": 2.0881800000000004,
+    "ScriptDuration": 0.840616
+  },
+  "frozenHUD": {
+    "frames": {
+      "count": 108,
+      "max": 51.09999999999127,
+      "mean": 27.924074074115467,
+      "p95": 50.30000000000291
+    },
+    "LayoutCount": 72,
+    "LayoutDuration": 0.160118,
+    "RecalcStyleDuration": 0.22050700000000004,
+    "TaskDuration": 2.3457359999999996,
+    "ScriptDuration": 1.074455
+  },
+  "noGlow": {
+    "frames": {
+      "count": 87,
+      "max": 67.10000000000582,
+      "mean": 34.685057471298556,
+      "p95": 50.19999999999709
+    },
+    "LayoutCount": 160,
+    "LayoutDuration": 0.164057,
+    "RecalcStyleDuration": 0.22814500000000004,
+    "TaskDuration": 2.0201530000000005,
+    "ScriptDuration": 0.8838569999999999
+  },
+  "restored": {
+    "frames": {
+      "count": 92,
+      "max": 83,
+      "mean": 32.914130434814936,
+      "p95": 50.29999999998836
+    },
+    "LayoutCount": 163,
+    "LayoutDuration": 0.13746400000000003,
+    "RecalcStyleDuration": 0.1904570000000001,
+    "TaskDuration": 1.8537180000000006,
+    "ScriptDuration": 0.7395639999999997
+  }
+}
