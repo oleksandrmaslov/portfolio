@@ -1,0 +1,152 @@
+{
+  "version": 1,
+  "sampleRate": 32000,
+  "directions": {
+    "signal": {
+      "file": "../../../public/audio/clear-signal.mp3",
+      "entries": [
+        {
+          "kind": "ep",
+          "note": 63,
+          "offset": 0.0,
+          "duration": 3.2
+        },
+        {
+          "kind": "ep",
+          "note": 67,
+          "offset": 3.35,
+          "duration": 3.2
+        },
+        {
+          "kind": "ep",
+          "note": 70,
+          "offset": 6.7,
+          "duration": 3.2
+        },
+        {
+          "kind": "ep",
+          "note": 74,
+          "offset": 10.05,
+          "duration": 3.2
+        },
+        {
+          "kind": "marimba",
+          "note": 55,
+          "offset": 13.4,
+          "duration": 2.0
+        },
+        {
+          "kind": "marimba",
+          "note": 60,
+          "offset": 15.55,
+          "duration": 2.0
+        },
+        {
+          "kind": "marimba",
+          "note": 63,
+          "offset": 17.7,
+          "duration": 2.0
+        },
+        {
+          "kind": "marimba",
+          "note": 67,
+          "offset": 19.85,
+          "duration": 2.0
+        },
+        {
+          "kind": "marimba",
+          "note": 70,
+          "offset": 22.0,
+          "duration": 2.0
+        },
+        {
+          "kind": "marimba",
+          "note": 75,
+          "offset": 24.15,
+          "duration": 2.0
+        },
+        {
+          "kind": "bass",
+          "note": 36,
+          "offset": 26.3,
+          "duration": 2.5
+        },
+        {
+          "kind": "bass",
+          "note": 39,
+          "offset": 28.95,
+          "duration": 2.5
+        },
+        {
+          "kind": "bass",
+          "note": 44,
+          "offset": 31.6,
+          "duration": 2.5
+        },
+        {
+          "kind": "silk",
+          "note": 55,
+          "offset": 34.25,
+          "duration": 7.0
+        },
+        {
+          "kind": "silk",
+          "note": 60,
+          "offset": 41.4,
+          "duration": 7.0
+        },
+        {
+          "kind": "silk",
+          "note": 63,
+          "offset": 48.55,
+          "duration": 7.0
+        },
+        {
+          "kind": "pluck",
+          "note": 63,
+          "offset": 55.7,
+          "duration": 1.5
+        },
+        {
+          "kind": "pluck",
+          "note": 70,
+          "offset": 57.35,
+          "duration": 1.5
+        },
+        {
+          "kind": "pluck",
+          "note": 75,
+          "offset": 59.0,
+          "duration": 1.5
+        },
+        {
+          "kind": "wood",
+          "note": 1,
+          "offset": 60.65,
+          "duration": 0.6
+        },
+        {
+          "kind": "wood",
+          "note": 2,
+          "offset": 61.4,
+          "duration": 0.6
+        },
+        {
+          "kind": "wood",
+          "note": 3,
+          "offset": 62.15,
+          "duration": 0.6
+        },
+        {
+          "kind": "pulse",
+          "note": 39,
+          "offset": 62.9,
+          "duration": 0.4
+        }
+      ],
+      "decodedBytes": 16243200,
+      "transferBytes": 1016685,
+      "masterGain": 2.063003667310708
+    }
+  }
+}
