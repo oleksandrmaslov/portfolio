@@ -1,37 +1,4 @@
-/* Landing shell, sound control, and keycaps. */
-.shell {
-  position: fixed;
-  inset: 0 0 auto 0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--s-6) var(--gutter);
-  z-index: 50;
-  font-family: var(--ff-mono);
-  font-size: var(--fs-meta);
-  letter-spacing: var(--tr-mono);
-  background: linear-gradient(var(--void), transparent);
-  pointer-events: none;
-}
-.shell > * { pointer-events: auto; }
-.shell__brand { color: var(--bone); font-weight: 500; }
-.shell__nav { display: flex; gap: var(--s-6); }
-.shell__nav a { color: var(--ash); transition: color var(--d-fast); }
-.shell__nav a:hover { color: var(--bone); }
-.shell__status { display: flex; align-items: center; gap: var(--s-4); color: var(--ash); }
-.shell__dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--signal);
-  box-shadow: 0 0 12px var(--signal-glow);
-  animation: pulse 2.2s var(--e-in-out) infinite;
-}
-@keyframes pulse {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.4); opacity: 0.55; }
-}
-
+/* Landing-only sound control. Shared header/menu: navigation.css. */
 .volBtn {
   display: inline-flex;
   align-items: center;
@@ -39,9 +6,10 @@
   cursor: pointer;
   background: none;
   border: 0;
-  padding: 0 0 0 var(--s-4);
-  border-left: 1px solid var(--hairline);
-  margin-left: var(--s-3);
+  padding: 0;
+  min-height: 44px;
+
+
   font-family: var(--ff-mono);
   font-size: var(--fs-micro);
   letter-spacing: var(--tr-caps);
@@ -55,5 +23,6 @@
 .volBtn.is-off .volBtn__wave { opacity: 0.5; }
 .volBtn:hover .volBtn__wave { opacity: 1; }
 
-/* .key lives in app/shared/styles/key.css — one definition for every route. */
 
+/* Shared by landing status marks and work-reel indicators. */
+@keyframes pulse {0%,100% {transform:scale(1);opacity:1} 50% {transform:scale(1.4);opacity:.55}}

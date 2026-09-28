@@ -223,35 +223,11 @@ function PCProjectFooterNav({ project }) {
    SHELL + HERO
    ============================================================ */
 function PCShell({ project }) {
-  return (
-    <header className="shell pp-shell">
-      <div className="pp-shell__blur" aria-hidden="true">
-        <div></div><div></div><div></div><div></div><div></div><div></div><div></div>
-      </div>
-      {/* Two destinations, so two controls. The wordmark goes home to the
-          title like it does on every other route; the arrow keeps the
-          reverse node flight back to wherever this page was opened from. */}
-      <div className="shell__brand pp-shell__brand">
-        <a className="pp-shell__brandM" href="./" aria-label="Back to the title"
-           data-mo-cursor-mirror data-mo-cursor-opacity=".pp-shell,.hv-page">M.O.</a>
-        <span className="pp-shell__brandSep" />
-        <a className="pp-shell__brandBack" href="./#work"
-           onClick={(e) => { e.preventDefault(); pcLeaveToUniverse(); }}
-           data-mo-cursor-mirror data-mo-cursor-opacity=".pp-shell,.hv-page">← UNIVERSE</a>
-      </div>
-      <nav className="shell__nav pp-shell__nav">
-        <a href="./#work" onClick={(e) => { e.preventDefault(); pcLeaveToUniverse(); }} data-mo-cursor-mirror data-mo-cursor-opacity=".pp-shell,.hv-page">WORK</a>
-        <a href="./#about" onClick={(e) => { e.preventDefault(); pcLeaveToUniverse(); }} data-mo-cursor-mirror data-mo-cursor-opacity=".pp-shell,.hv-page">ABOUT</a>
-        <a href="./#contact" onClick={(e) => { e.preventDefault(); pcLeaveToUniverse(); }} data-mo-cursor-mirror data-mo-cursor-opacity=".pp-shell,.hv-page">CONTACT</a>
-      </nav>
-      <div className="shell__status pp-shell__status">
-        <span className="shell__dot" />
-        <span data-mo-cursor-mirror data-mo-cursor-opacity=".pp-shell,.hv-page">NODE {project.addr}</span>
-        <span className="pp-shell__sep" />
-        <span data-mo-cursor-mirror data-mo-cursor-opacity=".pp-shell,.hv-page">[ESC] back</span>
-      </div>
-    </header>
-  );
+  return <PortfolioHeader className="pp-shell" context={project.addr + " · " + project.name}
+    utility={<a href="./#work" onClick={(e) => {
+      if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      e.preventDefault(); pcLeaveToUniverse();
+    }}>← UNIVERSE</a>} />;
 }
 
 function PCHero({ project }) {
@@ -346,6 +322,7 @@ function ProjectPageApp() {
   /* keyboard: ESC exits the demo, else leaves */
   useEPC(() => {
     const onKey = (e) => {
+      if (e.defaultPrevented || document.body.classList.contains("mo-menu-open")) return;
       if (e.key === "Escape") { e.preventDefault(); if (demoRef.current) exitDemo(); else pcLeaveToUniverse(); }
     };
     window.addEventListener("keydown", onKey);

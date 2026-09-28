@@ -57,7 +57,8 @@
 .lp-title .title__shield--right { top: var(--tf-top); bottom: var(--tf-bot); width: var(--tc-x); }
 
 /* content aligned to the corner column */
-.lp-title .title__idTop { top: calc(var(--tf-top) + var(--s-5)); left: var(--tc-x); }
+.lp-title .title__idTop { top: calc(var(--tf-top) + var(--s-5)); left: var(--tc-x); right: var(--tc-x); }
+.lp-title .title__idRole { padding-left: 0; }
 .lp-title .title__wordmark {
   left: var(--tc-x);
   bottom: var(--tc-bot);
@@ -138,7 +139,6 @@ body.mo-explore .lp-title .title__baseline {
 /* Mobile lifts the wordmark above the control cluster,
    but from the new aligned bottom */
 @media (max-width: 700px) {
-  .lp-shell .shell__nav { display: none; }
   .lp-title .title__wordmark { bottom: calc(var(--tc-bot) + 108px); right: var(--tc-x); }
   .lp-title .title__proceedCap { display: none; }
 }

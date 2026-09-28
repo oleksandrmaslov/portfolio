@@ -117,7 +117,7 @@ function LandingApp() {
         />
       </div>
 
-      <ShellLanding section={section} />
+      <PortfolioHeader landing section={section} className="lp-shell" sound={<VolumeToggle />} />
 
       {window.NodeHandoff ? <NodeHandoff /> : null}
 
@@ -135,38 +135,6 @@ function LandingApp() {
   );
 }
 
-/* shell — section-aware status */
-function ShellLanding({ section }) {
-  const [time, setTime] = useLA("--:--");
-  useEA(() => {
-    const tick = () => setTime(new Date().toTimeString().slice(0, 5));
-    tick();
-    const id = setInterval(tick, 30000);
-    return () => clearInterval(id);
-  }, []);
-  return (
-    <header className="shell lp-shell">
-      <div className="lp-shell__blur" aria-hidden="true">
-        <div /><div /><div /><div /><div /><div /><div />
-      </div>
-      {/* the wordmark is the way home on every route — here that is the
-          title section, which is the top of this page */}
-      <a className="shell__brand" href="#title" aria-label="Back to the title">M.O.</a>
-      <nav className="shell__nav">
-        <a href="#work" className={section === "work" ? "is-active" : ""} aria-current={section === "work" ? "location" : undefined}>WORK</a>
-        <a href="#about" className={section === "about" ? "is-active" : ""} aria-current={section === "about" ? "location" : undefined}>ABOUT</a>
-        <a href="#contact" className={section === "contact" ? "is-active" : ""} aria-current={section === "contact" ? "location" : undefined}>CONTACT</a>
-        <a href="All Projects.html" onClick={moLeaveToIndex}>INDEX ↗</a>
-      </nav>
-      <div className="shell__status">
-        <span className="shell__dot" />
-        <span>MUC · {time} GMT+1</span>
-        <VolumeToggle />
-      </div>
-    </header>
-  );
-}
-
 /* ============================================================
    LANDING → ALL PROJECTS
    ------------------------------------------------------------
@@ -180,6 +148,7 @@ function ShellLanding({ section }) {
    The universe owns the duration; do not re-copy a number here.
    ============================================================ */
 function moLeaveToIndex(e) {
+  if (e && (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey)) return;
   if (e && e.preventDefault) e.preventDefault();
   if (document.body.classList.contains("lp-toIndex")) return;
   const uni = window.__mo_universe;
@@ -196,15 +165,20 @@ window.moLeaveToIndex = moLeaveToIndex;
 function VolumeToggle() {
   const { useState, useEffect, useRef } = React;
   const [muted, setMuted] = useState(() => (window.MOSound ? window.MOSound.isMuted() : true));
+  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState("");
   const pathRef = useRef(null);
 
   useEffect(() => {
     if (!window.MOSound) return;
     window.MOSound.init();
     const W = 38, H = 16, MID = H / 2, N = 40;
-    let raf = 0, phase = 0, amp = 0;
-    const tick = () => {
+    let raf = 0, phase = 0, amp = 0, last = 0;
+    const tick = (now) => {
       raf = 0;
+      if (document.hidden) return;
+      if (now - last < 33) { raf = requestAnimationFrame(tick); return; }
+      last = now;
       const path = pathRef.current; if (!path) return;
       const on = !window.MOSound.isMuted();
       const lvl = on ? window.MOSound.getLevel() : 0;
@@ -228,9 +202,9 @@ function VolumeToggle() {
       }
     };
     const wake = () => { if (!raf) raf = requestAnimationFrame(tick); };
-    window.MOSound.onState(s => { setMuted(s.muted); wake(); });
+    const unsubscribe = window.MOSound.onState(s => { setMuted(s.muted); setLoading(!!s.loading); setStatus(s.status || ""); wake(); });
     wake();
-    return () => cancelAnimationFrame(raf);
+    return () => { cancelAnimationFrame(raf); if (unsubscribe) unsubscribe(); };
   }, []);
 
   const click = () => {
@@ -243,13 +217,13 @@ function VolumeToggle() {
     <button
       className={"volBtn " + (muted ? "is-off" : "is-on")}
       onClick={click}
-      aria-label={muted ? "Enable sound" : "Mute sound"}
-      title={muted ? "Enable sound — 0x00 carrier field" : "Mute sound"}
+      aria-label={loading ? "Cancel sound loading" : muted ? "Enable sound" : "Mute sound"}
+      title={status || (muted ? "Enable Clear signal" : "Mute sound")}
     >
       <svg className="volBtn__wave" viewBox="0 0 38 16" width="38" height="16" aria-hidden="true">
         <path ref={pathRef} d="M0 8 L38 8" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
-      <span>{muted ? "sound off" : "sound on"}</span>
+      <span>{loading ? "loading sound" : muted ? "sound off" : "sound on"}</span>
     </button>
   );
 }

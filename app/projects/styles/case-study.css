@@ -5,63 +5,6 @@
 
 body { background: var(--void); overflow-x: clip; }
 
-/* ============================================================
-   PROGRESSIVE-BLUR HEADER
-   Seven masked layers form an overlapping blur stack
-   layers, each masked to an overlapping slice so the blur fades out
-   smoothly toward the bottom edge — no hard seam.
-   ============================================================ */
-.pp-shell {
-  /* The layered stack owns the header blur. */
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  isolation: isolate;
-  background: linear-gradient(rgba(4,6,13,0.85), transparent);
-}
-.pp-shell__blur {
-  position: absolute;
-  inset: 0 0 auto 0;
-  height: calc(100% + 16px);
-  pointer-events: none;
-  z-index: -1;
-}
-.pp-shell__blur > div { position: absolute; inset: 0; }
-.pp-shell__blur > div:nth-child(1) {
-  backdrop-filter: blur(32px); -webkit-backdrop-filter: blur(32px);
-  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 12.5%, transparent 25%);
-          mask-image: linear-gradient(to bottom, #000 0%, #000 12.5%, transparent 25%);
-}
-.pp-shell__blur > div:nth-child(2) {
-  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 12.5%, #000 25%, transparent 37.5%);
-          mask-image: linear-gradient(to bottom, transparent 0%, #000 12.5%, #000 25%, transparent 37.5%);
-}
-.pp-shell__blur > div:nth-child(3) {
-  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-  -webkit-mask-image: linear-gradient(to bottom, transparent 12.5%, #000 25%, #000 37.5%, transparent 50%);
-          mask-image: linear-gradient(to bottom, transparent 12.5%, #000 25%, #000 37.5%, transparent 50%);
-}
-.pp-shell__blur > div:nth-child(4) {
-  backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
-  -webkit-mask-image: linear-gradient(to bottom, transparent 25%, #000 37.5%, #000 50%, transparent 62.5%);
-          mask-image: linear-gradient(to bottom, transparent 25%, #000 37.5%, #000 50%, transparent 62.5%);
-}
-.pp-shell__blur > div:nth-child(5) {
-  backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px);
-  -webkit-mask-image: linear-gradient(to bottom, transparent 37.5%, #000 50%, #000 62.5%, transparent 75%);
-          mask-image: linear-gradient(to bottom, transparent 37.5%, #000 50%, #000 62.5%, transparent 75%);
-}
-.pp-shell__blur > div:nth-child(6) {
-  backdrop-filter: blur(1px); -webkit-backdrop-filter: blur(1px);
-  -webkit-mask-image: linear-gradient(to bottom, transparent 50%, #000 62.5%, #000 75%, transparent 87.5%);
-          mask-image: linear-gradient(to bottom, transparent 50%, #000 62.5%, #000 75%, transparent 87.5%);
-}
-.pp-shell__blur > div:nth-child(7) {
-  backdrop-filter: blur(0.5px); -webkit-backdrop-filter: blur(0.5px);
-  -webkit-mask-image: linear-gradient(to bottom, transparent 62.5%, #000 75%, #000 87.5%, transparent 100%);
-          mask-image: linear-gradient(to bottom, transparent 62.5%, #000 75%, #000 87.5%, transparent 100%);
-}
-
 /* seam-bridge label (over the captured handoff frame during boot) */
 .mo-seam__tag {
   position: absolute;
@@ -269,16 +212,6 @@ body.hv-exit .pp-shell { opacity: 0; transition: opacity 300ms var(--e-out); }
     align-items: center;
   }
   .hv-demo__hint { display: none; }
-}
-
-/* ---- phone: collapse the crowded shell to a clean two-element bar ---- */
-@media (max-width: 640px) {
-  .pp-shell { padding: var(--s-5) var(--s-5); }
-  .pp-shell__nav { display: none; }                 /* footer carries nav on phones */
-  .pp-shell__brandSep { width: 12px; }
-  /* [ESC] back is meaningless without a keyboard — keep just the live node */
-  .pp-shell__sep, .pp-shell__status > span:last-child { display: none; }
-  .pp-shell__status { gap: var(--s-3); }
 }
 
 @media (max-width: 460px) {

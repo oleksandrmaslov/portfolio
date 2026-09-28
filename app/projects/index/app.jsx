@@ -60,19 +60,12 @@ function ManifestApp() {
   const [sortId, setSortId] = useMA("addr");
   const [query,  setQuery]  = useMA("");
   const [focus,  setFocus]  = useMA(null);
-  const [time,   setTime]   = useMA("--:--");
-
-  useME(() => {
-    const tick = () => setTime(new Date().toTimeString().slice(0, 5));
-    tick();
-    const id = setInterval(tick, 30000);
-    return () => clearInterval(id);
-  }, []);
-
   /* Keyboard nav — j/k or ↑/↓ to move focus, Enter to open */
   useME(() => {
     const onKey = (e) => {
-      if (e.target && /input|textarea/i.test(e.target.tagName || "")) return;
+      if (document.body.classList.contains("mo-menu-open") || e.defaultPrevented || e.isComposing || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+      // List shortcuts must not activate the last hovered row from a control.
+      if (e.target?.closest?.("a, button, input, textarea, select, summary, [contenteditable]:not([contenteditable='false']), [role='button'], [role='link']")) return;
       const dir = e.key === "j" || e.key === "ArrowDown" ? +1
                 : e.key === "k" || e.key === "ArrowUp"   ? -1
                 : 0;
@@ -125,24 +118,8 @@ function ManifestApp() {
     <>
       {window.Cursor  ? React.createElement(window.Cursor)  : null}
 
-      <header className="shell m-shell">
-        <a className="shell__brand" href="./" aria-label="Back to the title"
-           onClick={(e) => {
-             e.preventDefault();
-             document.body.classList.add("landing-exit");
-             setTimeout(() => { window.location.href = "./"; }, 380);
-           }}>M.O.</a>
-        <nav className="shell__nav">
-          <a href="./">LANDING ↗</a>
-          <a href="./#work">WORK</a>
-          <a href="Design System.html">SYSTEM ↗</a>
-        </nav>
-        <div className="shell__status">
-          <span className="shell__dot" />
-          <span>MUC · {time} GMT+1</span>
-          <span className="shell__hint">[/] search</span>
-        </div>
-      </header>
+      <PortfolioHeader className="m-shell" section="index" context="All projects"
+        utility={<a href="Design System.html">SYSTEM ↗</a>} />
 
       <main className="m-page" data-screen-label="01 Terminal">
         {/* ===== HEADER ROW ===== */}

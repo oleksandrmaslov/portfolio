@@ -467,8 +467,6 @@
   .voiceGrid { grid-template-columns: 1fr; }
   .lexicon { grid-template-columns: 1fr; }
   .lexicon__row > * { border-bottom: none; padding: var(--s-3) 0; }
-  .shell__nav { display: none; }
-  .cursor { display: none; }
 }
 
 /* group heading inside the type specimen */
