@@ -33,6 +33,7 @@
         ready: true, src: "models/wafer_demo.glb", proxy: null,
         rigFit: 4.0,   // matches this project's page hero
         rigPose: { x: -0.92, y: 0, z: 0 },
+        menuPose: { x: -0.28, y: 0.08, z: -0.04 },
         cardPose: { scale: 1, yaw: 0, pitch: 0, offsetY: 0, fit: 2.9, pose: { x: -1.15, y: 0, z: 0 } },
         handoffPose: Object.assign({}, HANDOFF_DEFAULTS),
         pagePose: { scale: 0.92, restX: 0.46, offsetY: 0 },

@@ -109,9 +109,9 @@ function AsciiHero({ cols = 108, rows = 20, ramp = " ·:-=+*#%@", className = ""
        now that the box hugs the glyph grid (base.css), is a 1:1 match with the
        columns this loop draws.
 
-       The rect is read once per frame rather than per event: at high mouse
-       rates a getBoundingClientRect() inside the move handler is a forced
-       layout on every sample, and this loop only repaints at ~30fps anyway. */
+       Cache its box until scrolling, resizing or the title exit moves it.
+       Reading after every glyph update forced layout even when the pointer
+       was over a project elsewhere in the universe. */
     const cursor = { x: -1000, y: -1000, active: false };
     let ptrX = 0, ptrY = 0, ptrSeen = false;
     const onMove = (e) => {
@@ -124,9 +124,13 @@ function AsciiHero({ cols = 108, rows = 20, ramp = " ·:-=+*#%@", className = ""
     window.addEventListener("pointermove", onMove, { passive: true });
     document.addEventListener("mouseout", onOut);
 
-    const syncCursor = () => {
+    let cursorRect = el.getBoundingClientRect(), rectDirty = false, lastExit = 0;
+    const syncCursor = (exit) => {
       if (!ptrSeen) { cursor.active = false; return; }
-      const r = el.getBoundingClientRect();
+      if (rectDirty || exit !== lastExit) {
+        cursorRect = el.getBoundingClientRect(); rectDirty = false; lastExit = exit;
+      }
+      const r = cursorRect;
       const inside = r.width > 0 && r.height > 0
         && ptrX >= r.left && ptrX <= r.right
         && ptrY >= r.top  && ptrY <= r.bottom;
@@ -138,7 +142,7 @@ function AsciiHero({ cols = 108, rows = 20, ramp = " ·:-=+*#%@", className = ""
     };
 
     /* ---------- demand-driven render gate ---------- */
-    const initialRect = el.getBoundingClientRect();
+    const initialRect = cursorRect;
     let onScreen = initialRect.bottom > 0 && initialRect.top < window.innerHeight;
     let disposed = false;
     let raf = 0;
@@ -165,10 +169,14 @@ function AsciiHero({ cols = 108, rows = 20, ramp = " ·:-=+*#%@", className = ""
       },
       { threshold: 0 }
     );
-    const onScroll = () => requestLoop();
+    const onScroll = () => { rectDirty = true; requestLoop(); };
+    const onResize = () => { rectDirty = true; requestLoop(); };
+    const ro = new ResizeObserver(onResize);
+    ro.observe(el);
     const onVisibility = () => syncLoop();
     io.observe(el);
     window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onResize);
     document.addEventListener("visibilitychange", onVisibility);
 
     /* ---------- render loop — one string per frame ---------- */
@@ -185,7 +193,7 @@ function AsciiHero({ cols = 108, rows = 20, ramp = " ·:-=+*#%@", className = ""
       last = now;
 
       el.__exCleared = false;
-      syncCursor();
+      syncCursor(ex);
 
       const t = now * 0.0009;
       const buf = [];
@@ -260,7 +268,9 @@ function AsciiHero({ cols = 108, rows = 20, ramp = " ·:-=+*#%@", className = ""
       disposed = true;
       cancelLoop();
       io.disconnect();
+      ro.disconnect();
       window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onResize);
       document.removeEventListener("visibilitychange", onVisibility);
       window.removeEventListener("pointermove", onMove);
       document.removeEventListener("mouseout", onOut);

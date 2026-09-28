@@ -23,11 +23,11 @@ const { useEffect: useOE, useRef: useOR } = React;
    Previously the last line completed at 0.86 and the exit began at 0.87 —
    the text started dying the moment it finished being born. */
 const ORIGIN_LINES = [
-  { t: "I build", at: 0.20 },
-  { t: "complete products,", at: 0.34, em: true },
-  { t: "starting with", at: 0.34, ghost: true },
-  { t: "a real problem—", at: 0.48 },
-  { t: "not a technology.", at: 0.60, em: true },
+  { t: "I build the device.", at: 0.20 },
+  { t: "Then the firmware.", at: 0.34, em: true },
+  { t: "Then the tools", at: 0.34 },
+  { t: "that put it", at: 0.48 },
+  { t: "in someone’s hands.", at: 0.60, em: true },
 ];
 
 const _oEase  = (t) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);

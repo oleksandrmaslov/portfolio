@@ -27,7 +27,7 @@ function FieldGuide({ dismissed, touch }) {
     <div className={"fieldHint " + (dismissed ? "is-dismissed" : "")} aria-hidden="true">
       <div className="fieldHint__inner">
         <div className="fieldHint__ring"><span className="cross" /><span className="dot" /></div>
-        <div className="fieldHint__lede" data-mo-cursor-mirror data-mo-cursor-opacity=".fieldHint,.fieldHint__inner,.title__stage,.lp">This field is live</div>
+        <div className="fieldHint__lede" data-mo-cursor-mirror data-mo-cursor-opacity=".fieldHint,.fieldHint__inner,.title__stage,.lp">Explore my projects</div>
         <div className="fieldHint__cues">
           {touch ? (
             <>
@@ -43,7 +43,7 @@ function FieldGuide({ dismissed, touch }) {
               <span className="fieldHint__sep" />
               <span className="fieldHint__cue" data-mo-cursor-mirror data-mo-cursor-opacity=".fieldHint,.fieldHint__inner,.title__stage,.lp"><b>Scroll</b> to fly through</span>
               <span className="fieldHint__sep" />
-              <span className="fieldHint__cue" data-mo-cursor-mirror data-mo-cursor-opacity=".fieldHint,.fieldHint__inner,.title__stage,.lp"><b>Click</b> a node</span>
+              <span className="fieldHint__cue" data-mo-cursor-mirror data-mo-cursor-opacity=".fieldHint,.fieldHint__inner,.title__stage,.lp"><b>Click</b> a project</span>
             </>
           )}
         </div>
@@ -137,7 +137,7 @@ function TitleScreen() {
 
   return (
     <section className={"lp-title " + (touched ? "is-touched" : "")} id="title" data-screen-label="01 Title">
-      <h1 className="title__sr">Oleksandr Maslov — product systems, embedded systems and interaction</h1>
+      <h1 className="title__sr">Oleksandr Maslov — hardware, firmware and interaction portfolio</h1>
       <div className="title__stage">
       <div className="title__shield title__shield--top" />
       <div className="title__shield title__shield--bot" />
@@ -152,8 +152,8 @@ function TitleScreen() {
       </div>
 
       <div className="title__idTop">
-        <span className="title__idName" data-mo-cursor-mirror data-mo-cursor-opacity=".title__idTop,.title__stage,.lp"><span className="title__idBullet">■</span>MASLOV / OLEKSANDR</span>
-        <span className="title__idRole" data-mo-cursor-mirror data-mo-cursor-opacity=".title__idTop,.title__stage,.lp">PRODUCT SYSTEMS · EMBEDDED · INTERACTION</span>
+        <span className="title__idName" data-mo-cursor-mirror data-mo-cursor-opacity=".title__idTop,.title__stage,.lp"><span className="title__idBullet">0x00</span>OLEKSANDR MASLOV</span>
+        <span className="title__idRole" data-mo-cursor-mirror data-mo-cursor-opacity=".title__idTop,.title__stage,.lp">PORTFOLIO · HARDWARE + SOFTWARE</span>
       </div>
 
       <FieldGuide dismissed={touched} touch={showExplore} />
@@ -210,8 +210,9 @@ function TitleScreen() {
 function TitleKeyboardShortcut({ onProceed }) {
   useT2E(() => {
     const onKey = (e) => {
-      if (e.key !== "Enter") return;
-      if (e.target && /input|textarea|button/i.test(e.target.tagName || "")) return;
+      if (e.key !== "Enter" || e.defaultPrevented || e.isComposing || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+      // A focused control owns Enter, including the skip link and mobile menu.
+      if (e.target?.closest?.("a, button, input, textarea, select, summary, [contenteditable]:not([contenteditable='false']), [role='button'], [role='link']")) return;
       if (window.scrollY > 80) return;
       e.preventDefault();
       onProceed();

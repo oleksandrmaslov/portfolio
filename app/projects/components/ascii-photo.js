@@ -325,13 +325,17 @@
     /* Bind a <video> as the sampled texture. Every other part of the engine
        stays identical: the lens, the convert ramp and the CA all read from
        TEXTURE0, so a moving frame resolves into glyphs exactly like a still.
-       The frame is re-uploaded only while the element is actually playing,
-       which keeps the idle-skip path below intact for a paused clip. */
+       New decoded frames invalidate the texture independently of the lens's
+       display-rate animation. Older browsers keep the playing-frame fallback. */
     loadVideo(el) {
+      if (this._releaseVideo) this._releaseVideo();
       this._video = el;
+      this._videoFrameReady = false;
+      this._usesVideoFrames = typeof el.requestVideoFrameCallback === "function";
+      let active = true, frameId = null;
       const bind = () => {
         const gl = this.gl;
-        if (!el.videoWidth || !el.videoHeight) return;
+        if (!active || el.readyState < 2 || !el.videoWidth || !el.videoHeight) return;
         this.imgAspect = el.videoWidth / el.videoHeight;
         if (!this.photoTex) this.photoTex = gl.createTexture();
         gl.activeTexture(gl.TEXTURE0);
@@ -344,9 +348,25 @@
         if (!this.ready) { this.ready = true; if (this.onReady) this.onReady(); }
         this._dirty = true;
       };
+      const invalidate = () => { if (active) this._videoFrameReady = true; };
+      const onFrame = () => {
+        if (!active) return;
+        invalidate();
+        frameId = el.requestVideoFrameCallback(onFrame);
+      };
+      // A paused seek can change the visible frame too. Coalesce these events
+      // with video callbacks, then upload once in the next render tick.
+      el.addEventListener("loadeddata", invalidate);
+      el.addEventListener("seeked", invalidate);
+      if (this._usesVideoFrames) frameId = el.requestVideoFrameCallback(onFrame);
+      this._releaseVideo = () => {
+        active = false;
+        el.removeEventListener("loadeddata", invalidate);
+        el.removeEventListener("seeked", invalidate);
+        if (frameId !== null) el.cancelVideoFrameCallback(frameId);
+      };
       this._bindVideoFrame = bind;
       if (el.readyState >= 2) bind();
-      else el.addEventListener("loadeddata", bind, { once: true });
     }
 
     load(src) {
@@ -456,14 +476,17 @@
       // ---- idle skip: when nothing is animating and the lens is gone,
       // stop issuing GPU work. The canvas holds the last (plain-photo) frame.
       // Scanline shimmer needs continuous redraw only while ascii is visible. ----
-      // a running clip is always "animating": pull the current frame first so
-      // the shader samples it, then fall through to the normal draw.
+      // Keep video uploads independent of display refresh. Binding marks the
+      // draw dirty, so plain video redraws only when its sampled frame changes.
       const v = this._video;
       const videoLive = !!(v && !v.paused && !v.ended && v.readyState >= 2);
-      if (videoLive && this._bindVideoFrame) this._bindVideoFrame();
+      if (v && v.readyState >= 2 && this._bindVideoFrame &&
+          (this._videoFrameReady || (!this._usesVideoFrames && videoLive))) {
+        this._bindVideoFrame();
+        this._videoFrameReady = false;
+      }
 
-      const animating = videoLive ||
-        Math.abs(this.hoverTarget - this.hover) > 0.002 ||
+      const animating = Math.abs(this.hoverTarget - this.hover) > 0.002 ||
         Math.abs(this.convertTarget - this.convert) > 0.002 ||
         this.hover > 0.002 || this.convert > 0.002 || this._caBoost > 0.01 || this._pulse >= 0;
       if (!this.ready) return;
@@ -510,6 +533,8 @@
     }
 
     destroy() {
+      if (this._releaseVideo) this._releaseVideo();
+      this._releaseVideo = null;
       this._video = null;
       this._bindVideoFrame = null;
       cancelAnimationFrame(this._raf);

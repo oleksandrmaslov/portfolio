@@ -276,10 +276,10 @@ function Work({ onHoverWork }) {
           <div className="lp-workReel__slot lp-workReel__slot--title">
             <div className="lp-workReel__titleInner">
               <div className="lp-workReel__titleNum"><span data-mo-cursor-mirror data-mo-cursor-opacity=".lp-workReel__sticky,.lp">02</span></div>
-              <h2 className="lp-workReel__title" data-mo-cursor-mirror data-mo-cursor-opacity=".lp-workReel__sticky,.lp">Selected nodes<em>.</em></h2>
+              <h2 className="lp-workReel__title" data-mo-cursor-mirror data-mo-cursor-opacity=".lp-workReel__sticky,.lp">Selected work<em>.</em></h2>
               <div className="lp-workReel__titleSub">
                 <span className="lp-workReel__titleSubDot" />
-                <span data-mo-cursor-mirror data-mo-cursor-opacity=".lp-workReel__sticky,.lp">Scroll — each node resolves at the lens.</span>
+                <span data-mo-cursor-mirror data-mo-cursor-opacity=".lp-workReel__sticky,.lp">Scroll to explore. Select a project to open it.</span>
               </div>
             </div>
           </div>
@@ -309,7 +309,7 @@ function Work({ onHoverWork }) {
                     <div className="showAllGate__overline" data-mo-cursor-mirror data-mo-cursor-opacity=".showAllGate,.lp-workReel__sticky,.lp">04 / END · PASSAGE</div>
                     <h3 className="showAllGate__name" data-mo-cursor-mirror data-mo-cursor-opacity=".showAllGate,.lp-workReel__sticky,.lp">Open the universe<em>.</em></h3>
                     <div className="showAllGate__sub" data-mo-cursor-mirror data-mo-cursor-opacity=".showAllGate,.lp-workReel__sticky,.lp">
-                      {(window.MO_PROJECTS || []).length} nodes — products, systems, modules and studies. Enter the full field. ESC returns here.
+                      {(window.MO_PROJECTS || []).length} projects — products, systems, modules and studies. Explore the full collection. ESC returns here.
                     </div>
                   </div>
                   <div className="showAllGate__key">
@@ -430,7 +430,7 @@ function NodeCard({ work, i, total, nodeRef, focused, onFocus }) {
       {/* CAPTION PLATE — original caption-bar block, unchanged */}
       <div className="rcard__body">
         <div className="rcard__top" data-mo-cursor-mirror data-mo-cursor-opacity=".rcard,.lp-workReel__sticky,.lp">
-          <span className="rcard__topAddr">NODE {work.addr}</span>
+          <span className="rcard__topAddr">PROJECT {work.addr}</span>
           <span className="rcard__topSep" />
           <span className="rcard__topIdx">{(i + 1).toString().padStart(2, "0")} / {total.toString().padStart(2, "0")}</span>
         </div>
