@@ -1,0 +1,1687 @@
+{
+  "label": "before",
+  "samples": [
+    {
+      "name": "landing idle",
+      "mutations": 72,
+      "audioCpu": null,
+      "frames": 109,
+      "mean": 27.750458715541654,
+      "p95": 41.70000000000073,
+      "over50": 1,
+      "metrics": {
+        "LayoutCount": 75,
+        "RecalcStyleCount": 111,
+        "LayoutDuration": 0.12730200000000003,
+        "RecalcStyleDuration": 0.131801,
+        "ScriptDuration": 0.6328909999999999,
+        "TaskDuration": 1.4291479999999996
+      },
+      "callbacks": {
+        "draw": 0,
+        "measureLayout": 0,
+        "frame": 327,
+        "anonymous": 0,
+        "refreshNow": 0,
+        "tick": 109,
+        "update": 0,
+        "measure": 0,
+        "next": 0,
+        "paint": 0
+      },
+      "state": {
+        "url": "/",
+        "viewport": [
+          1280,
+          800
+        ],
+        "overflow": false,
+        "heap": 34634783,
+        "contexts": {
+          "created": 3,
+          "lost": 0,
+          "live": 2
+        },
+        "figures": 0,
+        "raf": {
+          "draw": 29,
+          "measureLayout": 3,
+          "frame": 708,
+          "anonymous": 4,
+          "refreshNow": 3,
+          "tick": 110,
+          "update": 5,
+          "measure": 4,
+          "next": 47,
+          "paint": 2
+        },
+        "dof": true,
+        "dofFps": 46.1,
+        "audio": {
+          "direction": "signal",
+          "title": "Clear signal",
+          "bpm": 100,
+          "chord": "E♭maj9",
+          "chordIndex": 0,
+          "energy": 0.12,
+          "focused": null,
+          "memory": [],
+          "visited": [],
+          "section": "title",
+          "assembly": 0,
+          "forming": false,
+          "step": 0,
+          "emitted": 0,
+          "resonance": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "running": false,
+          "intent": false,
+          "loading": false,
+          "volume": 0.55,
+          "status": "Sound is off",
+          "voices": 0,
+          "maxVoices": 24,
+          "highWater": 0,
+          "dropped": 0,
+          "decodedBytes": 0,
+          "allocatedVoices": 0,
+          "contextState": "uncreated",
+          "level": 0,
+          "scheduled": 0,
+          "late": 0,
+          "maxScheduleMs": 0
+        },
+        "scroll": 0
+      }
+    },
+    {
+      "name": "landing hover",
+      "mutations": 71,
+      "audioCpu": null,
+      "frames": 114,
+      "mean": 26.351754385951846,
+      "p95": 41.70000000000073,
+      "over50": 1,
+      "metrics": {
+        "LayoutCount": 77,
+        "RecalcStyleCount": 178,
+        "LayoutDuration": 0.10943299999999989,
+        "RecalcStyleDuration": 0.13989599999999996,
+        "ScriptDuration": 0.7961720000000003,
+        "TaskDuration": 1.618856000000001
+      },
+      "callbacks": {
+        "draw": 0,
+        "measureLayout": 0,
+        "frame": 342,
+        "anonymous": 0,
+        "refreshNow": 0,
+        "tick": 114,
+        "update": 0,
+        "measure": 0,
+        "next": 0,
+        "paint": 0,
+        "runHover": 0,
+        "flushMove": 0
+      },
+      "state": {
+        "url": "/",
+        "viewport": [
+          1280,
+          800
+        ],
+        "overflow": false,
+        "heap": 29989986,
+        "contexts": {
+          "created": 3,
+          "lost": 0,
+          "live": 2
+        },
+        "figures": 0,
+        "raf": {
+          "draw": 29,
+          "measureLayout": 3,
+          "frame": 1083,
+          "anonymous": 4,
+          "refreshNow": 3,
+          "tick": 224,
+          "update": 5,
+          "measure": 4,
+          "next": 47,
+          "paint": 2,
+          "runHover": 1,
+          "flushMove": 1
+        },
+        "dof": true,
+        "dofFps": 46.1,
+        "audio": {
+          "direction": "signal",
+          "title": "Clear signal",
+          "bpm": 100,
+          "chord": "E♭maj9",
+          "chordIndex": 0,
+          "energy": 0.12,
+          "focused": null,
+          "memory": [],
+          "visited": [],
+          "section": "title",
+          "assembly": 0,
+          "forming": false,
+          "step": 0,
+          "emitted": 0,
+          "resonance": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "running": false,
+          "intent": false,
+          "loading": false,
+          "volume": 0.55,
+          "status": "Sound is off",
+          "voices": 0,
+          "maxVoices": 24,
+          "highWater": 0,
+          "dropped": 0,
+          "decodedBytes": 0,
+          "allocatedVoices": 0,
+          "contextState": "uncreated",
+          "level": 0,
+          "scheduled": 0,
+          "late": 0,
+          "maxScheduleMs": 0
+        },
+        "scroll": 0
+      }
+    },
+    {
+      "name": "settled menu",
+      "mutations": 91,
+      "audioCpu": null,
+      "frames": 361,
+      "mean": 8.327977839335183,
+      "p95": 8.400000000001455,
+      "over50": 0,
+      "metrics": {
+        "LayoutCount": 92,
+        "RecalcStyleCount": 367,
+        "LayoutDuration": 0.14384400000000008,
+        "RecalcStyleDuration": 0.213808,
+        "ScriptDuration": 0.20390199999999936,
+        "TaskDuration": 1.0101009999999988
+      },
+      "callbacks": {
+        "draw": 0,
+        "measureLayout": 0,
+        "frame": 732,
+        "anonymous": 0,
+        "refreshNow": 0,
+        "tick": 361,
+        "update": 0,
+        "measure": 0,
+        "next": 0,
+        "paint": 0,
+        "runHover": 0,
+        "flushMove": 0
+      },
+      "state": {
+        "url": "/",
+        "viewport": [
+          1280,
+          800
+        ],
+        "overflow": false,
+        "heap": 29979882,
+        "contexts": {
+          "created": 3,
+          "lost": 0,
+          "live": 2
+        },
+        "figures": 0,
+        "raf": {
+          "draw": 29,
+          "measureLayout": 3,
+          "frame": 2234,
+          "anonymous": 4,
+          "refreshNow": 3,
+          "tick": 585,
+          "update": 5,
+          "measure": 4,
+          "next": 47,
+          "paint": 2,
+          "runHover": 1,
+          "flushMove": 3
+        },
+        "dof": true,
+        "dofFps": 46.1,
+        "audio": {
+          "direction": "signal",
+          "title": "Clear signal",
+          "bpm": 100,
+          "chord": "E♭maj9",
+          "chordIndex": 0,
+          "energy": 0.12,
+          "focused": null,
+          "memory": [],
+          "visited": [],
+          "section": "title",
+          "assembly": 0,
+          "forming": false,
+          "step": 0,
+          "emitted": 0,
+          "resonance": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "running": false,
+          "intent": false,
+          "loading": false,
+          "volume": 0.55,
+          "status": "Sound is off",
+          "voices": 0,
+          "maxVoices": 24,
+          "highWater": 0,
+          "dropped": 0,
+          "decodedBytes": 0,
+          "allocatedVoices": 0,
+          "contextState": "uncreated",
+          "level": 0,
+          "scheduled": 0,
+          "late": 0,
+          "maxScheduleMs": 0
+        },
+        "scroll": 0
+      }
+    },
+    {
+      "name": "after 10 menu cycles",
+      "mutations": 69,
+      "audioCpu": null,
+      "frames": 112,
+      "mean": 26.911607142803923,
+      "p95": 50,
+      "over50": 4,
+      "metrics": {
+        "LayoutCount": 74,
+        "RecalcStyleCount": 114,
+        "LayoutDuration": 0.11498199999999992,
+        "RecalcStyleDuration": 0.12539600000000006,
+        "ScriptDuration": 0.5372610000000009,
+        "TaskDuration": 1.2972919999999988
+      },
+      "callbacks": {
+        "draw": 0,
+        "measureLayout": 0,
+        "frame": 336,
+        "anonymous": 0,
+        "refreshNow": 0,
+        "tick": 112,
+        "update": 0,
+        "measure": 0,
+        "next": 0,
+        "paint": 0,
+        "runHover": 0,
+        "flushMove": 0
+      },
+      "state": {
+        "url": "/",
+        "viewport": [
+          1280,
+          800
+        ],
+        "overflow": false,
+        "heap": 33680307,
+        "contexts": {
+          "created": 3,
+          "lost": 0,
+          "live": 2
+        },
+        "figures": 0,
+        "raf": {
+          "draw": 29,
+          "measureLayout": 3,
+          "frame": 3030,
+          "anonymous": 4,
+          "refreshNow": 14,
+          "tick": 697,
+          "update": 5,
+          "measure": 4,
+          "next": 47,
+          "paint": 2,
+          "runHover": 1,
+          "flushMove": 13
+        },
+        "dof": true,
+        "dofFps": 46.1,
+        "audio": {
+          "direction": "signal",
+          "title": "Clear signal",
+          "bpm": 100,
+          "chord": "E♭maj9",
+          "chordIndex": 0,
+          "energy": 0.12,
+          "focused": null,
+          "memory": [],
+          "visited": [],
+          "section": "title",
+          "assembly": 0,
+          "forming": false,
+          "step": 0,
+          "emitted": 0,
+          "resonance": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "running": false,
+          "intent": false,
+          "loading": false,
+          "volume": 0.55,
+          "status": "Sound is off",
+          "voices": 0,
+          "maxVoices": 24,
+          "highWater": 0,
+          "dropped": 0,
+          "decodedBytes": 0,
+          "allocatedVoices": 0,
+          "contextState": "uncreated",
+          "level": 0,
+          "scheduled": 0,
+          "late": 0,
+          "maxScheduleMs": 0
+        },
+        "scroll": 0
+      }
+    },
+    {
+      "name": "project media idle",
+      "mutations": 0,
+      "audioCpu": null,
+      "frames": 359,
+      "mean": 8.362952646231253,
+      "p95": 8.400000000001455,
+      "over50": 0,
+      "metrics": {
+        "LayoutCount": 0,
+        "RecalcStyleCount": 362,
+        "LayoutDuration": 0,
+        "RecalcStyleDuration": 0.049338999999999994,
+        "ScriptDuration": 0.09707600000000016,
+        "TaskDuration": 0.4373779999999998
+      },
+      "callbacks": {
+        "anonymous": 0,
+        "refreshNow": 0,
+        "loop": 0,
+        "bound _loop": 362,
+        "flushMove": 0,
+        "renderFrame": 0,
+        "tick": 359
+      },
+      "state": {
+        "url": "/Iskra.html",
+        "viewport": [
+          1280,
+          800
+        ],
+        "overflow": false,
+        "heap": 12867738,
+        "contexts": {
+          "created": 4,
+          "lost": 1,
+          "live": 3
+        },
+        "figures": 1,
+        "raf": {
+          "anonymous": 7,
+          "refreshNow": 2,
+          "loop": 124,
+          "bound _loop": 592,
+          "flushMove": 1,
+          "renderFrame": 37,
+          "tick": 359
+        },
+        "scroll": 5020
+      }
+    },
+    {
+      "name": "wafer scroll cycle 0",
+      "mutations": 0,
+      "audioCpu": null,
+      "frames": 57,
+      "mean": 26.36491228070174,
+      "p95": 41.70000000000073,
+      "over50": 1,
+      "metrics": {
+        "LayoutCount": 57,
+        "RecalcStyleCount": 57,
+        "LayoutDuration": 0.011828000000000005,
+        "RecalcStyleDuration": 0.027198,
+        "ScriptDuration": 0.042414000000000396,
+        "TaskDuration": 0.2015179999999992
+      },
+      "callbacks": {
+        "anonymous": 0,
+        "refreshNow": 0,
+        "loop": 57,
+        "flushMove": 0,
+        "renderFrame": 0,
+        "bound _loop": 0,
+        "tick": 57
+      },
+      "state": {
+        "url": "/Wafer.html",
+        "viewport": [
+          1280,
+          800
+        ],
+        "overflow": false,
+        "heap": 24284287,
+        "contexts": {
+          "created": 24,
+          "lost": 22,
+          "live": 2
+        },
+        "figures": 0,
+        "raf": {
+          "anonymous": 39,
+          "refreshNow": 2,
+          "loop": 332,
+          "flushMove": 1,
+          "renderFrame": 1,
+          "bound _loop": 521,
+          "tick": 57
+        },
+        "scroll": 0
+      }
+    },
+    {
+      "name": "wafer scroll cycle 1",
+      "mutations": 0,
+      "audioCpu": null,
+      "frames": 59,
+      "mean": 25.574576271161185,
+      "p95": 41.70000000000073,
+      "over50": 0,
+      "metrics": {
+        "LayoutCount": 61,
+        "RecalcStyleCount": 61,
+        "LayoutDuration": 0.015195000000000014,
+        "RecalcStyleDuration": 0.03885899999999998,
+        "ScriptDuration": 0.043226999999999904,
+        "TaskDuration": 0.24472800000000028
+      },
+      "callbacks": {
+        "anonymous": 0,
+        "refreshNow": 0,
+        "loop": 60,
+        "flushMove": 0,
+        "renderFrame": 0,
+        "bound _loop": 0,
+        "tick": 59
+      },
+      "state": {
+        "url": "/Wafer.html",
+        "viewport": [
+          1280,
+          800
+        ],
+        "overflow": false,
+        "heap": 24308227,
+        "contexts": {
+          "created": 45,
+          "lost": 43,
+          "live": 2
+        },
+        "figures": 0,
+        "raf": {
+          "anonymous": 74,
+          "refreshNow": 2,
+          "loop": 627,
+          "flushMove": 1,
+          "renderFrame": 1,
+          "bound _loop": 1057,
+          "tick": 116
+        },
+        "scroll": 0
+      }
+    },
+    {
+      "name": "mobile reduced landing",
+      "mutations": 88,
+      "audioCpu": null,
+      "frames": 272,
+      "mean": 11.035294117663495,
+      "p95": 24.899999999999636,
+      "over50": 0,
+      "metrics": {
+        "LayoutCount": 89,
+        "RecalcStyleCount": 276,
+        "LayoutDuration": 0.11101000000000003,
+        "RecalcStyleDuration": 0.14476799999999998,
+        "ScriptDuration": 0.8818259999999998,
+        "TaskDuration": 1.9610970000000005
+      },
+      "callbacks": {
+        "draw": 0,
+        "measureLayout": 0,
+        "frame": 828,
+        "anonymous": 0,
+        "refreshNow": 0,
+        "tick": 272,
+        "update": 0,
+        "measure": 0,
+        "next": 0,
+        "paint": 0
+      },
+      "state": {
+        "url": "/",
+        "viewport": [
+          390,
+          844
+        ],
+        "overflow": false,
+        "heap": 36476526,
+        "contexts": {
+          "created": 3,
+          "lost": 1,
+          "live": 2
+        },
+        "figures": 0,
+        "raf": {
+          "draw": 9,
+          "measureLayout": 4,
+          "frame": 1170,
+          "anonymous": 5,
+          "refreshNow": 2,
+          "tick": 273,
+          "update": 3,
+          "measure": 2,
+          "next": 15,
+          "paint": 2
+        },
+        "dof": true,
+        "dofFps": 72.5,
+        "audio": {
+          "direction": "signal",
+          "title": "Clear signal",
+          "bpm": 100,
+          "chord": "E♭maj9",
+          "chordIndex": 0,
+          "energy": 0.12,
+          "focused": null,
+          "memory": [],
+          "visited": [],
+          "section": "title",
+          "assembly": 0,
+          "forming": false,
+          "step": 0,
+          "emitted": 0,
+          "resonance": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "running": false,
+          "intent": false,
+          "loading": false,
+          "volume": 0.55,
+          "status": "Sound is off",
+          "voices": 0,
+          "maxVoices": 24,
+          "highWater": 0,
+          "dropped": 0,
+          "decodedBytes": 0,
+          "allocatedVoices": 0,
+          "contextState": "uncreated",
+          "level": 0,
+          "scheduled": 0,
+          "late": 0,
+          "maxScheduleMs": 0
+        },
+        "scroll": 0
+      }
+    },
+    {
+      "name": "mobile reduced menu",
+      "mutations": 45,
+      "audioCpu": null,
+      "frames": 182,
+      "mean": 8.28461538461538,
+      "p95": 8.400000000001455,
+      "over50": 0,
+      "metrics": {
+        "LayoutCount": 46,
+        "RecalcStyleCount": 186,
+        "LayoutDuration": 0.05760199999999999,
+        "RecalcStyleDuration": 0.07422699999999999,
+        "ScriptDuration": 0.07306100000000004,
+        "TaskDuration": 0.4619079999999993
+      },
+      "callbacks": {
+        "draw": 0,
+        "measureLayout": 0,
+        "frame": 368,
+        "anonymous": 0,
+        "refreshNow": 0,
+        "tick": 182,
+        "update": 0,
+        "measure": 0,
+        "next": 0,
+        "paint": 0,
+        "flushMove": 0
+      },
+      "state": {
+        "url": "/",
+        "viewport": [
+          390,
+          844
+        ],
+        "overflow": false,
+        "heap": 31418592,
+        "contexts": {
+          "created": 3,
+          "lost": 1,
+          "live": 2
+        },
+        "figures": 0,
+        "raf": {
+          "draw": 9,
+          "measureLayout": 4,
+          "frame": 1716,
+          "anonymous": 5,
+          "refreshNow": 2,
+          "tick": 455,
+          "update": 3,
+          "measure": 2,
+          "next": 15,
+          "paint": 2,
+          "flushMove": 1
+        },
+        "dof": true,
+        "dofFps": 72.5,
+        "audio": {
+          "direction": "signal",
+          "title": "Clear signal",
+          "bpm": 100,
+          "chord": "E♭maj9",
+          "chordIndex": 0,
+          "energy": 0.12,
+          "focused": null,
+          "memory": [],
+          "visited": [],
+          "section": "title",
+          "assembly": 0,
+          "forming": false,
+          "step": 0,
+          "emitted": 0,
+          "resonance": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "running": false,
+          "intent": false,
+          "loading": false,
+          "volume": 0.55,
+          "status": "Sound is off",
+          "voices": 0,
+          "maxVoices": 24,
+          "highWater": 0,
+          "dropped": 0,
+          "decodedBytes": 0,
+          "allocatedVoices": 0,
+          "contextState": "uncreated",
+          "level": 0,
+          "scheduled": 0,
+          "late": 0,
+          "maxScheduleMs": 0
+        },
+        "scroll": 0
+      }
+    },
+    {
+      "name": "sound on settled menu",
+      "mutations": 302,
+      "audioCpu": {
+        "realtimeData": {
+          "currentTime": 10.328,
+          "renderCapacity": 0.08184988071205726,
+          "callbackIntervalMean": 0.010669862722100052,
+          "callbackIntervalVariance": 8.055849812440825e-8
+        }
+      },
+      "frames": 1199,
+      "mean": 8.346288573810288,
+      "p95": 8.400000000001455,
+      "over50": 0,
+      "metrics": {
+        "LayoutCount": 302,
+        "RecalcStyleCount": 1204,
+        "LayoutDuration": 0.549696,
+        "RecalcStyleDuration": 0.7896259999999999,
+        "ScriptDuration": 0.7864049999999998,
+        "TaskDuration": 3.8422280000000004
+      },
+      "callbacks": {
+        "draw": 0,
+        "measureLayout": 0,
+        "frame": 2408,
+        "anonymous": 0,
+        "refreshNow": 0,
+        "tick": 2403,
+        "update": 0,
+        "measure": 0,
+        "next": 0,
+        "paint": 0
+      },
+      "state": {
+        "url": "/",
+        "viewport": [
+          1280,
+          800
+        ],
+        "overflow": false,
+        "heap": 37764907,
+        "contexts": {
+          "created": 3,
+          "lost": 0,
+          "live": 2
+        },
+        "figures": 0,
+        "raf": {
+          "draw": 36,
+          "measureLayout": 3,
+          "frame": 2998,
+          "anonymous": 5,
+          "refreshNow": 2,
+          "tick": 2447,
+          "update": 3,
+          "measure": 2,
+          "next": 79,
+          "paint": 2
+        },
+        "dof": true,
+        "dofFps": 54.3,
+        "audio": {
+          "direction": "signal",
+          "title": "Clear signal",
+          "bpm": 100,
+          "chord": "E♭maj9",
+          "chordIndex": 0,
+          "energy": 0.08789096137761612,
+          "focused": null,
+          "memory": [],
+          "visited": [],
+          "section": "title",
+          "assembly": 0,
+          "forming": false,
+          "step": 68,
+          "emitted": 39,
+          "resonance": [
+            0.26996302513542,
+            0,
+            0.5051045016740259,
+            1.015915314019826,
+            0,
+            0.42882489254515244,
+            0,
+            0.750717468997608,
+            0.44741328961228255,
+            0,
+            0.710491447035769,
+            0
+          ],
+          "running": true,
+          "intent": true,
+          "loading": false,
+          "volume": 0.55,
+          "status": "Listening to your movement",
+          "voices": 11,
+          "maxVoices": 24,
+          "highWater": 13,
+          "dropped": 0,
+          "decodedBytes": 16243200,
+          "allocatedVoices": 13,
+          "contextState": "running",
+          "level": 0.3752463103707325,
+          "scheduled": 39,
+          "late": 0,
+          "maxScheduleMs": 4.299999997019768
+        },
+        "scroll": 0
+      }
+    },
+    {
+      "name": "sound after minute",
+      "mutations": 151,
+      "audioCpu": {
+        "realtimeData": {
+          "currentTime": 60.396,
+          "renderCapacity": 0.159247889485802,
+          "callbackIntervalMean": 0.010667495184865533,
+          "callbackIntervalVariance": 5.855272936542895e-8
+        }
+      },
+      "frames": 601,
+      "mean": 8.329450915146394,
+      "p95": 8.400000000008731,
+      "over50": 0,
+      "metrics": {
+        "LayoutCount": 152,
+        "RecalcStyleCount": 608,
+        "LayoutDuration": 0.2913400000000004,
+        "RecalcStyleDuration": 0.4583890000000004,
+        "ScriptDuration": 0.4447239999999999,
+        "TaskDuration": 2.2339480000000016
+      },
+      "callbacks": {
+        "draw": 0,
+        "measureLayout": 0,
+        "frame": 1216,
+        "anonymous": 0,
+        "refreshNow": 0,
+        "tick": 1209,
+        "update": 0,
+        "measure": 0,
+        "next": 0,
+        "paint": 0
+      },
+      "state": {
+        "url": "/",
+        "viewport": [
+          1280,
+          800
+        ],
+        "overflow": false,
+        "heap": 36417795,
+        "contexts": {
+          "created": 3,
+          "lost": 0,
+          "live": 2
+        },
+        "figures": 0,
+        "raf": {
+          "draw": 36,
+          "measureLayout": 3,
+          "frame": 15020,
+          "anonymous": 5,
+          "refreshNow": 2,
+          "tick": 9059,
+          "update": 3,
+          "measure": 2,
+          "next": 79,
+          "paint": 2
+        },
+        "dof": true,
+        "dofFps": 54.3,
+        "audio": {
+          "direction": "signal",
+          "title": "Clear signal",
+          "bpm": 100,
+          "chord": "A♭maj9",
+          "chordIndex": 2,
+          "energy": 0.07011490387218562,
+          "focused": null,
+          "memory": [],
+          "visited": [],
+          "section": "title",
+          "assembly": 0,
+          "forming": false,
+          "step": 402,
+          "emitted": 213,
+          "resonance": [
+            1.5259405343820753,
+            0,
+            0.944465116429284,
+            1.8912771752788562,
+            0,
+            0.4875940031271378,
+            0,
+            1.789787334721612,
+            1.0394283871070151,
+            0,
+            1.7812348198349024,
+            0
+          ],
+          "running": true,
+          "intent": true,
+          "loading": false,
+          "volume": 0.55,
+          "status": "Listening to your movement",
+          "voices": 12,
+          "maxVoices": 24,
+          "highWater": 13,
+          "dropped": 0,
+          "decodedBytes": 16243200,
+          "allocatedVoices": 13,
+          "contextState": "running",
+          "level": 0.1530935820898147,
+          "scheduled": 213,
+          "late": 0,
+          "maxScheduleMs": 4.299999997019768
+        },
+        "scroll": 0
+      }
+    },
+    {
+      "name": "sound muted",
+      "mutations": 91,
+      "audioCpu": {
+        "realtimeData": {
+          "currentTime": 60.632,
+          "renderCapacity": 0.10179013521234052,
+          "callbackIntervalMean": 0.01066591150566683,
+          "callbackIntervalVariance": 9.061848848840626e-8
+        }
+      },
+      "frames": 360,
+      "mean": 8.353333333337488,
+      "p95": 8.400000000008731,
+      "over50": 0,
+      "metrics": {
+        "LayoutCount": 92,
+        "RecalcStyleCount": 365,
+        "LayoutDuration": 0.18139999999999956,
+        "RecalcStyleDuration": 0.2696720000000008,
+        "ScriptDuration": 0.24223000000000017,
+        "TaskDuration": 1.3051589999999997
+      },
+      "callbacks": {
+        "draw": 0,
+        "measureLayout": 0,
+        "frame": 728,
+        "anonymous": 0,
+        "refreshNow": 0,
+        "tick": 424,
+        "update": 0,
+        "measure": 0,
+        "next": 0,
+        "paint": 0
+      },
+      "state": {
+        "url": "/",
+        "viewport": [
+          1280,
+          800
+        ],
+        "overflow": false,
+        "heap": 31853700,
+        "contexts": {
+          "created": 3,
+          "lost": 0,
+          "live": 2
+        },
+        "figures": 0,
+        "raf": {
+          "draw": 36,
+          "measureLayout": 3,
+          "frame": 15876,
+          "anonymous": 5,
+          "refreshNow": 2,
+          "tick": 9547,
+          "update": 3,
+          "measure": 2,
+          "next": 79,
+          "paint": 2
+        },
+        "dof": true,
+        "dofFps": 54.3,
+        "audio": {
+          "direction": "signal",
+          "title": "Clear signal",
+          "bpm": 100,
+          "chord": "A♭maj9",
+          "chordIndex": 2,
+          "energy": 0.07011490387218562,
+          "focused": null,
+          "memory": [],
+          "visited": [],
+          "section": "title",
+          "assembly": 0,
+          "forming": false,
+          "step": 402,
+          "emitted": 213,
+          "resonance": [
+            1.5259405343820753,
+            0,
+            0.944465116429284,
+            1.8912771752788562,
+            0,
+            0.4875940031271378,
+            0,
+            1.789787334721612,
+            1.0394283871070151,
+            0,
+            1.7812348198349024,
+            0
+          ],
+          "running": false,
+          "intent": false,
+          "loading": false,
+          "volume": 0.55,
+          "status": "Sound is off",
+          "voices": 0,
+          "maxVoices": 24,
+          "highWater": 13,
+          "dropped": 0,
+          "decodedBytes": 16243200,
+          "allocatedVoices": 13,
+          "contextState": "suspended",
+          "level": 0,
+          "scheduled": 213,
+          "late": 0,
+          "maxScheduleMs": 4.299999997019768
+        },
+        "scroll": 0
+      }
+    }
+  ],
+  "checks": [
+    {
+      "name": "environment",
+      "value": {
+        "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+        "gpu": "ANGLE (Intel, Mesa Intel(R) Iris(R) Xe Graphics (RPL-P), OpenGL ES 3.2)",
+        "concurrency": 20,
+        "memory": 32,
+        "ready": 9211.40000000596,
+        "navigation": {
+          "name": "http://localhost:8000/",
+          "entryType": "navigation",
+          "startTime": 0,
+          "duration": 1089.2000000029802,
+          "navigationId": 6140,
+          "initiatorType": "navigation",
+          "deliveryType": "",
+          "nextHopProtocol": "http/1.0",
+          "renderBlockingStatus": "non-blocking",
+          "contentType": "text/html",
+          "contentEncoding": "",
+          "workerStart": 0,
+          "workerRouterEvaluationStart": 0,
+          "workerCacheLookupStart": 0,
+          "workerMatchedSourceType": "",
+          "workerFinalSourceType": "",
+          "redirectStart": 0,
+          "redirectEnd": 0,
+          "fetchStart": 2.600000001490116,
+          "domainLookupStart": 2.600000001490116,
+          "domainLookupEnd": 2.600000001490116,
+          "connectStart": 2.600000001490116,
+          "secureConnectionStart": 0,
+          "connectEnd": 2.600000001490116,
+          "requestStart": 6.300000004470348,
+          "responseStart": 9.200000002980232,
+          "firstInterimResponseStart": 0,
+          "finalResponseHeadersStart": 9.200000002980232,
+          "responseEnd": 11.5,
+          "transferSize": 13572,
+          "encodedBodySize": 13272,
+          "decodedBodySize": 13272,
+          "responseStatus": 200,
+          "serverTiming": [],
+          "unloadEventStart": 0,
+          "unloadEventEnd": 0,
+          "domInteractive": 346.40000000596046,
+          "domContentLoadedEventStart": 603.6000000014901,
+          "domContentLoadedEventEnd": 642.6000000014901,
+          "domComplete": 1088.4000000059605,
+          "loadEventStart": 1089.1000000014901,
+          "loadEventEnd": 1089.2000000029802,
+          "type": "navigate",
+          "redirectCount": 0,
+          "activationStart": 0,
+          "criticalCHRestart": 0,
+          "notRestoredReasons": null,
+          "confidence": {
+            "randomizedTriggerRate": 0.4994798,
+            "value": "low"
+          }
+        },
+        "resources": [
+          {
+            "name": "http://localhost:8000/app/shared/styles/pointer.css?v=5244ec5f4bcb",
+            "duration": 38.899999998509884,
+            "size": 4756
+          },
+          {
+            "name": "http://localhost:8000/app/shared/styles/navigation.css?v=c12021497f97",
+            "duration": 45,
+            "size": 11913
+          },
+          {
+            "name": "http://localhost:8000/app/landing/preloader.js",
+            "duration": 51.899999998509884,
+            "size": 7924
+          },
+          {
+            "name": "https://unpkg.com/react@18.3.1/umd/react.production.min.js",
+            "duration": 93.60000000149012,
+            "size": 0
+          },
+          {
+            "name": "https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js",
+            "duration": 127.89999999850988,
+            "size": 0
+          },
+          {
+            "name": "http://localhost:8000/app/data/projects.js?v=c95097033c03",
+            "duration": 45.30000000447035,
+            "size": 11382
+          },
+          {
+            "name": "http://localhost:8000/app/landing/audio/generative-score.js?v=20260925-signal",
+            "duration": 46.5,
+            "size": 11218
+          },
+          {
+            "name": "http://localhost:8000/app/landing/audio/sample-engine.js?v=20260925-signal",
+            "duration": 48.69999999552965,
+            "size": 11483
+          },
+          {
+            "name": "http://localhost:8000/app/landing/audio/sound-controller.js?v=20260925-signal",
+            "duration": 61.20000000298023,
+            "size": 2934
+          },
+          {
+            "name": "http://localhost:8000/app/projects/rendering/solid-materials.js",
+            "duration": 64.29999999701977,
+            "size": 4464
+          },
+          {
+            "name": "http://localhost:8000/app/shared/pointer-effects.js",
+            "duration": 72,
+            "size": 44119
+          },
+          {
+            "name": "http://localhost:8000/app/landing/runtime.js?v=f3fa1b5e5606",
+            "duration": 83.20000000298023,
+            "size": 310534
+          },
+          {
+            "name": "http://localhost:8000/app/landing/controllers/cinematic.js",
+            "duration": 80.60000000149012,
+            "size": 5421
+          },
+          {
+            "name": "http://localhost:8000/app/landing/controllers/scroll-flight.js?v=20260925-restored",
+            "duration": 67.19999999552965,
+            "size": 20486
+          },
+          {
+            "name": "http://localhost:8000/app/shared/scrollbar.js",
+            "duration": 77.79999999701977,
+            "size": 8268
+          },
+          {
+            "name": "https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&family=Instrument+Serif:ital@1&display=swap",
+            "duration": 112.30000000447035,
+            "size": 890
+          },
+          {
+            "name": "http://localhost:8000/app/shared/styles/tokens.css",
+            "duration": 41.80000000447035,
+            "size": 10805
+          },
+          {
+            "name": "http://localhost:8000/app/shared/styles/key.css",
+            "duration": 44.400000005960464,
+            "size": 3397
+          },
+          {
+            "name": "http://localhost:8000/app/landing/styles/shell.css?v=e3d5708d1471",
+            "duration": 47,
+            "size": 822
+          },
+          {
+            "name": "http://localhost:8000/app/landing/styles/base.css?v=8ebbdbc1eddb",
+            "duration": 52.899999998509884,
+            "size": 24987
+          },
+          {
+            "name": "http://localhost:8000/app/landing/styles/origin.css",
+            "duration": 63.80000000447035,
+            "size": 4677
+          },
+          {
+            "name": "http://localhost:8000/app/landing/styles/board-flight.css",
+            "duration": 66.89999999850988,
+            "size": 11689
+          },
+          {
+            "name": "http://localhost:8000/app/landing/styles/work-reel.css",
+            "duration": 80.69999999552965,
+            "size": 18285
+          },
+          {
+            "name": "http://localhost:8000/app/landing/styles/cinematic.css",
+            "duration": 73.5,
+            "size": 3273
+          },
+          {
+            "name": "http://localhost:8000/app/shared/styles/scrollbar.css",
+            "duration": 72.60000000149012,
+            "size": 2505
+          },
+          {
+            "name": "http://localhost:8000/app/landing/styles/universe-hud.css",
+            "duration": 62.29999999701977,
+            "size": 2149
+          },
+          {
+            "name": "http://localhost:8000/app/landing/styles/scroll-flight.css",
+            "duration": 97.70000000298023,
+            "size": 6588
+          },
+          {
+            "name": "http://localhost:8000/app/landing/styles/wide.css",
+            "duration": 84,
+            "size": 3125
+          },
+          {
+            "name": "http://localhost:8000/app/landing/styles/title.css?v=339adcd790f1",
+            "duration": 99.5,
+            "size": 6145
+          },
+          {
+            "name": "http://localhost:8000/Wafer.html",
+            "duration": 93.70000000298023,
+            "size": 5643
+          },
+          {
+            "name": "http://localhost:8000/app/page-runtimes/wafer-page.js?v=b0252075a2bc",
+            "duration": 107.10000000149012,
+            "size": 240053
+          },
+          {
+            "name": "http://localhost:8000/app/projects/styles/case-study.css?v=ccddb5f52dc2",
+            "duration": 88.69999999552965,
+            "size": 10072
+          },
+          {
+            "name": "http://localhost:8000/models/wafer_demo.glb",
+            "duration": 113.5,
+            "size": 821400
+          },
+          {
+            "name": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "duration": 189,
+            "size": 0
+          },
+          {
+            "name": "https://unpkg.com/three@0.160.0/examples/jsm/loaders/GLTFLoader.js",
+            "duration": 58,
+            "size": 0
+          },
+          {
+            "name": "https://unpkg.com/three@0.160.0/examples/jsm/libs/meshopt_decoder.module.js",
+            "duration": 53.399999998509884,
+            "size": 0
+          },
+          {
+            "name": "https://unpkg.com/three@0.160.0/examples/jsm/environments/RoomEnvironment.js",
+            "duration": 49.79999999701977,
+            "size": 0
+          },
+          {
+            "name": "https://unpkg.com/three@0.160.0/examples/jsm/postprocessing/EffectComposer.js",
+            "duration": 54.599999994039536,
+            "size": 0
+          },
+          {
+            "name": "https://unpkg.com/three@0.160.0/examples/jsm/postprocessing/RenderPass.js",
+            "duration": 32.80000000447035,
+            "size": 0
+          },
+          {
+            "name": "https://unpkg.com/three@0.160.0/examples/jsm/postprocessing/BokehPass.js",
+            "duration": 52.600000001490116,
+            "size": 0
+          },
+          {
+            "name": "https://unpkg.com/three@0.160.0/examples/jsm/postprocessing/OutputPass.js",
+            "duration": 47.899999998509884,
+            "size": 0
+          },
+          {
+            "name": "https://unpkg.com/three@0.160.0/examples/jsm/postprocessing/ShaderPass.js",
+            "duration": 48.69999999552965,
+            "size": 0
+          },
+          {
+            "name": "https://unpkg.com/three@0.160.0/examples/jsm/loaders/KTX2Loader.js",
+            "duration": 54.70000000298023,
+            "size": 0
+          },
+          {
+            "name": "https://unpkg.com/three@0.160.0/examples/jsm/postprocessing/Pass.js",
+            "duration": 42.5,
+            "size": 0
+          },
+          {
+            "name": "https://unpkg.com/three@0.160.0/examples/jsm/shaders/OutputShader.js",
+            "duration": 46.70000000298023,
+            "size": 0
+          },
+          {
+            "name": "https://unpkg.com/three@0.160.0/examples/jsm/shaders/BokehShader.js",
+            "duration": 42,
+            "size": 0
+          },
+          {
+            "name": "https://unpkg.com/three@0.160.0/examples/jsm/shaders/CopyShader.js",
+            "duration": 29.599999994039536,
+            "size": 0
+          },
+          {
+            "name": "https://unpkg.com/three@0.160.0/examples/jsm/postprocessing/MaskPass.js",
+            "duration": 41.900000005960464,
+            "size": 0
+          },
+          {
+            "name": "https://unpkg.com/three@0.160.0/examples/jsm/utils/WorkerPool.js",
+            "duration": 41.79999999701977,
+            "size": 0
+          },
+          {
+            "name": "https://unpkg.com/three@0.160.0/examples/jsm/libs/ktx-parse.module.js",
+            "duration": 40.79999999701977,
+            "size": 0
+          },
+          {
+            "name": "https://unpkg.com/three@0.160.0/examples/jsm/libs/zstddec.module.js",
+            "duration": 44.100000001490116,
+            "size": 0
+          },
+          {
+            "name": "https://unpkg.com/three@0.160.0/examples/jsm/utils/BufferGeometryUtils.js",
+            "duration": 38.70000000298023,
+            "size": 0
+          },
+          {
+            "name": "http://localhost:8000/models/wafer_demo.glb",
+            "duration": 2.7000000029802322,
+            "size": 821400
+          },
+          {
+            "name": "http://localhost:8000/models/iskra-mark.glb",
+            "duration": 3.2999999970197678,
+            "size": 36508
+          },
+          {
+            "name": "https://unpkg.com/three@0.160.0/examples/jsm/libs/basis/basis_transcoder.js",
+            "duration": 68.69999999552965,
+            "size": 0
+          },
+          {
+            "name": "https://unpkg.com/three@0.160.0/examples/jsm/libs/basis/basis_transcoder.wasm",
+            "duration": 123.69999999552965,
+            "size": 0
+          },
+          {
+            "name": "http://localhost:8000/models/ci-clop-mark.glb",
+            "duration": 6,
+            "size": 134248
+          },
+          {
+            "name": "http://localhost:8000/models/wafer-mark.glb",
+            "duration": 4.399999998509884,
+            "size": 43792
+          },
+          {
+            "name": "http://localhost:8000/models/keyboard-display.opt.glb",
+            "duration": 3.6999999955296516,
+            "size": 87456
+          },
+          {
+            "name": "http://localhost:8000/models/zmk-mark.glb",
+            "duration": 4.699999995529652,
+            "size": 92456
+          },
+          {
+            "name": "http://localhost:8000/models/soft-off-keycap.opt.glb",
+            "duration": 4.9000000059604645,
+            "size": 27204
+          },
+          {
+            "name": "http://localhost:8000/models/sightseeing-mark.glb",
+            "duration": 4.4000000059604645,
+            "size": 21856
+          },
+          {
+            "name": "http://localhost:8000/models/brionel-mark.glb",
+            "duration": 4.699999995529652,
+            "size": 170516
+          },
+          {
+            "name": "http://localhost:8000/models/bulgaria-mark.glb",
+            "duration": 4.300000004470348,
+            "size": 16876
+          }
+        ]
+      }
+    },
+    {
+      "name": "wafer bounds",
+      "value": {
+        "x": 857.6674226219333,
+        "y": 213.62710372891988,
+        "w": 408.77057199277317,
+        "h": 137.78994390813315,
+        "isModel": true
+      }
+    },
+    {
+      "name": "escape returns focus",
+      "value": true
+    },
+    {
+      "name": "keyboard work",
+      "value": {
+        "hash": "#work",
+        "open": false,
+        "overflow": ""
+      }
+    },
+    {
+      "name": "video initially plays",
+      "value": true
+    },
+    {
+      "name": "explicit pause persists",
+      "value": false
+    },
+    {
+      "name": "reduced motion video paused",
+      "value": false
+    },
+    {
+      "name": "audio off lifecycle",
+      "value": {
+        "state": {
+          "direction": "signal",
+          "title": "Clear signal",
+          "bpm": 100,
+          "chord": "A♭maj9",
+          "chordIndex": 2,
+          "energy": 0.07011490387218562,
+          "focused": null,
+          "memory": [],
+          "visited": [],
+          "section": "title",
+          "assembly": 0,
+          "forming": false,
+          "step": 402,
+          "emitted": 213,
+          "resonance": [
+            1.5259405343820753,
+            0,
+            0.944465116429284,
+            1.8912771752788562,
+            0,
+            0.4875940031271378,
+            0,
+            1.789787334721612,
+            1.0394283871070151,
+            0,
+            1.7812348198349024,
+            0
+          ],
+          "running": false,
+          "intent": false,
+          "loading": false,
+          "volume": 0.55,
+          "status": "Sound is off",
+          "voices": 0,
+          "maxVoices": 24,
+          "highWater": 13,
+          "dropped": 0,
+          "decodedBytes": 16243200,
+          "allocatedVoices": 13,
+          "contextState": "suspended",
+          "level": 0,
+          "scheduled": 213,
+          "late": 0,
+          "maxScheduleMs": 4.299999997019768
+        },
+        "timer": null,
+        "stopTimer": null
+      }
+    }
+  ],
+  "errors": [],
+  "warnings": [
+    {
+      "url": "http://localhost:8000/",
+      "message": "sigmaRadians, 0.06, is too large and will clip, as it requested 30 samples when the maximum is set to 20"
+    },
+    {
+      "url": "http://localhost:8000/",
+      "message": "sigmaRadians, 0.06, is too large and will clip, as it requested 30 samples when the maximum is set to 20"
+    },
+    {
+      "url": "http://localhost:8000/",
+      "message": "sigmaRadians, 0.08, is too large and will clip, as it requested 39 samples when the maximum is set to 20"
+    },
+    {
+      "url": "http://localhost:8000/",
+      "message": "sigmaRadians, 0.08, is too large and will clip, as it requested 39 samples when the maximum is set to 20"
+    },
+    {
+      "url": "http://localhost:8000/Iskra.html",
+      "message": "sigmaRadians, 0.08, is too large and will clip, as it requested 39 samples when the maximum is set to 20"
+    },
+    {
+      "url": "http://localhost:8000/Iskra.html",
+      "message": "sigmaRadians, 0.08, is too large and will clip, as it requested 39 samples when the maximum is set to 20"
+    },
+    {
+      "url": "http://localhost:8000/Wafer.html",
+      "message": "sigmaRadians, 0.08, is too large and will clip, as it requested 39 samples when the maximum is set to 20"
+    },
+    {
+      "url": "http://localhost:8000/Wafer.html",
+      "message": "sigmaRadians, 0.08, is too large and will clip, as it requested 39 samples when the maximum is set to 20"
+    },
+    {
+      "url": "http://localhost:8000/Iskra.html",
+      "message": "sigmaRadians, 0.08, is too large and will clip, as it requested 39 samples when the maximum is set to 20"
+    },
+    {
+      "url": "http://localhost:8000/Iskra.html",
+      "message": "sigmaRadians, 0.08, is too large and will clip, as it requested 39 samples when the maximum is set to 20"
+    },
+    {
+      "url": "http://localhost:8000/",
+      "message": "sigmaRadians, 0.06, is too large and will clip, as it requested 30 samples when the maximum is set to 20"
+    },
+    {
+      "url": "http://localhost:8000/",
+      "message": "sigmaRadians, 0.06, is too large and will clip, as it requested 30 samples when the maximum is set to 20"
+    },
+    {
+      "url": "http://localhost:8000/",
+      "message": "sigmaRadians, 0.08, is too large and will clip, as it requested 39 samples when the maximum is set to 20"
+    },
+    {
+      "url": "http://localhost:8000/",
+      "message": "sigmaRadians, 0.08, is too large and will clip, as it requested 39 samples when the maximum is set to 20"
+    },
+    {
+      "url": "http://localhost:8000/",
+      "message": "sigmaRadians, 0.06, is too large and will clip, as it requested 30 samples when the maximum is set to 20"
+    },
+    {
+      "url": "http://localhost:8000/",
+      "message": "sigmaRadians, 0.06, is too large and will clip, as it requested 30 samples when the maximum is set to 20"
+    },
+    {
+      "url": "http://localhost:8000/",
+      "message": "sigmaRadians, 0.08, is too large and will clip, as it requested 39 samples when the maximum is set to 20"
+    },
+    {
+      "url": "http://localhost:8000/",
+      "message": "sigmaRadians, 0.08, is too large and will clip, as it requested 39 samples when the maximum is set to 20"
+    }
+  ]
+}

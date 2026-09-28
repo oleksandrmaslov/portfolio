@@ -1,0 +1,598 @@
+{
+  "routes": [
+    {
+      "route": "All Projects.html",
+      "keyboardFocus": true,
+      "mobile": {
+        "overflow": false,
+        "links": [
+          {
+            "x": 21,
+            "right": 369,
+            "bottom": 307.203125,
+            "text": "Selected work4 projects, in detail"
+          },
+          {
+            "x": 21,
+            "right": 369,
+            "bottom": 409.203125,
+            "text": "About meThe person behind the projects"
+          },
+          {
+            "x": 21,
+            "right": 369,
+            "bottom": 511.203125,
+            "text": "ContactStart a conversation"
+          },
+          {
+            "x": 21,
+            "right": 369,
+            "bottom": 613.203125,
+            "text": "All projects13 projects to explore"
+          }
+        ]
+      }
+    },
+    {
+      "route": "Brionel Catalogue.html",
+      "keyboardFocus": true,
+      "mobile": {
+        "overflow": false,
+        "links": [
+          {
+            "x": 21,
+            "right": 369,
+            "bottom": 307.203125,
+            "text": "Selected work4 projects, in detail"
+          },
+          {
+            "x": 21,
+            "right": 369,
+            "bottom": 409.203125,
+            "text": "About meThe person behind the projects"
+          },
+          {
+            "x": 21,
+            "right": 369,
+            "bottom": 511.203125,
+            "text": "ContactStart a conversation"
+          },
+          {
+            "x": 21,
+            "right": 369,
+            "bottom": 613.203125,
+            "text": "All projects13 projects to explore"
+          }
+        ]
+      }
+    },
+    {
+      "route": "Bulgaria 2026.html",
+      "keyboardFocus": true,
+      "mobile": {
+        "overflow": false,
+        "links": [
+          {
+            "x": 21,
+            "right": 369,
+            "bottom": 307.203125,
+            "text": "Selected work4 projects, in detail"
+          },
+          {
+            "x": 21,
+            "right": 369,
+            "bottom": 409.203125,
+            "text": "About meThe person behind the projects"
+          },
+          {
+            "x": 21,
+            "right": 369,
+            "bottom": 511.203125,
+            "text": "ContactStart a conversation"
+          },
+          {
+            "x": 21,
+            "right": 369,
+            "bottom": 613.203125,
+            "text": "All projects13 projects to explore"
+          }
+        ]
+      }
+    },
+    {
+      "route": "Ci-Clop.html",
+      "keyboardFocus": true,
+      "mobile": {
+        "overflow": false,
+        "links": [
+          {
+            "x": 21,
+            "right": 369,
+            "bottom": 307.203125,
+            "text": "Selected work4 projects, in detail"
+          },
+          {
+            "x": 21,
+            "right": 369,
+            "bottom": 409.203125,
+            "text": "About meThe person behind the projects"
+          },
+          {
+            "x": 21,
+            "right": 369,
+            "bottom": 511.203125,
+            "text": "ContactStart a conversation"
+          },
+          {
+            "x": 21,
+            "right": 369,
+            "bottom": 613.203125,
+            "text": "All projects13 projects to explore"
+          }
+        ]
+      }
+    },
+    {
+      "route": "Design System.html",
+      "keyboardFocus": true,
+      "mobile": {
+        "overflow": false,
+        "links": [
+          {
+            "x": 21,
+            "right": 369,
+            "bottom": 307.203125,
+            "text": "Selected work4 projects, in detail"
+          },
+          {
+            "x": 21,
+            "right": 369,
+            "bottom": 409.203125,
+            "text": "About meThe person behind the projects"
+          },
+          {
+            "x": 21,
+            "right": 369,
+            "bottom": 511.203125,
+            "text": "ContactStart a conversation"
+          },
+          {
+            "x": 21,
+            "right": 369,
+            "bottom": 613.203125,
+            "text": "All projects13 projects to explore"
+          }
+        ]
+      }
+    },
+    {
+      "route": "Iskra.html",
+      "keyboardFocus": true,
+      "mobile": {
+        "overflow": false,
+        "links": [
+          {
+            "x": 21,
+            "right": 369,
+            "bottom": 307.203125,
+            "text": "Selected work4 projects, in detail"
+          },
+          {
+            "x": 21,
+            "right": 369,
+            "bottom": 409.203125,
+            "text": "About meThe person behind the projects"
+          },
+          {
+            "x": 21,
+            "right": 369,
+            "bottom": 511.203125,
+            "text": "ContactStart a conversation"
+          },
+          {
+            "x": 21,
+            "right": 369,
+            "bottom": 613.203125,
+            "text": "All projects13 projects to explore"
+          }
+        ]
+      }
+    },
+    {
+      "route": "Kerfur.html",
+      "keyboardFocus": true,
+      "mobile": {
+        "overflow": false,
+        "links": [
+          {
+            "x": 21,
+            "right": 369,
+            "bottom": 307.203125,
+            "text": "Selected work4 projects, in detail"
+          },
+          {
+            "x": 21,
+            "right": 369,
+            "bottom": 409.203125,
+            "text": "About meThe person behind the projects"
+          },
+          {
+            "x": 21,
+            "right": 369,
+            "bottom": 511.203125,
+            "text": "ContactStart a conversation"
+          },
+          {
+            "x": 21,
+            "right": 369,
+            "bottom": 613.203125,
+            "text": "All projects13 projects to explore"
+          }
+        ]
+      }
+    },
+    {
+      "route": "Sightseeing.html",
+      "keyboardFocus": true,
+      "mobile": {
+        "overflow": false,
+        "links": [
+          {
+            "x": 21,
+            "right": 369,
+            "bottom": 307.203125,
+            "text": "Selected work4 projects, in detail"
+          },
+          {
+            "x": 21,
+            "right": 369,
+            "bottom": 409.203125,
+            "text": "About meThe person behind the projects"
+          },
+          {
+            "x": 21,
+            "right": 369,
+            "bottom": 511.203125,
+            "text": "ContactStart a conversation"
+          },
+          {
+            "x": 21,
+            "right": 369,
+            "bottom": 613.203125,
+            "text": "All projects13 projects to explore"
+          }
+        ]
+      }
+    },
+    {
+      "route": "Silent Depth.html",
+      "keyboardFocus": true,
+      "mobile": {
+        "overflow": false,
+        "links": [
+          {
+            "x": 21,
+            "right": 369,
+            "bottom": 307.203125,
+            "text": "Selected work4 projects, in detail"
+          },
+          {
+            "x": 21,
+            "right": 369,
+            "bottom": 409.203125,
+            "text": "About meThe person behind the projects"
+          },
+          {
+            "x": 21,
+            "right": 369,
+            "bottom": 511.203125,
+            "text": "ContactStart a conversation"
+          },
+          {
+            "x": 21,
+            "right": 369,
+            "bottom": 613.203125,
+            "text": "All projects13 projects to explore"
+          }
+        ]
+      }
+    },
+    {
+      "route": "Split HID Display.html",
+      "keyboardFocus": true,
+      "mobile": {
+        "overflow": false,
+        "links": [
+          {
+            "x": 21,
+            "right": 369,
+            "bottom": 307.203125,
+            "text": "Selected work4 projects, in detail"
+          },
+          {
+            "x": 21,
+            "right": 369,
+            "bottom": 409.203125,
+            "text": "About meThe person behind the projects"
+          },
+          {
+            "x": 21,
+            "right": 369,
+            "bottom": 511.203125,
+            "text": "ContactStart a conversation"
+          },
+          {
+            "x": 21,
+            "right": 369,
+            "bottom": 613.203125,
+            "text": "All projects13 projects to explore"
+          }
+        ]
+      }
+    },
+    {
+      "route": "Venovisor.html",
+      "keyboardFocus": true,
+      "mobile": {
+        "overflow": false,
+        "links": [
+          {
+            "x": 21,
+            "right": 369,
+            "bottom": 307.203125,
+            "text": "Selected work4 projects, in detail"
+          },
+          {
+            "x": 21,
+            "right": 369,
+            "bottom": 409.203125,
+            "text": "About meThe person behind the projects"
+          },
+          {
+            "x": 21,
+            "right": 369,
+            "bottom": 511.203125,
+            "text": "ContactStart a conversation"
+          },
+          {
+            "x": 21,
+            "right": 369,
+            "bottom": 613.203125,
+            "text": "All projects13 projects to explore"
+          }
+        ]
+      }
+    },
+    {
+      "route": "Wafer Studio.html",
+      "keyboardFocus": true,
+      "mobile": {
+        "overflow": false,
+        "links": [
+          {
+            "x": 21,
+            "right": 369,
+            "bottom": 307.203125,
+            "text": "Selected work4 projects, in detail"
+          },
+          {
+            "x": 21,
+            "right": 369,
+            "bottom": 409.203125,
+            "text": "About meThe person behind the projects"
+          },
+          {
+            "x": 21,
+            "right": 369,
+            "bottom": 511.203125,
+            "text": "ContactStart a conversation"
+          },
+          {
+            "x": 21,
+            "right": 369,
+            "bottom": 613.203125,
+            "text": "All projects13 projects to explore"
+          }
+        ]
+      }
+    },
+    {
+      "route": "Wafer.html",
+      "keyboardFocus": true,
+      "mobile": {
+        "overflow": false,
+        "links": [
+          {
+            "x": 21,
+            "right": 369,
+            "bottom": 307.203125,
+            "text": "Selected work4 projects, in detail"
+          },
+          {
+            "x": 21,
+            "right": 369,
+            "bottom": 409.203125,
+            "text": "About meThe person behind the projects"
+          },
+          {
+            "x": 21,
+            "right": 369,
+            "bottom": 511.203125,
+            "text": "ContactStart a conversation"
+          },
+          {
+            "x": 21,
+            "right": 369,
+            "bottom": 613.203125,
+            "text": "All projects13 projects to explore"
+          }
+        ]
+      }
+    },
+    {
+      "route": "ZMK Soft Off Plus.html",
+      "keyboardFocus": true,
+      "mobile": {
+        "overflow": false,
+        "links": [
+          {
+            "x": 21,
+            "right": 369,
+            "bottom": 307.203125,
+            "text": "Selected work4 projects, in detail"
+          },
+          {
+            "x": 21,
+            "right": 369,
+            "bottom": 409.203125,
+            "text": "About meThe person behind the projects"
+          },
+          {
+            "x": 21,
+            "right": 369,
+            "bottom": 511.203125,
+            "text": "ContactStart a conversation"
+          },
+          {
+            "x": 21,
+            "right": 369,
+            "bottom": 613.203125,
+            "text": "All projects13 projects to explore"
+          }
+        ]
+      }
+    },
+    {
+      "route": "ZMK-PointAccel.html",
+      "keyboardFocus": true,
+      "mobile": {
+        "overflow": false,
+        "links": [
+          {
+            "x": 21,
+            "right": 369,
+            "bottom": 307.203125,
+            "text": "Selected work4 projects, in detail"
+          },
+          {
+            "x": 21,
+            "right": 369,
+            "bottom": 409.203125,
+            "text": "About meThe person behind the projects"
+          },
+          {
+            "x": 21,
+            "right": 369,
+            "bottom": 511.203125,
+            "text": "ContactStart a conversation"
+          },
+          {
+            "x": 21,
+            "right": 369,
+            "bottom": 613.203125,
+            "text": "All projects13 projects to explore"
+          }
+        ]
+      }
+    }
+  ],
+  "navigation": [
+    {
+      "id": "work",
+      "url": "http://localhost:8000/#work",
+      "dialog": false,
+      "body": "",
+      "transition": false
+    },
+    {
+      "id": "about",
+      "url": "http://localhost:8000/#about",
+      "dialog": false,
+      "body": "",
+      "transition": false
+    },
+    {
+      "id": "contact",
+      "url": "http://localhost:8000/#contact",
+      "dialog": false,
+      "body": "",
+      "transition": false
+    },
+    {
+      "id": "index",
+      "url": "http://localhost:8000/All%20Projects.html",
+      "dialog": false,
+      "body": "",
+      "transition": false
+    }
+  ],
+  "errors": [],
+  "checks": [
+    "Escape cancels pending pointer exit",
+    "Three index → Wafer → Universe → Back cycles",
+    "ASCII Enter/Space and pause after recycling",
+    "390px DPR2 touch menu and reduced-motion manual playback",
+    "No-JavaScript overview and native links"
+  ],
+  "lastFocus": [
+    {
+      "tag": "BUTTON",
+      "text": "CLOSE ",
+      "inside": true
+    },
+    {
+      "tag": "A",
+      "text": "Selected work4 projects, in detail",
+      "inside": true
+    },
+    {
+      "tag": "A",
+      "text": "About meThe person behind the projects",
+      "inside": true
+    },
+    {
+      "tag": "A",
+      "text": "ContactStart a conversation",
+      "inside": true
+    },
+    {
+      "tag": "A",
+      "text": "All projects13 projects to explore",
+      "inside": true
+    },
+    {
+      "tag": "A",
+      "text": "0x00Oleksandr Maslov",
+      "inside": true
+    },
+    {
+      "tag": "BODY",
+      "text": "\n  M.O.← UNIVERSE0x08 · ZMK PointAccelMENU NODE 0x08 · 2025MODEL · LIVEOPEN SOURCE · INPUT · DEVICET",
+      "inside": false
+    },
+    {
+      "tag": "A",
+      "text": "M.O.",
+      "inside": true
+    },
+    {
+      "tag": "BUTTON",
+      "text": "CLOSE ",
+      "inside": true
+    }
+  ],
+  "backRestores": [
+    {
+      "persisted": true,
+      "ready": "complete"
+    },
+    {
+      "persisted": true,
+      "ready": "complete"
+    },
+    {
+      "persisted": true,
+      "ready": "complete"
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "label": "before",
+  "dof": {
+    "reported": 20,
+    "expected": 13.333333333333334,
+    "on": false
+  },
+  "reducedBefore": [
+    "000°",
+    "0°",
+    "0.0",
+    "—",
+    "ROTATE",
+    "FLY",
+    "AIM",
+    "∞"
+  ],
+  "reducedAfter": [
+    "110°",
+    "-10°",
+    "0.0",
+    "—",
+    "ROTATE",
+    "FLY",
+    "AIM",
+    "∞"
+  ],
+  "idleWhisper": "universe__whisper ",
+  "threeFailure": {
+    "text": "·\n-\n-\n:\n:\n=\n=\n+\n+\n*\n*\n*\n#\n#\n#\n%\n%\n%\n%\n%\n%\n@\n@\n@\n@\n@\n@\n@\n@\n@\n@\n@\n@\n@\n@\n@\n%\n%\n%\n%\n%\n%\n#\n#\n#\n*\n*\n*\n+\n+\n=\n=\n:\n:\n-\n-\n·\n00%\n0x00",
+    "links": [],
+    "loader": false
+  },
+  "webglFailure": {
+    "text": "·\n-\n-\n:\n=\n=\n+\n+\n*\n*\n#\n#\n#\n%\n%\n%\n%\n@\n@\n@\n@\n@\n@\n@\n@\n@\n@\n@\n@\n@\n%\n%\n%\n%\n#\n#\n#\n*\n*\n+\n+\n=\n=\n:\n-\n-\n·\n00%\n0x00",
+    "links": []
+  }
+}

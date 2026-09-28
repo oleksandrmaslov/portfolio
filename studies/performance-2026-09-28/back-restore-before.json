@@ -1,0 +1,38 @@
+{
+  "label": "before",
+  "base": "http://localhost:8001/",
+  "routes": [
+    {
+      "route": "Wafer.html",
+      "freshDeepRafPer2s": {
+        "loop": 120
+      },
+      "restored": {
+        "persisted": true,
+        "exitSpin": true,
+        "hvExit": false,
+        "yaw": 3.785400000000001,
+        "yawPerSecond": 1.9
+      },
+      "restoredDeepRafPer2s": {
+        "loop": 120
+      },
+      "errors": []
+    },
+    {
+      "route": "Iskra.html",
+      "freshDeepRafPer2s": {},
+      "restored": {
+        "persisted": true,
+        "exitSpin": true,
+        "hvExit": false,
+        "yaw": 3.960959999999816,
+        "yawPerSecond": 1.932
+      },
+      "restoredDeepRafPer2s": {
+        "loop": 120
+      },
+      "errors": []
+    }
+  ]
+}

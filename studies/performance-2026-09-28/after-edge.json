@@ -1,0 +1,75 @@
+{
+  "label": "after",
+  "dof": {
+    "reported": 13.3,
+    "expected": 13.333333333333334,
+    "on": false
+  },
+  "reducedBefore": [
+    "000°",
+    "0°",
+    "0.0",
+    "—",
+    "ROTATE",
+    "FLY",
+    "AIM",
+    "∞"
+  ],
+  "reducedAfter": [
+    "000°",
+    "0°",
+    "0.0",
+    "—",
+    "ROTATE",
+    "FLY",
+    "AIM",
+    "∞"
+  ],
+  "idleWhisper": "universe__whisper ",
+  "threeFailure": {
+    "text": "0x00 · Hardware · firmware · interaction\n\nOleksandr Maslov\n\nI build the device. Then the firmware. Then the tools that put it in someone’s hands.\n\nThe interactive universe is unavailable. You can still explore the projects or get in touch.\n\nWafer\nIskra\nCi-Clop\nWafer Studio\nAll projects\n\noleksandrmaslov08@gmail.com\n\nCV · PDF",
+    "links": [
+      {
+        "text": "Wafer",
+        "href": "Wafer.html"
+      },
+      {
+        "text": "Iskra",
+        "href": "Iskra.html"
+      },
+      {
+        "text": "Ci-Clop",
+        "href": "Ci-Clop.html"
+      },
+      {
+        "text": "Wafer Studio",
+        "href": "Wafer Studio.html"
+      },
+      {
+        "text": "All projects",
+        "href": "All Projects.html"
+      },
+      {
+        "text": "oleksandrmaslov08@gmail.com",
+        "href": "mailto:oleksandrmaslov08@gmail.com"
+      },
+      {
+        "text": "CV · PDF",
+        "href": "assets/Oleksandr-Maslov-CV.pdf"
+      }
+    ],
+    "loader": false
+  },
+  "webglFailure": {
+    "text": "0x00 · Hardware · firmware · interaction\n\nOleksandr Maslov\n\nI build the device. Then the firmware. Then the tools that put it in someone’s hands.\n\nThe interactive universe is unavailable. You can still explore the projects or get in touch.\n\nWafer\nIskra\nCi-Clop\nWafer Studio\nAll projects\n\noleksandrmaslov08@gmail.com\n\nCV · PDF",
+    "links": [
+      "Wafer.html",
+      "Iskra.html",
+      "Ci-Clop.html",
+      "Wafer Studio.html",
+      "All Projects.html",
+      "mailto:oleksandrmaslov08@gmail.com",
+      "assets/Oleksandr-Maslov-CV.pdf"
+    ]
+  }
+}

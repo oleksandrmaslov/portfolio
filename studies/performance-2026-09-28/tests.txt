@@ -1,0 +1,53 @@
+✔ workshop: visitor history changes the future arrangement, beyond direct cues (84.450757ms)
+✔ workshop: valid, bounded notes under rapid input; unknown projects ignored (31.407346ms)
+✔ workshop: silence in interaction keeps a continuous musical foundation (8.015622ms)
+✔ signal: visitor history changes the future arrangement, beyond direct cues (26.600722ms)
+✔ signal: valid, bounded notes under rapid input; unknown projects ignored (21.03934ms)
+✔ signal: silence in interaction keeps a continuous musical foundation (6.038815ms)
+✔ presence: visitor history changes the future arrangement, beyond direct cues (20.859424ms)
+✔ presence: valid, bounded notes under rapid input; unknown projects ignored (8.527862ms)
+✔ presence: silence in interaction keeps a continuous musical foundation (1.90386ms)
+✔ universe: visitor history changes the future arrangement, beyond direct cues (14.794388ms)
+✔ universe: valid, bounded notes under rapid input; unknown projects ignored (12.687569ms)
+✔ universe: silence in interaction keeps a continuous musical foundation (5.551933ms)
+✔ assembly is one phrase until released, with no threshold chatter (6.117201ms)
+✔ reading removes ornament and rhythmic demand while keeping harmony (13.690489ms)
+✔ video uploads follow 24 new frames across 60 display ticks (28.129285ms)
+✔ lens animation remains at display rate between video frames (6.817773ms)
+✔ paused seeking updates the frame once without restarting playback (10.420628ms)
+✔ legacy browsers retain playing updates and paused seeking (7.577568ms)
+✔ disposal cancels video callbacks and ignores late media events (6.763249ms)
+✔ rebinding a video leaves one callback and one upload path (6.906009ms)
+✔ plain paused media sleeps until an interaction or decoded frame wakes it (9.521088ms)
+✔ an offscreen converted figure stops rendering and resumes without another context (8.401531ms)
+✔ interruption during instrument loading stays stopped and can be restarted (41.180907ms)
+✔ cancelling a pending download cannot restart sound or install its bank (8.457614ms)
+✔ cancelling a pending decode cannot restart sound or install its bank (14.005742ms)
+✔ rapid palette switches retain only the last bank and one scheduler (17.237436ms)
+✔ 180 sequential notes reuse one envelope/panner pair and keep one-shot sources (15.21798ms)
+✔ voice pool remains bounded and stale completion cannot release a reused slot (8.714041ms)
+✔ meter polling does not publish React control state on every scheduler tick (18.091947ms)
+(node:569002) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ tracking a moving card only writes transforms, not layout or SVG geometry (214.870305ms)
+✔ the outline still connects the four projected corners exactly (80.433272ms)
+(node:569003) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ explicit video pause survives leaving and re-entering the viewport (445.035283ms)
+✔ reduced motion waits for an explicit play and responds to live preference changes (198.918791ms)
+✔ hidden pages pause media and do not override explicit pause on return (161.657445ms)
+✔ ASCII conversion has a named keyboard control and prevents Space scrolling (78.921184ms)
+(node:569004) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ covered sound indicator sleeps without muting audio and resumes on close (258.641391ms)
+(node:569015) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ opaque menu stops hidden wordmark mutations and RAF, closing wakes it once (677.971507ms)
+ℹ tests 37
+ℹ suites 0
+ℹ pass 37
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2052.890804

@@ -1,0 +1,9 @@
+
+> landing-runtime-build@1.0.0 check
+> node build.cjs --check
+
+Landing runtime is current (f952bb777376, 17 source units).
+Page runtimes are current (24 ordered phase bundles).
+Generated HTML is current on 16 deployed root pages.
+(node:569238) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
