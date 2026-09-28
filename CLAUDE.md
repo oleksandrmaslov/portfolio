@@ -30,8 +30,11 @@ became `models/ci-clop-mark.glb` in the same pass, which also puts it on the
 
 Nothing links to a route by literal filename except the two registries: pages
 navigate through `project.file`. That is the whole migration surface — plus one
-`<link rel="prefetch">` in `index.html`. Verify a rename by executing both
-registries and walking the ring in both directions, not by grepping.
+`<link rel="prefetch">` in `index.html`, and the landing's no-graphics overview
+(`#mo-fallback` in `index.html`), whose project links
+`tools/landing-runtime/build.cjs` generates from `MO_FEATURED_ADDRS`, so the
+build moves them with a rename. Verify a rename by executing both registries
+and walking the ring in both directions, not by grepping.
 
 The other public pages are:
 

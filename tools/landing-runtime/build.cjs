@@ -380,6 +380,26 @@ function stampDataAssets(html) {
   return html;
 }
 
+// The landing's no-graphics overview is the one place outside the two
+// registries that names routes by literal filename. Generate its project links
+// from the registry so a rename or a featured-list change cannot leave a
+// dead link in the page that exists for when everything else has failed.
+function stampFallbackNav(html) {
+  const window = {};
+  require("node:vm").runInNewContext(readSource("app/data/projects.js"), { window });
+  const escapeHtml = (value) => String(value).replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
+  const links = window.MO_FEATURED_ADDRS.map((addr) => window.MO_PROJECT_BY_ADDR[addr])
+    .map((project) => [project.file, project.name])
+    .concat([["All Projects.html", "All projects"]]);
+  for (const [file] of links) {
+    if (!fs.existsSync(path.join(root, file))) throw new Error(`Fallback link ${file} is not a root page.`);
+  }
+  const pattern = /(<main id="mo-fallback"[^>]*>[\s\S]*?<nav aria-label="Projects">\r?\n)[\s\S]*?([ \t]*<\/nav>)/;
+  if (!pattern.test(html)) throw new Error("index.html has no fallback project navigation.");
+  const markup = links.map(([file, name]) => `      <a href="${escapeHtml(file)}">${escapeHtml(name)}</a>\n`).join("");
+  return html.replace(pattern, (_match, open, close) => open + markup + close);
+}
+
 function stampReference(html, attribute, relativePath, hash, expectedCount = 1) {
   const pattern = new RegExp(`${attribute}="${escapeRegExp(relativePath)}(?:\\?v=[a-f0-9]{12})?"`, "g");
   const matches = html.match(pattern) || [];
@@ -459,6 +479,7 @@ function expectedLandingHtml() {
   let html = fs.readFileSync(landingHtmlPath, "utf8");
   html = stampReference(html, "src", "app/landing/runtime.js", landingRuntimeHash);
   html = stampDataAssets(html);
+  html = stampFallbackNav(html);
   const waferRuntime = runtimeById.get("wafer-page");
   for (const legacyPath of ["app/projects/pages/wafer-page.jsx", "app/projects/rendering/solid-hero-rig.jsx"]) {
     if (!html.includes(`href="${legacyPath}`)) continue;
@@ -499,7 +520,7 @@ const stalePages = pageStates.filter((page) => page.current !== page.expected);
 if (checkOnly) {
   if (!landingRuntimeFresh || !landingHtmlFresh || staleRuntimes.length || orphanRuntimes.length || stalePages.length) {
     if (!landingRuntimeFresh) console.error("app/landing/runtime.js is stale or missing.");
-    if (!landingHtmlFresh) console.error("index.html has a stale runtime, prefetch, or data version.");
+    if (!landingHtmlFresh) console.error("index.html has a stale runtime, prefetch, data version, or fallback link.");
     for (const runtime of staleRuntimes) console.error(`${runtime.runtime} is stale or missing.`);
     for (const runtime of orphanRuntimes) console.error(`${path.relative(root, runtime)} is an orphaned page runtime.`);
     for (const page of stalePages) console.error(`${page.definition.html} has stale page-runtime markup.`);
