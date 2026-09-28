@@ -102,6 +102,7 @@
 
   function startHandoff() {
     if (handoff || finished) return;
+    if (!hit.frame && window.__mo_show_fallback) window.__mo_show_fallback();
     handoff = true;
     applyProgress(1);
     root.classList.add("is-ready", "is-handoff");
