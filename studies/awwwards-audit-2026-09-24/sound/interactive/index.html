@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex"><title>M.O. — play the field</title>
+<link rel="stylesheet" href="../../../../app/shared/styles/tokens.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap"><link rel="stylesheet" href="field.css"></head>
+<body>
+<!-- Interactive extension of the preserved listening studies. Existing M.O.
+     tokens; real project nodes; one shared, bounded musical state. -->
+<header><a href="../../../../#title" aria-label="Return to the portfolio">M.O.</a><a href="../variants/">Original mixes</a><a id="portfolio-link" href="universe.html?direction=workshop">Try in the portfolio</a></header>
+<main>
+  <div class="heading"><h1>Play the field.</h1><p>The music remembers where you’ve been.<br>Move, meet a project, then bring it home.</p></div>
+  <div class="directions" role="group" aria-label="Musical direction">
+    <button data-direction="workshop" aria-pressed="true"><span>A</span> Electric workshop</button>
+    <button data-direction="signal" aria-pressed="false"><span>B</span> Clear signal</button>
+    <button data-direction="presence" aria-pressed="false"><span>C</span> Quiet presence</button>
+    <button data-direction="universe" aria-pressed="false"><span>D</span> Common origin</button>
+  </div>
+  <div class="transport"><button id="start" class="start">Start sound</button><p id="character">Warm keys, a wooden pulse, and phrases shaped by the projects you visit.</p><label for="volume">Volume <output id="volume-value">55%</output></label><input id="volume" type="range" min="0" max="100" value="55"></div>
+  <section id="field" aria-label="Interactive project sound field">
+    <canvas id="space" aria-hidden="true"></canvas>
+    <div id="nodes"></div>
+    <button id="origin" aria-label="Gather the project voices into origin 0x00"><strong>0x00</strong><span id="origin-label">Gather the voices</span></button>
+  </section>
+  <div class="field-footer">
+    <span class="field-hint" id="field-hint">Start sound, then explore the nodes</span>
+    <div class="field-actions"><button id="reading" aria-pressed="false">Reading space</button><button id="reset">Start fresh</button></div>
+  </div>
+  <div class="under-field"><p id="status" role="status">Sound starts only when you ask.</p><span id="harmony">D major</span></div>
+  <div class="explanation"><p><strong>Movement gives the pulse room.</strong> It changes the next phrase’s density. Every mouse movement does not need a sound.</p><p><strong>Projects become musical memory.</strong> Their notes influence the harmony and return in later phrases.</p><p><strong>0x00 is where it comes together.</strong> Fragments from your path collect into one recognizable phrase.</p></div>
+  <details class="inside"><summary>Inside the music</summary><div class="readouts"><p>Voices <output id="voices">0 / 24</output></p><p>Remembered <output id="memory">none yet</output></p><p>Audio <output id="audio-state">not started</output></p><p>Instrument memory <output id="bank-size">0 MB</output></p></div><p>Notes are scheduled live from recorded instruments. There is no full backing track. The chord, phrasing and density share the same history of your actions.</p><a href="README.md">Composition and verification notes</a></details>
+  <footer><span>Local sound experiment · original mixes preserved</span><a href="audio/universe-guided.mp3" id="new-study">Hear a guided Common origin session</a></footer>
+</main><script src="../../../../app/data/projects.js"></script><script src="score.js"></script><script src="engine.js"></script><script src="field.js"></script></body></html>

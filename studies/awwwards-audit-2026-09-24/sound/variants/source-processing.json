@@ -1,0 +1,170 @@
+[
+  {
+    "file": "GrandPno_Main_Sus_A2_v1_rr1.wav",
+    "family": "piano",
+    "midi_root": 57,
+    "onset_trim_ms": 0.0
+  },
+  {
+    "file": "GrandPno_Main_Sus_A4_v1_rr1.wav",
+    "family": "piano",
+    "midi_root": 81,
+    "onset_trim_ms": 0.0
+  },
+  {
+    "file": "GrandPno_Main_Sus_B3_v1_rr1.wav",
+    "family": "piano",
+    "midi_root": 71,
+    "onset_trim_ms": 0.0
+  },
+  {
+    "file": "GrandPno_Main_Sus_C2_v1_rr1.wav",
+    "family": "piano",
+    "midi_root": 48,
+    "onset_trim_ms": 0.0
+  },
+  {
+    "file": "GrandPno_Main_Sus_C3_v1_rr1.wav",
+    "family": "piano",
+    "midi_root": 60,
+    "onset_trim_ms": 0.0
+  },
+  {
+    "file": "GrandPno_Main_Sus_C5_v1_rr1.wav",
+    "family": "piano",
+    "midi_root": 84,
+    "onset_trim_ms": 0.0
+  },
+  {
+    "file": "GrandPno_Main_Sus_D4_v1_rr1.wav",
+    "family": "piano",
+    "midi_root": 74,
+    "onset_trim_ms": 0.0
+  },
+  {
+    "file": "GrandPno_Main_Sus_E3_v1_rr1.wav",
+    "family": "piano",
+    "midi_root": 64,
+    "onset_trim_ms": 0.0
+  },
+  {
+    "file": "GrandPno_Main_Sus_F4_v1_rr1.wav",
+    "family": "piano",
+    "midi_root": 77,
+    "onset_trim_ms": 0.0
+  },
+  {
+    "file": "GrandPno_Main_Sus_G1_v1_rr1.wav",
+    "family": "piano",
+    "midi_root": 43,
+    "onset_trim_ms": 0.0
+  },
+  {
+    "file": "GrandPno_Main_Sus_G3_v1_rr1.wav",
+    "family": "piano",
+    "midi_root": 67,
+    "onset_trim_ms": 0.0
+  },
+  {
+    "file": "Marimba_hit_Outrigger_B2_soft_01.wav",
+    "family": "marimba",
+    "midi_root": 59,
+    "onset_trim_ms": 3.99
+  },
+  {
+    "file": "Marimba_hit_Outrigger_C4_soft_01.wav",
+    "family": "marimba",
+    "midi_root": 72,
+    "onset_trim_ms": 0.0
+  },
+  {
+    "file": "Marimba_hit_Outrigger_F3_soft_01.wav",
+    "family": "marimba",
+    "midi_root": 65,
+    "onset_trim_ms": 0.0
+  },
+  {
+    "file": "Marimba_hit_Outrigger_G2_soft_01.wav",
+    "family": "marimba",
+    "midi_root": 55,
+    "onset_trim_ms": 0.0
+  },
+  {
+    "file": "Marimba_hit_Outrigger_G4_soft_01.wav",
+    "family": "marimba",
+    "midi_root": 79,
+    "onset_trim_ms": 0.0
+  },
+  {
+    "file": "Vibes_soft_A2_v1_rr1_Main.wav",
+    "family": "vibes",
+    "midi_root": 57,
+    "onset_trim_ms": 0.0
+  },
+  {
+    "file": "Vibes_soft_A4_v1_rr1_Main.wav",
+    "family": "vibes",
+    "midi_root": 81,
+    "onset_trim_ms": 0.0
+  },
+  {
+    "file": "Vibes_soft_B3_v1_rr1_Main.wav",
+    "family": "vibes",
+    "midi_root": 71,
+    "onset_trim_ms": 0.0
+  },
+  {
+    "file": "Vibes_soft_C3_v1_rr2_Main.wav",
+    "family": "vibes",
+    "midi_root": 60,
+    "onset_trim_ms": 0.0
+  },
+  {
+    "file": "Vibes_soft_C5_v1_rr1_Main.wav",
+    "family": "vibes",
+    "midi_root": 84,
+    "onset_trim_ms": 0.0
+  },
+  {
+    "file": "Vibes_soft_D4_v1_rr1_Main.wav",
+    "family": "vibes",
+    "midi_root": 74,
+    "onset_trim_ms": 0.0
+  },
+  {
+    "file": "Vibes_soft_E3_v1_rr2_Main.wav",
+    "family": "vibes",
+    "midi_root": 64,
+    "onset_trim_ms": 3.99
+  },
+  {
+    "file": "Vibes_soft_F4_v1_rr1_Main.wav",
+    "family": "vibes",
+    "midi_root": 77,
+    "onset_trim_ms": 0.0
+  },
+  {
+    "file": "Vibes_soft_G3_v1_rr1_Main.wav",
+    "family": "vibes",
+    "midi_root": 67,
+    "onset_trim_ms": 0.0
+  },
+  {
+    "file": "wood_click_pp_rr1.wav",
+    "family": "wood",
+    "midi_root": null,
+    "onset_trim_ms": 0.0
+  },
+  {
+    "file": "wood_click_pp_rr2.wav",
+    "family": "wood",
+    "midi_root": null,
+    "onset_trim_ms": 28.93
+  },
+  {
+    "file": "wood_click_pp_rr3.wav",
+    "family": "wood",
+    "midi_root": null,
+    "onset_trim_ms": 8.98
+  }
+]

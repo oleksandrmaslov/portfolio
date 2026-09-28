@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>M.O. — sound studies</title>
+  <link rel="stylesheet" href="../../../../app/shared/styles/tokens.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="study.css">
+</head>
+<body>
+  <!-- Private audition tool: inherit M.O. tokens. The compositions lead; one
+       player makes loudness-matched comparison possible without overlapping audio. -->
+  <header><a href="../../../../#title" aria-label="Return to portfolio">M.O.</a><span>Sound studies / September 2026</span><span class="private">Local listening room</span></header>
+  <main>
+    <div class="intro"><h1>Three sound studies.</h1><p>Quiet music for a universe made by one person. Listen to the atmosphere, then hear its fragments assemble into <span class="mono">0x00</span>.</p></div>
+    <div class="studio">
+      <nav class="directions" aria-label="Sound direction">
+        <button class="direction" data-id="workshop" aria-pressed="true"><span class="letter">A</span><span><strong>Electric workshop</strong><span class="palette">Warm keys. A small wooden pulse.</span></span><span class="tempo">80 BPM</span></button>
+        <button class="direction" data-id="signal" aria-pressed="false"><span class="letter">B</span><span><strong>Clear signal</strong><span class="palette">Precise rhythm. Playful electronics.</span></span><span class="tempo">100 BPM</span></button>
+        <button class="direction" data-id="presence" aria-pressed="false"><span class="letter">C</span><span><strong>Quiet presence</strong><span class="palette">Piano. Time between the notes.</span></span><span class="tempo">60 BPM</span></button>
+        <p class="compare-note">Switch directions while playing to compare the same moment. Only one plays at a time.</p>
+      </nav>
+      <section class="player" aria-labelledby="track-title">
+        <div class="track-top"><h2 id="track-title">Electric workshop</h2><span id="key" class="mono">D major</span></div>
+        <p id="description">Electric keys carry the harmony; recorded vibraphone and quiet wood percussion give it a tactile edge. The most rhythmic of the two warmer directions.</p>
+        <div class="layers" role="group" aria-label="Listen to a layer"><button data-layer="full" aria-pressed="true">Complete mix</button><button data-layer="atmosphere" aria-pressed="false">Atmosphere</button><button data-layer="cues" aria-pressed="false">Cues only</button></div>
+        <div class="wave-wrap" aria-hidden="true"><svg id="wave" viewBox="0 0 960 110" preserveAspectRatio="none"><path id="wave-base"/><clipPath id="played"><rect id="played-width" width="0" height="110"/></clipPath><path id="wave-active" clip-path="url(#played)"/></svg><span id="playhead"></span></div>
+        <label class="sr-only" for="seek">Playback position in seconds</label><input id="seek" type="range" min="0" max="48" step="0.1" value="0" aria-valuetext="0 seconds of 48">
+        <div class="transport"><button id="play" class="play"><svg viewBox="0 0 20 20" aria-hidden="true"><path id="play-icon" d="M6 3.5 16 10 6 16.5Z"/></svg><span id="play-label">Play study</span></button><span id="clock" class="mono">0:00 / 0:48</span><button id="restart">Restart</button></div>
+        <div class="chapters" role="group" aria-label="Jump to a moment"><button data-time="8.8"><span>0:09</span>Focus</button><button data-time="13.8"><span>0:14</span>Open project</button><button data-time="25.8"><span>0:26</span>0x00 assembly</button><button data-time="36"><span>0:36</span>Reading</button></div>
+        <div class="volume-row"><label for="volume">Listening level <output id="volume-value">100%</output></label><input id="volume" type="range" min="0" max="100" value="100"><button id="site-level" aria-pressed="false">Quiet site level</button></div>
+        <p id="status" role="status" aria-live="polite">Ready. Audio starts only when you press play.</p>
+      </section>
+    </div>
+    <section class="notes" aria-label="Listening notes">
+      <div><h3>Listen for identity</h3><p>Does it feel like somewhere you want to explore? Does the origin phrase feel connected to what came before? Is there any sound you already want to stop hearing?</p></div>
+      <div><h3>Then turn it down</h3><p>The complete mixes are matched to approximately −26 LUFS. “Quiet site level” lowers playback by 9 dB. Stems keep their place in the mix, so isolated layers will be quieter.</p></div>
+      <div><h3>Keep the useful parts</h3><p>A direction can supply the atmosphere and another the interaction character. These are 48-second studies; the portfolio’s sound has not been replaced.</p></div>
+    </section>
+    <footer><span>New arrangements · recorded instruments + synthesis</span><a href="README.md">Composition & source notes</a><a id="download" href="audio/workshop-full.mp3" download>Download selected mix</a></footer>
+  </main>
+  <audio id="audio" preload="none"></audio>
+  <script src="study.js"></script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "sample_rate": 32000,
+  "duration_seconds": 24,
+  "ambient_rms_dbfs_at_default_volume": -41.94,
+  "sketch_peak_dbfs": -21.39,
+  "clipped_samples": 0,
+  "asset_bytes": {
+    "focus-v1.wav": 11564,
+    "open-v1.wav": 29484,
+    "room-v1.mp3": 289053,
+    "settle-v1.wav": 51244
+  },
+  "provenance": "Newly synthesized study; no recordings, game assets or generated music service."
+}

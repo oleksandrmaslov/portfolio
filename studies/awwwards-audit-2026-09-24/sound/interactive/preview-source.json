@@ -1,0 +1,6 @@
+{
+  "source": "index.html",
+  "sha256": "8db4b1ddfaee255505ce2e496f0196de945293760afab081ba99cf5678b8e4ff",
+  "reuses": "app/landing/runtime.js",
+  "changes": "Local base URL; replacement audio scripts; preview controls. Canonical files unchanged."
+}

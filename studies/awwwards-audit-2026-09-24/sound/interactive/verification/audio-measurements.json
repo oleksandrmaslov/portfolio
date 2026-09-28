@@ -1,0 +1,38 @@
+{
+  "workshop": {
+    "lufs": -31.87,
+    "truePeak": -16.81,
+    "maxOverlappingVoices": 24,
+    "dropped": 0,
+    "duration": 48,
+    "volume": 0.55,
+    "finite": true
+  },
+  "signal": {
+    "lufs": -32.2,
+    "truePeak": -15.81,
+    "maxOverlappingVoices": 21,
+    "dropped": 0,
+    "duration": 48,
+    "volume": 0.55,
+    "finite": true
+  },
+  "presence": {
+    "lufs": -31.86,
+    "truePeak": -11.12,
+    "maxOverlappingVoices": 14,
+    "dropped": 0,
+    "duration": 48,
+    "volume": 0.55,
+    "finite": true
+  },
+  "universe": {
+    "lufs": -32.28,
+    "truePeak": -17.17,
+    "maxOverlappingVoices": 16,
+    "dropped": 0,
+    "duration": 48,
+    "volume": 0.55,
+    "finite": true
+  }
+}

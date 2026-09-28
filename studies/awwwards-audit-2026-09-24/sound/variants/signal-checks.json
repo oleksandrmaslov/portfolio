@@ -1,0 +1,128 @@
+[
+  {
+    "file": "presence-atmosphere.wav",
+    "duration": 48.0,
+    "peak_dbfs": -9.33,
+    "dc_dbfs": -114.88,
+    "finite": true
+  },
+  {
+    "file": "presence-cues.wav",
+    "duration": 48.0,
+    "peak_dbfs": -10.03,
+    "dc_dbfs": -125.92,
+    "finite": true
+  },
+  {
+    "file": "presence-focus.wav",
+    "duration": 1.4,
+    "peak_dbfs": -16.29,
+    "dc_dbfs": -110.11,
+    "finite": true
+  },
+  {
+    "file": "presence-full.wav",
+    "duration": 48.0,
+    "peak_dbfs": -9.33,
+    "dc_dbfs": -114.17,
+    "finite": true
+  },
+  {
+    "file": "presence-open.wav",
+    "duration": 2.8,
+    "peak_dbfs": -12.32,
+    "dc_dbfs": -119.6,
+    "finite": true
+  },
+  {
+    "file": "presence-origin.wav",
+    "duration": 8.0,
+    "peak_dbfs": -10.03,
+    "dc_dbfs": -113.28,
+    "finite": true
+  },
+  {
+    "file": "signal-atmosphere.wav",
+    "duration": 48.0,
+    "peak_dbfs": -10.7,
+    "dc_dbfs": -93.48,
+    "finite": true
+  },
+  {
+    "file": "signal-cues.wav",
+    "duration": 48.0,
+    "peak_dbfs": -11.93,
+    "dc_dbfs": -131.85,
+    "finite": true
+  },
+  {
+    "file": "signal-focus.wav",
+    "duration": 1.4,
+    "peak_dbfs": -13.84,
+    "dc_dbfs": -132.35,
+    "finite": true
+  },
+  {
+    "file": "signal-full.wav",
+    "duration": 48.0,
+    "peak_dbfs": -11.27,
+    "dc_dbfs": -94.58,
+    "finite": true
+  },
+  {
+    "file": "signal-open.wav",
+    "duration": 2.8,
+    "peak_dbfs": -11.93,
+    "dc_dbfs": -138.45,
+    "finite": true
+  },
+  {
+    "file": "signal-origin.wav",
+    "duration": 8.0,
+    "peak_dbfs": -15.27,
+    "dc_dbfs": -115.83,
+    "finite": true
+  },
+  {
+    "file": "workshop-atmosphere.wav",
+    "duration": 48.0,
+    "peak_dbfs": -11.2,
+    "dc_dbfs": -108.6,
+    "finite": true
+  },
+  {
+    "file": "workshop-cues.wav",
+    "duration": 48.0,
+    "peak_dbfs": -17.27,
+    "dc_dbfs": -132.62,
+    "finite": true
+  },
+  {
+    "file": "workshop-focus.wav",
+    "duration": 1.4,
+    "peak_dbfs": -20.46,
+    "dc_dbfs": -129.14,
+    "finite": true
+  },
+  {
+    "file": "workshop-full.wav",
+    "duration": 48.0,
+    "peak_dbfs": -11.36,
+    "dc_dbfs": -112.79,
+    "finite": true
+  },
+  {
+    "file": "workshop-open.wav",
+    "duration": 2.8,
+    "peak_dbfs": -20.71,
+    "dc_dbfs": -115.8,
+    "finite": true
+  },
+  {
+    "file": "workshop-origin.wav",
+    "duration": 8.0,
+    "peak_dbfs": -17.27,
+    "dc_dbfs": -122.19,
+    "finite": true
+  }
+]
