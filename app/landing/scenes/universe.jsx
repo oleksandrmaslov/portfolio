@@ -327,6 +327,9 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
 
     const sz = () => ({ w: mount.clientWidth, h: mount.clientHeight });
     let { w, h } = sz();
+    // This mount is fixed to the viewport. Hover projection must not flush
+    // layout after the ASCII wordmark and SVG have written their next frame.
+    let mountRect = mount.getBoundingClientRect();
 
     /* ---------- renderer / scene / camera ---------- */
     // MSAA on the drawing buffer is only worth paying for on the direct-render
@@ -347,6 +350,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     renderer.setSize(w, h);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     mount.appendChild(renderer.domElement);
+    let menuObjects = null;
 
     // Visibility gate — the universe is a full-screen hero background, so once
     // the user scrolls past it there's no reason to keep driving the GPU. The
@@ -355,7 +359,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     const uniIO = new IntersectionObserver(
       (entries) => {
         uniOnScreen = entries[0].isIntersecting;
-        if (uniOnScreen) wakeUniverseLoop();
+        if (uniOnScreen || menuObjects?.active) wakeUniverseLoop();
         else sleepUniverseLoop();
       },
       { threshold: 0 }
@@ -2056,7 +2060,37 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
        page swap still feels like one gesture. */
     const INDEX_COLLAPSE_MS = 620;
 
+    let menuSnapshot = null;
+    const clearMenuSnapshot = () => { menuSnapshot?.remove(); menuSnapshot = null; };
     window.__mo_universe = {
+      // The native dialog temporarily hosts this same canvas. Its small
+      // object scene shares the GLB cache and environment, with no composer.
+      openMenu(dialog, keyboard) {
+        if (!window.createMenuObjects) return false;
+        // Preserve one composited field frame while the menu reveals from the
+        // right. This is a temporary 2D copy, never another WebGL context or
+        // ongoing background render. Copy in the same task as the GL draw.
+        clearMenuSnapshot();
+        if (!keyboard && renderer.domElement.width && renderer.domElement.height) {
+          if (composer) composer.render(); else renderer.render(scene, camera);
+          menuSnapshot = document.createElement("canvas");
+          menuSnapshot.width = renderer.domElement.width;
+          menuSnapshot.height = renderer.domElement.height;
+          menuSnapshot.style.cssText = "position:absolute;inset:0;width:100%;height:100%;pointer-events:none";
+          menuSnapshot.setAttribute("aria-hidden", "true");
+          menuSnapshot.getContext("2d").drawImage(renderer.domElement, 0, 0);
+          renderer.domElement.parentNode.appendChild(menuSnapshot);
+        }
+        if (!menuObjects) menuObjects = window.createMenuObjects(THREE, renderer, scene.environment, asmLocal, wakeUniverseLoop);
+        menuObjects.open(dialog, keyboard);
+        wakeUniverseLoop();
+        return true;
+      },
+      settleMenu: clearMenuSnapshot,
+      closeMenu() { clearMenuSnapshot(); if (menuObjects?.active) { menuObjects.close(); onResize(); } },
+      focusMenu(id, keyboard) { menuObjects?.focus(id, keyboard); },
+      pointMenu(id, x, y) { menuObjects?.point(id, x, y); },
+      exitMenu(id) { return menuObjects?.exit(id) || window.MOMenuMotion?.exit || 240; },
       /* Sweep the field into a ring around the camera for the All Projects
          handoff - the cards close in around you, then the page swaps. Returns
          the delay the caller should wait before navigating, so the timing
@@ -2140,7 +2174,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     const raycaster = new THREE.Raycaster();
     const ndc = new THREE.Vector2();
     function pickAt(clientX, clientY) {
-      const rect = mount.getBoundingClientRect();
+      const rect = mountRect;
       ndc.x =  ((clientX - rect.left) / rect.width)  * 2 - 1;
       ndc.y = -((clientY - rect.top)  / rect.height) * 2 + 1;
       raycaster.setFromCamera(ndc, camera);
@@ -2171,7 +2205,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     ];
     const _tsbCamRel = new THREE.Vector3();
     function tileScreenBounds(mesh) {
-      const rect = mount.getBoundingClientRect();
+      const rect = mountRect;
       let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
       camera.getWorldDirection(camDirTmp);
       for (const c of _tsbCorners) {
@@ -2198,7 +2232,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     function tileViewportBounds(mesh) {
       const b = tileScreenBounds(mesh);
       if (!b) return null;
-      const rect = mount.getBoundingClientRect();
+      const rect = mountRect;
       return { x: b.x + rect.left, y: b.y + rect.top, w: b.w, h: b.h };
     }
 
@@ -2222,7 +2256,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       if (!holder) return null;
       _mvbBox.setFromObject(holder);
       if (_mvbBox.isEmpty()) return null;
-      const rect = mount.getBoundingClientRect();
+      const rect = mountRect;
       camera.getWorldDirection(camDirTmp);
       let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
       for (let i = 0; i < 8; i++) {
@@ -2256,7 +2290,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     ];
     const _tscOut = [ {x:0,y:0}, {x:0,y:0}, {x:0,y:0}, {x:0,y:0} ];
     function tileScreenCorners(mesh) {
-      const rect = mount.getBoundingClientRect();
+      const rect = mountRect;
       camera.getWorldDirection(camDirTmp);
       for (let i = 0; i < 4; i++) {
         v3.copy(_tscCorners[i]);
@@ -2369,7 +2403,9 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
 
     /* ---------- resize ---------- */
     const onResize = () => {
+      if (menuObjects?.active) { menuObjects.resize(); return; }
       const s = sz(); w = s.w; h = s.h;
+      mountRect = mount.getBoundingClientRect();
       renderer.setSize(w, h);
       // ResizeObserver fires on any transition to 0x0, and w/0 bakes Infinity
       // (or NaN) into the projection matrix permanently — the scene then draws
@@ -2488,9 +2524,9 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
 
     function universeCanRender() {
       return !universeLoopDisposed
-        && !window.__mo_universe_pause
         && !document.hidden
-        && uniOnScreen;
+        && (menuObjects?.active || (!window.__mo_universe_pause
+          && !document.body.classList.contains("mo-menu-open") && uniOnScreen));
     }
 
     function sleepUniverseLoop() {
@@ -2520,7 +2556,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
               scheduleModelPump();
               wakeUniverseLoop();
             }
-            else if (!wasPaused && next) sleepUniverseLoop();
+            else if (!wasPaused && next && !menuObjects?.active) sleepUniverseLoop();
           },
         });
         pauseSignalInstalled = true;
@@ -2555,6 +2591,11 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       // the chain here instead of leaving a polling RAF alive.
       raf = 0;
       if (!universeCanRender()) { last = now; return; }
+      if (menuObjects?.active) {
+        last = now;
+        if (menuObjects.frame(now)) raf = requestAnimationFrame(frame);
+        return;
+      }
       const dt = Math.max(0, Math.min(50, now - last)); last = now;
       const mode = modeRef.current;
       const focusAddrNow = focusRef.current;
@@ -3400,6 +3441,8 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       cancelAnimationFrame(raf);
       raf = 0;
       clearTimeout(idleTimer);
+      clearMenuSnapshot();
+      if (menuObjects) menuObjects.dispose();
       if (cursorFx) cursorFx.destroy();
       if (bokehPass && bokehPass.dispose) bokehPass.dispose();
       if (composer && composer.dispose) composer.dispose();

@@ -135,72 +135,6 @@ body.lp-toIndex .universeBg { filter: none; }
 }
 .lp > * { pointer-events: auto; }
 
-.lp-shell {
-  /* NOTE: do not set `position` here — .shell is already position: fixed
-     in app/shared/styles/layout.css and overriding it would un-pin the header. */
-  isolation: isolate;
-  background: linear-gradient(rgba(4,6,13,0.85), transparent);
-}
-/* Progressive blur (Apple-style): a stack of 7 layers, each masked to a
-   slice of the height with soft overlapping edges. Each layer's blur
-   strength doubles, and slices overlap so no single mask edge is visible. */
-.lp-shell__blur {
-  position: absolute;
-  inset: 0 0 auto 0;
-  height: calc(100% + 16px);
-  pointer-events: none;
-  z-index: -1;
-}
-.lp-shell__blur > div {
-  position: absolute;
-  inset: 0;
-}
-.lp-shell__blur > div:nth-child(1) {
-  backdrop-filter: blur(32px);
-  -webkit-backdrop-filter: blur(32px);
-  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 12.5%, transparent 25%);
-          mask-image: linear-gradient(to bottom, #000 0%, #000 12.5%, transparent 25%);
-}
-.lp-shell__blur > div:nth-child(2) {
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 12.5%, #000 25%, transparent 37.5%);
-          mask-image: linear-gradient(to bottom, transparent 0%, #000 12.5%, #000 25%, transparent 37.5%);
-}
-.lp-shell__blur > div:nth-child(3) {
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  -webkit-mask-image: linear-gradient(to bottom, transparent 12.5%, #000 25%, #000 37.5%, transparent 50%);
-          mask-image: linear-gradient(to bottom, transparent 12.5%, #000 25%, #000 37.5%, transparent 50%);
-}
-.lp-shell__blur > div:nth-child(4) {
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  -webkit-mask-image: linear-gradient(to bottom, transparent 25%, #000 37.5%, #000 50%, transparent 62.5%);
-          mask-image: linear-gradient(to bottom, transparent 25%, #000 37.5%, #000 50%, transparent 62.5%);
-}
-.lp-shell__blur > div:nth-child(5) {
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
-  -webkit-mask-image: linear-gradient(to bottom, transparent 37.5%, #000 50%, #000 62.5%, transparent 75%);
-          mask-image: linear-gradient(to bottom, transparent 37.5%, #000 50%, #000 62.5%, transparent 75%);
-}
-.lp-shell__blur > div:nth-child(6) {
-  backdrop-filter: blur(1px);
-  -webkit-backdrop-filter: blur(1px);
-  -webkit-mask-image: linear-gradient(to bottom, transparent 50%, #000 62.5%, #000 75%, transparent 87.5%);
-          mask-image: linear-gradient(to bottom, transparent 50%, #000 62.5%, #000 75%, transparent 87.5%);
-}
-.lp-shell__blur > div:nth-child(7) {
-  backdrop-filter: blur(0.5px);
-  -webkit-backdrop-filter: blur(0.5px);
-  -webkit-mask-image: linear-gradient(to bottom, transparent 62.5%, #000 75%, #000 87.5%, transparent 100%);
-          mask-image: linear-gradient(to bottom, transparent 62.5%, #000 75%, #000 87.5%, transparent 100%);
-}
-.lp-shell .shell__nav a.is-active {
-  color: var(--signal);
-  text-shadow: 0 0 12px var(--signal-glow);
-}
 
 /* ============================================================
    TITLE SCREEN — minimalist framed viewport
@@ -550,12 +484,10 @@ body.mo-explore .universe__mount { touch-action: none; }
 
 /* ============================================================
    Universe hover inspector — "lock-on" targeting frame
-   The card face already shows all its data (addr, name, sub, stack,
-   OPEN), so the hover adds NO text — it's a pure reticle that hugs
-   the card's true projected (rotated) shape. An SVG overlay covers
-   the universe mount; the frame loop writes the 4 corner positions
-   imperatively via __updateHUD, so it tracks the card exactly with
-   no axis-aligned box, no clamping, and no per-frame jitter.
+   A reticle follows the card's true projected (rotated) shape, with
+   an upright Open project label. Fixed-size HTML segments follow
+   the four corners through __updateHUD using transforms only;
+   tracking does not rewrite SVG geometry or layout coordinates.
    ============================================================ */
 .uhud {
   position: absolute;
@@ -563,47 +495,22 @@ body.mo-explore .universe__mount { touch-action: none; }
   z-index: 6;
   pointer-events: none;
   overflow: visible;
+  contain: layout style;
 }
-.uhud__svg {
-  position: absolute;
-  inset: 0;
-  width: 100%; height: 100%;
-  overflow: visible;
-}
+/* Only transforms move. The layer dimensions never follow the card. */
+.uhud__lock {position:absolute;inset:0;animation:hudLockIn 240ms var(--e-out) both}
+@keyframes hudLockIn {from {opacity:0} to {opacity:1}}
+.uhud__segment {position:absolute;left:0;top:0;width:28px;height:1px;background:var(--signal);transform-origin:0 0;will-change:transform}
+.uhud__outline {opacity:.22}
+.uhud__bk {height:1.5px;box-shadow:0 0 5px var(--signal-glow)}
 
-/* lock-in: the whole reticle fades + settles when it jumps to a new card */
-.uhud__lock {
-  animation: hudLockIn 240ms var(--e-out) both;
-  transform-box: fill-box;
-  transform-origin: center;
-}
-@keyframes hudLockIn {
-  from { opacity: 0; transform: scale(1.06); }
-  to   { opacity: 1; transform: scale(1); }
-}
-
-/* faint full outline of the card quad */
-.uhud__outline {
-  fill: none;
-  stroke: var(--signal);
-  stroke-width: 1;
-  opacity: 0.22;
-}
-
-/* the four corner brackets — bright signal, glowing */
-.uhud__bk {
-  fill: none;
-  stroke: var(--signal);
-  stroke-width: 1.5;
-  stroke-linecap: square;
-  stroke-linejoin: miter;
-  filter: drop-shadow(0 0 5px var(--signal-glow));
-}
-
-/* small upright LOCK tab pinned to the top-left corner */
+/* Upright Open project label pinned to the top-left corner. */
 .uhud__tab {
   position: absolute;
   left: 0; top: 0;
+  will-change: transform;
+}
+.uhud__tabLabel {
   transform: translate(-1px, calc(-100% - 7px));
   display: flex; align-items: center; gap: 6px;
   padding: 3px 8px;
@@ -629,8 +536,9 @@ body.mo-explore .universe__mount { touch-action: none; }
 @keyframes hudPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
 
 @media (prefers-reduced-motion: reduce) {
-  .uhud__lock, .uhud__tab, .uhud__tabDot { animation: none !important; opacity: 1 !important; transform: none !important; }
-  .uhud__tab { transform: translate(-1px, calc(-100% - 7px)) !important; }
+  .uhud__lock, .uhud__tabLabel, .uhud__tabDot { animation: none !important; opacity: 1 !important; }
+  .uhud__lock { transform: none !important; }
+  .uhud__tabLabel { transform: translate(-1px, calc(-100% - 7px)); }
 }
 
 /* responsive */
@@ -743,12 +651,6 @@ body.mo-explore .lp-shell {
     bottom: calc(var(--title-inset) + 108px);
     right: auto;
   }
-
-  /* shell header: drop the clock + sound label, tighten the nav */
-  .lp-shell .shell__status > span:not(.shell__dot) { display: none; }
-  .lp-shell .shell__status .volBtn { display: inline-flex; }
-  .lp-shell .shell__status .volBtn > span { display: none; }
-  .lp-shell .shell__nav { gap: 12px; }
 
   /* (showAllGate mobile rules live in landing-scroll.css — cascade order) */
 }

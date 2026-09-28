@@ -123,3 +123,10 @@ html.custom-cursor .cursor--probe .cursor__vLine { opacity: 0.85; }
 @media (pointer: coarse) {
   html.custom-cursor .cursor { display: none; }
 }
+
+/* A native modal is above every document z-index. Cursor() lends its one
+   existing node to the dialog, including when the origin hides field probes. */
+html.custom-cursor.mo-cursor-live dialog .cursor {
+  visibility:visible!important;
+  opacity:1!important;
+}

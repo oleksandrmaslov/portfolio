@@ -1,0 +1,170 @@
+/* Shared header and native full-screen navigation. Every public route uses
+   this same geometry; local controls remain secondary to M.O. and MENU. */
+.site-header {
+  position:fixed;inset:0 0 auto;z-index:50;isolation:isolate;
+  display:flex;align-items:center;justify-content:space-between;gap:var(--s-6);
+  padding:var(--s-6) var(--gutter);pointer-events:none;
+  background:linear-gradient(rgba(4,6,13,.85),transparent);
+  font:var(--fs-meta)/var(--lh-text) var(--ff-mono);letter-spacing:var(--tr-mono);
+}
+.site-header__home,.site-header__actions {display:flex;align-items:center;gap:var(--s-6);min-width:0}
+.site-header a,.site-header button {pointer-events:auto;min-height:44px;display:inline-flex;align-items:center}
+.site-header__brand {font-weight:500;color:var(--bone)}
+.site-header__utility {display:flex;align-items:center;gap:var(--s-5)}
+.site-header__utility::before {content:"";width:var(--s-5);height:1px;background:var(--hairline)}
+.site-header__utility a {font-size:var(--fs-micro);letter-spacing:var(--tr-caps);color:var(--ash)}
+.site-header__context {font-size:var(--fs-small);color:var(--ash);max-width:28ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.site-header a:hover,.site-header button:hover {color:var(--signal)}
+.site-header a:focus-visible,.site-header button:focus-visible {outline:2px solid var(--signal);outline-offset:5px}
+.site-header button:active {transform:scale(.97)}
+.site-sections {position:relative;z-index:1;display:flex;gap:var(--s-6);padding:0 var(--gutter);margin-top:var(--gutter-top);overflow-x:auto;font:var(--fs-small)/var(--lh-text) var(--ff-mono);text-transform:uppercase;color:var(--ash)}
+.site-sections a {display:inline-flex;align-items:center;min-height:44px}
+.site-sections a:hover {color:var(--signal)}
+@media(max-width:700px){
+  .site-header {padding:var(--s-5) var(--s-6)}
+  .site-header__home,.site-header__actions {gap:var(--s-5)}
+  .site-header__context {display:none}
+  .site-header .volBtn>span {display:none}
+}
+
+.site-header__blur {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: calc(100% + 16px);
+  pointer-events: none;
+  z-index: -1;
+}
+.site-header__blur > div {
+  position: absolute;
+  inset: 0;
+}
+.site-header__blur > div:nth-child(1) {
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 12.5%, transparent 25%);
+          mask-image: linear-gradient(to bottom, #000 0%, #000 12.5%, transparent 25%);
+}
+.site-header__blur > div:nth-child(2) {
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 12.5%, #000 25%, transparent 37.5%);
+          mask-image: linear-gradient(to bottom, transparent 0%, #000 12.5%, #000 25%, transparent 37.5%);
+}
+.site-header__blur > div:nth-child(3) {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 12.5%, #000 25%, #000 37.5%, transparent 50%);
+          mask-image: linear-gradient(to bottom, transparent 12.5%, #000 25%, #000 37.5%, transparent 50%);
+}
+.site-header__blur > div:nth-child(4) {
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 25%, #000 37.5%, #000 50%, transparent 62.5%);
+          mask-image: linear-gradient(to bottom, transparent 25%, #000 37.5%, #000 50%, transparent 62.5%);
+}
+.site-header__blur > div:nth-child(5) {
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 37.5%, #000 50%, #000 62.5%, transparent 75%);
+          mask-image: linear-gradient(to bottom, transparent 37.5%, #000 50%, #000 62.5%, transparent 75%);
+}
+.site-header__blur > div:nth-child(6) {
+  backdrop-filter: blur(1px);
+  -webkit-backdrop-filter: blur(1px);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 50%, #000 62.5%, #000 75%, transparent 87.5%);
+          mask-image: linear-gradient(to bottom, transparent 50%, #000 62.5%, #000 75%, transparent 87.5%);
+}
+.site-header__blur > div:nth-child(7) {
+  backdrop-filter: blur(0.5px);
+  -webkit-backdrop-filter: blur(0.5px);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 62.5%, #000 75%, #000 87.5%, transparent 100%);
+          mask-image: linear-gradient(to bottom, transparent 62.5%, #000 75%, #000 87.5%, transparent 100%);
+}
+
+/* Destination objects — the menu names where each part of this world leads.
+   THESIS: the work, its source, its output and its collected projects.
+   OWN-WORLD: existing Geist/Instrument Serif, real GLBs, 0x00 particles, SW1.
+   STORY: four small objects belong to four readable destinations.
+   FIRST VIEWPORT: text on the left; a model opposite each line, no graphic stage.
+   FORM: one shared canvas; arrival resolves, focus reveals, selection departs. */
+.lp-menuToggle,.lp-menu__top button {display:inline-flex;align-items:center;gap:var(--s-3);min-height:44px;padding:0;background:none;border:0;color:var(--bone);font:inherit;cursor:pointer}
+.lp-menuToggle {margin-left:0}
+.lp-menuToggle svg,.lp-menu svg {fill:none;stroke:currentColor;stroke-width:1.5}
+.lp-menu {position:fixed;inset:0;width:100%;height:100dvh;max-width:none;max-height:none;margin:0;padding:var(--s-6) var(--gutter) var(--s-7);border:0;background:transparent;color:var(--bone);font:var(--fs-meta)/var(--lh-text) var(--ff-mono);cursor:auto;overflow-y:auto;--menu-exit:180ms}
+.lp-menu[open] {display:flex;flex-direction:column;}
+.lp-menu::backdrop {background:transparent}
+body.mo-menu-settled #root,body.mo-menu-settled .asb {visibility:hidden!important}
+.lp-menu__surface {position:fixed;inset:0;background:var(--void);pointer-events:none}
+.lp-menu[open]:not([data-keyboard="true"]) .lp-menu__surface {animation:menuCurtain var(--d-base) var(--e-out) backwards}
+.lp-menu[open]:not([data-keyboard="true"]) .lp-menu__objects {animation:menuObjectsIn 380ms var(--e-out) 80ms backwards}
+.lp-menu[open]:not([data-keyboard="true"]) .lp-menu__top,.lp-menu[open]:not([data-keyboard="true"]) .lp-menu__bottom {animation:menuChromeIn 220ms var(--e-out) 80ms backwards}
+.lp-menu__objects {position:fixed;inset:0;pointer-events:none;overflow:hidden}
+.lp-menu__objects canvas {display:block;width:100%;height:100%;pointer-events:none}
+.lp-menu__top,.lp-menu__bottom,.lp-menu__links {position:relative}
+.lp-menu__top,.lp-menu__bottom {display:flex;align-items:center;justify-content:space-between;gap:var(--s-6);flex-shrink:0}
+.lp-menu__top {min-height:44px}
+.lp-menu__top>a {font-weight:500;color:var(--bone)}
+.lp-menu__links {width:100%;margin:auto 0;padding:var(--s-6) 0}
+.lp-menu__links>a {display:grid;grid-template-columns:minmax(0,1fr) clamp(120px,18vw,240px) 32px;align-items:center;column-gap:var(--s-7);padding:var(--s-4) 0;color:var(--bone);cursor:pointer;transition:opacity 180ms,transform var(--menu-exit) var(--e-out)}
+.lp-menu__copy {display:block;min-width:0}
+.lp-menu__label {display:block;width:max-content;max-width:100%;overflow-wrap:anywhere;font:500 var(--fs-d2)/var(--lh-solid) var(--ff-display);letter-spacing:var(--tr-tight);transition:color 180ms,transform 240ms var(--e-out)}
+.lp-menu__label em {font-family:var(--ff-serif);font-weight:400;font-style:italic;letter-spacing:var(--tr-tight)}
+.lp-menu__description {display:block;margin-top:var(--s-4);color:var(--ash);font-size:var(--fs-small);line-height:var(--lh-text)}
+.lp-menu__object {display:flex;align-items:center;justify-content:center;height:clamp(80px,12vh,124px);pointer-events:none}
+.lp-menu__object img {width:100%;height:100%;object-fit:contain;transition:transform var(--d-fast) var(--e-out)}
+.lp-menu[data-live-objects="true"] .lp-menu__object img {visibility:hidden}
+.lp-menu[data-live-objects="false"][open]:not([data-keyboard="true"]) .lp-menu__object img {animation:menuObjectsIn 380ms var(--e-out) backwards;animation-delay:calc(80ms + var(--menu-order) * 30ms)}
+.lp-menu__links>a>svg {opacity:.3;transform:translateX(calc(-1 * var(--s-3)));transition:opacity 160ms,transform 240ms var(--e-out)}
+.lp-menu__links>a:focus-visible .lp-menu__label {color:var(--signal)}
+.lp-menu__links>a:focus-visible>svg {opacity:1;transform:none}
+.lp-menu__links>a:active .lp-menu__label {transform:translateX(var(--s-3))}
+.lp-menu__bottom {border-top:1px solid var(--hairline);padding-top:var(--s-6);color:var(--ash);font-size:var(--fs-small)}
+.lp-menu__bottom>a {display:inline-flex;align-items:center;gap:var(--s-5);min-height:44px;color:var(--bone)}
+.lp-menu__bottom b {font-size:var(--fs-micro);font-weight:400;color:var(--signal)}
+.lp-menu a:focus-visible,.lp-menu button:focus-visible,.lp-menuToggle:focus-visible {outline:2px solid var(--signal);outline-offset:5px}
+.lp-menu__links>a:focus-visible .lp-menu__label,.lp-menu__links>a:focus-visible>svg {transition:none}
+.lp-menu[open]:not([data-keyboard="true"]) .lp-menu__copy {animation:menuResolve 380ms var(--e-out) backwards;animation-delay:calc(60ms + var(--menu-order) * 30ms)}
+.lp-menu[data-keyboard="true"] {animation:none}
+.lp-menu.is-leaving .lp-menu__copy {animation:none!important}
+.lp-menu.is-leaving .lp-menu__links>a:not([data-selected]) {opacity:0;transform:translateX(calc(-1 * var(--s-5)))}
+.lp-menu.is-leaving .lp-menu__links>a[data-selected] .lp-menu__label {color:var(--signal);transform:translateX(var(--s-5))}
+.lp-menu.is-leaving .lp-menu__links>a[data-selected]>svg {opacity:1;transform:translateX(var(--s-5))}
+.lp-menu.is-leaving .lp-menu__top,.lp-menu.is-leaving .lp-menu__bottom {opacity:0;transition:opacity 160ms}
+.lp-menu.is-leaving .lp-menu__objects {opacity:0;transition:opacity var(--menu-exit) var(--e-out)}
+@media(hover:hover) and (pointer:fine){
+  .lp-menu__links>a:hover .lp-menu__label {color:var(--signal);transform:translateX(var(--s-4))}
+  .lp-menu__links>a:hover>svg {opacity:1;transform:none}
+  .lp-menu__links>a:hover .lp-menu__object img {transform:translateX(-5px) rotate(-3deg)}
+}
+@keyframes menuCurtain {from {clip-path:inset(0 0 0 100%)} to {clip-path:inset(0)}}
+@keyframes menuObjectsIn {from {opacity:0;transform:translateX(var(--s-6))} to {opacity:1;transform:none}}
+@keyframes menuChromeIn {from {opacity:0} to {opacity:1}}
+@keyframes menuResolve {from {clip-path:inset(0 100% 0 0);transform:translateX(var(--s-6))} to {clip-path:inset(0);transform:none}}
+html.mo-menu-transition::view-transition-old(root) {animation:menuDestinationOut 160ms var(--e-out) both;mix-blend-mode:normal}
+html.mo-menu-transition::view-transition-new(root) {animation:menuDestinationIn 220ms var(--e-out) both;mix-blend-mode:normal}
+@keyframes menuDestinationOut {to {opacity:0;transform:translateY(calc(-1 * var(--s-4)))}}
+@keyframes menuDestinationIn {from {opacity:0} to {opacity:1}}
+@media(min-width:1001px) and (max-height:760px){.lp-menu__label {font-size:var(--fs-d3)}}
+@media(max-width:1000px){
+  .lp-menu__links>a {grid-template-columns:minmax(0,1fr) 150px 24px;column-gap:var(--s-5)}
+  .lp-menu__label {font-size:var(--fs-d3)}
+}
+@media(max-width:700px){
+  .lp-menu {padding:var(--s-5) var(--s-6)}
+  .lp-menu__links {padding:var(--s-7) 0}
+  .lp-menu__links>a {grid-template-columns:minmax(0,1fr) 90px;column-gap:var(--s-3);padding:var(--s-5) 0}
+  .lp-menu__label {font-size:var(--fs-h3)}
+  .lp-menu__object {height:82px}
+  .lp-menu__links>a>svg {display:none}
+  .lp-menu__bottom {align-items:flex-start;flex-direction:column;gap:var(--s-3);padding-top:var(--s-5)}
+  .lp-menu__bottom>a {min-height:32px}
+}
+@media(max-width:420px){
+  .lp-menu__label {font-size:var(--fs-h4);line-height:var(--lh-compact)}
+  .lp-menu__links>a {grid-template-columns:minmax(0,1fr) 76px}
+  .lp-menu__object {height:76px}
+}
+@media(prefers-reduced-motion:reduce){
+  .lp-menu[open],.lp-menu[open] *, .lp-menu[open] *::before {animation:none!important}
+  .lp-menu__links>a,.lp-menu__label,.lp-menu__links>a>svg {transition:none;transform:none!important}
+}

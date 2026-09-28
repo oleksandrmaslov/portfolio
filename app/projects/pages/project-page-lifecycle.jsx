@@ -51,7 +51,7 @@
         selector: "[data-mo-cursor-mirror]",
         zIndex: 20,
         dprCap: 1,
-        disabledClasses: ["hv-exit", "hv-demoing"],
+        disabledClasses: ["hv-exit", "hv-demoing", "mo-menu-open"],
       });
       return () => {
         if (cursorFx && typeof cursorFx.destroy === "function") cursorFx.destroy();
@@ -178,7 +178,7 @@
         scheduleTimer(settleToRest, 460);
       }
 
-      const shouldRender = () => !document.hidden && (
+      const shouldRender = () => !document.hidden && !document.body.classList.contains("mo-menu-open") && (
         global.scrollY < global.innerHeight * 0.74
         || global.__hv_exitSpin
       );
@@ -233,6 +233,7 @@
       global.addEventListener("scroll", onScroll, { passive: true });
       document.addEventListener("visibilitychange", syncLoop);
       global.addEventListener("pageshow", syncLoop);
+      global.addEventListener("mo:menu", syncLoop);
       global.addEventListener("mo:project-rig-wake", syncLoop);
 
       return () => {
@@ -246,6 +247,7 @@
         global.removeEventListener("scroll", onScroll);
         document.removeEventListener("visibilitychange", syncLoop);
         global.removeEventListener("pageshow", syncLoop);
+        global.removeEventListener("mo:menu", syncLoop);
         global.removeEventListener("mo:project-rig-wake", syncLoop);
         if (global.__pageRig === rig) global.__pageRig = null;
         rig.dispose();

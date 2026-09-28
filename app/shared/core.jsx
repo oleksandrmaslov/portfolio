@@ -60,6 +60,19 @@ function Cursor() {
   useEffect(() => {
     document.documentElement.classList.add("custom-cursor");
     const node = ref.current;
+    const cursorHome = document.createComment("cursor home");
+    node.before(cursorHome);
+    const onMenu = (event) => {
+      const dialog = event.detail?.dialog;
+      if (event.detail?.open && dialog) {
+        dialog.appendChild(node);
+        node.classList.add("cursor--menu");
+      } else {
+        cursorHome.after(node);
+        node.classList.remove("cursor--menu");
+      }
+    };
+    window.addEventListener("mo:menu", onMenu);
 
     // Two decoupled jobs on pointer movement:
     //   1. position + live pixel readout  → written DIRECTLY to the DOM once
@@ -142,6 +155,8 @@ function Cursor() {
     document.addEventListener("mouseout", onOut);
     window.addEventListener("blur", onBlur);
     return () => {
+      window.removeEventListener("mo:menu", onMenu);
+      cursorHome.after(node); cursorHome.remove();
       window.removeEventListener("pointermove", track);
       window.removeEventListener("pointerdown", track);
       window.removeEventListener("wheel", track);
@@ -156,7 +171,7 @@ function Cursor() {
   // The coord span is ALWAYS mounted (just hidden when not idle) so its ref
   // stays stable and the per-move textContent writes never hit a detached node.
   return (
-    <div ref={ref} className={"cursor cursor--" + mode}>
+    <div ref={ref} aria-hidden="true" className={"cursor cursor--" + mode}>
       <div className="cursor__ring" />
       <div className="cursor__center" />
       <div className="cursor__hLine" />
@@ -175,31 +190,13 @@ function Cursor() {
    SHELL — fixed top nav
    ============================================================ */
 function Shell() {
-  const [time, setTime] = useState("--:--");
-  useEffect(() => {
-    const tick = () => setTime(new Date().toTimeString().slice(0, 5));
-    tick();
-    const id = setInterval(tick, 30000);
-    return () => clearInterval(id);
-  }, []);
-  return (
-    <header className="shell">
-      <a className="shell__brand" href="./" aria-label="Back to the title">M.O. ∥ SYSTEM v0.1.0</a>
-      <nav className="shell__nav">
-        <a href="#brief">BRIEF</a>
-        <a href="#color">COLOR</a>
-        <a href="#type">TYPE</a>
-        <a href="#grid">GRID</a>
-        <a href="#motion">MOTION</a>
-        <a href="#components">COMPONENTS</a>
-        <a href="#voice">VOICE</a>
-      </nav>
-      <div className="shell__status">
-        <span className="shell__dot" />
-        <span>ONLINE · MUC · {time}</span>
-      </div>
-    </header>
-  );
+  return <>
+    <PortfolioHeader context="Design system" />
+    <nav className="site-sections" aria-label="Design system sections">
+      {["brief", "color", "type", "grid", "motion", "components", "voice"].map(id =>
+        <a key={id} href={"#" + id}>{id}</a>)}
+    </nav>
+  </>;
 }
 
 window.Cursor = Cursor;

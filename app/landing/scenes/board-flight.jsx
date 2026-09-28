@@ -103,7 +103,7 @@ function BoardFlight({ onEnter, onContact }) {
           selector: "[data-mo-board-cursor-mirror]",
           zIndex: 20,
           dprCap: 1,
-          disabledClasses: ["landing-exit", "mo-explore", "nx-page"],
+          disabledClasses: ["landing-exit", "mo-explore", "mo-menu-open", "nx-page"],
           disabledWhen: () => presRef.current <= _bfRenderEps,
           chainPrevious: true,
         });
@@ -111,7 +111,7 @@ function BoardFlight({ onEnter, onContact }) {
       const loop = (now) => {
         renderRaf = 0;
         if (disposed) return;
-        if (presRef.current <= _bfRenderEps) return;
+        if (presRef.current <= _bfRenderEps || document.hidden || document.body.classList.contains("mo-menu-open")) return;
         const dt = Math.min(50, now - last); last = now;
         const a = ctrl.update(tRef.current, "probe", dt, footRef.current, introRef.current, nodeRef.current);
         ctrl.render();
@@ -119,7 +119,7 @@ function BoardFlight({ onEnter, onContact }) {
         renderRaf = requestAnimationFrame(loop);
       };
       const wakeRender = () => {
-        if (disposed || renderRaf || presRef.current <= _bfRenderEps) return;
+        if (disposed || renderRaf || presRef.current <= _bfRenderEps || document.hidden || document.body.classList.contains("mo-menu-open")) return;
         // A sleeping board may have been off-screen for minutes. Reset the
         // clock so its first visible update cannot receive a giant delta.
         last = performance.now();
@@ -219,6 +219,9 @@ function BoardFlight({ onEnter, onContact }) {
       if (wakeRenderRef.current) wakeRenderRef.current();
     };
     window.addEventListener("resize", onResize);
+    const onMenuOrVisibility = () => { if (wakeRenderRef.current) wakeRenderRef.current(); };
+    window.addEventListener("mo:menu", onMenuOrVisibility);
+    document.addEventListener("visibilitychange", onMenuOrVisibility);
     return () => {
       disposed = true;
       readyRef.current = false;
@@ -227,6 +230,8 @@ function BoardFlight({ onEnter, onContact }) {
       if (renderRaf) cancelAnimationFrame(renderRaf);
       wakeRenderRef.current = null;
       window.removeEventListener("resize", onResize);
+      window.removeEventListener("mo:menu", onMenuOrVisibility);
+      document.removeEventListener("visibilitychange", onMenuOrVisibility);
       window.__mo_universe_pause = false;
       if (cursorFx) cursorFx.destroy();
       if (uniRef.current) { uniRef.current.style.opacity = ""; uniRef.current.style.transition = ""; uniRef.current.style.transform = ""; }
