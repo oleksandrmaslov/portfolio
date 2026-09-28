@@ -174,9 +174,10 @@ function VolumeToggle() {
     window.MOSound.init();
     const W = 38, H = 16, MID = H / 2, N = 40;
     let raf = 0, phase = 0, amp = 0, last = 0;
+    const visible = () => !document.hidden && !document.body.classList.contains("mo-menu-settled");
     const tick = (now) => {
       raf = 0;
-      if (document.hidden) return;
+      if (!visible()) return;
       if (now - last < 33) { raf = requestAnimationFrame(tick); return; }
       last = now;
       const path = pathRef.current; if (!path) return;
@@ -201,10 +202,23 @@ function VolumeToggle() {
         path.setAttribute("d", "M0 8 L38 8");
       }
     };
-    const wake = () => { if (!raf) raf = requestAnimationFrame(tick); };
+    const wake = () => { if (!raf && visible()) raf = requestAnimationFrame(tick); };
+    const syncVisibility = () => {
+      if (visible()) wake();
+      else { cancelAnimationFrame(raf); raf = 0; }
+    };
+    window.addEventListener("mo:menu-settled", syncVisibility);
+    window.addEventListener("mo:menu", syncVisibility);
+    document.addEventListener("visibilitychange", syncVisibility);
     const unsubscribe = window.MOSound.onState(s => { setMuted(s.muted); setLoading(!!s.loading); setStatus(s.status || ""); wake(); });
     wake();
-    return () => { cancelAnimationFrame(raf); if (unsubscribe) unsubscribe(); };
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("mo:menu-settled", syncVisibility);
+      window.removeEventListener("mo:menu", syncVisibility);
+      document.removeEventListener("visibilitychange", syncVisibility);
+      if (unsubscribe) unsubscribe();
+    };
   }, []);
 
   const click = () => {
