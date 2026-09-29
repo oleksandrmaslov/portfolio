@@ -31,7 +31,9 @@ const save=()=>fs.writeFileSync(path.join(dir,'navigation-qa.json'),JSON.stringi
   const href=id==='index'?'All Projects.html':'#'+id;
   await page.locator('dialog nav a').filter({has:page.locator(`[data-menu-object="${id}"]`)}).click();
   if(id==='index')await page.waitForURL('**/All%20Projects.html');else await page.waitForFunction(hash=>location.hash===hash,'#'+id);
-  await page.waitForTimeout(1300);const s=await page.evaluate(()=>({url:location.href,dialog:!!document.querySelector('dialog[open]'),body:document.body.style.overflow,transition:document.documentElement.classList.contains('mo-menu-transition')}));
+  await page.waitForFunction(()=>!document.querySelector('dialog[open]'));
+  await page.waitForFunction(()=>!document.documentElement.classList.contains('mo-menu-transition'));
+  const s=await page.evaluate(()=>({url:location.href,dialog:!!document.querySelector('dialog[open]'),body:document.body.style.overflow,transition:document.documentElement.classList.contains('mo-menu-transition')}));
   assert.equal(s.dialog,false);assert.equal(s.body,'');assert.equal(s.transition,false);results.navigation.push({id,...s});save();
  }
  // A fast Escape cancels the pending destination.

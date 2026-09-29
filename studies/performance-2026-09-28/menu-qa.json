@@ -1,0 +1,621 @@
+{
+  "routes": [
+    {
+      "route": "/",
+      "start": {
+        "contexts": 3,
+        "hero": false,
+        "threeRequests": 21
+      },
+      "liveMs": 5501,
+      "modelsMs": 5520,
+      "borrowed": null,
+      "contexts": 3,
+      "groups": [
+        1,
+        1,
+        1,
+        3
+      ],
+      "idleFrames": 0,
+      "idleDraws": 0,
+      "keyboard": true,
+      "returned": true
+    },
+    {
+      "route": "All Projects.html",
+      "start": {
+        "contexts": 0,
+        "hero": false,
+        "threeRequests": 0
+      },
+      "liveMs": 4188,
+      "modelsMs": 6286,
+      "borrowed": null,
+      "contexts": 2,
+      "groups": [
+        1,
+        1,
+        1,
+        3
+      ],
+      "idleFrames": 0,
+      "idleDraws": 0,
+      "keyboard": true,
+      "returned": true
+    },
+    {
+      "route": "Brionel Catalogue.html",
+      "start": {
+        "contexts": 3,
+        "hero": true,
+        "threeRequests": 10
+      },
+      "liveMs": 822,
+      "modelsMs": 3367,
+      "borrowed": true,
+      "contexts": 3,
+      "groups": [
+        1,
+        1,
+        1,
+        3
+      ],
+      "idleFrames": 0,
+      "idleDraws": 0,
+      "keyboard": true,
+      "returned": true
+    },
+    {
+      "route": "Bulgaria 2026.html",
+      "start": {
+        "contexts": 3,
+        "hero": true,
+        "threeRequests": 10
+      },
+      "liveMs": 746,
+      "modelsMs": 2868,
+      "borrowed": true,
+      "contexts": 3,
+      "groups": [
+        1,
+        1,
+        1,
+        3
+      ],
+      "idleFrames": 0,
+      "idleDraws": 0,
+      "keyboard": true,
+      "returned": true
+    },
+    {
+      "route": "Ci-Clop.html",
+      "start": {
+        "contexts": 2,
+        "hero": true,
+        "threeRequests": 6
+      },
+      "liveMs": 1339,
+      "modelsMs": 3873,
+      "borrowed": true,
+      "contexts": 3,
+      "groups": [
+        1,
+        1,
+        1,
+        3
+      ],
+      "idleFrames": 0,
+      "idleDraws": 0,
+      "keyboard": true,
+      "returned": true
+    },
+    {
+      "route": "Design System.html",
+      "start": {
+        "contexts": 1,
+        "hero": false,
+        "threeRequests": 1
+      },
+      "liveMs": 2840,
+      "modelsMs": 5109,
+      "borrowed": null,
+      "contexts": 3,
+      "groups": [
+        1,
+        1,
+        1,
+        3
+      ],
+      "idleFrames": 0,
+      "idleDraws": 0,
+      "keyboard": true,
+      "returned": true
+    },
+    {
+      "route": "Iskra.html",
+      "start": {
+        "contexts": 2,
+        "hero": true,
+        "threeRequests": 6
+      },
+      "liveMs": 927,
+      "modelsMs": 2907,
+      "borrowed": true,
+      "contexts": 3,
+      "groups": [
+        1,
+        1,
+        1,
+        3
+      ],
+      "idleFrames": 0,
+      "idleDraws": 0,
+      "keyboard": true,
+      "returned": true
+    },
+    {
+      "route": "Kerfur.html",
+      "start": {
+        "contexts": 2,
+        "hero": true,
+        "threeRequests": 6
+      },
+      "liveMs": 638,
+      "modelsMs": 2661,
+      "borrowed": true,
+      "contexts": 3,
+      "groups": [
+        1,
+        1,
+        1,
+        3
+      ],
+      "idleFrames": 0,
+      "idleDraws": 0,
+      "keyboard": true,
+      "returned": true
+    },
+    {
+      "route": "Sightseeing.html",
+      "start": {
+        "contexts": 3,
+        "hero": true,
+        "threeRequests": 10
+      },
+      "liveMs": 1225,
+      "modelsMs": 3163,
+      "borrowed": true,
+      "contexts": 3,
+      "groups": [
+        1,
+        1,
+        1,
+        3
+      ],
+      "idleFrames": 0,
+      "idleDraws": 0,
+      "keyboard": true,
+      "returned": true
+    },
+    {
+      "route": "Silent Depth.html",
+      "start": {
+        "contexts": 3,
+        "hero": true,
+        "threeRequests": 10
+      },
+      "liveMs": 811,
+      "modelsMs": 2775,
+      "borrowed": true,
+      "contexts": 3,
+      "groups": [
+        1,
+        1,
+        1,
+        3
+      ],
+      "idleFrames": 0,
+      "idleDraws": 0,
+      "keyboard": true,
+      "returned": true
+    },
+    {
+      "route": "Split HID Display.html",
+      "start": {
+        "contexts": 2,
+        "hero": true,
+        "threeRequests": 6
+      },
+      "liveMs": 877,
+      "modelsMs": 2981,
+      "borrowed": true,
+      "contexts": 3,
+      "groups": [
+        1,
+        1,
+        1,
+        3
+      ],
+      "idleFrames": 0,
+      "idleDraws": 0,
+      "keyboard": true,
+      "returned": true
+    },
+    {
+      "route": "Venovisor.html",
+      "start": {
+        "contexts": 2,
+        "hero": true,
+        "threeRequests": 10
+      },
+      "liveMs": 541,
+      "modelsMs": 2984,
+      "borrowed": true,
+      "contexts": 3,
+      "groups": [
+        1,
+        1,
+        1,
+        3
+      ],
+      "idleFrames": 0,
+      "idleDraws": 0,
+      "keyboard": true,
+      "returned": true
+    },
+    {
+      "route": "Wafer Studio.html",
+      "start": {
+        "contexts": 3,
+        "hero": true,
+        "threeRequests": 10
+      },
+      "liveMs": 1161,
+      "modelsMs": 3046,
+      "borrowed": true,
+      "contexts": 3,
+      "groups": [
+        1,
+        1,
+        1,
+        3
+      ],
+      "idleFrames": 0,
+      "idleDraws": 0,
+      "keyboard": true,
+      "returned": true
+    },
+    {
+      "route": "Wafer.html",
+      "start": {
+        "contexts": 3,
+        "hero": true,
+        "threeRequests": 12
+      },
+      "liveMs": 9115,
+      "modelsMs": 11633,
+      "borrowed": true,
+      "contexts": 3,
+      "groups": [
+        1,
+        1,
+        1,
+        3
+      ],
+      "idleFrames": 0,
+      "idleDraws": 0,
+      "keyboard": true,
+      "returned": true
+    },
+    {
+      "route": "ZMK Soft Off Plus.html",
+      "start": {
+        "contexts": 3,
+        "hero": true,
+        "threeRequests": 10
+      },
+      "liveMs": 778,
+      "modelsMs": 4056,
+      "borrowed": true,
+      "contexts": 3,
+      "groups": [
+        1,
+        1,
+        1,
+        3
+      ],
+      "idleFrames": 0,
+      "idleDraws": 0,
+      "keyboard": true,
+      "returned": true
+    },
+    {
+      "route": "ZMK-PointAccel.html",
+      "start": {
+        "contexts": 2,
+        "hero": true,
+        "threeRequests": 5
+      },
+      "liveMs": 988,
+      "modelsMs": 3118,
+      "borrowed": true,
+      "contexts": 3,
+      "groups": [
+        1,
+        1,
+        1,
+        3
+      ],
+      "idleFrames": 0,
+      "idleDraws": 0,
+      "keyboard": true,
+      "returned": true
+    }
+  ],
+  "mobile": [
+    {
+      "route": "/",
+      "reducedMotion": "no-preference",
+      "idleDraws": 0,
+      "idleFrames": 0,
+      "groups": [
+        {
+          "rotation": [
+            -0.3,
+            0,
+            0
+          ],
+          "children": 1
+        },
+        {
+          "rotation": [
+            -0.06,
+            0,
+            0
+          ],
+          "children": 1
+        },
+        {
+          "rotation": [
+            -0.06,
+            0,
+            0
+          ],
+          "children": 1
+        },
+        {
+          "rotation": [
+            -0.06,
+            0,
+            0
+          ],
+          "children": 3
+        }
+      ],
+      "overflow": false
+    },
+    {
+      "route": "Wafer.html",
+      "reducedMotion": "no-preference",
+      "idleDraws": 0,
+      "idleFrames": 0,
+      "groups": [
+        {
+          "rotation": [
+            -0.3,
+            0,
+            0
+          ],
+          "children": 1
+        },
+        {
+          "rotation": [
+            -0.06,
+            0,
+            0
+          ],
+          "children": 1
+        },
+        {
+          "rotation": [
+            -0.06,
+            0,
+            0
+          ],
+          "children": 1
+        },
+        {
+          "rotation": [
+            -0.06,
+            0,
+            0
+          ],
+          "children": 3
+        }
+      ],
+      "overflow": false
+    },
+    {
+      "route": "All Projects.html",
+      "reducedMotion": "no-preference",
+      "idleDraws": 0,
+      "idleFrames": 0,
+      "groups": [
+        {
+          "rotation": [
+            -0.3,
+            0,
+            0
+          ],
+          "children": 1
+        },
+        {
+          "rotation": [
+            -0.06,
+            0,
+            0
+          ],
+          "children": 1
+        },
+        {
+          "rotation": [
+            -0.06,
+            0,
+            0
+          ],
+          "children": 1
+        },
+        {
+          "rotation": [
+            -0.06,
+            0,
+            0
+          ],
+          "children": 3
+        }
+      ],
+      "overflow": false
+    },
+    {
+      "route": "/",
+      "reducedMotion": "reduce",
+      "idleDraws": 0,
+      "idleFrames": 0,
+      "groups": [
+        {
+          "rotation": [
+            -0.3,
+            0,
+            0
+          ],
+          "children": 1
+        },
+        {
+          "rotation": [
+            -0.06,
+            0,
+            0
+          ],
+          "children": 1
+        },
+        {
+          "rotation": [
+            -0.06,
+            0,
+            0
+          ],
+          "children": 1
+        },
+        {
+          "rotation": [
+            -0.06,
+            0,
+            0
+          ],
+          "children": 3
+        }
+      ],
+      "overflow": false
+    },
+    {
+      "route": "Wafer.html",
+      "reducedMotion": "reduce",
+      "idleDraws": 0,
+      "idleFrames": 0,
+      "groups": [
+        {
+          "rotation": [
+            -0.3,
+            0,
+            0
+          ],
+          "children": 1
+        },
+        {
+          "rotation": [
+            -0.06,
+            0,
+            0
+          ],
+          "children": 1
+        },
+        {
+          "rotation": [
+            -0.06,
+            0,
+            0
+          ],
+          "children": 1
+        },
+        {
+          "rotation": [
+            -0.06,
+            0,
+            0
+          ],
+          "children": 3
+        }
+      ],
+      "overflow": false
+    },
+    {
+      "route": "All Projects.html",
+      "reducedMotion": "reduce",
+      "idleDraws": 0,
+      "idleFrames": 0,
+      "groups": [
+        {
+          "rotation": [
+            -0.3,
+            0,
+            0
+          ],
+          "children": 1
+        },
+        {
+          "rotation": [
+            -0.06,
+            0,
+            0
+          ],
+          "children": 1
+        },
+        {
+          "rotation": [
+            -0.06,
+            0,
+            0
+          ],
+          "children": 1
+        },
+        {
+          "rotation": [
+            -0.06,
+            0,
+            0
+          ],
+          "children": 3
+        }
+      ],
+      "overflow": false
+    }
+  ],
+  "errors": [],
+  "compact": {
+    "overflow": false,
+    "links": 4,
+    "scrollable": true
+  },
+  "repeat": {
+    "opens": 20,
+    "contextsBefore": 3,
+    "contextsAfter": 3,
+    "resize": {
+      "canvas": 390,
+      "mount": 390,
+      "inside": false
+    }
+  },
+  "dependencyFallback": true
+}

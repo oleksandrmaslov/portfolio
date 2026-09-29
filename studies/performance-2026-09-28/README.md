@@ -271,7 +271,7 @@ main initial-load risk. A future compilation change needs tests for the full
 composer, retargeting/cancellation and devices without parallel compilation;
 the handoff alone does not resolve them. No rendering quality was reduced.
 
-### Final validation
+### Validation at the loader checkpoint
 
 - **43/43 tests pass**; runtime check remains current at `ef8c414c10e2`, with 24 bundles and 16 public pages. The loader is its existing standalone script, so no runtime bundle regeneration was needed for this final change.
 - Repeated the 390px DPR2 touch/reduced-motion/manual-video and no-JavaScript checks after the loader fix; menu objects and fallback inspected visually.
@@ -293,3 +293,68 @@ node studies/performance-2026-09-28/edge-cases.cjs startup-final
 comparison uses the same application and assets. The shader experiment checks
 its generated-code match before substituting a test-only response; it is not
 a second shipping implementation. All evidence remains excluded from deploy.
+
+### Menu restoration — 29 September 2026
+
+The menu on the landing already used four live objects; the other public routes
+used still previews with CSS movement. The original menu scene's arrival,
+focus, exit, poses and pointer rotation are now shared by all 16 routes. The
+original motion math was checked line-for-line against its former landing
+source. An enlarged rotation experiment was rejected after the owner's
+screenshot: the final work hover moves about 0.09–0.10 radians across the row,
+matching the old restrained range. The 657×521 capture
+(`output/playwright/menu-restored-project-657x521.png`) shows the restored
+composition at the owner's viewport. The existing menu text, spacing, four
+destinations and public URLs are unchanged.
+
+Project pages lend the menu their existing hero renderer; a text-only route
+allocates one menu renderer on intent. The shared scene owns its materials,
+reuses cached GLB geometry, draws at most 30 times per second while moving,
+then sleeps. Its DOM previews stay until each corresponding model has actually
+drawn. If a model or module fails, the preview and native links remain. The
+Wafer texture model exposed a real late-decoder bug: a missing KTX2 constructor
+was cached as permanent failure, even if the decoder appeared while a prewarm
+was in flight. That cache now retries only the capability-limited failure and
+preserves successful model promises. `model-decoder.test.cjs` failed against
+the previous commit and passes after the fix.
+
+One headless Chrome run on the same machine, before and after allowing the
+scene to open while GLBs finish, measured a median first live scene of **4.40s
+→ 0.96s** across 16 routes. This is a browser workload comparison, not a
+claim about production network timing. `menu-qa-before-stream.json` and
+`menu-qa.json` hold every route's value. The delayed-Wafer test
+(`menu-streaming.json`) separately confirms a usable four-link menu, live 0x00
+and switch, and a visible Wafer preview while its GLB request is blocked;
+after the request is released, the model replaces the preview. Cold Three
+imports and GPU compilation can still delay the first live frame, especially
+on a software renderer. The native menu remains usable during that delay.
+Compared with the previous generated bundles, the added initial script is
+7.5 KB raw / 2.0 KB gzip-equivalent on the landing, 16.6 / 5.4 KB on Iskra,
+and 22.3 / 7.3 KB on All Projects. The text page imports Three and GLBs on
+menu intent; this measures source size, not a hosted transfer trace.
+
+`menu-motion-before.json` records still objects on non-landing pages;
+`menu-motion-restored-headless.json` records four loaded groups, the original
+hover range and zero draws in the final two-second idle window on the landing,
+Iskra and All Projects. The two latter routes had 2–3 isolated late draws in
+the preceding window, then stopped; there was no sustained loop.
+`menu-qa.json` covers all 16 desktop routes, keyboard focus/Escape,
+six 390px DPR2 touch/reduced-motion cases, 657×521 scrolling, dependency
+failure, and 20 repeated Iskra opens: its context count stayed 3→3 and the
+borrowed hero canvas returned to the correctly sized mount. All 16 settled
+desktop menus and all six mobile cases recorded zero draws. The forward tile
+hover → Wafer → Universe → browser Back flow passed headless in
+`forward-flight.json`, including the restored hero's resting state. Screenshots
+under `output/playwright/menu-restored-*` show the live composition.
+The complete `navigation-qa.cjs` also passed headless after this change:
+15 non-landing routes, four destinations, three index → Wafer → Universe → Back
+cycles, media keyboard/pause, touch with reduced motion, and no-JavaScript
+fallback. Its destination assertion now waits for the view transition to
+finish instead of assuming 1.3 seconds is enough under software rendering.
+
+The new menu work passes **48/48 runtime tests**. The generated landing and
+page runtimes are current at `e0d09997773a` (19 source units, 24 bundles,
+16 deployed root pages). Safari and a physical mobile GPU remain untested;
+the first menu open on slower hardware may show previews longer than in these
+captures. The earlier measured Universe startup long frame remains a separate
+open performance risk.
