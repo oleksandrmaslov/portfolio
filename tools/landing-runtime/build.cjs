@@ -39,6 +39,9 @@ const HANDOFF_PAGE = "app/projects/pages/handoff-page.jsx";
 // scripts intentionally share browser globals and repeat lexical helper names.
 const landingSourceFiles = [
   "app/shared/core.jsx",
+  "app/shared/scene-objects.js",
+  "app/shared/menu-objects.js",
+  "app/shared/menu-renderer.js",
   "app/shared/navigation.jsx",
   "app/shared/key-button.jsx",
   "app/landing/components/ascii-wordmark.jsx",
@@ -46,7 +49,6 @@ const landingSourceFiles = [
   "app/projects/rendering/solid-hero-rig.jsx",
   "app/projects/rendering/project-handoff-rig.jsx",
   "app/landing/components/project-preview.jsx",
-  "app/landing/scenes/menu-objects.js",
   "app/landing/scenes/universe.jsx",
   "app/landing/transitions/project-handoff.jsx",
   "app/landing/scenes/about-board.jsx",
@@ -58,7 +60,9 @@ const landingSourceFiles = [
 ];
 
 function phase(id, sources) {
-  return { id, runtime: `app/page-runtimes/${id}.js`, sources: sources.flatMap(source => source.file === CORE ? [source, jsx("app/shared/navigation.jsx")] : [source]) };
+  return { id, runtime: `app/page-runtimes/${id}.js`, sources: sources.flatMap(source => source.file === CORE ? [source,
+    classic("app/shared/scene-objects.js"), classic("app/shared/menu-objects.js"), classic("app/shared/menu-renderer.js"),
+    jsx("app/shared/navigation.jsx")] : [source]) };
 }
 
 function handoffDefinition(html, slug, options = {}) {
@@ -134,6 +138,7 @@ const pageDefinitions = [
     phases: [
       phase("all-projects-project", [
         jsx(CORE),
+        jsx(MODEL_VIEWER), classic(SOLID_MATERIALS),
         inlineJsx("all-projects-key-button", "All Projects.html#KeyButton", "function KeyButton"),
       ]),
       phase("all-projects-page", [jsx("app/projects/index/app.jsx"), classic(SCROLLBAR)]),
@@ -150,6 +155,7 @@ const pageDefinitions = [
     html: "Design System.html",
     phases: [phase("design-system-page", [
       jsx(CORE),
+      jsx(MODEL_VIEWER), classic(SOLID_MATERIALS),
       jsx("app/design-system/event-bus.jsx"),
       jsx("app/design-system/foundations.jsx"),
       jsx("app/design-system/patterns.jsx"),
@@ -445,7 +451,10 @@ const landingBanner = [
   "   Sources and order: tools/landing-runtime/build.cjs */",
   "",
 ].join("\n");
-const landingRuntime = landingBanner + landingSourceFiles.map(compile).join("");
+// Keep native dynamic imports in the lazy menu dependency loader. The env
+// preset would turn them into CommonJS require(), unavailable in the browser.
+const landingRuntime = landingBanner + landingSourceFiles.map(file =>
+  file === "app/shared/menu-renderer.js" ? emitClassic(file) : compile(file)).join("");
 const landingRuntimeHash = hashText(landingRuntime);
 
 const pageStates = pageDefinitions.map((definition) => {

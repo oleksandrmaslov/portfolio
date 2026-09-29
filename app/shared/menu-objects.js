@@ -1,6 +1,5 @@
-/* Four destinations, four objects. Borrows the Universe renderer while its
-   field is asleep; never creates a WebGL context or another animation loop.
-   The Universe's RAF runs only until an arrival, focus or exit has settled. */
+/* Four destinations, four objects. One scene shared by every route, borrowing
+   the existing renderer where available. Draw only while its motion changes. */
 (function () {
   const ENTER_MS = 420, EXIT_MS = 180;
   window.MOMenuMotion = { enter: ENTER_MS, exit: EXIT_MS };
@@ -17,9 +16,10 @@
     rim.position.set(400, 100, -200); scene.add(rim);
 
     const ids = ["work", "about", "contact", "index"];
-    const entries = ids.map(id => {
+    const entries = ids.map((id, index) => {
       const group = new THREE.Group(); scene.add(group);
-      return { id, group, focus: 0, target: 0, x: 0, y: 0, size: 1, rect: null };
+      return { id, group, expected: index === 3 ? 3 : 1, drawn: false,
+        focus: 0, target: 0, x: 0, y: 0, size: 1, rect: null };
     });
     const materials = new Set(), geometries = new Set(), textures = new Set();
     let dialog = null, host = null, lease = null, disposed = false;
@@ -92,7 +92,7 @@
     const points = new THREE.Points(pointGeo, pointMat);
     entries[1].group.add(points); own(points, true);
 
-    const output = window.MOBoard?.makeOutputSwitch?.();
+    const output = window.makeMoOutputSwitch(THREE);
     if (output) {
       own(output, true);
       switchButton = output.getObjectByName("SW1.actuator");
@@ -109,6 +109,7 @@
       renderer.setSize(width, height);
       camera.right = width; camera.top = height; camera.updateProjectionMatrix();
       for (const e of entries) {
+        dialog.querySelector(`[data-menu-object="${e.id}"]`).dataset.modelReady = e.drawn ? "true" : "false";
         e.rect = dialog.querySelector(`[data-menu-object="${e.id}"]`).getBoundingClientRect();
         e.rowRect = dialog.querySelector(`[data-menu-object="${e.id}"]`).closest("a").getBoundingClientRect();
         e.x = e.rect.left + e.rect.width / 2;
@@ -225,6 +226,11 @@
         });
         if (dirty || moving) {
           renderer.setRenderTarget(null); renderer.render(scene, camera);
+          // Keep each preview until its replacement has reached the canvas.
+          for (const e of entries) if (!e.drawn && e.group.children.length >= e.expected) {
+            e.drawn = true;
+            dialog.querySelector(`[data-menu-object="${e.id}"]`).dataset.modelReady = "true";
+          }
           dirty = moving;
         }
         return !!moving;

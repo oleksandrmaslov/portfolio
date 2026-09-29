@@ -90,17 +90,18 @@
 .lp-menuToggle,.lp-menu__top button {display:inline-flex;align-items:center;gap:var(--s-3);min-height:44px;padding:0;background:none;border:0;color:var(--bone);font:inherit;cursor:pointer}
 .lp-menuToggle {margin-left:0}
 .lp-menuToggle svg,.lp-menu svg {fill:none;stroke:currentColor;stroke-width:1.5}
-.lp-menu {position:fixed;inset:0;width:100%;height:100dvh;max-width:none;max-height:none;margin:0;padding:var(--s-6) var(--gutter) var(--s-7);border:0;background:transparent;color:var(--bone);font:var(--fs-meta)/var(--lh-text) var(--ff-mono);cursor:auto;overflow-y:auto;--menu-exit:180ms}
+.lp-menu {position:fixed;inset:0;width:100%;height:100dvh;max-width:none;max-height:none;margin:0;padding:var(--s-6) var(--gutter) var(--s-7);border:0;background:transparent;color:var(--bone);font:var(--fs-meta)/var(--lh-text) var(--ff-mono);cursor:auto;overflow-y:auto;isolation:isolate;--menu-exit:180ms}
 .lp-menu[open] {display:flex;flex-direction:column;}
 .lp-menu::backdrop {background:transparent}
 body.mo-menu-settled #root,body.mo-menu-settled .asb {visibility:hidden!important}
-.lp-menu__surface {position:fixed;inset:0;background:var(--void);pointer-events:none}
+.lp-menu__surface {position:fixed;inset:0;z-index:0;background:var(--void);pointer-events:none}
 .lp-menu[open]:not([data-keyboard="true"]) .lp-menu__surface {animation:menuCurtain var(--d-base) var(--e-out) backwards}
 .lp-menu[open]:not([data-keyboard="true"]) .lp-menu__objects {animation:menuObjectsIn 380ms var(--e-out) 80ms backwards}
 .lp-menu[open]:not([data-keyboard="true"]) .lp-menu__top,.lp-menu[open]:not([data-keyboard="true"]) .lp-menu__bottom {animation:menuChromeIn 220ms var(--e-out) 80ms backwards}
-.lp-menu__objects {position:fixed;inset:0;pointer-events:none;overflow:hidden}
+.lp-menu__objects {position:fixed;inset:0;z-index:1;pointer-events:none;overflow:hidden}
 .lp-menu__objects canvas {display:block;width:100%;height:100%;pointer-events:none}
-.lp-menu__top,.lp-menu__bottom,.lp-menu__links {position:relative}
+.lp-menu[data-live-objects="false"] .lp-menu__objects canvas {visibility:hidden}
+.lp-menu__top,.lp-menu__bottom,.lp-menu__links {position:relative;z-index:2}
 .lp-menu__top,.lp-menu__bottom {display:flex;align-items:center;justify-content:space-between;gap:var(--s-6);flex-shrink:0}
 .lp-menu__top {min-height:44px}
 .lp-menu__top>a {font-weight:500;color:var(--bone)}
@@ -111,8 +112,8 @@ body.mo-menu-settled #root,body.mo-menu-settled .asb {visibility:hidden!importan
 .lp-menu__label em {font-family:var(--ff-serif);font-weight:400;font-style:italic;letter-spacing:var(--tr-tight)}
 .lp-menu__description {display:block;margin-top:var(--s-4);color:var(--ash);font-size:var(--fs-small);line-height:var(--lh-text)}
 .lp-menu__object {display:flex;align-items:center;justify-content:center;height:clamp(80px,12vh,124px);pointer-events:none}
-.lp-menu__object img {width:100%;height:100%;object-fit:contain;transition:transform var(--d-fast) var(--e-out)}
-.lp-menu[data-live-objects="true"] .lp-menu__object img {visibility:hidden}
+.lp-menu__object img {width:100%;height:100%;object-fit:contain;transition:transform var(--d-fast) var(--e-out),opacity 180ms var(--e-out)}
+.lp-menu[data-live-objects="true"] .lp-menu__object[data-model-ready="true"] img {opacity:0}
 .lp-menu[data-live-objects="false"][open]:not([data-keyboard="true"]) .lp-menu__object img {animation:menuObjectsIn 380ms var(--e-out) backwards;animation-delay:calc(80ms + var(--menu-order) * 30ms)}
 .lp-menu__links>a>svg {opacity:.3;transform:translateX(calc(-1 * var(--s-3)));transition:opacity 160ms,transform 240ms var(--e-out)}
 .lp-menu__links>a:focus-visible .lp-menu__label {color:var(--signal)}
@@ -167,4 +168,5 @@ html.mo-menu-transition::view-transition-new(root) {animation:menuDestinationIn 
 @media(prefers-reduced-motion:reduce){
   .lp-menu[open],.lp-menu[open] *, .lp-menu[open] *::before {animation:none!important}
   .lp-menu__links>a,.lp-menu__label,.lp-menu__links>a>svg {transition:none;transform:none!important}
+  .lp-menu__object img {transition:none}
 }

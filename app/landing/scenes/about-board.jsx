@@ -539,6 +539,7 @@
     return t;
   }
   function buildComponent(kind) {
+    if (kind === "switch") return window.makeMoOutputSwitch(THREE, TOP);
     const grp = new THREE.Group();
     const epoxy = mat(0x161b22, 0.25, 0.5);
     const metal = mat(0xb9c0cc, 1.0, 0.28);
@@ -579,13 +580,6 @@
       }
       const dot = new THREE.Mesh(new THREE.CylinderGeometry(0.6,0.6,0.1,16), mat(0x9aa3b3,0.2,0.5));
       dot.position.set(-3, 1.62+TOP, -3); grp.add(dot);
-    } else if (kind === "switch") {
-      const housing = roundedBox(4.2, 1.7, 4.2, 0.2, mat(0x14171f,0.2,0.5)); housing.position.y = 0.85+TOP; grp.add(housing);
-      const plate = roundedBox(4.2, 0.16, 4.2, 0.1, metal); plate.position.y = 1.78+TOP; grp.add(plate);
-      const btn = new THREE.Mesh(new THREE.CylinderGeometry(1.15, 1.25, 0.75, 24), mat(0xff5b3b, 0.1, 0.45));
-      btn.name = "SW1.actuator";
-      btn.position.y = 2.2+TOP; grp.add(btn);
-      [[-1.9,-1.9],[1.9,-1.9],[-1.9,1.9],[1.9,1.9]].forEach(m2 => { const leg = roundedBox(0.6, 0.25, 0.9, 0.1, metal); leg.position.set(m2[0], 0.13+TOP, m2[1]); grp.add(leg); });
     }
     return grp;
   }

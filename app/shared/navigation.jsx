@@ -1,10 +1,26 @@
-/* One navigation contract for the landing, case studies and reference routes.
-   The landing lends its renderer; other routes use small renders of the same
-   objects so opening navigation never needs another WebGL context. */
+/* One navigation contract and one live object scene on every public route. */
 function PortfolioHeader({ landing = false, section, className = "", context, utility, sound }) {
   const home = landing ? "#title" : "./";
-  const universe = () => landing ? window.__mo_universe : null;
+  const motionRef = React.useRef(null);
+  const motionLoadRef = React.useRef(null);
+  const disposedRef = React.useRef(false);
+  const universe = () => motionRef.current || (landing ? window.__mo_universe : null);
+  const prepareMotion = () => {
+    if (universe()) return Promise.resolve(universe());
+    if (!motionLoadRef.current) {
+      motionLoadRef.current = window.loadMenuModelDependencies().then(() => {
+        const rig = window.__pageRig || window.__waferRig;
+        return rig?.getMenuMotion ? rig.getMenuMotion() : window.createStandaloneMenuMotion();
+      }).then(motion => {
+        if (disposedRef.current) { motion.dispose(); return null; }
+        motionRef.current = motion;
+        return motion;
+      }).catch(() => { motionLoadRef.current = null; return null; });
+    }
+    return motionLoadRef.current;
+  };
   const menuRef = React.useRef(null);
+  const menuOpeningRef = React.useRef(0);
   const restoreRef = React.useRef(null);
   const exitTimerRef = React.useRef(0);
   const openingTimerRef = React.useRef(0);
@@ -19,6 +35,7 @@ function PortfolioHeader({ landing = false, section, className = "", context, ut
     }
   };
   const finishClose = () => {
+    menuOpeningRef.current++;
     clearTimeout(exitTimerRef.current); exitTimerRef.current = 0;
     clearTimeout(openingTimerRef.current); openingTimerRef.current = 0;
     universe()?.closeMenu?.();
@@ -37,6 +54,7 @@ function PortfolioHeader({ landing = false, section, className = "", context, ut
   };
   const openMenu = (event) => {
     if (menuRef.current?.open) return;
+    const opening = ++menuOpeningRef.current;
     const previousPause = window.__mo_universe_pause;
     const instant = event.detail === 0 || window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const previousOverflow = document.body.style.overflow;
@@ -53,6 +71,9 @@ function PortfolioHeader({ landing = false, section, className = "", context, ut
     menuRef.current.showModal();
     const hasObjects = universe()?.openMenu?.(menuRef.current, instant);
     menuRef.current.dataset.liveObjects = hasObjects ? "true" : "false";
+    if (!universe()) prepareMotion().then(motion => {
+      if (motion && opening === menuOpeningRef.current && menuRef.current?.open) motion.openMenu(menuRef.current, instant);
+    });
     window.dispatchEvent(new CustomEvent("mo:menu", { detail: { open: true, dialog: menuRef.current } }));
     if (instant) settleOpening();
     // First-use shader work can delay the animation's first paint. Release
@@ -88,9 +109,12 @@ function PortfolioHeader({ landing = false, section, className = "", context, ut
     }, duration);
   };
   React.useEffect(() => () => {
+    disposedRef.current = true;
+    menuOpeningRef.current++;
     clearTimeout(exitTimerRef.current);
     clearTimeout(openingTimerRef.current);
     universe()?.closeMenu?.();
+    motionRef.current?.dispose?.();
     document.body.classList.remove("mo-menu-open", "mo-menu-settled");
     if (restoreRef.current) restoreRef.current();
   }, []);
@@ -112,7 +136,9 @@ function PortfolioHeader({ landing = false, section, className = "", context, ut
         <div className="site-header__actions">
           {context && <span className="site-header__context">{context}</span>}
           {sound}
-          <button ref={triggerRef} className="lp-menuToggle" onClick={openMenu} aria-expanded={menuOpen} aria-controls="portfolio-menu" aria-haspopup="dialog">
+          <button ref={triggerRef} className="lp-menuToggle" onClick={openMenu}
+            onPointerEnter={prepareMotion} onFocus={prepareMotion}
+            aria-expanded={menuOpen} aria-controls="portfolio-menu" aria-haspopup="dialog">
             MENU <svg viewBox="0 0 18 18" width="18" height="18" aria-hidden="true"><path d="M2 6h14M2 12h14" /></svg>
           </button>
         </div>
