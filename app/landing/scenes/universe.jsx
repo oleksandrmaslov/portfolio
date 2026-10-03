@@ -2557,8 +2557,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         if (menuObjects.frame(now)) raf = requestAnimationFrame(frame);
         return;
       }
-      const rawDt = now - last;
-      const dt = Math.max(0, Math.min(50, rawDt)); last = now;
+      const dt = Math.max(0, Math.min(50, now - last)); last = now;
       const mode = modeRef.current;
       const focusAddrNow = focusRef.current;
       if (focusAddrNow && focusAddrNow !== prioritizedModelAddr) {
@@ -3368,8 +3367,10 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         window.__mo_firstFrameAt = now;
         try { window.dispatchEvent(new CustomEvent("mo:first-frame")); } catch (_) {}
       }
-      // Motion is clamped to avoid large jumps; device measurement must not be.
-      probeDoF(rawDt);
+      // The probe deliberately sees the 50ms-clamped dt. Loading hitches inside
+      // its window otherwise count at full length and strip DoF from devices
+      // that hold 30+ FPS once settled; the 30 FPS gate was tuned against this.
+      probeDoF(dt);
       if (universeCanRender()) raf = requestAnimationFrame(frame);
     }
 

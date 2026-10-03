@@ -366,7 +366,9 @@ when the GLBs upload and the shaders compile, and judging the device on that
 stall was disabling depth of field on machines that then ran fine. Over the
 following 90 valid frames, an average below **30** FPS disables only the Bokeh
 pass for the current Universe mount, and the measured average is left on
-`window.__mo_dofFps`. The gate is 30 because depth of field is a look, not a
+`window.__mo_dofFps`. The probe reads the same 50 ms-clamped frame delta as the
+motion, on purpose: fed raw intervals, a few 50–200 ms loading hitches inside
+the window drag a capable device under the gate. The gate is 30 because depth of field is a look, not a
 luxury: a device holding a steady 30 keeps it. The pointer displacement,
 chromatic aberration, and vignette remain active either way. Depth of field is
 reconsidered only when the Universe mounts again. Board Flight deliberately uses
