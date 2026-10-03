@@ -1422,52 +1422,13 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
        Concept 01. A dedicated point cloud whose rest state is scattered through
        the box; in origin/assembly mode each point flies to a target sampled from
        a canvas-rendered "0x00" glyph, giving a 3D constellation of the self. */
-    function sampleGlyphTargets(text, count) {
-      const cw = 720, ch = 260;
-      const gc = document.createElement("canvas");
-      gc.width = cw; gc.height = ch;
-      const gx = gc.getContext("2d");
-      gx.fillStyle = "#000"; gx.fillRect(0, 0, cw, ch);
-      gx.fillStyle = "#fff";
-      gx.textAlign = "center"; gx.textBaseline = "middle";
-      gx.font = "700 210px 'Geist Mono', monospace";
-      gx.fillText(text, cw / 2, ch / 2 + 6);
-      const data = gx.getImageData(0, 0, cw, ch).data;
-      // Finer sampling (every 2px) → crisper letterforms.
-      const hits = [];
-      for (let y = 0; y < ch; y += 2) {
-        for (let x = 0; x < cw; x += 2) {
-          if (data[(y * cw + x) * 4] > 128) hits.push([x, y]);
-        }
-      }
-      // Shuffle so any subset we draw is an even sample of the whole glyph
-      // (a strided index would band along scan-rows and leave gaps).
-      for (let i = hits.length - 1; i > 0; i--) {
-        const k = Math.floor(Math.random() * (i + 1));
-        const t = hits[i]; hits[i] = hits[k]; hits[k] = t;
-      }
-      // map sampled pixels into world-space targets centred on ORIGIN_CENTER
-      const SCALE = 0.024;
-      const out = new Float32Array(count * 3);
-      for (let i = 0; i < count; i++) {
-        const h = hits.length ? hits[i % hits.length] : [cw / 2, ch / 2];
-        // sub-cell jitter softens the sampling grid without blurring strokes
-        const jx = (Math.random() - 0.5) * 1.6;
-        const jy = (Math.random() - 0.5) * 1.6;
-        out[i*3+0] = ORIGIN_CENTER.x + (h[0] + jx - cw / 2) * SCALE;
-        out[i*3+1] = ORIGIN_CENTER.y - (h[1] + jy - ch / 2) * SCALE;
-        // SHALLOW depth — keeps the glyph close to a readable plane instead of
-        // puffing into a 3D cloud that never resolves into text.
-        out[i*3+2] = ORIGIN_CENTER.z + Math.sin(i * 12.9898) * 0.22;
-      }
-      return out;
-    }
+
 
     // Denser than the original 560 so the strokes read, but kept modest. This
     // is a single THREE.Points (one draw call); the only per-frame cost is the
     // position loop below — trivial next to the GLB models + bokeh pass.
     const ASM_N = 820;
-    const asmTargets = sampleGlyphTargets("0x00", ASM_N);
+    const asmTargets = window.sampleMoGlyphTargets("0x00", ASM_N, ORIGIN_CENTER);
     // Glyph offsets relative to ORIGIN_CENTER — lets us re-anchor the formed
     // glyph in front of the *camera* each frame instead of at a fixed world
     // point (so it's always in view no matter how far the camera has drifted).
@@ -2640,7 +2601,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       // idle attention — after ~30s of stillness the field notices you:
       // the camera turns softly toward the nearest node, a slow ripple
       // crosses the screen, and the field murmurs.
-      if (!exploreOn && mode === "drift" && !_idleFired && now - _lastAct > 30000 && !ARR.t0) {
+      if (!FLOW_RM && !exploreOn && mode === "drift" && !_idleFired && now - _lastAct > 30000 && !ARR.t0) {
         _idleFired = true;
         let nearTile = null, nd = Infinity;
         for (const m of tiles) {
@@ -3406,6 +3367,9 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         window.__mo_firstFrameAt = now;
         try { window.dispatchEvent(new CustomEvent("mo:first-frame")); } catch (_) {}
       }
+      // The probe deliberately sees the 50ms-clamped dt. Loading hitches inside
+      // its window otherwise count at full length and strip DoF from devices
+      // that hold 30+ FPS once settled; the 30 FPS gate was tuned against this.
       probeDoF(dt);
       if (universeCanRender()) raf = requestAnimationFrame(frame);
     }

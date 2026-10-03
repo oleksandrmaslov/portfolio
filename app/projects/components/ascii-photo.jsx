@@ -53,6 +53,8 @@ function AsciiMediaFigure({ src, caption, kind = "photo", ratio, tone, poster, l
   const canvasRef = useRAF(null);
   const fxRef = useRAF(null);
   const videoRef = useRAF(null);
+  // null follows the motion preference; explicit play/pause survives GPU recycling.
+  const pausedRef = useRAF(null);
   const [playing, setPlaying] = useAF(false);
   const [natural, setNatural] = useAF(null);   // intrinsic ratio, once known
   const [failed, setFailed] = useAF(false);
@@ -65,7 +67,11 @@ function AsciiMediaFigure({ src, caption, kind = "photo", ratio, tone, poster, l
 
   useEAF(() => {
     if (!window.AsciiPhoto || !canvasRef.current) return;
-    let fx = null, io = null, far = null, started = false;
+    let fx = null, io = null, view = null, far = null, started = false;
+    let visible = false, ratioInView = 0;
+    const motion = matchMedia("(prefers-reduced-motion: reduce)");
+    // On screen, in a visible tab, and not under the settled navigation surface.
+    const active = () => visible && !document.hidden && !document.body.classList.contains("mo-menu-settled");
     const canvas = canvasRef.current;
     const wrap = wrapRef.current;
 
@@ -107,8 +113,26 @@ function AsciiMediaFigure({ src, caption, kind = "photo", ratio, tone, poster, l
         probe.src = src;
       }
       fxRef.current = fx;
+      fx.setVisible(active());
       canvas.__fx = fx;
       (window.__asciiFigs = window.__asciiFigs || []).push(fx);
+    };
+
+    const syncPlayback = () => {
+      const on = active();
+      if (fx) fx.setVisible(on);
+      const v = videoRef.current;
+      if (!isVideo || !v) return;
+      if (on && ratioInView > 0.35 && pausedRef.current !== true &&
+          (!motion.matches || pausedRef.current === false)) {
+        const pr = v.play();
+        if (pr && pr.catch) pr.catch(() => {});
+      } else v.pause();
+    };
+    const onMotion = () => {
+      // A new request to reduce motion also stops an explicitly started clip.
+      if (motion.matches && pausedRef.current === false) pausedRef.current = null;
+      syncPlayback();
     };
 
     /* desktop pointer — sweep lens + click convert */
@@ -169,28 +193,34 @@ function AsciiMediaFigure({ src, caption, kind = "photo", ratio, tone, poster, l
     }, { rootMargin: "1400px 0px" });
     far.observe(wrap);
 
+    // Prewarm within 240px, but drive playback/rendering from the actual viewport.
     io = new IntersectionObserver((entries) => {
+      if (entries.some(en => en.isIntersecting)) start();
+    }, { rootMargin: "240px 0px" });
+    io.observe(wrap);
+
+    view = new IntersectionObserver((entries) => {
       entries.forEach((en) => {
+        visible = en.isIntersecting;
+        ratioInView = en.intersectionRatio;
         if (en.isIntersecting) {
           start();
-          // Only a clip that is actually on screen decodes. Off screen it is
-          // paused, so several figures on one page stay cheap.
-          if (isVideo && videoRef.current && en.intersectionRatio > 0.35) {
-            const pr = videoRef.current.play();
-            if (pr && pr.catch) pr.catch(() => {});
-          }
-          if (touch.current && fx && en.intersectionRatio > 0.5 && !fx.converted) {
+          if (touch.current && !motion.matches && fx && en.intersectionRatio > 0.5 && !fx.converted) {
             setConverted(fx.setConvert(true) || true);
           }
         } else {
-          if (isVideo && videoRef.current) videoRef.current.pause();
           if (touch.current && fx && en.intersectionRatio < 0.05 && fx.converted) {
             fx.setConvert(false); setConverted(false);     // re-arm for next scroll-in
           }
         }
+        syncPlayback();
       });
-    }, { threshold: [0, 0.05, 0.35, 0.5, 0.85], rootMargin: "240px 0px" });
-    io.observe(wrap);
+    }, { threshold: [0, 0.05, 0.35, 0.5, 0.85], rootMargin: "0px" });
+    view.observe(wrap);
+    document.addEventListener("visibilitychange", syncPlayback);
+    window.addEventListener("mo:menu-settled", syncPlayback);
+    window.addEventListener("mo:menu", syncPlayback);
+    motion.addEventListener("change", onMotion);
 
     if (touch.current) {
       canvas.addEventListener("touchstart", onTouchStart, { passive: true });
@@ -206,7 +236,13 @@ function AsciiMediaFigure({ src, caption, kind = "photo", ratio, tone, poster, l
 
     return () => {
       io && io.disconnect();
+      view && view.disconnect();
       far && far.disconnect();
+      document.removeEventListener("visibilitychange", syncPlayback);
+      window.removeEventListener("mo:menu-settled", syncPlayback);
+      window.removeEventListener("mo:menu", syncPlayback);
+      motion.removeEventListener("change", onMotion);
+      if (isVideo && videoRef.current) videoRef.current.pause();
       window.removeEventListener("resize", updateGrid);
       if (touch.current) {
         canvas.removeEventListener("touchstart", onTouchStart);
@@ -219,6 +255,7 @@ function AsciiMediaFigure({ src, caption, kind = "photo", ratio, tone, poster, l
         canvas.removeEventListener("click", onClick);
       }
       if (fx) {
+        fxRef.current = null;
         try { fx.destroy(); } catch (_) {}
         const list = window.__asciiFigs;
         if (list) { const i = list.indexOf(fx); if (i >= 0) list.splice(i, 1); }
@@ -245,6 +282,7 @@ function AsciiMediaFigure({ src, caption, kind = "photo", ratio, tone, poster, l
   const togglePlay = () => {
     const v = videoRef.current;
     if (!v) return;
+    pausedRef.current = !v.paused;
     if (v.paused) { const pr = v.play(); if (pr && pr.catch) pr.catch(() => {}); }
     else v.pause();
   };
@@ -282,7 +320,16 @@ function AsciiMediaFigure({ src, caption, kind = "photo", ratio, tone, poster, l
             onError={() => setFailed(true)}
           />
         )}
-        <canvas className="ascii-fig__cv" ref={canvasRef} key={gen} />
+        <canvas className="ascii-fig__cv" ref={canvasRef} key={gen}
+          role="button" tabIndex={0} aria-pressed={converted}
+          aria-label={"Toggle ASCII effect" + (caption ? ": " + caption : "")}
+          onFocus={() => fxRef.current?.setHover(true)}
+          onBlur={() => fxRef.current?.setHover(false)}
+          onKeyDown={(e) => {
+            if (e.key !== "Enter" && e.key !== " ") return;
+            e.preventDefault();
+            if (fxRef.current) setConverted(fxRef.current.toggleConvert());
+          }} />
         <div className="ph__phCorner ph__phCorner--tl" />
         <div className="ph__phCorner ph__phCorner--tr" />
         <div className="ph__phCorner ph__phCorner--bl" />

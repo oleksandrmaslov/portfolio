@@ -1,0 +1,177 @@
+{
+  "marks": [
+    {
+      "name": "doc",
+      "at": 231.19999999552965
+    },
+    {
+      "name": "styles",
+      "at": 274.8999999985099
+    },
+    {
+      "name": "react",
+      "at": 295.5
+    },
+    {
+      "name": "fonts",
+      "at": 357.59999999403954
+    },
+    {
+      "name": "three",
+      "at": 1081
+    },
+    {
+      "name": "universe",
+      "at": 2754
+    },
+    {
+      "name": "title",
+      "at": 2773.89999999851
+    },
+    {
+      "name": "frame",
+      "at": 4009.1999999955297
+    },
+    {
+      "name": "handoff",
+      "at": 5809.5
+    }
+  ],
+  "ready": 9711.79999999702,
+  "frame": 1869.8,
+  "draws": [
+    {
+      "now": 993.264,
+      "progress": 0.00392156862745098,
+      "target": 0.4,
+      "core": false,
+      "handoff": false,
+      "finished": false
+    },
+    {
+      "now": 1019.9,
+      "progress": 0.19322892763583288,
+      "target": 0.5800000000000001,
+      "core": false,
+      "handoff": false,
+      "finished": false
+    },
+    {
+      "now": 1869.8,
+      "progress": 0.25471589369148373,
+      "target": 0.86,
+      "core": false,
+      "handoff": false,
+      "finished": false
+    },
+    {
+      "now": 4278.3,
+      "progress": 0.5440139885610732,
+      "target": 0.94,
+      "core": false,
+      "handoff": false,
+      "finished": false
+    },
+    {
+      "now": 4578.2,
+      "progress": 0.7332771750718688,
+      "target": 0.94,
+      "core": false,
+      "handoff": false,
+      "finished": false
+    },
+    {
+      "now": 4686.5,
+      "progress": 0.8320812222861622,
+      "target": 0.94,
+      "core": false,
+      "handoff": false,
+      "finished": false
+    },
+    {
+      "now": 4911.6,
+      "progress": 0.8836614578612801,
+      "target": 0.94,
+      "core": false,
+      "handoff": false,
+      "finished": false
+    },
+    {
+      "now": 5153.3,
+      "progress": 0.9105887020076088,
+      "target": 0.94,
+      "core": false,
+      "handoff": false,
+      "finished": false
+    },
+    {
+      "now": 5711.6,
+      "progress": 0.9246459560940123,
+      "target": 0.94,
+      "core": false,
+      "handoff": false,
+      "finished": false
+    },
+    {
+      "now": 5744.9,
+      "progress": 0.9319844862226759,
+      "target": 0.94,
+      "core": false,
+      "handoff": false,
+      "finished": false
+    },
+    {
+      "now": 5911.6,
+      "progress": 0.9335445232052294,
+      "target": 1,
+      "core": true,
+      "handoff": false,
+      "finished": false
+    },
+    {
+      "now": 8228.2,
+      "progress": 0.9653071989966503,
+      "target": 1,
+      "core": true,
+      "handoff": false,
+      "finished": false
+    },
+    {
+      "now": 9086.6,
+      "progress": 0.981888769752191,
+      "target": 1,
+      "core": true,
+      "handoff": false,
+      "finished": false
+    },
+    {
+      "now": 9094.9,
+      "progress": 0.9905451087371849,
+      "target": 1,
+      "core": true,
+      "handoff": false,
+      "finished": false
+    },
+    {
+      "now": 9111.6,
+      "progress": 0.9910416845495508,
+      "target": 1,
+      "core": true,
+      "handoff": false,
+      "finished": false
+    },
+    {
+      "now": 9120,
+      "progress": 0.9919631902952756,
+      "target": 1,
+      "core": true,
+      "handoff": false,
+      "finished": false
+    }
+  ],
+  "handoffs": [
+    9251.19999999553,
+    9362.19999999553
+  ],
+  "hidden": false
+}

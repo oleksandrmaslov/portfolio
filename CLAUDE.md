@@ -30,8 +30,11 @@ became `models/ci-clop-mark.glb` in the same pass, which also puts it on the
 
 Nothing links to a route by literal filename except the two registries: pages
 navigate through `project.file`. That is the whole migration surface — plus one
-`<link rel="prefetch">` in `index.html`. Verify a rename by executing both
-registries and walking the ring in both directions, not by grepping.
+`<link rel="prefetch">` in `index.html`, and the landing's no-graphics overview
+(`#mo-fallback` in `index.html`), whose project links
+`tools/landing-runtime/build.cjs` generates from `MO_FEATURED_ADDRS`, so the
+build moves them with a rename. Verify a rename by executing both registries
+and walking the ring in both directions, not by grepping.
 
 The other public pages are:
 
@@ -363,7 +366,9 @@ when the GLBs upload and the shaders compile, and judging the device on that
 stall was disabling depth of field on machines that then ran fine. Over the
 following 90 valid frames, an average below **30** FPS disables only the Bokeh
 pass for the current Universe mount, and the measured average is left on
-`window.__mo_dofFps`. The gate is 30 because depth of field is a look, not a
+`window.__mo_dofFps`. The probe reads the same 50 ms-clamped frame delta as the
+motion, on purpose: fed raw intervals, a few 50–200 ms loading hitches inside
+the window drag a capable device under the gate. The gate is 30 because depth of field is a look, not a
 luxury: a device holding a steady 30 keeps it. The pointer displacement,
 chromatic aberration, and vignette remain active either way. Depth of field is
 reconsidered only when the Universe mounts again. Board Flight deliberately uses
@@ -443,7 +448,18 @@ editing either registry — a rename is not finished until the stamp moves.
 - Keep fixed and sticky landing layers outside CSS filters that create new
   containing blocks.
 - Prefer visibility-gated rendering and explicit Three.js disposal; the site
-  targets machines with limited RAM.
+  targets machines with limited RAM. A loop sleeps (owns no animation
+  callback) while its output is scrolled away, in a hidden tab, or under the
+  navigation surface, and wakes on the event that changes that. An
+  IntersectionObserver cannot see the opaque menu, so work beneath it listens
+  for `body.mo-menu-settled` with `mo:menu-settled` / `mo:menu`. Wafer's
+  bespoke page lifecycle follows the same contract as
+  `project-page-lifecycle.jsx`.
+- Back/forward cache restores a project page exactly as it left: hero centred
+  in the handoff pose, idle off, exit spin on. `core.jsx` clears
+  `__hv_exitSpin` with `__hv_leaving`, and both hero lifecycles settle the rig
+  to rest on `mo:page-restored`. Any new one-way exit flag needs the same
+  reset.
 - Build generated landing code with
   `npm.cmd run build --prefix tools/landing-runtime` and verify freshness with
   `npm.cmd run check --prefix tools/landing-runtime`. Never edit

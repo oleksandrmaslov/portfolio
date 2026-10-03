@@ -1,0 +1,46 @@
+{
+  "headless": true,
+  "steps": [
+    {
+      "step": "eight rapid toggles, running",
+      "hidden": false,
+      "visibility": "visible",
+      "running": true,
+      "intent": true,
+      "contextState": "running",
+      "timer": 40,
+      "voices": 1
+    },
+    {
+      "step": "another tab in front",
+      "hidden": true,
+      "visibility": "hidden",
+      "running": false,
+      "intent": false,
+      "contextState": "suspended",
+      "timer": null,
+      "voices": 0
+    },
+    {
+      "step": "tab visible again",
+      "hidden": false,
+      "visibility": "visible",
+      "running": false,
+      "intent": false,
+      "contextState": "suspended",
+      "timer": null,
+      "voices": 0
+    },
+    {
+      "step": "explicit restart",
+      "hidden": false,
+      "visibility": "visible",
+      "running": true,
+      "intent": true,
+      "contextState": "running",
+      "timer": 42,
+      "voices": 1
+    }
+  ],
+  "pass": true
+}

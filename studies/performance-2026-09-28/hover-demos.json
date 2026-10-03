@@ -1,0 +1,44 @@
+{
+  "demos": [
+    {
+      "route": "Wafer.html",
+      "buttons": [
+        "▸PLAY DEMO"
+      ],
+      "openedAndClosed": true
+    },
+    {
+      "route": "Kerfur.html",
+      "buttons": [
+        "▸PLAY DEMO"
+      ],
+      "openedAndClosed": true
+    },
+    {
+      "route": "Ci-Clop.html",
+      "buttons": [
+        "▸PLAY DEMO"
+      ],
+      "openedAndClosed": true
+    },
+    {
+      "route": "ZMK-PointAccel.html",
+      "buttons": [
+        "▸PLAY DEMO"
+      ],
+      "openedAndClosed": true
+    }
+  ],
+  "errors": [],
+  "box": {
+    "x": 735.9435561351386,
+    "y": 191.03499005240167,
+    "w": 195.4092558866531,
+    "h": 232.38886990796277
+  },
+  "hover": {
+    "text": "Open project",
+    "outline": 4,
+    "segments": 12
+  }
+}

@@ -333,11 +333,20 @@
       recomputeOffX();
     }
 
+    let menuMotion = null;
     /* ---- shared rig controls ---- */
     const api = {
       el: renderer.domElement,
       get ready() { return modelReady; },
       render, update, setSize, setModel,
+      getMenuMotion() {
+        if (!menuMotion) {
+          menuMotion = window.createMenuMotion(THREE, renderer, scene.environment);
+          const close = menuMotion.closeMenu;
+          menuMotion.closeMenu = () => { close(); const size = sz(); setSize(size.w, size.h); };
+        }
+        return menuMotion;
+      },
       setEaseRate(r) { easeRate = r; },
       setYawRate(r) { yawRate = r; },
       isAt() { return false; },
@@ -404,6 +413,7 @@
       setExplode(v) { tgt.explode = Math.max(0, Math.min(1, v)); },
       get explode() { return tgt.explode; },
       dispose() {
+        menuMotion?.dispose();
         modelGeneration++;
         clearModel();
         try { mount.removeChild(renderer.domElement); } catch (_) {}

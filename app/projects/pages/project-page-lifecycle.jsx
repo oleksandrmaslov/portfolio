@@ -231,10 +231,17 @@
       };
       onScroll();
       global.addEventListener("scroll", onScroll, { passive: true });
+      // Back/forward cache restores the page exactly as it left: centred in
+      // the handoff pose, idle off. core.jsx has already cleared the exit spin.
+      const onRestored = () => {
+        if (!demoRef.current) settleToRest();
+        onScroll();
+      };
       document.addEventListener("visibilitychange", syncLoop);
       global.addEventListener("pageshow", syncLoop);
       global.addEventListener("mo:menu", syncLoop);
       global.addEventListener("mo:project-rig-wake", syncLoop);
+      global.addEventListener("mo:page-restored", onRestored);
 
       return () => {
         disposed = true;
@@ -249,6 +256,7 @@
         global.removeEventListener("pageshow", syncLoop);
         global.removeEventListener("mo:menu", syncLoop);
         global.removeEventListener("mo:project-rig-wake", syncLoop);
+        global.removeEventListener("mo:page-restored", onRestored);
         if (global.__pageRig === rig) global.__pageRig = null;
         rig.dispose();
       };

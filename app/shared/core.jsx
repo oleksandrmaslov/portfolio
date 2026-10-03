@@ -11,6 +11,7 @@ const { useState, useEffect, useRef } = React;
   window.addEventListener("pageshow", (event) => {
     if (!event.persisted) return;
     window.__hv_leaving = false;
+    window.__hv_exitSpin = false;   // otherwise the hero keeps spinning and never sleeps
     window.__mo_universe_pause = false;
     document.body.classList.remove("hv-exit", "landing-exit", "wf-flying");
     const universe = document.querySelector(".universeBg");

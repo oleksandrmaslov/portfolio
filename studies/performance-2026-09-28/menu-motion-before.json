@@ -1,0 +1,99 @@
+{
+  "label": "before",
+  "routes": [
+    {
+      "route": "/",
+      "live": "true",
+      "canvas": 1,
+      "left": [
+        {
+          "rotation": [
+            -0.16516775004977452,
+            0.13120919729821737,
+            0
+          ],
+          "children": 1
+        },
+        {
+          "rotation": [
+            -0.06187200476881755,
+            0.09808315013019936,
+            0
+          ],
+          "children": 1
+        },
+        {
+          "rotation": [
+            -0.06,
+            0,
+            0
+          ],
+          "children": 1
+        },
+        {
+          "rotation": [
+            -0.06,
+            0,
+            0
+          ],
+          "children": 3
+        }
+      ],
+      "right": [
+        {
+          "rotation": [
+            -0.3,
+            0,
+            0
+          ],
+          "children": 1
+        },
+        {
+          "rotation": [
+            -0.06,
+            0,
+            0
+          ],
+          "children": 1
+        },
+        {
+          "rotation": [
+            -0.06022349606257339,
+            0.0063085838867099914,
+            0
+          ],
+          "children": 1
+        },
+        {
+          "rotation": [
+            -0.06779452850400407,
+            0.2200147794939977,
+            0
+          ],
+          "children": 3
+        }
+      ],
+      "idleFrames": 121,
+      "idleDraws": 46
+    },
+    {
+      "route": "Iskra.html",
+      "live": "false",
+      "canvas": 0,
+      "left": null,
+      "right": null,
+      "idleFrames": 0,
+      "idleDraws": 0
+    },
+    {
+      "route": "All Projects.html",
+      "live": "false",
+      "canvas": 0,
+      "left": null,
+      "right": null,
+      "idleFrames": 0,
+      "idleDraws": 0
+    }
+  ],
+  "errors": []
+}

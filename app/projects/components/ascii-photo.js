@@ -282,17 +282,32 @@
       this.convert = 0; this.convertTarget = 0;
       this.imgAspect = 1; this.ready = false;
       this._raf = null; this._last = 0; this._t0 = performance.now();
+      this._visible = true; this._destroyed = false;
       this.fps = 0; this._fpsAcc = 0; this._fpsN = 0; this._fpsT = 0;
       this.onFps = null;
 
       this._buildAtlas();
-      if (this.o.src) this.load(this.o.src);
       this._loop = this._loop.bind(this);
-      this._raf = requestAnimationFrame(this._loop);
+      if (this.o.src) this.load(this.o.src);
 
       this._onResize = () => this.resize();
       window.addEventListener("resize", this._onResize);
       this.resize();
+    }
+
+    _wake() {
+      if (this._destroyed || !this._visible || this._raf !== null) return;
+      this._raf = requestAnimationFrame(this._loop);
+    }
+
+    setVisible(visible) {
+      this._visible = visible;
+      if (!visible) {
+        cancelAnimationFrame(this._raf); this._raf = null;
+      } else {
+        this._last = performance.now(); this._skipVel = true;
+        this._dirty = true; this._wake();
+      }
     }
 
     _buildAtlas() {
@@ -348,7 +363,7 @@
         if (!this.ready) { this.ready = true; if (this.onReady) this.onReady(); }
         this._dirty = true;
       };
-      const invalidate = () => { if (active) this._videoFrameReady = true; };
+      const invalidate = () => { if (active) { this._videoFrameReady = true; this._wake(); } };
       const onFrame = () => {
         if (!active) return;
         invalidate();
@@ -358,21 +373,24 @@
       // with video callbacks, then upload once in the next render tick.
       el.addEventListener("loadeddata", invalidate);
       el.addEventListener("seeked", invalidate);
+      el.addEventListener("play", invalidate);
       if (this._usesVideoFrames) frameId = el.requestVideoFrameCallback(onFrame);
       this._releaseVideo = () => {
         active = false;
         el.removeEventListener("loadeddata", invalidate);
         el.removeEventListener("seeked", invalidate);
+        el.removeEventListener("play", invalidate);
         if (frameId !== null) el.cancelVideoFrameCallback(frameId);
       };
       this._bindVideoFrame = bind;
-      if (el.readyState >= 2) bind();
+      if (el.readyState >= 2) { bind(); this._wake(); }
     }
 
     load(src) {
       const img = new Image();
       img.crossOrigin = "anonymous";
       img.onload = () => {
+        if (this._destroyed) return;
         const gl = this.gl;
         this.imgAspect = img.naturalWidth / img.naturalHeight;
         if (!this.photoTex) this.photoTex = gl.createTexture();
@@ -385,6 +403,7 @@
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
         this.ready = true;
         this._dirty = true;
+        this._wake();
         if (this.onReady) this.onReady();
       };
       img.src = src;
@@ -405,6 +424,7 @@
       this.dpr = dpr;
       this.gl.viewport(0, 0, w, h);
       this._dirty = true;
+      this._wake();
     }
 
     set(patch) {
@@ -412,17 +432,19 @@
       if (patch.ramp || patch.cellAspect) this._buildAtlas();
       if (patch.renderScale !== undefined || patch.dprCap !== undefined) this.resize();
       this._dirty = true;
+      this._wake();
     }
 
-    setPointer(u, v) { this.pointer.x = u; this.pointer.y = v; this._dirty = true; }
-    pulse(now) { this._pulse = 0; this._pulseT = now || performance.now(); this._dirty = true; }
-    setHover(on) { this.hoverTarget = on ? 1 : 0; if (on) this._skipVel = true; this._dirty = true; }
-    toggleConvert() { this.convertTarget = this.convertTarget > 0.5 ? 0 : 1; this._dirty = true; return this.convertTarget > 0.5; }
-    setConvert(on) { this.convertTarget = on ? 1 : 0; this._dirty = true; }
+    setPointer(u, v) { this.pointer.x = u; this.pointer.y = v; this._dirty = true; this._wake(); }
+    pulse(now) { this._pulse = 0; this._pulseT = now || performance.now(); this._dirty = true; this._wake(); }
+    setHover(on) { this.hoverTarget = on ? 1 : 0; if (on) this._skipVel = true; this._dirty = true; this._wake(); }
+    toggleConvert() { this.setConvert(this.convertTarget <= 0.5); return this.convertTarget > 0.5; }
+    setConvert(on) { this.convertTarget = on ? 1 : 0; this._dirty = true; this._wake(); }
     get converted() { return this.convertTarget > 0.5; }
 
     _loop(now) {
-      this._raf = requestAnimationFrame(this._loop);
+      this._raf = null;
+      if (this._destroyed || !this._visible) return;
       const dt = Math.min(0.05, (now - this._last) / 1000 || 0.016);
       this._last = now;
 
@@ -489,6 +511,7 @@
       const animating = Math.abs(this.hoverTarget - this.hover) > 0.002 ||
         Math.abs(this.convertTarget - this.convert) > 0.002 ||
         this.hover > 0.002 || this.convert > 0.002 || this._caBoost > 0.01 || this._pulse >= 0;
+      if (animating || (!this._usesVideoFrames && videoLive)) this._wake();
       if (!this.ready) return;
       if (!animating && !this._dirty) return;   // <-- the free-idle path
       this._dirty = false;
@@ -533,11 +556,13 @@
     }
 
     destroy() {
+      this._destroyed = true;
       if (this._releaseVideo) this._releaseVideo();
       this._releaseVideo = null;
       this._video = null;
       this._bindVideoFrame = null;
       cancelAnimationFrame(this._raf);
+      this._raf = null;
       window.removeEventListener("resize", this._onResize);
       // Browsers cap concurrent WebGL contexts (Chrome around 16) and silently
       // kill the oldest past that. A long case file can hold twenty figures

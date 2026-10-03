@@ -101,6 +101,10 @@
   height: 100%;
   display: block;
 }
+.ascii-fig__cv:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: -4px;
+}
 
 /* reticle accent brightens while probing */
 .ascii-fig.is-probing .ph__phCorner { opacity: 1; }

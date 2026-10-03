@@ -1,0 +1,18 @@
+{
+  "errors": [],
+  "requests": 1,
+  "whileBlocked": {
+    "open": true,
+    "workReady": "false",
+    "aboutReady": "true",
+    "contactReady": "true",
+    "previewOpacity": "1",
+    "links": 4
+  },
+  "after": {
+    "live": "true",
+    "workReady": "true",
+    "previewOpacity": "0",
+    "canvasCount": 1
+  }
+}

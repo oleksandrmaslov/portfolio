@@ -137,6 +137,7 @@ function leaveToUniverse() {
   // model stays on screen: ease back to CENTER + keep spinning (no shrink-away)
   if (window.__waferRig) { window.__waferRig.setIdle(false); window.__waferRig.setExplode(0); window.__waferRig.toHandoff(); window.__hv_exitSpin = true; }
   document.body.classList.add("hv-exit");            // page content fades; the model stage stays
+  window.dispatchEvent(new CustomEvent("mo:project-rig-wake"));   // the loop may be asleep below the stage
   // Hand the model's live yaw to the landing so the reverse flight CONTINUES
   // this page's rotation instead of snapping. The landing does
   // `if (isFinite(seamYaw)) rig.setYaw(seamYaw)` — with the key absent that
@@ -348,38 +349,69 @@ function WaferProjectApp() {
       setTimeout(settleToRest, 460);
     }
 
-    let raf, last = performance.now();
+    // Same sleep contract as project-page-lifecycle.jsx: no callback at all
+    // while the stage is scrolled away, covered or hidden. The case file below
+    // it is the longest on the site, and a permanent loop there never idled.
+    let raf = 0, last = performance.now();
+    const shouldRender = () => !document.hidden && !document.body.classList.contains("mo-menu-open") && (
+      window.scrollY < window.innerHeight * 0.74
+      || window.__hv_exitSpin
+    );
     const loop = (now) => {
+      raf = 0;
+      if (!shouldRender()) { last = now; return; }
       const dt = now - last; last = now;
-      const stageVisible = window.scrollY < window.innerHeight * 0.74
-        || window.__hv_exitSpin;
-      if (!document.hidden && !document.body.classList.contains("mo-menu-open") && stageVisible) {
-        if (window.__hv_exitSpin) rig.nudgeYaw(Math.min(50, dt) * 0.0019);   // graceful exit turn
-        rig.update(dt); rig.render();
-      }
+      if (window.__hv_exitSpin) rig.nudgeYaw(Math.min(50, dt) * 0.0019);   // graceful exit turn
+      rig.update(dt); rig.render();
       raf = requestAnimationFrame(loop);
     };
-    raf = requestAnimationFrame(loop);
+    const syncLoop = () => {
+      if (!shouldRender()) { cancelAnimationFrame(raf); raf = 0; return; }
+      if (raf) return;
+      last = performance.now();          // a long sleep must not arrive as one dt
+      raf = requestAnimationFrame(loop);
+    };
+    syncLoop();
 
     const onResize = () => {
       if (!mount) return;
       rig.setSize(mount.clientWidth, mount.clientHeight);
       if (!demoRef.current && !window.__hv_leaving) applyHeroLayout(rig);   // re-anchor across breakpoints
+      syncLoop();
     };
     window.addEventListener("resize", onResize);
 
     const onScroll = () => {
-      if (demoRef.current || window.__hv_leaving) return;
-      const op = Math.max(0, 1 - window.scrollY / (window.innerHeight * 0.72));
-      document.documentElement.style.setProperty("--hv-stage-op", op.toFixed(3));
+      if (!demoRef.current && !window.__hv_leaving) {
+        const op = Math.max(0, 1 - window.scrollY / (window.innerHeight * 0.72));
+        document.documentElement.style.setProperty("--hv-stage-op", op.toFixed(3));
+      }
+      syncLoop();
     };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
+
+    // Back/forward cache restores this page exactly as it left: centred in the
+    // handoff pose, idle off. core.jsx has already cleared the exit spin.
+    const onRestored = () => {
+      if (!demoRef.current) settleToRest();
+      onScroll();
+    };
+    document.addEventListener("visibilitychange", syncLoop);
+    window.addEventListener("pageshow", syncLoop);
+    window.addEventListener("mo:menu", syncLoop);
+    window.addEventListener("mo:project-rig-wake", syncLoop);
+    window.addEventListener("mo:page-restored", onRestored);
 
     return () => {
       cancelAnimationFrame(raf);
       window.removeEventListener("resize", onResize);
       window.removeEventListener("scroll", onScroll);
+      document.removeEventListener("visibilitychange", syncLoop);
+      window.removeEventListener("pageshow", syncLoop);
+      window.removeEventListener("mo:menu", syncLoop);
+      window.removeEventListener("mo:project-rig-wake", syncLoop);
+      window.removeEventListener("mo:page-restored", onRestored);
       rig.dispose();
     };
   }, []);

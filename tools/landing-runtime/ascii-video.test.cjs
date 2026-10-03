@@ -49,7 +49,7 @@ function fixture({ frameCallbacks = true, buffered = true } = {}) {
   };
   return { fx, video, frames, ticks, frame,
     get uploads() { return uploads.filter(source => source === video).length; },
-    get draws() { return draws; } };
+    get draws() { return draws; }, get callbacks() { return display.size; } };
 }
 
 test('video uploads follow 24 new frames across 60 display ticks', () => {
@@ -106,4 +106,29 @@ test('rebinding a video leaves one callback and one upload path', () => {
   const start = f.uploads;
   f.frame(); f.ticks(3);
   assert.equal(f.uploads - start, 1);
+});
+
+
+test('plain paused media sleeps until an interaction or decoded frame wakes it', () => {
+  const f = fixture(); f.video.paused = true; f.ticks(5);
+  assert.equal(f.callbacks, 0, 'an idle figure must own no display callback');
+  const draws = f.draws;
+  f.fx.setHover(true); f.ticks(2);
+  assert.ok(f.draws > draws);
+  f.fx.setHover(false); f.ticks(120);
+  assert.equal(f.callbacks, 0);
+  const uploads = f.uploads;
+  f.video.dispatchEvent(new Event('seeked')); f.ticks();
+  assert.equal(f.uploads, uploads + 1);
+});
+
+test('an offscreen converted figure stops rendering and resumes without another context', () => {
+  const f = fixture(); f.fx.setConvert(true); f.ticks(5);
+  const gl = f.fx.gl, draws = f.draws;
+  f.fx.setVisible(false); f.ticks(60);
+  assert.equal(f.callbacks, 0); assert.equal(f.draws, draws);
+  f.fx.setPointer(.2,.4); f.frame(); f.ticks();
+  assert.equal(f.callbacks, 0, 'hidden invalidation must not restart the loop');
+  f.fx.setVisible(true); f.ticks();
+  assert.equal(f.fx.gl, gl); assert.ok(f.draws > draws);
 });

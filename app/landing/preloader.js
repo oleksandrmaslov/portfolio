@@ -31,6 +31,7 @@
 
   var startedAt = performance.now();
   var minimumHold = reduced ? 80 : 440;
+  var rate = reduced ? 18 : 6.5;
   var hit = Object.create(null);
   var progress = 1 / 255;
   var target = 1 / 255;
@@ -44,6 +45,7 @@
   var fontFallback = 0;
   var handoffFallback = 0;
   var readyTimer = 0;
+  var completionTimer = 0;
   var revealTimer = 0;
   var finishTimer = 0;
   var bailoutTimer = 0;
@@ -73,8 +75,26 @@
   }
 
   function maybeReady() {
-    if (!hasCore() || handoff || finished) return;
+    if (!hasCore() || handoff || finished || completionQueued || completionTimer) return;
     target = 1;
+    // Preserve the easing's remaining duration, without requiring more display
+    // callbacks to prove readiness. Shader work can starve RAF for seconds even
+    // after every milestone has arrived; elapsed time still counts toward it.
+    var remaining = Math.log(Math.max(0.008, 1 - progress) / 0.008) / rate * 1000;
+    completionTimer = window.setTimeout(queueCompletion, Math.max(remaining, minimumHold - (performance.now() - startedAt), 0));
+  }
+
+  function queueCompletion() {
+    if (handoff || finished || completionQueued) return;
+    window.clearTimeout(completionTimer);
+    completionTimer = 0;
+    completionQueued = true;
+    cancelAnimationFrame(raf);
+    raf = 0;
+    applyProgress(1);
+    root.classList.add("is-ready");
+    announce(hit.frame ? "Project universe ready" : "Portfolio links ready");
+    readyTimer = window.setTimeout(startHandoff, reduced ? 0 : 120);
   }
 
   function mark(name) {
@@ -102,11 +122,12 @@
 
   function startHandoff() {
     if (handoff || finished) return;
+    if (!hit.frame && window.__mo_show_fallback) window.__mo_show_fallback();
     handoff = true;
     applyProgress(1);
     root.classList.add("is-ready", "is-handoff");
     root.setAttribute("aria-busy", "false");
-    announce("Project universe ready");
+    announce(hit.frame ? "Project universe ready" : "Portfolio links ready");
 
     if (!reduced && typeof window.__mo_arrival_start === "function") {
       try { window.__mo_arrival_start(); } catch (_) {}
@@ -143,15 +164,10 @@
     if (finished) return;
     var dt = Math.min(100, Math.max(0, now - lastFrame));
     lastFrame = now;
-    var rate = reduced ? 18 : 6.5;
     applyProgress(progress + (target - progress) * (1 - Math.exp(-rate * dt / 1000)));
 
     if (hasCore() && !handoff && !completionQueued && progress > 0.992 && now - startedAt >= minimumHold) {
-      completionQueued = true;
-      applyProgress(1);
-      root.classList.add("is-ready");
-      announce("Project universe ready");
-      readyTimer = window.setTimeout(startHandoff, reduced ? 0 : 120);
+      queueCompletion();
       return;
     }
     raf = requestAnimationFrame(draw);
@@ -164,6 +180,7 @@
     window.clearTimeout(fontFallback);
     window.clearTimeout(handoffFallback);
     window.clearTimeout(readyTimer);
+    window.clearTimeout(completionTimer);
     window.clearTimeout(revealTimer);
     window.clearTimeout(finishTimer);
     window.clearTimeout(bailoutTimer);
@@ -233,10 +250,6 @@
 
   // A failed CDN or WebGL context must never trap the visitor behind the line.
   bailoutTimer = window.setTimeout(function () {
-    if (finished || handoff) return;
-    completionQueued = true;
-    applyProgress(1);
-    root.classList.add("is-ready");
-    readyTimer = window.setTimeout(startHandoff, reduced ? 0 : 120);
+    queueCompletion();
   }, 9000);
 })();

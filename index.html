@@ -108,6 +108,20 @@
   <link rel="stylesheet" href="app/shared/styles/pointer.css?v=5244ec5f4bcb" />
   <script>
     document.documentElement.classList.add("mo-origin-on");
+    // A local, native route out when the graphics module or renderer fails.
+    // A late first frame can still recover the full experience.
+    window.__mo_show_fallback = function () {
+      if (window.__mo_has_frame) return;
+      var fallback = document.getElementById("mo-fallback");
+      if (fallback) fallback.hidden = false;
+      document.documentElement.classList.add("mo-fallback-on");
+    };
+    window.addEventListener("mo:first-frame", function () {
+      window.__mo_has_frame = true;
+      var fallback = document.getElementById("mo-fallback");
+      if (fallback) fallback.hidden = true;
+      document.documentElement.classList.remove("mo-fallback-on");
+    }, { once: true });
     window.__mo_origin_watchdog = setTimeout(function () {
       var p = document.getElementById("mo-pl");
       var app = document.getElementById("root");
@@ -117,9 +131,27 @@
         app.inert = false;
         app.removeAttribute("aria-hidden");
       }
+      window.__mo_show_fallback();
       try { window.dispatchEvent(new CustomEvent("mo:preloader-done")); } catch (_) {}
     }, 12000);
   </script>
+  <style>
+    .mo-fallback-on, .mo-fallback-on body { overflow: hidden; }
+    .mo-fallback-on #root, .mo-fallback-on .asb { visibility: hidden !important; }
+    #mo-fallback {
+      position: fixed; inset: 0; z-index: 110; overflow: auto;
+      padding: var(--gutter-top) var(--gutter) var(--gutter-bot);
+      background: var(--void); color: var(--bone);
+      font: var(--fs-body)/var(--lh-text) var(--ff-display);
+    }
+    #mo-fallback[hidden] { display: none; }
+    #mo-fallback h1 { font-size: var(--fs-d3); line-height: var(--lh-tight); }
+    #mo-fallback p { max-width: 38em; }
+    #mo-fallback nav { display: flex; flex-wrap: wrap; gap: var(--s-6); margin: var(--s-7) 0; }
+    #mo-fallback a { color: var(--signal); text-decoration: underline; overflow-wrap: anywhere; }
+    #mo-fallback a:focus-visible { outline: 2px solid var(--signal); outline-offset: 4px; }
+    #mo-fallback, #mo-fallback * { cursor: auto !important; }
+  </style>
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -160,7 +192,7 @@
 
   <!-- Warm the Wafer handoff target so the cross-page seam has no boot gap. -->
   <link rel="prefetch" href="Wafer.html" as="document" />
-  <link rel="prefetch" href="app/page-runtimes/wafer-page.js?v=b0252075a2bc" as="fetch" crossorigin="anonymous" />
+  <link rel="prefetch" href="app/page-runtimes/wafer-page.js?v=c79e62b2b325" as="fetch" crossorigin="anonymous" />
   <link rel="prefetch" href="app/projects/styles/case-study.css?v=ccddb5f52dc2" as="style" />
   <link rel="prefetch" href="models/wafer_demo.glb" as="fetch" crossorigin="anonymous" />
   <link rel="stylesheet" href="app/shared/styles/navigation.css?v=c12021497f97" />
@@ -176,7 +208,22 @@
     </div>
     <p class="mo-pl__sr">Loading project universe</p>
   </div>
-  <noscript><style>#mo-pl{display:none!important}</style></noscript>
+  <noscript><style>#mo-pl{display:none!important}#mo-fallback[hidden]{display:block}</style></noscript>
+  <main id="mo-fallback" hidden aria-label="Portfolio overview">
+    <p>0x00 · Hardware · firmware · interaction</p>
+    <h1>Oleksandr Maslov</h1>
+    <p>I build the device. Then the firmware. Then the tools that put it in someone’s hands.</p>
+    <p>The interactive universe hasn’t opened yet. You can explore the projects or get in touch.</p>
+    <nav aria-label="Projects">
+      <a href="Wafer.html">Wafer</a>
+      <a href="Iskra.html">Iskra</a>
+      <a href="Ci-Clop.html">Ci-Clop</a>
+      <a href="Wafer Studio.html">Wafer Studio</a>
+      <a href="All Projects.html">All projects</a>
+    </nav>
+    <p><a href="mailto:oleksandrmaslov08@gmail.com">oleksandrmaslov08@gmail.com</a></p>
+    <p><a href="assets/Oleksandr-Maslov-CV.pdf">CV · PDF</a></p>
+  </main>
   <div id="root" inert aria-hidden="true"></div>
   <script src="app/landing/preloader.js"></script>
 
@@ -222,7 +269,7 @@
   <!-- Solid materials (plain JS, defined before the rig/cards run) -->
   <script src="app/projects/rendering/solid-materials.js"></script>
   <script src="app/shared/pointer-effects.js"></script>
-  <script src="app/landing/runtime.js?v=f3fa1b5e5606"></script>
+  <script src="app/landing/runtime.js?v=04a7ae6dc160"></script>
 
   <!-- Cinematic layer -->
   <script src="app/landing/controllers/cinematic.js"></script>
