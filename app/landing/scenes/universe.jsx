@@ -1103,7 +1103,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       tilePhaseSin[i] = Math.sin(ang);
       tilePhaseSin2[i] = Math.sin(ang * 2);
     }
-    /* CLEARED FIELD — one ring, four scales.
+    /* CLEARED FIELD — one ring, two scales.
        Every beat that needs the cards out of its way puts them on a ring
        around whatever the beat is about. Both x and y come from the ring
        angle, so two nodes can only share a screen position if they share an
@@ -1157,24 +1157,8 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     function targetForTile(mode, i, t) {
       if (listCollapse) return indexRingTarget(i, tileTargets.length, t);
       const target = tileTargets[i];
-      if (mode === "origin") {
-        const concept = (window.__mo_origin && window.__mo_origin.concept) || "assembly";
-        const m = tiles[i];
-        const addr = m && m.userData.project.addr;
-        const fIdx = MO_FEATURED.indexOf(addr || "");
-        // ASSEMBLY: clear ALL nodes far out so the particle glyph reads clean.
-        if (concept === "assembly") return scatter(i, 19, 11, -22, 5);
-        // HUB: featured nodes ring the hub, the rest drift back.
-        if (fIdx >= 0) {
-          const ang = (fIdx / Math.max(1, MO_FEATURED.length)) * Math.PI * 2 - Math.PI / 2 + t * 0.00004;
-          return target.set(
-            ORIGIN_CENTER.x + Math.cos(ang) * ORIGIN_RING_R,
-            ORIGIN_CENTER.y + Math.sin(ang) * ORIGIN_RING_R * 0.62,
-            ORIGIN_CENTER.z + Math.sin(ang * 1.3) * 1.4,
-          );
-        }
-        return scatter(i, 16, 9, -18, 4);
-      }
+      // ORIGIN: clear ALL nodes far out so the "0x00" particle glyph reads clean.
+      if (mode === "origin") return scatter(i, 19, 11, -22, 5);
       if (mode === "reel") {
         // WORK REEL — the featured tiles parade past the lens (positions 1–4).
         // At the final stop ("Open the universe") every node — all 12 —
@@ -1355,74 +1339,13 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     const AMB_DEPTH_SPAN = Math.hypot(BOX.x, BOX.y, BOX.z) * 0.5 + AMB_SCALE;
     const sortAmbientBackToFront = (a, b) => b.userData.depth - a.userData.depth;
 
-    /* ---------- ORIGIN hub — node 0x00 (the self) ----------
-       A special, larger node that only matters in `origin` mode. Every
-       project node radiates from it. This is the literal target of the
-       later "dive into node 0x00" → About · Board transition. */
+    /* ---------- ORIGIN anchor — where node 0x00 (the self) forms ---------- */
     const ORIGIN_CENTER = new THREE.Vector3(0, 0, -9);   // in front of a levelled camera
-    const ORIGIN_RING_R = 6.2;                            // project nodes ring radius
-
-    function makeOriginTexture() {
-      const oc = document.createElement("canvas");
-      oc.width = 256; oc.height = 256;
-      const g = oc.getContext("2d");
-      g.clearRect(0, 0, 256, 256);
-      const cx = 128, cy = 128;
-      // concentric rings
-      g.strokeStyle = "#00f0c8";
-      for (let i = 0; i < 3; i++) {
-        g.globalAlpha = 0.9 - i * 0.28;
-        g.lineWidth = 2 - i * 0.4;
-        g.beginPath(); g.arc(cx, cy, 30 + i * 26, 0, Math.PI * 2); g.stroke();
-      }
-      g.globalAlpha = 1;
-      // crosshair ticks
-      g.strokeStyle = "#00f0c8"; g.lineWidth = 1.5;
-      [[0,-1],[0,1],[-1,0],[1,0]].forEach(([dx,dy]) => {
-        g.beginPath();
-        g.moveTo(cx + dx * 84, cy + dy * 84);
-        g.lineTo(cx + dx * 98, cy + dy * 98);
-        g.stroke();
-      });
-      // core
-      g.fillStyle = "#00f0c8";
-      g.beginPath(); g.arc(cx, cy, 7, 0, Math.PI * 2); g.fill();
-      g.fillStyle = "#04060d";
-      g.beginPath(); g.arc(cx, cy, 3, 0, Math.PI * 2); g.fill();
-      const t = new THREE.CanvasTexture(oc);
-      t.colorSpace = THREE.SRGBColorSpace;
-      return t;
-    }
-
-    const originGroup = new THREE.Group();
-    scene.add(originGroup);
-    originGroup.visible = false;
-
-    const originHub = new THREE.Sprite(new THREE.SpriteMaterial({
-      map: makeOriginTexture(), transparent: true, opacity: 0, depthWrite: false, depthTest: false,
-    }));
-    originHub.position.copy(ORIGIN_CENTER);
-    originHub.scale.set(4.2, 4.2, 1);
-    originGroup.add(originHub);
-
-    // radiating links hub → each featured project node
-    const featuredTiles = tiles.filter(m => MO_FEATURED.includes(m.userData.project.addr));
-    const originLinks = featuredTiles.map((tile) => {
-      const geo = new THREE.BufferGeometry();
-      geo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(6), 3));
-      const line = new THREE.Line(geo, new THREE.LineBasicMaterial({
-        color: 0x00f0c8, transparent: true, opacity: 0, depthWrite: false, depthTest: false,
-      }));
-      line.userData = { tile };
-      originGroup.add(line);
-      return line;
-    });
 
     /* ---------- ASSEMBLY cloud — particles that swarm to FORM "0x00" ----------
-       Concept 01. A dedicated point cloud whose rest state is scattered through
-       the box; in origin/assembly mode each point flies to a target sampled from
-       a canvas-rendered "0x00" glyph, giving a 3D constellation of the self. */
-
+       A dedicated point cloud whose rest state is scattered through the box;
+       in origin mode each point flies to a target sampled from a
+       canvas-rendered "0x00" glyph, giving a 3D constellation of the self. */
 
     // Denser than the original 560 so the strokes read, but kept modest. This
     // is a single THREE.Points (one draw call); the only per-frame cost is the
@@ -3099,35 +3022,15 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
          begin assembling the instant the section enters view and always melts
          cleanly when you scroll away — no "stuck formed" or "never appeared". */
       {
-        const ob = window.__mo_origin || { p: 0, active: false, concept: "assembly" };
-        const concept = ob.concept || "assembly";
+        const ob = window.__mo_origin || { p: 0, active: false };
         const op = Math.max(0, Math.min(1, ob.p || 0));
         const eP = op < 0.5 ? 2*op*op : 1 - Math.pow(-2*op+2, 2)/2;  // easeInOut
-
-        // ---- HUB concept (exploration only) ----
-        const showHub = (mode === "origin") && concept === "hub";
-        originGroup.visible = showHub;
-        if (showHub) {
-          originHub.material.opacity = 0.25 + eP * 0.75;
-          const pulse = 1 + Math.sin(now * 0.0025) * 0.04;
-          originHub.scale.set(4.2 * pulse, 4.2 * pulse, 1);
-          for (const link of originLinks) {
-            const tile = link.userData.tile;
-            const la = link.geometry.attributes.position.array;
-            la[0] = ORIGIN_CENTER.x; la[1] = ORIGIN_CENTER.y; la[2] = ORIGIN_CENTER.z;
-            la[3] = tile.position.x; la[4] = tile.position.y; la[5] = tile.position.z;
-            link.geometry.attributes.position.needsUpdate = true;
-            link.material.opacity = eP * 0.45;
-          }
-        }
-
-        // ---- DIVE ignition (about gateway → board) ----
 
         // ---- target formedness (0 = pure field, 1 = full glyph) ----
         // Continuous: rises with origin-section scroll whenever the section is in
         // its active band. Never keyed to `mode`.
         let formTarget = 0;
-        if (ob.active && concept !== "hub") formTarget = eP;
+        if (ob.active) formTarget = eP;
         // Ease toward the target so entry/exit is always gradual (no pop when the
         // section's active flag toggles mid-scroll).
         formActual += (formTarget - formActual) * (1 - decay91);
@@ -3437,8 +3340,6 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       ambientAtlas.texture.dispose();
       starGeo.dispose();
       asmGeo.dispose(); assemblyPts.material.dispose();
-      originHub.material.map?.dispose(); originHub.material.dispose();
-      originLinks.forEach(l => { l.geometry.dispose(); l.material.dispose(); });
       constGeo.dispose(); constMat.dispose();
       if (renderer.renderLists) renderer.renderLists.dispose();
       if (renderer.forceContextLoss) renderer.forceContextLoss();
