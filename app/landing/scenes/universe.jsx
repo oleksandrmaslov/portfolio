@@ -2605,13 +2605,13 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       if (mode === "drift") {
         for (const m of tiles) {
           // If a fresh drift target was queued on mode-change, ease toward it
-          // and DO NOT wrap — grid/ambient positions sit outside the wrap box
-          // (z = ±16 vs box half-depth 13), so wrapping here would teleport the
-          // tile across the camera before the lerp could play. Skip the wrap
-          // until we've landed inside the box, then resume normal wrapping.
+          // and DO NOT wrap — the origin and reel scatter rings sit 22–25u out,
+          // past TILE_BOX's 18.2 half-depth, so wrapping here would teleport
+          // the tile across the camera before the lerp could play. Skip the
+          // wrap until we've landed inside the box, then resume normal wrapping.
           const dt2 = m.userData.driftTarget;
           if (dt2) {
-            const rate = 0.025;          // matches forward grid → ambient feel
+            const rate = 0.025;          // same ease the origin beat arranges with
             m.position.lerp(dt2, 1 - Math.pow(1 - rate, dt / 16));
             if (m.position.distanceToSquared(dt2) < 0.09) {
               m.userData.driftTarget = null;
@@ -2688,7 +2688,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         _lookM.lookAt(camera.position, m.position, camera.up);
         _baseQ.setFromRotationMatrix(_lookM);
 
-        // Per-card constant offset so each tile floats at its own angle (suppressed in grid)
+        // Per-card constant offset so each tile floats at its own angle (damped in the reel)
         const offFactor = mode === "reel" ? 0.15 : 1.0;
         _euler.set(
           m.userData.offsetPitch * offFactor,
@@ -2929,7 +2929,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         // ── Field-follow — keeps the scatter source in NEAR space ──
         // While the glyph is even slightly formed we STOP wrapping the field and
         // instead slide every home (and its rendered point) by the camera's
-        // per-frame delta. Origin/dive ease the camera toward world-0, and free
+        // per-frame delta. The arranged beats ease the camera toward world-0, and free
         // flight can start far out; without this the home cloud stays frozen in
         // world space, gets left behind, and partially-formed particles streak
         // in from that one distant point instead of scattering from up close.
