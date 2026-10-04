@@ -16,7 +16,7 @@
    instantiate once the figure nears the viewport (IntersectionObserver),
    so several figures on one page stay cheap.
 
-   Usage: <AsciiPhotoFigure src="…jpg" caption="…" id="03 / —" />
+   Usage: <AsciiMediaFigure src="…jpg" caption="…" ratio="3 / 4" />
    ============================================================ */
 const { useState: useAF, useEffect: useEAF, useRef: useRAF } = React;
 
@@ -46,9 +46,9 @@ const ASCII_FIG_BASE = {
    and 15 of the 19 clips are portrait, and the rest run 4:3, 16:9, 2:1 and
    near-square. A single 3:2 stage cropped most of them. When a block omits the
    ratio we fall back to the media's own intrinsic aspect once it loads. */
-function AsciiMediaFigure({ src, caption, kind = "photo", ratio, tone, poster, label, id, idx = 0 }) {
+function AsciiMediaFigure({ src, caption, kind = "photo", ratio, tone, poster }) {
   const isVideo = kind === "video";
-  label = label || (isVideo ? "ASCII · VIDEO" : "ASCII · PHOTO");
+  const label = isVideo ? "ASCII · VIDEO" : "ASCII · PHOTO";
   const wrapRef = useRAF(null);
   const canvasRef = useRAF(null);
   const fxRef = useRAF(null);
@@ -114,7 +114,6 @@ function AsciiMediaFigure({ src, caption, kind = "photo", ratio, tone, poster, l
       }
       fxRef.current = fx;
       fx.setVisible(active());
-      canvas.__fx = fx;
       (window.__asciiFigs = window.__asciiFigs || []).push(fx);
     };
 

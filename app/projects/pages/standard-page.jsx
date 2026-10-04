@@ -103,8 +103,6 @@ function PCSectionBlock({ block, i }) {
           ratio={block.ratio}
           tone={block.tone}
           caption={block.caption}
-          id={(i + 1).toString().padStart(2, "0") + " / —"}
-          idx={i}
         />
       </div>
     );
