@@ -65,13 +65,8 @@ function Cursor() {
     node.before(cursorHome);
     const onMenu = (event) => {
       const dialog = event.detail?.dialog;
-      if (event.detail?.open && dialog) {
-        dialog.appendChild(node);
-        node.classList.add("cursor--menu");
-      } else {
-        cursorHome.after(node);
-        node.classList.remove("cursor--menu");
-      }
+      if (event.detail?.open && dialog) dialog.appendChild(node);
+      else cursorHome.after(node);
     };
     window.addEventListener("mo:menu", onMenu);
 

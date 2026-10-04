@@ -17,6 +17,9 @@ html.custom-cursor.mo-cursor-live:not(.mo-origin-on) .cursor {
   visibility: visible !important;
   opacity: 1;
 }
+/* Cursor() commits its node before its effect sets `custom-cursor`. Keep the
+   hidden node out of flow meanwhile, or its readout pushes the page down. */
+html:not(.custom-cursor) .cursor { position: fixed; }
 
 html.custom-cursor .cursor {
   position: fixed;
