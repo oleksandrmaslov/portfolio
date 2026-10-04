@@ -29,10 +29,11 @@ jobs:
           cache: npm
           cache-dependency-path: tools/landing-runtime/package-lock.json
 
-      - name: Verify generated landing runtime
+      - name: Verify generated runtimes and run tests
         run: |
           npm ci --prefix tools/landing-runtime --include=dev --ignore-scripts --no-audit --no-fund
           npm run check --prefix tools/landing-runtime
+          npm test --prefix tools/landing-runtime
 
       - name: Configure Pages
         uses: actions/configure-pages@v5

@@ -1,0 +1,33 @@
+name: Checks
+
+# Deploys only run from master; this runs the same runtime check and tests on
+# every pull request and on main, so a stale bundle or a failing test shows up
+# before it reaches the deploy branch.
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  runtime:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: tools/landing-runtime/package-lock.json
+
+      - name: Verify generated runtimes and run tests
+        run: |
+          npm ci --prefix tools/landing-runtime --include=dev --ignore-scripts --no-audit --no-fund
+          npm run check --prefix tools/landing-runtime
+          npm test --prefix tools/landing-runtime
