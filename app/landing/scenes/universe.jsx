@@ -2572,19 +2572,16 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       const _flTransit = _fl.seg === "toOrigin" || _fl.seg === "toWork" || _fl.seg === "toAbout";
       let _flowDX = 0, _flowDY = 0, _flowDZ = 0;
       {
-        const cfgF = window.__mo_flightCfg || {};
-        const styleMul = cfgF.style === "calm" ? 0.45 : 1;
-        const warpMul  = (cfgF.warp != null ? cfgF.warp : 65) / 65;
         let flowTarget = 0, rollTarget = 0;
         if (!exploreOn && _flTransit && !FLOW_RM) {
           const tt = Math.max(0, Math.min(1, _fl.t || 0));
           const bell = Math.sin(Math.PI * tt);          // ease in and out of the leg
-          flowTarget = (3.4 + Math.min(24, _fl.speed || 0) * 0.6) * bell * styleMul * warpMul;
+          flowTarget = (3.4 + Math.min(24, _fl.speed || 0) * 0.6) * bell;
           const legRoll = _fl.seg === "toWork" ? 1 : _fl.seg === "toAbout" ? -0.7 : -0.45;
           // Optional page-level scaler (window.__mo_fx.legRoll)
           // tempers the toWork bank; defaults to 1 so other pages are unchanged.
           const legRollMul = window.__mo_fx && window.__mo_fx.legRoll != null ? window.__mo_fx.legRoll : 1;
-          rollTarget = legRoll * 0.055 * bell * styleMul * Math.min(1.3, warpMul) * legRollMul;
+          rollTarget = legRoll * 0.055 * bell * legRollMul;
         }
         flowSm    += (flowTarget - flowSm)    * ease10;
         camRollFX += (rollTarget - camRollFX) * (1 - decay93);

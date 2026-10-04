@@ -6,7 +6,6 @@
      while the camera surges forward
    · origin / work sticky stages fade before they ever un-stick,
      so no section is ever seen "sliding away" like a page
-   · tunnel-style iris for seam transits
    ============================================================ */
 
 /* ---------- TITLE — fixed stage, staggered lift-off ---------- */
@@ -103,21 +102,10 @@ body.fl-titleGone .title__stage { visibility: hidden; }
   .lp-workReel__sticky { animation-timeline: --flWorkTrack; }
 }
 
-/* ---------- TUNNEL IRIS — seam style "tunnel" ---------- */
-.fl-iris {
-  position: fixed;
-  inset: -2vmax;
-  z-index: 6;
-  pointer-events: none;
-  opacity: var(--fl-iris, 0);
-  background: radial-gradient(ellipse at 50% 50%, rgba(2, 4, 10, 0) 44%, rgba(2, 4, 10, 0.85) 76%, #02040a 95%);
-}
-
 @media (prefers-reduced-motion: reduce) {
   .title__stage .title__wordmark .asciiHero,
   .title__stage .title__wordmarkSub,
   .title__stage .title__idTop,
   .title__stage .title__ctl,
   .title__stage .title__frame { transform: none; filter: none; }
-  .fl-iris { display: none; }
 }

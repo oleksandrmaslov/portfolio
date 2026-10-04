@@ -19,7 +19,6 @@
 
    The remaining timeline derives segment progress and coordinates the title
    exit stagger, stage presence, doppler wind, seam accents.
-   Tuning: window.__mo_flightCfg { warp, style, doppler, dock }.
    ============================================================ */
 (function () {
   /* The work reel's scroll geometry, mirrored from app/landing/sections/work.jsx:
@@ -43,25 +42,8 @@
   var easeIO = function (t) { return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; };
   var easeOut = function (t) { return 1 - Math.pow(1 - t, 3); };
 
-  function cfg() {
-    var c = window.__mo_flightCfg || {};
-    return {
-      warp: c.warp != null ? c.warp : 65,
-      style: c.style || "surge",
-      doppler: c.doppler !== false,
-      dock: c.dock !== false,
-    };
-  }
-
-  /* iris overlay — the "tunnel" seam style closes the edges in transit */
-  var iris = null;
-  function buildIris() {
-    if (iris) return;
-    iris = document.createElement("div");
-    iris.className = "fl-iris";
-    iris.setAttribute("aria-hidden", "true");
-    document.body.appendChild(iris);
-  }
+  /* windUpdate() reads its on switch from C.doppler; the wind is always on. */
+  var C = { doppler: true };
 
   /* ---------- doppler wind (own tiny layer over MOSound's context) ---------- */
   var W = { built: false };
@@ -304,9 +286,9 @@
       ? sections.about.top + 0.065 * (sections.about.dockHeight - vh) // about node-card resolved
       : sections.work.top + 0.90 * (sections.work.dockHeight - vh);   // last reel stops
   }
-  function dockUpdate(seg, t, dt, sections, vh, now, enabled) {
+  function dockUpdate(seg, t, dt, sections, vh, now) {
     var b = document.body;
-    if (!enabled || b.classList.contains("wf-flying") || b.classList.contains("mo-explore")) {
+    if (b.classList.contains("wf-flying") || b.classList.contains("mo-explore")) {
       dock.anim = null; dock.idle = 0; return;
     }
     if (dock.cool > 0) dock.cool -= dt;
@@ -357,13 +339,11 @@
     if (document.hidden) { lastT = now; return; }
     var dt = Math.min(80, now - lastT);
     lastT = now;
-    var C = cfg();
 
     if (!layout.ready || layout.dirty) {
       scheduleLayoutMeasure();
       return; // React not mounted yet, or a coalesced read phase is pending
     }
-    buildIris();
 
     var vh = layout.vh;
     var y = cachedScrollY;
@@ -406,7 +386,7 @@
     if (seg !== prevSeg) { segChanged(seg); prevSeg = seg; }
 
     /* ── transit auto-dock — finish the leg if the visitor rests mid-transit ── */
-    dockUpdate(seg, t, dt, sections, vh, now, C.dock);
+    dockUpdate(seg, t, dt, sections, vh, now);
 
     /* ── rail distance → speed → surge (station spacing matches the
            universe rig: 13 / +15 / +16) ── */
@@ -424,17 +404,11 @@
     var surge = clamp01(speedSm / 11 + cinV * 0.2);
     surgeSm += (surge - surgeSm) * (1 - Math.pow(0.85, dt / 16));
 
-    var styleMul = C.style === "calm" ? 0.3 : C.style === "tunnel" ? 0.9 : 1;
-    var warp = reduceMotion ? 0 : surgeSm * styleMul * (C.warp / 100);
-    var inTransit = seg === "toOrigin" || seg === "toWork" || seg === "toAbout";
-    var irisV = 0;
-    if (C.style === "tunnel" && inTransit && !reduceMotion) {
-      irisV = Math.pow(Math.sin(Math.PI * clamp01(t)), 1.4) * 0.9;
-    }
+    var warp = reduceMotion ? 0 : surgeSm * 0.65;
 
     /* ── publish the flight bridge (the universe rig reads this) ── */
     var FL = (window.__mo_flight = window.__mo_flight || {});
-    FL.seg = seg; FL.t = t; FL.speed = speedSm; FL.surge = surgeSm;
+    FL.seg = seg; FL.t = t; FL.speed = speedSm;
     FL.warp = warp;
 
     /* ── title exit choreography ── */
@@ -461,14 +435,12 @@
     /* ── stage presence for the sticky sections ── */
     setVar("--fl-origin", stagePresence(rO, vh), sections.origin.el);
     setVar("--fl-work", stagePresence(rW, vh), sections.work.el);
-    setVar("--fl-iris", irisV, iris);
 
     /* ── sound ── */
     windUpdate(surgeSm, C);
   }
 
   function boot() {
-    buildIris();
     scheduleLayoutMeasure();
     requestAnimationFrame(frame);
   }
