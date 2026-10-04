@@ -82,7 +82,7 @@ function NodeHandoff() {
     if (!rig || typeof rig.setProject !== "function") {
       if (rig) { try { rig.dispose(); } catch (_) {} }
       while (mount.firstChild) mount.removeChild(mount.firstChild);
-      rig = window.makeNodeRig(mount, { project, model: project.model, mode: "handoff", deferModel: true });
+      rig = window.makeNodeRig(mount, { project, model: project.model, deferModel: true });
       rigRef.current = rig;
     }
     if (!rig) return null;
@@ -197,7 +197,7 @@ function NodeHandoff() {
     }
     if (rig) { try { rig.dispose(); } catch (_) {} rigRef.current = null; }
     while (mount.firstChild) mount.removeChild(mount.firstChild);
-    rig = window.makeNodeRig(mount, { project, model: project.model, mode: "handoff" });
+    rig = window.makeNodeRig(mount, { project, model: project.model });
     rigRef.current = rig;
     prepRef.current = { addr: project.addr, promise: Promise.resolve(rig && rig.ready) };
     return rig;

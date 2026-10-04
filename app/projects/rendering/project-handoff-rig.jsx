@@ -1,7 +1,7 @@
 /* ============================================================
    M.O. SYSTEM — PROJECT HANDOFF RIG
    ------------------------------------------------------------
-   window.makeNodeRig(mount, { project, model, mode }) — one rig
+   window.makeNodeRig(mount, { project, model, deferModel }) — one rig
    for EVERY node. Wraps the proven Wafer hero rig (identical
    camera/pose contract, so the Wafer seam is unchanged) and adds:
      · per-project model config from app/data/projects.js (no
@@ -13,7 +13,6 @@
        on top of the classic API
        (startFromScreen, setLayout, snapToLayout, setEaseRate,
         nudgeYaw, update, render, dispose).
-   The Wafer page continues to use its dedicated solid-material rig.
    ============================================================ */
 (function () {
   const SIGNAL = 0x00f0c8;
@@ -67,7 +66,6 @@
     );
     tag.position.set(0, -1.06, 0);
     g.add(tag);
-    g.userData.isProxy = true;
     return g;
   };
 
