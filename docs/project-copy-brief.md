@@ -114,13 +114,6 @@ Send me:
 - who it is for and who fielded it (unit, volunteer org, hospital — whatever is
   safe to name);
 - your scope: firmware only, or hardware too;
-- the `nodeClass` it should carry instead of `WEARABLE EXPERIMENT`. The full
-  vocabulary in use is `OBJECT`, `EMBEDDED HARDWARE`, `FIRMWARE SYSTEM`,
-  `FIRMWARE MODULE`, `OPEN-SOURCE MODULE`, `PRODUCTION SYSTEM`,
-  `PRODUCT SOFTWARE`, `BEHAVIORAL OBJECT`, `CLIENT WORK`, `INTERFACE STUDY`,
-  `VISUAL STUDY`, `WEARABLE EXPERIMENT`. For firmware on a fielded medical
-  device, `EMBEDDED HARDWARE` or `FIRMWARE SYSTEM` fit better than the current
-  one;
 - its `state`: currently `FORMING`. `ACTIVE`, `ACTIVE DEVELOPMENT`, `WORKING
   PROTOTYPE` and `ARCHIVED` are the others in use;
 - **anything that must not be published.** Deployment locations, unit names,
@@ -203,7 +196,7 @@ ones; renaming later needs a redirect plan.
 | What | File |
 |---|---|
 | case-study copy, metrics, sections, links | `app/projects/data.jsx` |
-| card copy, tags, nodeClass, state, model config | `app/data/projects.js` |
+| card copy, tags, state, model config | `app/data/projects.js` |
 | hero model, fit, pose, headline link keycap | the project's root `.html` |
 | photos | `app/projects/components/` |
 

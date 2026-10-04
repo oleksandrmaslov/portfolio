@@ -41,12 +41,10 @@
        so it only needs the text columns — no models, no poses. */
     window.UNIVERSE_PROJECTS = (window.MO_PROJECTS || []).map(function (p) {
       return {
-        addr: p.addr, kind: p.slug, file: p.file, name: p.name,
+        addr: p.addr, file: p.file, name: p.name,
         sub: p.short || p.statement,
         year: p.state || "",
-        nodeClass: p.nodeClass || "",
         stack: (p.tags || []).join(" · ").toUpperCase(),
-        mo: p,
       };
     });
     if (!window.UNIVERSE_PROJECTS.length) console.warn("[manifest] MO_PROJECTS missing");
