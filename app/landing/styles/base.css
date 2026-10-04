@@ -127,14 +127,9 @@ body.lp-toIndex .universeBg { filter: none; }
    TITLE SCREEN — minimalist framed viewport
    The corner reticles mark a discoverable interactive area; pointer
    shields outside the frame absorb mouse events so the universe is
-   only reachable INSIDE the frame.
+   only reachable INSIDE the frame. The frame geometry (insets,
+   shield sizes, corner-column alignment) lives in title.css.
    ============================================================ */
-:root {
-  /* tighter top inset so the rail sits close to the edge; bigger side/bottom
-     so the ASCII has room to breathe. */
-  --title-inset: clamp(24px, 4vw, 55px);
-}
-
 .lp-title {
   position: relative;
   min-height: 100vh;
@@ -149,15 +144,14 @@ body.lp-toIndex .universeBg { filter: none; }
   pointer-events: auto;
   z-index: 2;
 }
-.title__shield--top   { top: 0; left: 0; right: 0; height: var(--title-inset); }
-.title__shield--bot   { bottom: 0; left: 0; right: 0; height: var(--title-inset); }
-.title__shield--left  { top: var(--title-inset); bottom: var(--title-inset); left: 0;   width: var(--title-inset); }
-.title__shield--right { top: var(--title-inset); bottom: var(--title-inset); right: 0;  width: var(--title-inset); }
+.title__shield--top   { top: 0; left: 0; right: 0; }
+.title__shield--bot   { bottom: 0; left: 0; right: 0; }
+.title__shield--left  { left: 0; }
+.title__shield--right { right: 0; }
 
 /* ===== FRAME — corner reticles ===== */
 .title__frame {
   position: absolute;
-  inset: var(--title-inset);
   pointer-events: none;
 }
 .title__corner {
@@ -174,9 +168,6 @@ body.lp-toIndex .universeBg { filter: none; }
 /* ===== ASCII M.O. — bottom-left, original styling restored ===== */
 .title__wordmark {
   position: absolute;
-  bottom: calc(var(--title-inset) + var(--s-5));
-  left:   calc(var(--title-inset) + var(--s-5));
-  right:  calc(var(--title-inset) + 240px);
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -253,8 +244,6 @@ body.lp-toIndex .universeBg { filter: none; }
 /* ---- identity stamp · top-left (replaces the dense top rail) ---- */
 .title__idTop {
   position: absolute;
-  top: 92px;
-  left: calc(var(--title-inset) + var(--s-5));
   z-index: 3;
   display: flex; flex-direction: column; gap: var(--s-3);
 }
@@ -337,13 +326,11 @@ body.lp-toIndex .universeBg { filter: none; }
 /* ---- control cluster · bottom-right (Continue + PROCEED) ---- */
 .title__ctl {
   position: absolute;
-  bottom: calc(var(--title-inset) + var(--s-5));
-  right:  calc(var(--title-inset) + var(--s-5));
   z-index: 3;
   display: flex; flex-direction: column; align-items: flex-end; gap: var(--s-4);
   pointer-events: auto;
 }
-.title__proceedRow { display: inline-flex; align-items: center; gap: var(--s-6); }
+.title__proceedRow { display: inline-flex; align-items: center; }
 .title__proceedRow .key { transform: scale(1.25); transform-origin: bottom right; }
 .title__proceedCap {
   font-family: var(--ff-mono); font-size: var(--fs-nano); letter-spacing: var(--tr-caps);
@@ -381,7 +368,6 @@ body.lp-toIndex .universeBg { filter: none; }
 @media (max-width: 860px) {
   .fieldHint__cues { flex-direction: column; gap: var(--s-4); }
   .fieldHint__sep { display: none; }
-  .title__idTop { top: 80px; }
 }
 
 /* ============================================================
@@ -475,15 +461,6 @@ body.mo-explore .universe__mount { touch-action: none; }
   .uhud__tabLabel { transform: translate(-1px, calc(-100% - 7px)); }
 }
 
-/* responsive */
-@media (max-width: 800px) {
-  .title__wordmark { bottom: calc(var(--title-inset) + var(--s-5)); left: calc(var(--title-inset) + var(--s-5)); }
-  .universe__reticle span { display: none; }
-}
-@media (max-width: 600px) {
-  .title__wordmark { right: calc(var(--title-inset) + 100px); }
-}
-
 /* ============================================================
    EXPLORE MODE · mobile universe window
    The overlay is pointer-transparent (touches fall through to the
@@ -571,18 +548,8 @@ body.mo-explore .lp-shell {
    ============================================================ */
 @media (max-width: 700px) {
   /* control cluster: two keycaps fit, the Continue chevron stack doesn't */
-  .title__proceedRow { gap: var(--s-4); }
   .title__proceedRow .scrollcue { display: none; }
   .title__proceedRow .key { transform: scale(1.05); }
-
-  /* wordmark sits ABOVE the control cluster instead of beside it —
-     230px of ASCII + two keycaps don't share 390px */
-  .title__wordmark {
-    bottom: calc(var(--title-inset) + 108px);
-    right: auto;
-  }
-
-  /* (showAllGate mobile rules live in landing-scroll.css — cascade order) */
 }
 
 /* ============================================================

@@ -16,13 +16,10 @@
     --fs-meta:  clamp(13px, 0.76vw, 19px);
     --fs-body:  clamp(16px, 0.93vw, 24px);
     --fs-lead:  clamp(21px, 1.22vw, 31px);
-    --title-inset: 3.2vw;
   }
 
   /* ── title screen ── */
-  .title__wordmark { max-width: 62vw; right: calc(var(--title-inset) + 14vw); }
   .fieldHint__lede { font-size: clamp(11px, 0.64vw, 16px); }
-  .title__idTop { top: 5.3vw; }
 
   /* ── work reel ── */
   .lp-workReel__title { font-size: clamp(169px, 9.8vw, 251px); }
