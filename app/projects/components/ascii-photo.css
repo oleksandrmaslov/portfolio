@@ -4,7 +4,6 @@
    ============================================================ */
 
 .ascii-fig {
-  max-width: 860px;
   width: 100%;
   transition: border-color var(--d-base) var(--e-out);
 }
