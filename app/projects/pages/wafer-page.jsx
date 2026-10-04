@@ -5,8 +5,8 @@
    landing flight it SNAPS to the canonical pose (seam), then
    eases to the hero rest layout while the title resolves around it.
 
-   · bottom-right INSPECT keycap → dim the page, raise the model
-     fullscreen, drag-to-orbit + exploded view, ESC / STOP to exit.
+   · bottom-right PLAY DEMO keycap → the live keyboard demo
+     (demo/wafer-demo.js + demo/wafer-hud.jsx), ESC / STOP to exit.
    · leaving (ESC / wordmark / footer home) → the model flies back
      out and we return to wherever the user came from (universe title
      screen or the work reel).
