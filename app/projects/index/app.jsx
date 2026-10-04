@@ -109,9 +109,7 @@ function ManifestApp() {
 
   const openProject = (p) => {
     if (!p.file) return;
-    sessionStorage.setItem("mo_navigate_from_addr", p.addr);
-    document.body.classList.add("landing-exit");
-    setTimeout(() => { window.location.href = p.file; }, 380);
+    window.location.href = p.file;
   };
 
   return (
