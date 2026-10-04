@@ -28,8 +28,17 @@
 <body>
   <div id="root"></div>
 
-  <!-- Three.js -->
-  <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+  <!-- Three.js (ESM) on window.THREE, through the import map in <head>. A
+       module script is deferred, so it runs before the deferred page runtime
+       below. GLTFLoader and MeshoptDecoder let the menu reuse it instead of
+       importing a second copy. -->
+  <script type="module">
+    import * as THREE from "three";
+    import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+    import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
+    import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
+    window.THREE = Object.assign({}, THREE, { GLTFLoader, MeshoptDecoder, RoomEnvironment });
+  </script>
 
   <script src="app/data/projects.js?v=c95097033c03"></script>
 
