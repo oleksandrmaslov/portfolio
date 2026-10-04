@@ -23,11 +23,8 @@
   --cin-rise: 52px;          /* reveal travel */
   --cin-blur: 10px;          /* reveal blur   */
   --cin-dur: 1.05s;
-  --cin-stagger: 80ms;
   --cin-ease: cubic-bezier(.16, 1, .3, 1);
 
-  /* live, set by cinematic.js every frame (0..1 normalized velocity) */
-  --cin-vel: 0;
   /* small base vignette (Maslov universe preset) that deepens with velocity */
   --cin-vig: 0.30;
 }

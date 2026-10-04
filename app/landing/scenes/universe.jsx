@@ -606,7 +606,6 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         composer.addPass(cursorFx.effectPass);
         composer.addPass(new OutputPass());
         useComposer = true;
-        window.__mo_useComposer = true;
         window.__mo_dofOn = !!bokehPass;
       }
     } catch (error) {
@@ -615,7 +614,6 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       cursorFx = null;
       composer = null;
       useComposer = false;
-      window.__mo_useComposer = false;
       window.__mo_dofOn = false;
     }
     // audio-reactive level (smoothed) — the field breathes with the sound
@@ -1933,10 +1931,6 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         const b = tileViewportBounds(m);
         return onScreenBox(b) ? b : null;
       },
-      fly(v) {
-        cam.vel = Math.max(-22, Math.min(22, cam.vel + v));
-        stopDrift(); fireInteract();
-      },
       setExplore(on) {
         const next = !!on;
         mount.style.touchAction = next ? "none" : "pan-y pinch-zoom";
@@ -1979,9 +1973,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         gyroAnnounced = false;
         resetGyroCalibration();
       },
-      isGyro() { return gyroOn; },
       isGyroActive() { return gyroOn && gyroReady; },
-      recenterGyro() { if (gyroOn && gyroReady) rebaseGyroToExploreTarget(); },
     };
 
     /* ---------- raycasting ---------- */
@@ -2141,10 +2133,9 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       // only pay for a React re-render when the hovered PROJECT actually
       // changes — moving within the same card is free.
       if (hoverObjRef.current === m) return;
-      const screen = tileScreenBounds(m);
-      if (!screen) return;
+      if (!tileScreenBounds(m)) return;
       hoverObjRef.current = m;
-      setHover({ project: m.userData.project, screen });
+      setHover({ project: m.userData.project });
       emitTileHover(m.userData.project.addr);
       // the touch disturbs the field — a soft ripple spreads from the node
       if (window.__mo_disturb) window.__mo_disturb(cx, cy, 0.3);
@@ -2204,7 +2195,6 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         window.__mo_open_project(p, originRect);
         return;
       }
-      sessionStorage.setItem("mo_navigate_from_addr", p.addr);
       document.body.classList.add("landing-exit");
       setTimeout(() => { window.location.href = p.file; }, 380);
     }
@@ -3089,14 +3079,10 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         // +0.055 growth made "0x00" read as soft blobs up close.
         assemblyPts.material.size = 0.1 + formP * 0.015 + arrCollapse * 0.07 + _lvlS * 0.04;
 
-        assemblyGroup.position.set(0, 0, 0);
-        assemblyGroup.scale.set(1, 1, 1);
-
+        // formP feeds the topology and DoF below; the audio reads mode + formP.
         const debugState = window.__mo_debug || (window.__mo_debug = {});
         debugState.mode = mode;
-        debugState.active = !!ob.active;
         debugState.formP = +formP.toFixed(2);
-        debugState.camZ = +cam.pos.z.toFixed(1);
       }
 
       /* ── constellation layer ── */
@@ -3106,9 +3092,6 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
              transit is felt through FOV + aberration, not extra geometry ── */
       const FLbr = window.__mo_flight || {};
       const warpNow = Math.max(0, Math.min(1.4, FLbr.warp || 0));
-      const MC = (window.__mo_cam = window.__mo_cam || {});
-      MC.x = cam.pos.x; MC.y = cam.pos.y; MC.z = cam.pos.z;
-      MC.yaw = cam.yaw; MC.pitch = cam.pitch; MC.vel = cam.vel;
 
       // Counts rendered frames; the first one announces mo:first-frame below.
       frameI++;
@@ -3250,7 +3233,6 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       }
       delete window.__mo_universe;
       delete window.__mo_arrival_start;
-      delete window.__mo_cam;
     };
   }, []);
 

@@ -8,7 +8,7 @@
    · every card opens through the generic mo:nodeFlight handoff
      (no addr-specific branches); file:null nodes stay visual
      and read RECORD FORMING instead of navigating.
-   Exports: WORKS, Work.
+   Exports: Work.
    ============================================================ */
 
 const { useState: useL, useEffect: useE, useLayoutEffect: useLE, useRef: useR } = React;
@@ -446,6 +446,4 @@ function NodeCard({ work, i, total, nodeRef, focused, onFocus }) {
   );
 }
 
-window.Work        = Work;
-window.WORKS       = WORKS;
-window.FEATURED_ADDRS = FEATURED_ADDRS;
+window.Work = Work;
