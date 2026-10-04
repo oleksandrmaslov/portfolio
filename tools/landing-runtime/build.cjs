@@ -373,6 +373,10 @@ function assetHash(relativePath) {
 }
 
 function stampDataAssets(html) {
+  // Local stylesheets carry a content hash too, so a returning visitor never
+  // pairs a fresh runtime with a cached stylesheet from before an edit.
+  html = html.replace(/href="((?:app|demo)\/[^"?]+\.css)(?:\?v=[a-f0-9]{12})?"/g,
+    (_match, file) => `href="${file}?v=${assetHash(file)}"`);
   for (const relativePath of ["app/data/projects.js", "app/projects/data.jsx"]) {
     const stamped = `src="${relativePath}?v=${assetHash(relativePath)}"`;
     const parts = html.split(`src="${relativePath}`);
