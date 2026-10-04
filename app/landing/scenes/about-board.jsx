@@ -4,10 +4,10 @@
    Production board scene:
      · U1 is the ONLY chip — every other stop is now a realistic
        schematic-derived CLUSTER of small parts (LDO front-end,
-       crystal + load caps, decoupling bank + RF pi-filter with a
-       meandered 2.4 GHz antenna, LED driver, debounce)
+       decoupling bank + RF pi-filter with a meandered 2.4 GHz
+       antenna, debounce)
      · richer part library: MLCC, chip R, tantalum, inductor,
-       ferrite, SOT-23, SOT-223, LEDs, SMA diode, test points
+       ferrite, SOT-23, SOT-223, SMA diode, test points
      · escape routing off every MCU pin, per-cluster nets, edge
        bus lines, mounting holes, barcode, denser silkscreen
    window.MOBoard.build(mount) -> controller
@@ -59,14 +59,12 @@
     ctant: { l: 3.5, w: 2.8,  h: 1.9 },
     ind:   { l: 4.0, w: 4.0,  h: 2.0 },
     fb:    { l: 2.0, w: 1.25, h: 0.95 },
-    led:   { l: 2.0, w: 1.25, h: 0.75 },
     diode: { l: 4.3, w: 2.6,  h: 1.1 },
     sot23: { l: 2.9, w: 1.5,  h: 1.05 },
     sot223:{ l: 6.4, w: 3.4,  h: 1.6 },
     tp:    { l: 1.2, w: 1.2,  h: 0 },
-    xtal:  { l: 5.0, w: 3.2,  h: 1.0 },
   };
-  const TWO_PAD = { r:1, c:1, fb:1, led:1, diode:1, ctant:1, ind:1 };
+  const TWO_PAD = { r:1, c:1, fb:1, diode:1, ctant:1, ind:1 };
   function rr(cx, cz, dx, dz, w, d, rot) { return rot ? [cx + dz, cz + dx, d, w] : [cx + dx, cz + dz, w, d]; }
   function padsFor(k, cx, cz, rot) {
     const s = P[k], out = [];
@@ -74,7 +72,6 @@
     else if (k === "sot23") { out.push(rr(cx,cz,-0.95,1.15,0.6,0.8,rot), rr(cx,cz,0.95,1.15,0.6,0.8,rot), rr(cx,cz,0,-1.15,0.6,0.8,rot)); }
     else if (k === "sot223") { for (let i=-1;i<=1;i++) out.push(rr(cx,cz,i*2.1,2.2,1.0,1.5,rot)); out.push(rr(cx,cz,0,-2.1,3.4,1.7,rot)); }
     else if (k === "tp") { out.push([cx, cz, 1.15, 1.15]); }
-    else if (k === "xtal") { [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(m => out.push(rr(cx,cz,m[0]*1.9,m[1]*1.05,1.15,0.95,rot))); }
     return out;
   }
 
@@ -398,7 +395,7 @@
       x.fillStyle = "#9aa3b5"; x.font = `500 ${0.44*S}px 'Geist Mono', monospace`; x.textAlign = "center";
       x.fillText(p.ref, u, v - (D/2 + 0.72)*S);
       if (p.k === "ctant") { x.fillStyle = "#dfe3ec"; x.font = `700 ${0.6*S}px 'Geist Mono', monospace`; x.fillText("+", u - (s.l/2 + 0.75)*S, v); }
-      if (p.k === "diode" || p.k === "led") {
+      if (p.k === "diode") {
         x.strokeStyle = "rgba(220,226,238,0.8)"; x.lineWidth = 0.1*S;
         const bx = u - (L/2 + 0.42)*S;
         x.beginPath(); x.moveTo(bx, v - D*S/2); x.lineTo(bx, v + D*S/2); x.stroke();
@@ -598,11 +595,6 @@
     if (k === "r") twoEnd(mat(0x11141a, 0.05, 0.5));
     else if (k === "c") twoEnd(mat(0xb08d5a, 0.1, 0.5));
     else if (k === "fb") twoEnd(mat(0x3a3f47, 0.2, 0.5));
-    else if (k === "led") {
-      twoEnd(mat(0xe8eaec, 0.05, 0.4));
-      const dome = box(s.l*0.42, 0.28, s.w*0.7, new THREE.MeshStandardMaterial({ color: 0x073b33, emissive: 0x00f0c8, emissiveIntensity: 1.6, metalness: 0, roughness: 0.3 }));
-      dome.position.y = s.h + 0.14; g.add(dome);
-    }
     else if (k === "diode") {
       twoEnd(mat(0x0c0e13, 0.1, 0.5));
       const band = box(0.42, 0.03, s.w*0.9, mat(0xd8dbe2, 0, 0.6));
@@ -631,9 +623,6 @@
     else if (k === "tp") {
       const pad = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 0.08, 20), mat(0xd9b35e, 1.0, 0.3));
       pad.position.y = 0.04; g.add(pad);
-    }
-    else if (k === "xtal") {
-      const can = box(4.4, s.h, 2.7, mat(0xb9c0cc, 1.0, 0.28)); can.position.y = s.h/2; g.add(can);
     }
     return g;
   }
@@ -866,12 +855,10 @@
     await yieldBuildPhase();
 
     /* ---- controller ---- */
-    const tmpPos = new THREE.Vector3(), tmpLook = new THREE.Vector3(), tmpTan = new THREE.Vector3(), tmpSide = new THREE.Vector3(), UP = new THREE.Vector3(0,1,0);
+    const tmpPos = new THREE.Vector3(), tmpTan = new THREE.Vector3(), tmpSide = new THREE.Vector3(), UP = new THREE.Vector3(0,1,0);
     const camPos = new THREE.Vector3().copy(camera.position);
     const camLook = new THREE.Vector3(0,0,0);
     let curLook = new THREE.Vector3(0,0,0);
-
-    function stopTForIndex(i) { return STOP_TS[i]; }
 
     const HERO_POS = new THREE.Vector3(), HERO_LOOK = new THREE.Vector3();
     const NODE_POS = new THREE.Vector3(), NODE_LOOK = new THREE.Vector3();
@@ -1037,5 +1024,5 @@
     }
   }
 
-  window.MOBoard = { build, STOPS, makeOutputSwitch: () => buildComponent("switch") };
+  window.MOBoard = { build, STOPS };
 })();
