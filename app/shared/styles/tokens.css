@@ -179,8 +179,6 @@
      Use --col-{1..13} for column-spans in custom grids. */
   --col-1:  calc(100% / 13);
 
-  /* Custom cursor offset */
-  --cursor-size: 24px;
 }
 
 /* ============================================================
