@@ -4,7 +4,7 @@
    The PCB board flight, folded into the landing as a scroll
    section in a FIXED full-viewport layer (no sliding panel edge).
 
-   TAKEOVER timing (the chosen concept), split in two:
+   TAKEOVER timing, split in two:
      · the board's APPEAR/punch is SCROLL-DRIVEN and fast — you
        drive the takeover by scrolling.
      · the previous UI (the universe) DISAPPEARS on a quick TIMED
@@ -12,13 +12,12 @@
        it clears decisively instead of lingering through the board.
 
    FOOTER beat: after the last stop the camera pulls back to a hero
-   framing of the whole board (scene.update's 4th arg `footerMix`)
+   framing of the whole board (scene.update's 3rd arg `footerMix`)
    and the contact/footer resolves IN the scene and persists — so
    there's no separate footer section and no second seam.
 
-   Other modes ("crossfade","wipe") remain for the comparison files.
-   Perf: board builds lazily on approach; LITE render; universe
-   pauses once hidden. Camera = PROBE.
+   Perf: board builds lazily on approach; light render (no
+   composer, DPR ≤ 1.25); universe pauses once hidden. Camera = PROBE.
    ============================================================ */
 const { useState: useBF, useEffect: useBFE, useRef: useBFR } = React;
 
@@ -27,7 +26,7 @@ const _bfEaseOut   = (t) => 1 - Math.pow(1 - t, 3);
 const _bfClamp     = (v, a, b) => Math.max(a, Math.min(b, v));
 const _bfRenderEps = 0.004;
 
-function BoardFlight({ onEnter, onContact }) {
+function BoardFlight() {
   const secRef     = useBFR(null);
   const layerRef   = useBFR(null);
   const mountRef   = useBFR(null);
@@ -38,19 +37,7 @@ function BoardFlight({ onEnter, onContact }) {
   const presRef    = useBFR(0);
   const nodeRef    = useBFR(1);   // 1 = whole-board "model" framing in the card → 0 = flight pose
   const uniRef     = useBFR(null);
-  const enteredRef = useBFR(false);
-  const contactRef = useBFR(false);
   const wakeRenderRef = useBFR(null);
-  const onEnterRef = useBFR(onEnter);
-  const onContactRef = useBFR(onContact);
-  useBFE(() => { onEnterRef.current = onEnter; onContactRef.current = onContact; });
-
-  // takeover is SCROLL-DRIVEN (deterministic function of scroll position) so it
-  // always replays when you scroll back up and down. introRef (1→0) is passed to
-  // the scene to drive the establishing camera swoop in lock-step.
-  const introRef = useBFR(1);
-
-  const MODE = (typeof window !== "undefined" && window.__mo_bf_transition) || "takeover";
 
   const STOPS = (window.MOBoard && window.MOBoard.STOPS) || [];
   const N = STOPS.length;
@@ -77,7 +64,7 @@ function BoardFlight({ onEnter, onContact }) {
       if (disposed) return;
       let ctrl = null;
       try {
-        ctrl = await window.MOBoard.build(mount, { lite: true });
+        ctrl = await window.MOBoard.build(mount);
       } catch (error) {
         console.warn("[board] preflight failed", error);
       }
@@ -113,7 +100,7 @@ function BoardFlight({ onEnter, onContact }) {
         if (disposed) return;
         if (presRef.current <= _bfRenderEps || document.hidden || document.body.classList.contains("mo-menu-open")) return;
         const dt = Math.min(50, now - last); last = now;
-        const a = ctrl.update(tRef.current, "probe", dt, footRef.current, introRef.current, nodeRef.current);
+        const a = ctrl.update(tRef.current, dt, footRef.current, nodeRef.current);
         ctrl.render();
         if (a !== undefined) setActive((prev) => (prev === a ? prev : a));
         renderRaf = requestAnimationFrame(loop);
@@ -240,7 +227,9 @@ function BoardFlight({ onEnter, onContact }) {
     };
   }, []);
 
-  /* ── scroll → flight t + footer beat + transition styling ── */
+  /* ── scroll → flight t + footer beat + takeover styling ──
+     The takeover is SCROLL-DRIVEN (a deterministic function of scroll
+     position), so it always replays when you scroll back up and down. */
   useBFE(() => {
     const el = secRef.current;
     if (!el) return;
@@ -259,7 +248,6 @@ function BoardFlight({ onEnter, onContact }) {
     const footerInner = footer && footer.querySelector(".bf-foot__inner");
     let raf = 0, measureRaf = 0, dead = false;
     let trackTop = 0, trackHeight = 1, viewportH = window.innerHeight;
-    const ENTRY_VH = MODE === "takeover" ? 0.36 : MODE === "wipe" ? 0.58 : 0.7;
 
     const update = () => {
       raf = 0;
@@ -267,8 +255,6 @@ function BoardFlight({ onEnter, onContact }) {
       const total = trackHeight - vh;
       const pageY = Number.isFinite(window.__mo_scrollY) ? window.__mo_scrollY : window.scrollY;
       const top = pageY - trackTop;
-      const rectTop = -top;
-      const rectBottom = rectTop + trackHeight;
       const raw = total > 0 ? _bfClamp(top / total, 0, 1) : 0;
 
       // ── lead-in (About node-card → board grows OUT of the card) ──
@@ -292,107 +278,63 @@ function BoardFlight({ onEnter, onContact }) {
       const visualCardP = boardReady ? cardP : 0;
 
       // contact (footer) active → drives nav highlight. Published to a window
-      // bridge so LandingApp's central section resolver can read it (and still
-      // calls onContact if a parent passed one, for back-compat).
+      // bridge so LandingApp's central section resolver can read it.
       const contactOn = boardReady && footerMix > 0.5;
       window.__mo_bf = window.__mo_bf || {};
       window.__mo_bf.footer = contactOn;
-      // Flight bridge: the unified HUD reads the board leg state here.
-      window.__mo_bf.lead = lead;
-      window.__mo_bf.openP = visualOpenP;
-      window.__mo_bf.t = t;
-      window.__mo_bf.foot = boardReady ? footerMix : 0;
-      if (contactOn !== contactRef.current) { contactRef.current = contactOn; onContactRef.current && onContactRef.current(contactOn); }
 
-      if (MODE === "takeover") {
-        // ── The PCB morphs OUT of the card. The board canvas is windowed into
-        //    the card's art rectangle (clip-path), small + pulled back; as the
-        //    card OPENS (openP) the clip expands to the full viewport, the board
-        //    camera dollies into the flight, and the card chrome fades. ──
-        const oe  = _bfEaseInOut(visualOpenP);
-        // At rest (window closed) the REAL board sits fully formed and framed as
-        // a clean whole-board 3/4 "model" (nodeMix=1) inside the card's window.
-        // As the window OPENS, the camera dollies out of that node framing into
-        // the flight start (nodeMix 1→0) while the clip expands to fullscreen —
-        // one board, one canvas, a true grow-out morph (no crossfade, no separate
-        // mini-PCB). introMix stays 0 so the board is solid the whole time.
-        introRef.current = 0;
-        nodeRef.current = 1 - oe;
-        presRef.current = visualCardP;   // render only after a controller is ready
-        if (wakeRenderRef.current) wakeRenderRef.current();
+      // ── The PCB morphs OUT of the card. The board canvas is windowed into
+      //    the card's art rectangle (clip-path), small + pulled back; as the
+      //    card OPENS (openP) the clip expands to the full viewport, the board
+      //    camera dollies into the flight, and the card chrome fades. ──
+      const oe  = _bfEaseInOut(visualOpenP);
+      // At rest (window closed) the REAL board sits fully formed and framed as
+      // a clean whole-board 3/4 "model" (nodeMix=1) inside the card's window.
+      // As the window OPENS, the camera dollies out of that node framing into
+      // the flight start (nodeMix 1→0) while the clip expands to fullscreen —
+      // one board, one canvas, a true grow-out morph (no crossfade, no separate
+      // mini-PCB). The board stays solid the whole time.
+      nodeRef.current = 1 - oe;
+      presRef.current = visualCardP;   // render only after a controller is ready
+      if (wakeRenderRef.current) wakeRenderRef.current();
 
-        // The board renders fullscreen + TRANSPARENT (LITE path = no opaque
-        // composer), so it floats over the node-card as a real 3D model. No
-        // rectangular clip / window — it simply DOLLIES CLOSER (nodeMix) and
-        // grows to fill the screen = the About scene. The solid void backdrop +
-        // grain must stay OFF while it's the small floating model (so the card +
-        // universe show behind it), then fade in only as it takes over.
-        if (layer) {
-          layer.style.opacity = _bfClamp(visualCardP * 1.4, 0, 1).toFixed(3);
-          layer.style.clipPath = "none";
-          layer.style.transform = "none";
-          const layerActive = boardReady && visualOpenP > 0.6;
-          layer.style.pointerEvents = layerActive ? "auto" : "none";
-          layer.inert = !layerActive;
-          layer.setAttribute("aria-hidden", layerActive ? "false" : "true");
-          // void backdrop: 0 until the board is ~60% closed-in, then ramps to 1
-          const voidMix = _bfClamp((visualOpenP - 0.55) / 0.35, 0, 1);
-          layer.style.backgroundColor = `rgba(4, 6, 13, ${voidMix.toFixed(3)})`;
-          if (grain) grain.style.opacity = voidMix.toFixed(3);
-        }
-        // universe stays lit behind the floating card, fades as the board opens
-        if (uni) {
-          uni.style.transition = boardReady && raw > 0 ? "none" : "";
-          const uniFade = _bfEaseInOut(visualOpenP);
-          uni.style.opacity = (1 - uniFade).toFixed(3);
-          uni.style.transform = `scale(${(1 + 0.05 * oe).toFixed(4)})`;
-        }
-        // keep the universe ALIVE while the card floats; pause once board is full
-        window.__mo_universe_pause = boardReady && visualOpenP > 0.92;
-        const engaged = boardReady && visualOpenP > 0.5;
-        if (engaged !== enteredRef.current) {
-          enteredRef.current = engaged;
-          if (engaged) onEnterRef.current && onEnterRef.current();
-        }
-        // card chrome: resolves in (cardP), then fades as the window opens
-        const cVis = cardP * (1 - _bfClamp(visualOpenP / 0.55, 0, 1));
-        if (aboutLayer) {
-          aboutLayer.style.opacity = cVis.toFixed(3);
-          aboutLayer.setAttribute("aria-hidden", cVis < 0.02 ? "true" : "false");
-        }
-        if (aboutNode) {
-          aboutNode.style.transform = `scale(${(1 + visualOpenP * 0.06).toFixed(3)}) translateY(${((1 - cardP) * 26).toFixed(1)}px)`;
-          aboutNode.style.filter = cardP < 0.996 ? `blur(${((1 - cardP) * 9).toFixed(2)}px)` : "none";
-        }
-      } else {
-        // ── scroll-driven crossfade / wipe (comparison files) ──
-        const entry = rectTop > 0 ? _bfClamp((vh - rectTop) / (ENTRY_VH * vh), 0, 1) : 1;
-        const exit  = rectBottom < vh ? _bfClamp(rectBottom / (0.6 * vh), 0, 1) : 1;
-        const presence = boardReady ? Math.min(entry, exit) : 0;
-        presRef.current = presence;
-        if (wakeRenderRef.current) wakeRenderRef.current();
-        if (presence > 0.45 && !enteredRef.current) { enteredRef.current = true; onEnterRef.current && onEnterRef.current(); }
-        else if (presence < 0.1 && enteredRef.current) { enteredRef.current = false; }
-        if (layer) {
-          if (MODE === "wipe") {
-            const r = (_bfEaseInOut(entry) * 152).toFixed(1);
-            layer.style.opacity = exit.toFixed(3);
-            layer.style.clipPath = `circle(${r}% at 50% 45%)`;
-            layer.style.transform = "";
-            if (uni) { uni.style.opacity = (1 - entry).toFixed(3); uni.style.transform = ""; }
-            window.__mo_universe_pause = entry > 0.92;
-          } else { // crossfade
-            layer.style.opacity = presence.toFixed(3);
-            layer.style.transform = "";
-            layer.style.clipPath = "";
-            if (uni) { uni.style.opacity = (1 - presence).toFixed(3); uni.style.transform = ""; }
-            window.__mo_universe_pause = presence > 0.92;
-          }
-          const layerActive = presence > 0.5;
-          layer.style.pointerEvents = layerActive ? "auto" : "none";
-          layer.inert = !layerActive;
-          layer.setAttribute("aria-hidden", layerActive ? "false" : "true");
-        }
+      // The board renders fullscreen + TRANSPARENT (alpha renderer, no
+      // composer), so it floats over the node-card as a real 3D model. No
+      // rectangular clip / window — it simply DOLLIES CLOSER (nodeMix) and
+      // grows to fill the screen = the About scene. The solid void backdrop +
+      // grain must stay OFF while it's the small floating model (so the card +
+      // universe show behind it), then fade in only as it takes over.
+      if (layer) {
+        layer.style.opacity = _bfClamp(visualCardP * 1.4, 0, 1).toFixed(3);
+        layer.style.clipPath = "none";
+        layer.style.transform = "none";
+        const layerActive = boardReady && visualOpenP > 0.6;
+        layer.style.pointerEvents = layerActive ? "auto" : "none";
+        layer.inert = !layerActive;
+        layer.setAttribute("aria-hidden", layerActive ? "false" : "true");
+        // void backdrop: 0 until the board is ~60% closed-in, then ramps to 1
+        const voidMix = _bfClamp((visualOpenP - 0.55) / 0.35, 0, 1);
+        layer.style.backgroundColor = `rgba(4, 6, 13, ${voidMix.toFixed(3)})`;
+        if (grain) grain.style.opacity = voidMix.toFixed(3);
+      }
+      // universe stays lit behind the floating card, fades as the board opens
+      if (uni) {
+        uni.style.transition = boardReady && raw > 0 ? "none" : "";
+        const uniFade = _bfEaseInOut(visualOpenP);
+        uni.style.opacity = (1 - uniFade).toFixed(3);
+        uni.style.transform = `scale(${(1 + 0.05 * oe).toFixed(4)})`;
+      }
+      // keep the universe ALIVE while the card floats; pause once board is full
+      window.__mo_universe_pause = boardReady && visualOpenP > 0.92;
+      // card chrome: resolves in (cardP), then fades as the window opens
+      const cVis = cardP * (1 - _bfClamp(visualOpenP / 0.55, 0, 1));
+      if (aboutLayer) {
+        aboutLayer.style.opacity = cVis.toFixed(3);
+        aboutLayer.setAttribute("aria-hidden", cVis < 0.02 ? "true" : "false");
+      }
+      if (aboutNode) {
+        aboutNode.style.transform = `scale(${(1 + visualOpenP * 0.06).toFixed(3)}) translateY(${((1 - cardP) * 26).toFixed(1)}px)`;
+        aboutNode.style.filter = cardP < 0.996 ? `blur(${((1 - cardP) * 9).toFixed(2)}px)` : "none";
       }
 
       // Continuous scroll values stay out of React. Updating the authored
@@ -478,7 +420,7 @@ function BoardFlight({ onEnter, onContact }) {
       if (raf) cancelAnimationFrame(raf);
       if (measureRaf) cancelAnimationFrame(measureRaf);
     };
-  }, [MODE, FLIGHT_PORTION, FLIGHT_V]);
+  }, [FLIGHT_PORTION, FLIGHT_V]);
 
   /* ── jump to a stop ── */
   const jump = (i) => {
@@ -544,7 +486,7 @@ function BoardFlight({ onEnter, onContact }) {
         </div>
       </div>
 
-      <div className={"bf-layer bf-layer--" + MODE} ref={layerRef} style={{ opacity: 0, pointerEvents: "none" }} inert="" aria-hidden="true">
+      <div className="bf-layer bf-layer--takeover" ref={layerRef} style={{ opacity: 0, pointerEvents: "none" }} inert="" aria-hidden="true">
         {/* the board canvas */}
         <div className="bf-mount" ref={mountRef} />
         <div className="bf-grain" aria-hidden="true" />
