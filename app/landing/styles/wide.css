@@ -57,6 +57,4 @@
   .bf-foot__big { font-size: clamp(88px, 5.1vw, 131px); }
   .bf-foot__linkKey { font-size: clamp(9px, 0.52vw, 13px); }
   .bf-foot__meta { font-size: clamp(9px, 0.52vw, 13px); }
-
-  /* ── console keys ── */
 }

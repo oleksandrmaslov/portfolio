@@ -2,8 +2,6 @@
    M.O. SYSTEM — Landing base styles
    ============================================================ */
 
-body { overflow-x: clip; }
-
 /* ============================================================
    WAFER FLIGHT OVERLAY — fly into node 0x01 → Wafer
    ============================================================ */
@@ -132,7 +130,6 @@ body.lp-toIndex .universeBg { filter: none; }
    ============================================================ */
 .lp-title {
   position: relative;
-  min-height: 100vh;
   width: 100%;
   pointer-events: none;
 }
@@ -527,7 +524,6 @@ body.mo-explore .universe__mount { touch-action: none; }
    overlay's z-index:60 BELOW the z-index:50 shell. Tapping EXIT toggled the
    sound and left explore mode open. Chrome that has been faded out must not
    catch the pointer. */
-body.mo-explore .lp-shell,
 body.mo-explore .lp-shell > *,
 body.mo-explore .lp-shell > * > * { pointer-events: none; }
 
@@ -550,19 +546,4 @@ body.mo-explore .lp-shell {
   /* control cluster: two keycaps fit, the Continue chevron stack doesn't */
   .title__proceedRow .scrollcue { display: none; }
   .title__proceedRow .key { transform: scale(1.05); }
-}
-
-/* ============================================================
-   WIDE-SCREEN PASS — fluid type ramp
-   Above 1720px the fixed Fibonacci ramp starts to feel like a
-   postage stamp. Re-express every step in vw (values equal the
-   px ramp exactly AT 1720px, then scale proportionally) so the
-   page reads the same at 27" and at 40".
-   ============================================================ */
-@media (min-width: 1720px) {
-  :root {
-    --fs-h4:      1.63vw;
-    --fs-h3:      2.44vw;
-    --fs-h2:      3.72vw;
-  }
 }
