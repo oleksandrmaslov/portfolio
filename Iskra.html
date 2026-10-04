@@ -83,16 +83,6 @@
         href: "https://github.com/oleksandrmaslov/iskra",
         hint: "FLASHING STATION · SOURCE",
       },
-      tweakDefaults: /*EDITMODE-BEGIN*/{
-        "idleSpin": true
-      }/*EDITMODE-END*/,
-      renderTweaks: (t, set) => (
-        <>
-          <TweakSection label="Model" />
-          <TweakToggle label="Idle auto-rotate" value={t.idleSpin}
-                       onChange={(v) => set("idleSpin", v)} />
-        </>
-      ),
     };
   </script>
 

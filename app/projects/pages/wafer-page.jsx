@@ -22,15 +22,17 @@ const {
 const HERO_LAYOUT = "right";   // "right" | "center" | "left"
 const IDLE_DRIFT = true;
 
-/* PLAY DEMO · tweakable defaults (Tweaks panel) */
-const WAFER_TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
-  "direction": "cinematic",
-  "hud": "full",
-  "explodeDist": 1,
-  "stagger": 0.65,
-  "thockPitch": 1,
-  "soundLevel": 0.8
-}/*EDITMODE-END*/;
+/* PLAY DEMO settings, handed to WaferDemoLayer as its `tweaks` prop. The HUD
+   copies them to window.__waferDemoTweaks, where wafer-demo.js and
+   wafer-sound.js read them. */
+const WAFER_DEMO_TWEAKS = {
+  direction: "cinematic",
+  hud: "full",
+  explodeDist: 1,
+  stagger: 0.65,
+  thockPitch: 1,
+  soundLevel: 0.8,
+};
 
 /* layout → rig offset (fraction of half-width), scale, vertical offset.
    Width-aware: on phones the board floats up-top and shrinks so the title
@@ -263,7 +265,6 @@ function WaferProjectApp() {
   const project = window.PROJECT_DATA["0x01"];
   const [ready, setReady] = useWaferPageState(false);
   const [demo, setDemo] = useWaferPageState(false);
-  const [tweaks, setTweak] = useTweaks(WAFER_TWEAK_DEFAULTS);
 
   const stageRef = useWaferPageRef(null);
   const rigRef   = useWaferPageRef(null);
@@ -479,27 +480,7 @@ function WaferProjectApp() {
       </div>
 
       {/* fullscreen demo stage + HUD (always mounted; controls its own fade) */}
-      <WaferDemoLayer active={demo} onClose={exitDemo} tweaks={tweaks} />
-
-      <TweaksPanel>
-        <TweakSection label="Demo" />
-        <TweakRadio label="Direction" value={tweaks.direction}
-                    options={["cinematic", "sandbox"]}
-                    onChange={(v) => setTweak("direction", v)} />
-        <TweakRadio label="HUD density" value={tweaks.hud}
-                    options={["full", "minimal"]}
-                    onChange={(v) => setTweak("hud", v)} />
-        <TweakSection label="Explode" />
-        <TweakSlider label="Distance" value={tweaks.explodeDist} min={0.6} max={1.8} step={0.05}
-                     onChange={(v) => setTweak("explodeDist", v)} />
-        <TweakSlider label="Stagger" value={tweaks.stagger} min={0} max={1} step={0.05}
-                     onChange={(v) => setTweak("stagger", v)} />
-        <TweakSection label="Sound" />
-        <TweakSlider label="Thock pitch" value={tweaks.thockPitch} min={0.7} max={1.3} step={0.05}
-                     onChange={(v) => setTweak("thockPitch", v)} />
-        <TweakSlider label="Field level" value={tweaks.soundLevel} min={0} max={1} step={0.05}
-                     onChange={(v) => setTweak("soundLevel", v)} />
-      </TweaksPanel>
+      <WaferDemoLayer active={demo} onClose={exitDemo} tweaks={WAFER_DEMO_TWEAKS} />
     </>
   );
 }

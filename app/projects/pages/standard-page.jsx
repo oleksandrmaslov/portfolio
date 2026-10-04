@@ -27,10 +27,9 @@
          layerName: "TorchDemoLayer",
          hint: "TAIL SWITCH · MODES · SOS",
          label: "PLAY DEMO",
+         tweaks: { … },             //   handed to the layer as its `tweaks`
        },
-       link: { label, href },       // … or a link keycap instead
-       tweakDefaults: { … },
-       renderTweaks: (t, set) => <></>,
+       link: { label, href, hint }, // … or a link keycap instead
      };
 
    Behaviour:
@@ -291,7 +290,6 @@ function ProjectPageApp() {
   const project = window.PROJECT_DATA[PC.addr];
   const [ready, setReady] = usePC(false);
   const [demo, setDemo] = usePC(false);
-  const [tweaks, setTweak] = useTweaks(PC.tweakDefaults || {});
 
   const stageRef = useRPC(null);
   const rigRef   = useRPC(null);
@@ -384,11 +382,7 @@ function ProjectPageApp() {
         </div>
       )}
 
-      {DemoLayer && <DemoLayer active={demo} onClose={exitDemo} tweaks={tweaks} />}
-
-      <TweaksPanel>
-        {PC.renderTweaks ? PC.renderTweaks(tweaks, setTweak) : null}
-      </TweaksPanel>
+      {DemoLayer && <DemoLayer active={demo} onClose={exitDemo} tweaks={PC.demo.tweaks} />}
     </>
   );
 }

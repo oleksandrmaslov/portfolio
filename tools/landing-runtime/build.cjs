@@ -25,7 +25,6 @@ const MODEL_VIEWER = "app/projects/rendering/model-viewer.jsx";
 const SOLID_MATERIALS = "app/projects/rendering/solid-materials.js";
 const SOLID_HERO = "app/projects/rendering/solid-hero-rig.jsx";
 const HANDOFF_RIG = "app/projects/rendering/project-handoff-rig.jsx";
-const TWEAK_PANEL = "app/projects/components/tweak-panel.jsx";
 const ASCII_ENGINE = "app/projects/components/ascii-photo.js";
 const ASCII_FIGURE = "app/projects/components/ascii-photo.jsx";
 const POINTER_EFFECTS = "app/shared/pointer-effects.js";
@@ -86,7 +85,7 @@ function handoffDefinition(html, slug, options = {}) {
     jsx(SOLID_HERO),
   ];
   if (options.projectHandoffRig) projectSources.push(jsx(HANDOFF_RIG));
-  projectSources.push(jsx(TWEAK_PANEL), jsx(ASCII_FIGURE));
+  projectSources.push(jsx(ASCII_FIGURE));
   return {
     html,
     plainPageConfig: true,
@@ -106,7 +105,6 @@ function standardDefinition(html, slug, options = {}) {
     jsx(MODEL_VIEWER),
     classic(SOLID_MATERIALS),
     jsx(SOLID_HERO),
-    jsx(TWEAK_PANEL),
     jsx(ASCII_FIGURE),
   );
   if (options.hud) sources.push(jsx(options.hud));
@@ -190,7 +188,6 @@ const pageDefinitions = [
       jsx(PROJECT_DATA),
       jsx(MODEL_VIEWER),
       jsx(SOLID_HERO),
-      jsx(TWEAK_PANEL),
       jsx(ASCII_FIGURE),
       jsx("demo/wafer-hud.jsx"),
       classic(POINTER_EFFECTS),

@@ -113,30 +113,8 @@
         layerName: "KerfurDemoLayer",
         hint: "PET · SHAKE · NOTIFY · MEET",
         label: "PLAY DEMO",
+        tweaks: { direction: "cinematic", hud: "full", soundLevel: 0.8 },
       },
-      tweakDefaults: /*EDITMODE-BEGIN*/{
-        "direction": "cinematic",
-        "hud": "full",
-        "soundLevel": 0.8,
-        "presence": 49,
-        "space": 100,
-        "rippleStrength": 99,
-        "constellation": 200
-      }/*EDITMODE-END*/,
-      renderTweaks: (t, set) => (
-        <>
-          <TweakSection label="Demo" />
-          <TweakRadio label="Direction" value={t.direction}
-                      options={["cinematic", "sandbox"]}
-                      onChange={(v) => set("direction", v)} />
-          <TweakRadio label="HUD density" value={t.hud}
-                      options={["full", "minimal"]}
-                      onChange={(v) => set("hud", v)} />
-          <TweakSection label="Sound" />
-          <TweakSlider label="Field level" value={t.soundLevel} min={0} max={1} step={0.05}
-                       onChange={(v) => set("soundLevel", v)} />
-        </>
-      ),
     };
   </script>
 
