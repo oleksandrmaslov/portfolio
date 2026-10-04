@@ -106,6 +106,9 @@ function ManifestApp() {
   }, [filtered, sortId]);
 
   const live = projects.filter(p => p.file).length;
+  // The universe draws every registry node except those marked
+  // `universe: false`, so count from the registry instead of typing it.
+  const inField = (window.MO_PROJECTS || []).filter(p => p.universe !== false).length;
 
   const openProject = (p) => {
     if (!p.file) return;
@@ -314,8 +317,9 @@ function ManifestApp() {
                 Open the universe view instead<em>.</em>
               </div>
               <div className="m-cta__sub">
-                Same 12 nodes — but drifting in 3D space with constellation lines
-                drawn between siblings of the same family. Bonus: it looks great.
+                {inField === projects.length ? "Same " + inField + " nodes — but" : inField + " of these nodes,"} drifting
+                in 3D space with constellation lines drawn between siblings of the same
+                family. Bonus: it looks great.
               </div>
             </div>
             <div className="m-cta__btn">
