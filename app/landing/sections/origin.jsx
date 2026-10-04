@@ -178,13 +178,11 @@ function OriginBeat() {
                 transform: `translateY(${((1 - e) * 18).toFixed(1)}px)`,
                 color: "var(--bone)",
               };
-              const cls = "origin__line" +
-                (ln.em ? " origin__line--em" : "") +
-                (ln.ghost ? " origin__line--ghost" : "");
+              const cls = "origin__line" + (ln.em ? " origin__line--em" : "");
               return (
                 <span key={i} className={cls} style={style}>
                   <span data-mo-cursor-mirror data-mo-cursor-opacity=".origin__line,.origin__type,.origin__stage,.lp">
-                    {ln.t}{ln.dot ? <em className="origin__period">.</em> : null}
+                    {ln.t}
                   </span>
                 </span>
               );

@@ -60,8 +60,6 @@
 }
 .origin__line { display: block; will-change: filter, opacity, transform; text-wrap: balance; }
 .origin__line--em { font-family: var(--ff-serif); font-style: italic; color: var(--signal); letter-spacing: var(--tr-tight); }
-.origin__line--ghost { color: var(--ash); }
-.origin__period { font-family: var(--ff-serif); font-style: italic; color: var(--copper); }
 
 /* ---- signature strip ---- */
 .origin__sig {
