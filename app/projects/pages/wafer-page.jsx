@@ -137,7 +137,7 @@ function leaveToUniverse() {
   window.__hv_leaving = true;
   document.documentElement.style.setProperty("--hv-stage-op", "1");
   // model stays on screen: ease back to CENTER + keep spinning (no shrink-away)
-  if (window.__waferRig) { window.__waferRig.setIdle(false); window.__waferRig.setExplode(0); window.__waferRig.toHandoff(); window.__hv_exitSpin = true; }
+  if (window.__waferRig) { window.__waferRig.setIdle(false); window.__waferRig.toHandoff(); window.__hv_exitSpin = true; }
   document.body.classList.add("hv-exit");            // page content fades; the model stage stays
   window.dispatchEvent(new CustomEvent("mo:project-rig-wake"));   // the loop may be asleep below the stage
   // Hand the model's live yaw to the landing so the reverse flight CONTINUES

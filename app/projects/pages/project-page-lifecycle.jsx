@@ -17,7 +17,6 @@
     const rig = global.__pageRig;
     if (rig) {
       rig.setIdle(false);
-      rig.setExplode(0);
       rig.toHandoff();
       global.__hv_exitSpin = true;
     }

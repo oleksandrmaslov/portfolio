@@ -14,7 +14,7 @@ function world(){
  Object.assign(window,{scrollY:0,innerHeight:800,innerWidth:1280,location:{href:''}});
  Object.assign(document,{hidden:false,title:'',documentElement:{style:{setProperty(){}}},querySelector:()=>null,getElementById:()=>null,
   body:{classList:{contains:k=>classes.has(k),add:(...k)=>k.forEach(c=>classes.add(c)),remove:(...k)=>k.forEach(c=>classes.delete(c))}}});
- const rig={yaw:0,ready:true,update(){},render(){calls.push('render');},setSize(){},setIdle(on){calls.push('idle:'+on);},setExplode(){},
+ const rig={yaw:0,ready:true,update(){},render(){calls.push('render');},setSize(){},setIdle(on){calls.push('idle:'+on);},
   toHandoff(){calls.push('handoff');},nudgeYaw(){},resetOrbit(){calls.push('rest');},setLayout(){calls.push('layout');},
   beginHandoff(){},snapToLayout(){},setYawTarget(){},setYawRate(){},dispose(){}};
  window.makeWaferRig=()=>rig;
@@ -58,7 +58,7 @@ test('shared project lifecycle: exit spin wakes, Back restores the rest pose and
 
 test('Wafer page: no permanent loop, exit spin wakes, Back restores the rest pose and sleeps',()=>{
  const w=world();const stub=()=>null;
- Object.assign(w.context,{useTweaks:d=>[d,()=>{}],Cursor:stub,KeyButton:stub,WaferDemoLayer:stub,TweaksPanel:stub,TweakSection:stub,TweakRadio:stub,TweakSlider:stub,
+ Object.assign(w.context,{Cursor:stub,KeyButton:stub,WaferDemoLayer:stub,
   ReactDOM:{createRoot:()=>({render(){}})}});
  w.window.PROJECT_DATA={'0x01':{addr:'0x01',name:'Wafer'}};
  vm.runInContext(compile(read('app/projects/pages/wafer-page.jsx'),'wafer-page.jsx'),w.context);

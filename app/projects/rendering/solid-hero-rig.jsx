@@ -115,8 +115,6 @@
     pivot.add(spin);
     scene.add(pivot);
 
-    /* explode bookkeeping — per-mesh base local position + out vector */
-    const parts = [];
     let modelReady = false;
     let modelUpdate = null;
     let modelRoot = null;
@@ -146,7 +144,6 @@
       modelRoot = null;
       modelOwnsGeometry = false;
       ownedMaterials = new Set();
-      parts.length = 0;
       modelReady = false;
       modelUpdate = null;
     }
@@ -186,19 +183,6 @@
       modelOwnsGeometry = !!config.ownsGeometry;
       ownedMaterials = nextOwnedMaterials;
       holder.add(root);
-      // collect meshes for the exploded view (radial out-vectors)
-      const centre = new THREE.Vector3();
-      const box = new THREE.Box3().setFromObject(root);
-      box.getCenter(centre);
-      root.traverse((o) => {
-        if (!o.isMesh) return;
-        const wp = new THREE.Vector3();
-        o.getWorldPosition(wp);
-        const dir = wp.clone().sub(centre);
-        if (dir.lengthSq() < 1e-6) dir.set(0, 1, 0);
-        dir.normalize();
-        parts.push({ mesh: o, base: o.position.clone(), out: dir });
-      });
       modelReady = true;
       if (config.onReady) config.onReady();
       return true;
@@ -260,7 +244,7 @@
     });
 
     /* ---- eased state (cur) toward targets (tgt) ---- */
-    const cur = { entry: 1, offX: 0, offY: 0, scale: 1, yaw: RIG.arriveYaw, pitch: RIG.arrivePitch, explode: 0, dist: RIG.camZ };
+    const cur = { offX: 0, offY: 0, scale: 1, yaw: RIG.arriveYaw, pitch: RIG.arrivePitch, dist: RIG.camZ };
     const tgt = { ...cur };
     let offFracX = 0;
     let idleSpin = 0;
@@ -274,30 +258,14 @@
     }
     function recomputeOffX() { tgt.offX = offFracX * halfWidthAt(tgt.dist); }
 
-    function arrivalState() {
-      return { entry: 1, offX: 0, offY: 0, scale: 1, yaw: RIG.arriveYaw, pitch: RIG.arrivePitch, explode: 0, dist: RIG.camZ };
-    }
-
-    const HANDOFF = { entry: 1, offX: 0, offY: 0, scale: RIG.handoffScale, pitch: RIG.arrivePitch, explode: 0, dist: RIG.camZ };
+    const HANDOFF = { offX: 0, offY: 0, scale: RIG.handoffScale, pitch: RIG.arrivePitch, dist: RIG.camZ };
 
     function applyToScene() {
-      const e = cur.entry;
-      const entryScale = 0.12 + 0.88 * e;
-      pivot.scale.setScalar(cur.scale * entryScale);
-      pivot.position.set(cur.offX, cur.offY, (1 - e) * -7.0);
-      spin.rotation.y = cur.yaw + (1 - e) * 1.25 + idleSpin;
+      pivot.scale.setScalar(cur.scale);
+      pivot.position.set(cur.offX, cur.offY, 0);
+      spin.rotation.y = cur.yaw + idleSpin;
       spin.rotation.x = cur.pitch;
       camera.position.z = cur.dist;
-      if (parts.length) {
-        const amt = cur.explode * (RIG.modelFit * 0.42);
-        for (const p of parts) {
-          p.mesh.position.set(
-            p.base.x + p.out.x * amt,
-            p.base.y + p.out.y * amt,
-            p.base.z + p.out.z * amt,
-          );
-        }
-      }
     }
     applyToScene();
 
@@ -311,14 +279,12 @@
         }
       }
       const R = easeRate;
-      cur.entry   = damp(cur.entry,   tgt.entry,   R, dt);
-      cur.offX    = damp(cur.offX,    tgt.offX,    R, dt);
-      cur.offY    = damp(cur.offY,    tgt.offY,    R, dt);
-      cur.scale   = damp(cur.scale,   tgt.scale,   R, dt);
-      cur.yaw     = damp(cur.yaw,     tgt.yaw,     yawRate, dt);
-      cur.pitch   = damp(cur.pitch,   tgt.pitch,   yawRate, dt);
-      cur.explode = damp(cur.explode, tgt.explode, 0.12, dt);
-      cur.dist    = damp(cur.dist,    tgt.dist,    R, dt);
+      cur.offX  = damp(cur.offX,  tgt.offX,  R, dt);
+      cur.offY  = damp(cur.offY,  tgt.offY,  R, dt);
+      cur.scale = damp(cur.scale, tgt.scale, R, dt);
+      cur.yaw   = damp(cur.yaw,   tgt.yaw,   yawRate, dt);
+      cur.pitch = damp(cur.pitch, tgt.pitch, yawRate, dt);
+      cur.dist  = damp(cur.dist,  tgt.dist,  R, dt);
       if (idleEnabled) idleSpin += dt * 0.00004;
       applyToScene();
     }
@@ -349,8 +315,6 @@
       },
       setEaseRate(r) { easeRate = r; },
       setYawRate(r) { yawRate = r; },
-      isAt() { return false; },
-      snapArrival() { Object.assign(cur, arrivalState()); Object.assign(tgt, arrivalState()); offFracX = 0; applyToScene(); },
       startFromScreen(cx, cy, vw, vh, scale) {
         const halfH = RIG.camZ * Math.tan((RIG.fov * Math.PI / 180) / 2);
         const aspect = vw / vh;
@@ -358,22 +322,17 @@
         const fracX = (cx - vw / 2) / (vw / 2);
         const fracY = -(cy - vh / 2) / (vh / 2);
         offFracX = fracX * (halfW / halfWidthAt(RIG.camZ));
-        cur.entry = 1; cur.scale = scale; cur.explode = 0; cur.dist = RIG.camZ;
+        cur.scale = scale; cur.dist = RIG.camZ;
         cur.offX = fracX * halfW; cur.offY = fracY * halfH;
         cur.yaw = RIG.arriveYaw; cur.pitch = RIG.arrivePitch;
         Object.assign(tgt, cur);
         applyToScene();
       },
-      easeToHandoff() {
-        offFracX = 0;
-        tgt.entry = 1; tgt.offX = 0; tgt.offY = 0;
-        tgt.scale = RIG.handoffScale; tgt.pitch = RIG.arrivePitch; tgt.explode = 0; tgt.dist = RIG.camZ;
-      },
       snapToLayout(fracX, scale = 1, offY = 0, yaw = RIG.arriveYaw) {
         offFracX = fracX;
-        tgt.entry = 1; tgt.scale = scale; tgt.offY = offY; tgt.pitch = RIG.arrivePitch; tgt.explode = 0; tgt.dist = RIG.camZ; tgt.yaw = yaw;
+        tgt.scale = scale; tgt.offY = offY; tgt.pitch = RIG.arrivePitch; tgt.dist = RIG.camZ; tgt.yaw = yaw;
         recomputeOffX();
-        cur.entry = 1; cur.scale = scale; cur.offY = offY; cur.pitch = RIG.arrivePitch; cur.explode = 0; cur.dist = RIG.camZ; cur.yaw = yaw; cur.offX = tgt.offX;
+        cur.scale = scale; cur.offY = offY; cur.pitch = RIG.arrivePitch; cur.dist = RIG.camZ; cur.yaw = yaw; cur.offX = tgt.offX;
         applyToScene();
       },
       beginHandoff() {
@@ -388,30 +347,18 @@
       },
       toHandoff() {
         offFracX = 0;
-        tgt.entry = 1; tgt.offX = 0; tgt.offY = 0;
-        tgt.scale = RIG.handoffScale; tgt.pitch = RIG.arrivePitch; tgt.explode = 0;
+        tgt.offX = 0; tgt.offY = 0;
+        tgt.scale = RIG.handoffScale; tgt.pitch = RIG.arrivePitch;
         recomputeOffX();
       },
       nudgeYaw(d) { cur.yaw += d; tgt.yaw += d; },
       get yaw() { return cur.yaw; },
       setYawTarget(y) { tgt.yaw = y; },
-      get entry() { return cur.entry; },
-      setEntry(v) { tgt.entry = v; },
       setIdle(on) { idleEnabled = on; },
       setLayout(fracX, scale = 1, offY = 0) {
         offFracX = fracX; tgt.scale = scale; tgt.offY = offY; recomputeOffX();
       },
-      setInspect(on) {
-        if (on) { offFracX = 0; recomputeOffX(); tgt.offY = 0; tgt.scale = 1.12; tgt.dist = RIG.camZ * 0.94; idleEnabled = false; }
-      },
-      orbit(dx, dy) {
-        tgt.yaw   += dx * 0.006;
-        tgt.pitch += dy * 0.006;
-        tgt.pitch  = Math.max(-1.2, Math.min(1.2, tgt.pitch));
-      },
       resetOrbit() { tgt.yaw = RIG.arriveYaw; tgt.pitch = RIG.arrivePitch; },
-      setExplode(v) { tgt.explode = Math.max(0, Math.min(1, v)); },
-      get explode() { return tgt.explode; },
       dispose() {
         menuMotion?.dispose();
         modelGeneration++;
@@ -421,11 +368,6 @@
         if (renderer.renderLists) renderer.renderLists.dispose();
         renderer.dispose();
         if (renderer.forceContextLoss) renderer.forceContextLoss();
-      },
-      _debug() {
-        const box = new THREE.Box3().setFromObject(pivot);
-        return { parts: parts.length, ready: modelReady, envOk: !!scene.environment,
-                 box: [box.min.toArray().map(n=>+n.toFixed(2)), box.max.toArray().map(n=>+n.toFixed(2))] };
       },
     };
     return api;
