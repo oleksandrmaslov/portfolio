@@ -17,7 +17,7 @@
   <link rel="stylesheet" href="app/projects/styles/case-study.css?v=ccddb5f52dc2" />
   <link rel="stylesheet" href="demo/base.css" />
   <link rel="stylesheet" href="app/projects/components/ascii-photo.css" />
-  <!-- Shared: ASCII bracket cursor + RAMP scrollbar styles -->
+  <!-- Shared cursor, ASCII RAMP scrollbar and navigation -->
   <link rel="stylesheet" href="app/shared/styles/pointer.css?v=5244ec5f4bcb" />
   <link rel="stylesheet" href="app/shared/styles/scrollbar.css" />
   <link rel="stylesheet" href="app/shared/styles/navigation.css?v=c12021497f97" />
@@ -46,8 +46,8 @@
     })();
   </script>
 
-  <!-- Three.js (ESM) + GLTFLoader + MeshoptDecoder + RoomEnvironment, exposed
-       on window.THREE for the non-module Babel-standalone scripts below. -->
+  <!-- Three.js (ESM) on window.THREE. A module script is deferred, so it runs
+       before the deferred page runtime below. -->
   <script type="importmap">
   {
     "imports": {
@@ -71,31 +71,9 @@
   <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" integrity="sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" integrity="sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1" crossorigin="anonymous"></script>
 
-  <!-- Shared system (Cursor, shell) -->
+  <!-- Page runtime: shared core, KeyButton, PLAY DEMO (production GLB board,
+       field sound, controller, HUD), project data, hero rig, ASCII figures,
+       pointer effects, the Wafer page and scrollbar -->
   <script defer src="app/page-runtimes/wafer-page.js?v=c79e62b2b325"></script>
-
-  <!-- PLAY DEMO · production GLB board + field sound + controller (plain JS) -->
-
-
-
-
-  <!-- ASCII photo reveal-lens -->
-
-
-  <!-- Solid-material tuning is defined before the production hero rig runs. -->
-
-
-  <!-- Project pieces -->
-
-
-
-
-
-
-
-
-
-  <!-- ASCII RAMP scrollbar -->
-
 </body>
 </html>

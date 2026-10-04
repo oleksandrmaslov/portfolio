@@ -25,7 +25,9 @@
 <body>
   <div id="root"></div>
 
-  <!-- Three.js (ESM) exposed on window.THREE for the Babel scripts below -->
+  <!-- Three.js (ESM) on window.THREE. A module script is deferred, so it runs
+       before the deferred page runtime below. RoundedBoxGeometry is for the
+       procedural Kerfur body (demo/kerfur-model.js). -->
   <script type="importmap">
   {
     "imports": {
@@ -49,30 +51,14 @@
   <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" integrity="sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" integrity="sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1" crossorigin="anonymous"></script>
 
-  <!-- Shared system (Cursor, shell) -->
+  <!-- Page runtime: shared core, PLAY DEMO (field core, kerfur sound, face,
+       emotion and body engines, controller, HUD), project data, hero rig,
+       ASCII figures, the page config below, pointer effects, KeyButton,
+       project page and scrollbar -->
   <script defer src="app/page-runtimes/kerfur-page.js?v=0972055b186e"></script>
 
-  <!-- PLAY DEMO · field core + kerfur palette + face/emotion/body engines + controller -->
-
-
-
-
-
-
-
-  <!-- ASCII photo reveal-lens (lab engine + React figure wrapper) -->
-
-
-  <!-- Project pieces -->
-
-
-
-
-
-
-
-
-  <!-- Page config — everything project-specific lives here -->
+  <!-- Page config — everything project-specific lives here. Inert in the
+       page: build.cjs compiles it into the page runtime above. -->
   <script type="text/plain" data-page-runtime-source="kerfur-config">
     window.PAGE_CONFIG = {
       addr: "0x02",
@@ -114,12 +100,5 @@
       },
     };
   </script>
-
-  <!-- Shared project page and pointer effects -->
-
-
-
-  <!-- Shared ASCII RAMP scrollbar -->
-
 </body>
 </html>

@@ -17,7 +17,7 @@
   <link rel="stylesheet" href="app/shared/styles/tokens.css" />
   <link rel="stylesheet" href="app/shared/styles/key.css" />
   <link rel="stylesheet" href="app/projects/index/styles.css" />
-  <!-- Shared shipping cursor and ASCII RAMP scrollbar -->
+  <!-- Shared cursor, ASCII RAMP scrollbar and navigation -->
   <link rel="stylesheet" href="app/shared/styles/pointer.css?v=5244ec5f4bcb" />
   <link rel="stylesheet" href="app/shared/styles/scrollbar.css" />
   <link rel="stylesheet" href="app/shared/styles/navigation.css?v=c12021497f97" />
@@ -29,7 +29,7 @@
   <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" integrity="sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" integrity="sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1" crossorigin="anonymous"></script>
 
-  <!-- Shared core (fib grid, cursor, shell) -->
+  <!-- Shared core (cursor, header, navigation), model loader and KeyButton -->
   <script defer src="app/page-runtimes/all-projects-project.js?v=53c2a0d8bfbb"></script>
 
   <!-- The node dataset — SINGLE SOURCE OF TRUTH, shared with the landing -->
@@ -48,10 +48,7 @@
     if (!window.UNIVERSE_PROJECTS.length) console.warn("[manifest] MO_PROJECTS missing");
   </script>
 
-  <!-- Manifest page -->
+  <!-- Manifest page and scrollbar -->
   <script defer src="app/page-runtimes/all-projects-page.js?v=6368408f5ea0"></script>
-
-  <!-- ASCII RAMP scrollbar -->
-
 </body>
 </html>

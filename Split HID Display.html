@@ -23,7 +23,8 @@
 <body>
   <div id="root"></div>
 
-  <!-- Three.js (ESM) exposed on window.THREE for the Babel scripts below -->
+  <!-- Three.js (ESM) on window.THREE. A module script is deferred, so it runs
+       before the deferred page runtime below. -->
   <script type="importmap">
   {
     "imports": {
@@ -46,21 +47,10 @@
   <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" integrity="sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" integrity="sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1" crossorigin="anonymous"></script>
 
-  <!-- Shared interface foundation (Cursor, shell) -->
+  <!-- Shared core, project data, hero rig and ASCII figures -->
   <script defer src="app/page-runtimes/split-hid-display-project.js?v=bc90085134e7"></script>
 
-  <!-- ASCII photo reveal lens -->
-
-
-  <!-- Project pieces (no demo scripts — this node links to its GitHub source) -->
-
-
-
-
-
-
-
-  <!-- Page config -->
+  <!-- Page config — no demo; this node links to its GitHub source -->
   <script>
     window.PAGE_CONFIG = {
       addr: "0x07",
@@ -77,11 +67,7 @@
     };
   </script>
 
-  <!-- Shared pointer effects and standard project page -->
+  <!-- Pointer effects, KeyButton, the shared project page and scrollbar -->
   <script defer src="app/page-runtimes/split-hid-display-page.js?v=8721fcfc4391"></script>
-
-
-  <!-- Shared ASCII ramp scrollbar -->
-
 </body>
 </html>

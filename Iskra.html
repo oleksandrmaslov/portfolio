@@ -23,7 +23,8 @@
 <body>
   <div id="root"></div>
 
-  <!-- Three.js (ESM) exposed on window.THREE for the Babel scripts below -->
+  <!-- Three.js (ESM) on window.THREE. A module script is deferred, so it runs
+       before the deferred page runtime below. -->
   <script type="importmap">
   {
     "imports": {
@@ -46,24 +47,13 @@
   <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" integrity="sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" integrity="sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1" crossorigin="anonymous"></script>
 
-  <!-- Shared system (Cursor, shell) -->
+  <!-- Page runtime: shared core, project data, hero rig, ASCII figures, the
+       page config below, pointer effects, KeyButton, project page and
+       scrollbar -->
   <script defer src="app/page-runtimes/iskra-page.js?v=7bdf456bed55"></script>
 
-
-
-  <!-- ASCII photo reveal-lens (lab engine + React figure wrapper) -->
-
-
-  <!-- Project pieces -->
-
-
-
-
-
-
-
-
-  <!-- Page config — everything project-specific lives here -->
+  <!-- Page config — everything project-specific lives here. Inert in the
+       page: build.cjs compiles it into the page runtime above. -->
   <script type="text/plain" data-page-runtime-source="iskra-config">
     window.PAGE_CONFIG = {
       addr: "0x03",
@@ -80,12 +70,5 @@
       },
     };
   </script>
-
-  <!-- Shared project page and pointer effects -->
-
-
-
-  <!-- Shared ASCII RAMP scrollbar -->
-
 </body>
 </html>

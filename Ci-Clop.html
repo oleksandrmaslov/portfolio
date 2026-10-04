@@ -25,8 +25,8 @@
 <body>
   <div id="root"></div>
 
-  <!-- Three.js (ESM) + GLTFLoader + MeshoptDecoder + RoomEnvironment, exposed
-       on window.THREE for the non-module Babel-standalone scripts below. -->
+  <!-- Three.js (ESM) on window.THREE. A module script is deferred, so it runs
+       before the deferred page runtime below. -->
   <script type="importmap">
   {
     "imports": {
@@ -43,34 +43,19 @@
     window.THREE = Object.assign({}, THREE, { GLTFLoader, MeshoptDecoder, RoomEnvironment });
   </script>
 
-  <!-- React + precompiled page runtime -->
   <script src="app/data/projects.js?v=c95097033c03"></script>
 
+  <!-- React + precompiled page runtime -->
   <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" integrity="sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" integrity="sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1" crossorigin="anonymous"></script>
 
-  <!-- Shared system (Cursor, shell) -->
+  <!-- Page runtime: shared core, PLAY DEMO (field core, torch sound, model,
+       controller, HUD), project data, hero rig, ASCII figures, the page config
+       below, pointer effects, KeyButton, project page and scrollbar -->
   <script defer src="app/page-runtimes/ci-clop-page.js?v=91eb5927c9a0"></script>
 
-  <!-- PLAY DEMO · field sound core + torch palette + procedural torch + controller -->
-
-
-
-
-
-  <!-- ASCII photo reveal-lens (lab engine + React figure wrapper) -->
-
-
-  <!-- Project pieces -->
-
-
-
-
-
-
-
-
-  <!-- Page config — everything project-specific lives here -->
+  <!-- Page config — everything project-specific lives here. Inert in the
+       page: build.cjs compiles it into the page runtime above. -->
   <script type="text/plain" data-page-runtime-source="ci-clop-config">
     window.PAGE_CONFIG = {
       addr: "0x04",
@@ -100,12 +85,5 @@
       },
     };
   </script>
-
-  <!-- Shared project page and pointer effects -->
-
-
-
-  <!-- Shared ASCII RAMP scrollbar -->
-
 </body>
 </html>
