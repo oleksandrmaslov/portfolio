@@ -95,9 +95,9 @@ function makeTileTexture(p, THREE) {
     }
   }
 
-  // Skip the canvas wireframe graphic when a real 3D model or mini-PCB
-  // overlays the card — otherwise the green primitive shows through behind it.
-  if (!p.model && !p.pcbBoard) {
+  // Skip the canvas graphic when a real 3D model overlays the card —
+  // otherwise the green line art shows through behind it.
+  if (!p.model) {
     x.save();
     x.translate(270, 320);
     x.strokeStyle = "#00f0c8";
@@ -185,44 +185,6 @@ function drawGraphic(x, p) {
         x.beginPath();
         x.arc(0, 0, 100 + i * 14, -0.4 - i * 0.05, 0.4 + i * 0.05);
         x.globalAlpha = 0.4 - i * 0.1;
-        x.stroke();
-      }
-      x.globalAlpha = 1;
-      break;
-    }
-    case "accel": {
-      x.beginPath();
-      for (let i = 0; i <= 80; i++) {
-        const t = i / 80;
-        const xx = (t - 0.5) * 240;
-        const yy = -Math.pow(t, 2.6) * 170 + 70;
-        if (i === 0) x.moveTo(xx, yy); else x.lineTo(xx, yy);
-      }
-      x.stroke();
-      x.strokeStyle = "#1a2030";
-      x.beginPath(); x.moveTo(-120, 70); x.lineTo(120, -80); x.stroke();
-      x.beginPath(); x.moveTo(-120, 70); x.lineTo(120, 70); x.stroke();
-      x.beginPath(); x.moveTo(-120, 70); x.lineTo(-120, -100); x.stroke();
-      x.fillStyle = "#5b6478";
-      for (let i = 1; i <= 4; i++) {
-        x.fillRect(-120 + i * 48 - 0.5, 70 - 3, 1, 6);
-        x.fillRect(-120 - 3, 70 - i * 38 - 0.5, 6, 1);
-      }
-      x.strokeStyle = "#00f0c8";
-      x.fillStyle = "#00f0c8";
-      break;
-    }
-    case "torch": {
-      x.beginPath();
-      x.moveTo(-50, 60); x.lineTo(50, 60);
-      x.lineTo(110, -90); x.lineTo(-110, -90); x.closePath();
-      x.stroke();
-      x.beginPath(); x.rect(-50, 60, 100, 70); x.stroke();
-      x.beginPath(); x.arc(0, -10, 16, 0, Math.PI * 2); x.fill();
-      for (let i = -2; i <= 2; i++) {
-        x.globalAlpha = 0.3;
-        x.beginPath();
-        x.moveTo(i * 16, -90); x.lineTo(i * 24, -150);
         x.stroke();
       }
       x.globalAlpha = 1;
@@ -983,30 +945,15 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       tiles.push(mesh);
 
       // ---- per-tile 3D overlay
-      // Two paths:
-      //   (a) project has a `model` URL → load the GLB with its real materials
-      //   (b) otherwise → procedural wireframe primitive as before
-      // Both paths register a single "wire" entry in tileWires so the existing
-      // follow/rotate/visibility logic in the frame loop works unchanged.
-      if (p.pcbBoard && window.makeAboutPCBMesh) {
-        // About node: float the actual PCB used by window.MOBoard.
-        // on the card, and let the GLB-overlay frame logic below drive it
-        // (scale/yaw/opacity) by tagging it as a loaded model.
-        const board = window.makeAboutPCBMesh(THREE);
-        board.userData.parentTile = mesh;
-        board.userData.prim = "pcb";
-        board.userData.addr = p.addr;
-        board.userData.isModel = true;
-        board.userData.loaded = true;
-        board.userData.loadedAt = performance.now();
-        tilesGroup.add(board);
-        tileWires.push(board);
-      } else if (p.model && window.loadProjectModel) {
+      // A project with a `model` URL loads its GLB with its real materials into
+      // a holder registered in tileWires, so the frame loop can follow, turn
+      // and fade it with its card. A project without one (Kerfur, Venovisor)
+      // keeps the line art makeTileTexture drew into the card itself.
+      if (p.model && window.loadProjectModel) {
         // Reserve a placeholder Group right away so frame ordering doesn't blink.
         const holder = new THREE.Group();
         holder.userData = {
           parentTile: mesh,
-          prim: p.prim || "model",
           addr: p.addr,
           isModel: true,
           loaded: false,
@@ -1020,8 +967,6 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
           state: "queued",
           run: () => window.loadProjectModel(p.model, THREE).then((root) => {
           if (universeDisposed) return;
-          // Centre + scale so longest edge ~2 world units; outer scale.setScalar
-          // then matches what the wireframe used to do (0.28 of that).
           // Fit so longest edge = 2 world units; the frame loop then sets the
           // outer holder scale (≈0.85 idle, 1.10 on focus) so the model reads
           // as the card's hero, not a small inset.
@@ -1063,20 +1008,6 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         };
         modelJobs.push(job);
         modelJobByAddr.set(p.addr, job);
-      } else if (p.prim && window.makePrimitiveMesh) {
-        const wire = window.makePrimitiveMesh(p.prim, THREE, {
-          wireframe: true,
-          color: 0x00f0c8,
-          opacity: 0.85,
-        });
-        wire.scale.setScalar(0.28);                  // tiny — fits in the upper area of the card
-        wire.userData.parentTile = mesh;
-        wire.userData.prim = p.prim;
-        wire.userData.addr = p.addr;
-        // Cone sits horizontally — same as on the project page
-        if (p.prim === "cone") wire.rotation.set(0, 0, Math.PI / 2);
-        tilesGroup.add(wire);
-        tileWires.push(wire);
       }
     });
     // The greeting card is part of the opening composition and is also the
@@ -2316,7 +2247,6 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     // Hoisted scratch — reused every frame so the hot loops allocate nothing.
     const _camDir   = new THREE.Vector3();
     const _off      = new THREE.Vector3();
-    const _localOff = new THREE.Vector3();
     const _lookM    = new THREE.Matrix4();
     const _baseQ    = new THREE.Quaternion();
     const _offQ     = new THREE.Quaternion();
@@ -2706,78 +2636,48 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       // stars wrap in a larger box for parallax illusion
       wrapPointsAroundCamera(stars, SBOX, SBOX_HALF);
 
-      /* small per-tile overlays — wireframe primitives OR loaded GLBs.
-         Both branches follow their parent tile, rotate, and fade with it.
-         Models are centred on the card face and pushed further toward camera
-         so they read as the hero element; wireframes sit small above the art. */
+      /* per-tile model overlays — each loaded GLB follows its parent tile,
+         turns, and fades with it. Models are centred on the card face and
+         pushed toward the camera so they read as the hero element. */
       // World-direction is constant for all overlays this frame — fetch once.
       camera.getWorldDirection(_camDir);
       for (const wire of tileWires) {
         const parent = wire.userData.parentTile;
         if (!parent) continue;
-        const isModel = !!wire.userData.isModel;
-        // Offset toward viewer — bigger for full models so they clear the card.
-        const forwardDist = isModel ? 1.4 : 0.6;
-        _off.copy(_camDir).multiplyScalar(-forwardDist);
-        // Card-local offset: models can be nudged to their visual centre;
-        // wireframes stay just above the card art.
-        const modelOffset = isModel ? parent.userData.project.modelOffset : null;
-        _localOff.set(
-          modelOffset ? (modelOffset.x || 0) : 0,
-          isModel ? (modelOffset ? (modelOffset.y || 0) : 0) : parent.scale.y * 1.05,
-          modelOffset ? (modelOffset.z || 0) : 0,
-        ).applyQuaternion(parent.quaternion);
+        // Offset toward the viewer so the model clears the card.
+        _off.copy(_camDir).multiplyScalar(-1.4);
         wire.position.set(
-          parent.position.x + _off.x + _localOff.x,
-          parent.position.y + _off.y + _localOff.y,
-          parent.position.z + _off.z + _localOff.z,
+          parent.position.x + _off.x,
+          parent.position.y + _off.y,
+          parent.position.z + _off.z,
         );
-        // Continuous slow rotation. Loaded GLBs are the "hero" presentation —
-        // they get a gentle yaw-only drift so the form stays readable and
-        // mostly faces the camera. Wireframe primitives still tumble as
-        // before (cheap, abstract, more decorative).
-        if (!FLOW_RM && isModel) {
-          wire.rotation.y += dt * 0.00015;
-        } else if (!FLOW_RM && wire.userData.prim === "cone") {
-          wire.rotation.y += dt * 0.00072;
-        } else if (!FLOW_RM) {
-          wire.rotation.y += dt * 0.0006;
-          wire.rotation.x += dt * 0.00024;
-        }
-        // Match parent visibility
-        const tileOp = parent.material.opacity;
-        const overlayOp = Math.min(0.95, tileOp * 1.15);
-        if (isModel) {
-          // Loaded GLB — fade every material in the subtree, and hide
-          // the whole group below a threshold so we don't pay for invisible draws.
-          if (wire.userData.loaded) {
-            // Soft fade-in from the moment the GLB lands, so the model eases up
-            // instead of popping (the parent tile may already be fully visible).
-            const mFade = THREE.MathUtils.smoothstep(now - (wire.userData.loadedAt || now), 0, 600);
-            // Per request: loaded GLB models render FULLY SOLID at rest —
-            //  (1) no 0.95 cap (use the full distance opacity, clamped to 1), and
-            //  (2) no mode dimming (use the tile's pre-dim base opacity).
-            // Distance fade and the load fade-in are preserved.
-            const modelTileOp = parent.userData.modelOpacityBase != null
-              ? parent.userData.modelOpacityBase
-              : tileOp;
-            const modelOp = Math.min(1, modelTileOp * 1.15) * mFade;
-            wire.visible = modelOp > 0.02;
-            if (modelOp !== wire.userData.lastModelOpacity) {
-              const fadeMaterials = wire.userData.fadeMaterials || [];
-              for (const material of fadeMaterials) material.opacity = modelOp;
-              wire.userData.lastModelOpacity = modelOp;
-            }
+        // A gentle yaw-only drift so the form stays readable and mostly faces
+        // the camera.
+        if (!FLOW_RM) wire.rotation.y += dt * 0.00015;
+        // Fade every material in the subtree, and hide the whole group below a
+        // threshold so we don't pay for invisible draws.
+        if (wire.userData.loaded) {
+          // Soft fade-in from the moment the GLB lands, so the model eases up
+          // instead of popping (the parent tile may already be fully visible).
+          const mFade = THREE.MathUtils.smoothstep(now - (wire.userData.loadedAt || now), 0, 600);
+          // Per request: loaded GLB models render FULLY SOLID at rest —
+          //  (1) no 0.95 cap (use the full distance opacity, clamped to 1), and
+          //  (2) no mode dimming (use the tile's pre-dim base opacity).
+          // Distance fade and the load fade-in are preserved.
+          const modelTileOp = parent.userData.modelOpacityBase != null
+            ? parent.userData.modelOpacityBase
+            : parent.material.opacity;
+          const modelOp = Math.min(1, modelTileOp * 1.15) * mFade;
+          wire.visible = modelOp > 0.02;
+          if (modelOp !== wire.userData.lastModelOpacity) {
+            const fadeMaterials = wire.userData.fadeMaterials || [];
+            for (const material of fadeMaterials) material.opacity = modelOp;
+            wire.userData.lastModelOpacity = modelOp;
           }
-        } else {
-          // Procedural wireframe primitive — single material
-          wire.material.opacity = overlayOp;
         }
-        // Pop with focus — models start much larger than wireframes.
+        // Pop with focus.
         const isFocused = focusAddrNow && wire.userData.addr === focusAddrNow;
-        const baseScale  = isModel ? 0.85 : 0.28;
-        const focusScale = isModel ? 1.10 : 0.42;
-        const targetScale = isFocused ? focusScale : baseScale;
+        const targetScale = isFocused ? 1.10 : 0.85;
         wire.scale.lerp(_vScale.set(targetScale, targetScale, targetScale), ease10);
       }
 
@@ -3320,17 +3220,12 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       else if (scene.environment && scene.environment.dispose) scene.environment.dispose();
       tiles.forEach(m => { m.geometry.dispose(); m.material.map?.dispose(); m.material.dispose(); });
       tileWires.forEach(w => {
-        if (w.userData && w.userData.isModel) {
-          w.traverse((obj) => {
-            if (obj.isMesh) {
-              obj.geometry?.dispose();
-              obj.material?.dispose();
-            }
-          });
-        } else {
-          w.geometry?.dispose();
-          w.material?.dispose();
-        }
+        w.traverse((obj) => {
+          if (obj.isMesh) {
+            obj.geometry?.dispose();
+            obj.material?.dispose();
+          }
+        });
       });
       ambientBatches.forEach(batch => batch.geo.dispose());
       ambientMat.dispose();
