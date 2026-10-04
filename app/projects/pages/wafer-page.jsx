@@ -19,7 +19,7 @@ const {
 } = React;
 
 /* Wafer hero config — the production page is fixed to the classic layout. */
-const HERO_LAYOUT = "right";   // "right" | "center" | "left"
+const HERO_LAYOUT = "right";   // the only hero layout case-study.css draws
 const IDLE_DRIFT = true;
 
 /* PLAY DEMO settings, handed to WaferDemoLayer as its `tweaks` prop. The HUD

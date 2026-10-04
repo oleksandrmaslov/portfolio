@@ -133,14 +133,8 @@ body.hv-exit .pp-shell { opacity: 0; transition: opacity 300ms var(--e-out); }
 .hv-page--ready .hv__scrollCue { opacity: 1; }
 .hv__scrollCueLine { width: 30px; height: 1px; background: var(--hairline); }
 
-/* ---- layout variants (model offset handled by rig; title alignment here) ---- */
+/* ---- layout (model offset handled by rig; title alignment here) ---- */
 .hv--right  { justify-content: flex-start; }
-.hv--left   { justify-content: flex-end; }
-.hv--center { justify-content: center; text-align: center; padding-top: 96px; align-items: flex-start; }
-.hv--center .hv__title { align-items: center; max-width: 30ch; margin-top: var(--s-7); }
-.hv--center .hv__metric { justify-content: center; }
-.hv--center .hv__meta { justify-content: center; }
-.hv--center .hv__metricCol { border-left: 0; border-top: 2px solid var(--signal); padding-left: 0; padding-top: var(--s-3); align-items: center; }
 
 /* ============================================================
    DEMO / INSPECT BUTTON — bottom-right keycap
@@ -192,7 +186,7 @@ body.hv-exit .pp-shell { opacity: 0; transition: opacity 300ms var(--e-out); }
 
 @media (max-width: 900px) {
   .hv { padding: 104px var(--s-6) 132px; align-items: flex-start; justify-content: flex-start; }
-  .hv--left, .hv--right, .hv--center { justify-content: flex-start; text-align: left; }
+  .hv--right { justify-content: flex-start; text-align: left; }
   /* constrain the title to the viewport so it stacks instead of
      overflowing off the left edge (was max-width:none + centered) */
   .hv__title { width: 100%; max-width: 100%; min-width: 0; margin-top: 40vh; gap: var(--s-5); align-items: flex-start; }
