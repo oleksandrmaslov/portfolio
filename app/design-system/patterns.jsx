@@ -158,36 +158,8 @@ function MotionSection() {
 /* ============================================================
    COMPONENTS — buttons, links, node card, badges
    ============================================================ */
-/* KeyButton — a physical keycap. Press = depress + LED flash. */
-function KeyButton({ children, legend = "↵", primary, onPress }) {
-  const [pressed, setPressed] = useStateS(false);
-  const [lit, setLit] = useStateS(false);
-
-  const fire = () => {
-    setPressed(true);
-    setLit(true);
-    onPress && onPress();
-    setTimeout(() => setPressed(false), 140);
-    setTimeout(() => setLit(false), 520);
-  };
-
-  const onKey = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fire(); } };
-
-  return (
-    <button
-      className={"key " + (pressed ? "key--down " : "") + (lit ? "key--lit " : "") + (primary ? "key--primary" : "")}
-      onClick={fire}
-      onKeyDown={onKey}
-    >
-      <span className="key__cap">
-        <span className="key__legendTop">{legend}</span>
-        <span className="key__label">{children}</span>
-      </span>
-      <span className="key__shadow" aria-hidden="true" />
-    </button>
-  );
-}
-
+/* The KEY specimen renders the shipping KeyButton from
+   app/shared/key-button.jsx: a physical keycap, press = depress + LED flash. */
 function ComponentsSection() {
   return (
     <Section num="08" title="Components" id="components"
@@ -480,7 +452,6 @@ function PhotoSection() {
   );
 }
 
-window.KeyButton = KeyButton;
 window.GridSection = GridSection;
 window.MotionSection = MotionSection;
 window.ComponentsSection = ComponentsSection;

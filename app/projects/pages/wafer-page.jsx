@@ -473,6 +473,8 @@ function WaferProjectApp() {
           key={demo ? "demo-on" : "demo-off"}
           legend={<span data-mo-cursor-mirror data-mo-cursor-opacity=".hv-demo">▸</span>}
           primary
+          ripple={false}
+          blurOnPress
           onPress={enterDemo}
         >
           <span data-mo-cursor-mirror data-mo-cursor-opacity=".hv-demo">PLAY DEMO</span>

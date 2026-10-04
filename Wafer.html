@@ -77,35 +77,6 @@
   <!-- Shared system (Cursor, shell) -->
   <script defer src="app/page-runtimes/wafer-page.js?v=c79e62b2b325"></script>
 
-  <!-- KeyButton (inline; shared with Landing) -->
-  <script type="text/plain" data-page-runtime-source="wafer-key-button">
-    function KeyButton({ children, legend = "↵", primary, onPress }) {
-      const { useState } = React;
-      const [pressed, setPressed] = useState(false);
-      const [lit, setLit] = useState(false);
-      const fire = (el) => {
-        setPressed(true); setLit(true);
-        onPress && onPress();
-        if (el && el.blur) el.blur();
-        setTimeout(() => setPressed(false), 140);
-        setTimeout(() => setLit(false), 520);
-      };
-      const onKey = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fire(e.currentTarget); } };
-      return (
-        <button
-          className={"key " + (pressed ? "key--down " : "") + (lit ? "key--lit " : "") + (primary ? "key--primary" : "")}
-          onClick={(e) => fire(e.currentTarget)} onKeyDown={onKey}>
-          <span className="key__cap">
-            <span className="key__legendTop">{legend}</span>
-            <span className="key__label">{children}</span>
-          </span>
-          <span className="key__shadow" aria-hidden="true" />
-        </button>
-      );
-    }
-    window.KeyButton = KeyButton;
-  </script>
-
   <!-- PLAY DEMO · production GLB board + field sound + controller (plain JS) -->
 
 

@@ -31,6 +31,7 @@ const POINTER_EFFECTS = "app/shared/pointer-effects.js";
 const SCROLLBAR = "app/shared/scrollbar.js";
 const PROJECT_PAGE_LIFECYCLE = "app/projects/pages/project-page-lifecycle.jsx";
 const STANDARD_PAGE = "app/projects/pages/standard-page.jsx";
+const KEY_BUTTON = "app/shared/key-button.jsx";
 
 // Keep this in the same order as the former text/babel tags in the shipping
 // landing HTML. Each unit is transformed independently because the classic
@@ -70,6 +71,7 @@ function projectPageSources() {
   return [
     classic(POINTER_EFFECTS),
     jsx(PROJECT_PAGE_LIFECYCLE),
+    jsx(KEY_BUTTON),
     jsx(STANDARD_PAGE),
     classic(SCROLLBAR),
   ];
@@ -133,7 +135,7 @@ const pageDefinitions = [
       phase("all-projects-project", [
         jsx(CORE),
         jsx(MODEL_VIEWER), classic(SOLID_MATERIALS),
-        inlineJsx("all-projects-key-button", "All Projects.html#KeyButton", "function KeyButton"),
+        jsx(KEY_BUTTON),
       ]),
       phase("all-projects-page", [jsx("app/projects/index/app.jsx"), classic(SCROLLBAR)]),
     ],
@@ -152,6 +154,7 @@ const pageDefinitions = [
       jsx(MODEL_VIEWER), classic(SOLID_MATERIALS),
       jsx("app/design-system/event-bus.jsx"),
       jsx("app/design-system/foundations.jsx"),
+      jsx(KEY_BUTTON),
       jsx("app/design-system/patterns.jsx"),
       jsx("app/design-system/app.jsx"),
       classic(SCROLLBAR),
@@ -179,7 +182,7 @@ const pageDefinitions = [
     html: "Wafer.html",
     phases: [phase("wafer-page", [
       jsx(CORE),
-      inlineJsx("wafer-key-button", "Wafer.html#KeyButton", "function KeyButton"),
+      jsx(KEY_BUTTON),
       classic("demo/wafer-sound.js"),
       classic("demo/wafer-board.js"),
       classic("demo/wafer-demo.js"),

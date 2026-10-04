@@ -60,32 +60,6 @@ const PC = window.PAGE_CONFIG || {};
 const PC_IDLE_DRIFT = true;
 const PC_LIFECYCLE = window.MOProjectPageLifecycle;
 
-/* Shared project keycap button. */
-function PCKeyButton({ children, legend = "↵", primary, onPress }) {
-  const [pressed, setPressed] = usePC(false);
-  const [lit, setLit] = usePC(false);
-  const fire = (el) => {
-    setPressed(true); setLit(true);
-    onPress && onPress();
-    if (el && el.blur) el.blur();
-    setTimeout(() => setPressed(false), 140);
-    setTimeout(() => setLit(false), 520);
-  };
-  const onKey = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fire(e.currentTarget); } };
-  return (
-    <button
-      className={"key " + (pressed ? "key--down " : "") + (lit ? "key--lit " : "") + (primary ? "key--primary" : "")}
-      onClick={(e) => fire(e.currentTarget)} onKeyDown={onKey}>
-      <span className="key__cap" data-mo-cursor-mirror data-mo-cursor-opacity=".hv-demo">
-        <span className="key__legendTop">{legend}</span>
-        <span className="key__label">{children}</span>
-      </span>
-      <span className="key__shadow" aria-hidden="true" />
-    </button>
-  );
-}
-if (!window.KeyButton) window.KeyButton = PCKeyButton;
-
 /* layout → rig offset (shared project-page breakpoints).
    A page may override any breakpoint with PAGE_CONFIG.heroLayout —
    { mobile, tablet, desktop } — when its model needs to sit clear of the
@@ -365,20 +339,15 @@ function ProjectPageApp() {
       {PC.demo && (
         <div className="hv-demo">
           <span className="hv-demo__hint" data-mo-cursor-mirror data-mo-cursor-opacity=".hv-demo"><span className="hv-demo__hintDot" />{PC.demo.hint}</span>
-          <PCKeyButton key={demo ? "demo-on" : "demo-off"} legend="▸" primary onPress={enterDemo}>{PC.demo.label || "PLAY DEMO"}</PCKeyButton>
+          <KeyButton key={demo ? "demo-on" : "demo-off"} legend="▸" primary ripple={false} blurOnPress cursorMirror=".hv-demo"
+            onPress={enterDemo}>{PC.demo.label || "PLAY DEMO"}</KeyButton>
         </div>
       )}
       {!PC.demo && PC.link && (
         <div className="hv-demo">
           <span className="hv-demo__hint" data-mo-cursor-mirror data-mo-cursor-opacity=".hv-demo"><span className="hv-demo__hintDot" />{PC.link.hint || "SOURCE · ARTIFACTS"}</span>
-          <PCKeyButton legend="↗" primary onPress={() => {
-            if (PC.link.self) {
-              document.body.classList.add("hv-exit");
-              setTimeout(() => { window.location.href = PC.link.href; }, 420);
-            } else {
-              window.open(PC.link.href, "_blank");
-            }
-          }}>{PC.link.label}</PCKeyButton>
+          <KeyButton legend="↗" primary ripple={false} blurOnPress cursorMirror=".hv-demo"
+            onPress={() => { window.open(PC.link.href, "_blank"); }}>{PC.link.label}</KeyButton>
         </div>
       )}
 
