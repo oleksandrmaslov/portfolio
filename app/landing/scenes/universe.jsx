@@ -267,7 +267,6 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
   const overlayRef = React.useRef(null);
   const [hover, setHover] = React.useState(null);
   const [activeAddr, setActiveAddr] = React.useState(null);
-  const [status, setStatus] = React.useState({ yaw: "0", pit: "0", vel: "0", tile: "—" });
   const [idleNote, setIdleNote] = React.useState(false);
 
   const hoverObjRef = React.useRef(null);
@@ -3111,23 +3110,8 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       MC.x = cam.pos.x; MC.y = cam.pos.y; MC.z = cam.pos.z;
       MC.yaw = cam.yaw; MC.pitch = cam.pitch; MC.vel = cam.vel;
 
-      /* status ~ 3hz */
+      // Counts rendered frames; the first one announces mo:first-frame below.
       frameI++;
-      if (frameI % 18 === 0) {
-        const yawDeg = ((cam.yaw * 180 / Math.PI) % 360 + 360) % 360;
-        const next = {
-          yaw: yawDeg.toFixed(0).padStart(3, "0"),
-          pit: (cam.pitch * 180 / Math.PI).toFixed(0),
-          vel: cam.vel.toFixed(1),
-          tile: hoverObjRef.current?.userData?.project?.addr || activeAddrRef.current || "—",
-        };
-        // Return the previous object when nothing changed. A fresh object here
-        // failed Object.is every time and reconciled the whole Universe subtree
-        // 3.3x/second forever, including with the camera completely still.
-        setStatus((prev) => (prev
-          && prev.yaw === next.yaw && prev.pit === next.pit
-          && prev.vel === next.vel && prev.tile === next.tile) ? prev : next);
-      }
 
       // Scene grade — advance grain and keep live-tunable uniforms in sync.
       // Velocity weight (written by cinematic.js) leans on the aberration
@@ -3281,28 +3265,9 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         />
       )}
 
-      <div className="universe__reticle" aria-hidden="true">
-        <span /><span /><span /><span />
-      </div>
-
       <div className={"universe__whisper " + (idleNote ? "is-on" : "")} aria-hidden="true">
         <span className="universe__whisperDot" />
         the field notices you
-      </div>
-
-      {/* center crosshair removed per request */}
-
-      <div className="universe__hud universe__hud--bl">
-        <div className="universe__hudRow"><span className="universe__hudKey">YAW</span><span className="universe__hudVal">{status.yaw}°</span></div>
-        <div className="universe__hudRow"><span className="universe__hudKey">PITCH</span><span className="universe__hudVal">{status.pit}°</span></div>
-        <div className="universe__hudRow"><span className="universe__hudKey">VEL</span><span className="universe__hudVal">{status.vel}</span></div>
-        <div className="universe__hudRow"><span className="universe__hudKey">FOCUS</span><span className="universe__hudVal">{status.tile}</span></div>
-      </div>
-      <div className="universe__hud universe__hud--br">
-        <div className="universe__hudRow"><span className="universe__hudKey">DRAG</span><span className="universe__hudVal">ROTATE</span></div>
-        <div className="universe__hudRow"><span className="universe__hudKey">WHEEL</span><span className="universe__hudVal">FLY</span></div>
-        <div className="universe__hudRow"><span className="universe__hudKey">CLICK</span><span className="universe__hudVal">AIM</span></div>
-        <div className="universe__hudRow"><span className="universe__hudKey">SPACE</span><span className="universe__hudVal">∞</span></div>
       </div>
     </div>
   );

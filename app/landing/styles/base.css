@@ -112,19 +112,6 @@ body.lp-toIndex .universeBg { filter: none; }
 }
 .universeBg .universe { position: absolute; inset: 0; }
 
-/* mode-specific visual treatment */
-.universeBg--drift   { filter: none;                       }
-
-/* universe HUD lives under content (zindex 4) but above bg (0).
-   Hide on all sections — we have section-specific framing (title corners, etc.).
-   `!important` to defeat the hudIn animation's `forwards` keyframe. */
-.universeBg .universe__hud,
-.universeBg .universe__reticle {
-  opacity: 0 !important;
-  animation: none !important;
-  pointer-events: none;
-}
-
 .lp {
   position: relative;
   z-index: 1;
@@ -429,59 +416,6 @@ body.lp-toIndex .universeBg { filter: none; }
 body.mo-explore .universe__mount { touch-action: none; }
 .universe__mount canvas { display: block; }
 
-/* corner reticles — small + asymmetric */
-.universe__reticle {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 2;
-  transition: opacity var(--d-base) var(--e-out);
-}
-.universe__reticle span {
-  position: absolute;
-  width: 14px;
-  height: 14px;
-  border: 1px solid var(--signal);
-  opacity: 0.55;
-}
-.universe__reticle span:nth-child(1) { top: 84px;    left: var(--s-7);  border-right: 0; border-bottom: 0; }
-.universe__reticle span:nth-child(2) { top: 84px;    right: var(--s-7); border-left:  0; border-bottom: 0; }
-.universe__reticle span:nth-child(3) { bottom: 30vh; left: var(--s-7);  border-right: 0; border-top:    0; }
-.universe__reticle span:nth-child(4) { bottom: 30vh; right: var(--s-7); border-left:  0; border-top:    0; }
-
-/* HUD */
-.universe__hud {
-  position: absolute;
-  z-index: 4;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-family: var(--ff-mono);
-  font-size: var(--fs-micro);
-  letter-spacing: var(--tr-caps);
-  text-transform: uppercase;
-  pointer-events: none;
-  opacity: 0;
-  animation: hudIn 700ms var(--e-out) 700ms forwards;
-  transition: opacity var(--d-base) var(--e-out);
-}
-@keyframes hudIn { to { opacity: 1; } }
-.universe__hud--bl { bottom: 6vh; left:  var(--s-7); }
-.universe__hud--br { bottom: 6vh; right: var(--s-7); align-items: flex-end; }
-.universe__hudRow {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--s-4);
-}
-.universe__hudKey { color: var(--ghost); }
-.universe__hudVal {
-  color: var(--signal);
-  font-variant-numeric: tabular-nums;
-}
-.universe__hud--br .universe__hudRow { flex-direction: row-reverse; }
-.universe__hud--br .universe__hudKey { color: var(--ghost); }
-.universe__hud--br .universe__hudVal { color: var(--bone); }
-
 /* ============================================================
    Universe hover inspector — "lock-on" targeting frame
    A reticle follows the card's true projected (rotated) shape, with
@@ -636,10 +570,6 @@ body.mo-explore .lp-shell {
    MOBILE LAYOUT
    ============================================================ */
 @media (max-width: 700px) {
-  /* the corner HUDs read as desktop chrome (DRAG/WHEEL/CLICK verbs);
-     the explore overlay carries its own touch cues */
-  .universe__hud { display: none; }
-
   /* control cluster: two keycaps fit, the Continue chevron stack doesn't */
   .title__proceedRow { gap: var(--s-4); }
   .title__proceedRow .scrollcue { display: none; }
