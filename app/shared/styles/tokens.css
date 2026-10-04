@@ -171,14 +171,8 @@
 
   /* ---------- LAYOUT ----------
      Fibonacci-scaled max-widths. */
-  --w-reading: 610px;   /* reading width — phi*column */
-  --w-column:  987px;   /* primary column */
+  --w-reading: 610px;   /* reading width — canvas / phi² */
   --w-canvas:  1597px;  /* full layout */
-
-  /* Grid: a 13-column proportional grid based on Fib ratios.
-     Use --col-{1..13} for column-spans in custom grids. */
-  --col-1:  calc(100% / 13);
-
 }
 
 /* ============================================================
