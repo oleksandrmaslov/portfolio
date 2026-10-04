@@ -1,9 +1,5 @@
 /* Shared layout and site chrome. */
-@keyframes blink { 50% { opacity: 0; } }
 
-/* ============================================================
-   AMBIENT — signal traces canvas
-   ============================================================ */
 /* ============================================================
    PAGE / SECTIONS
    ============================================================ */
@@ -16,7 +12,6 @@
 .section + .section { border-top: 1px solid var(--hairline); }
 .section__head {
   display: grid;
-  grid-template-columns: 144px 1fr 144px;
   gap: var(--s-7);
   align-items: baseline;
   margin-bottom: var(--s-8);
