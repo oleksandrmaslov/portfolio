@@ -51,7 +51,7 @@ function FibNest() {
 function GridSection() {
   return (
     <Section num="03" title="Grid &amp; Spacing" id="grid"
-      lede="Every measurement is a Fibonacci number. No off-grid values. The spiral itself is never drawn — only its proportions, baked into spacing, type, and layout. This is the invisible scaffold."
+      lede="Spacing steps, page measures and window insets are Fibonacci numbers. The spiral itself is never drawn — only its proportions, baked into spacing and layout. This is the invisible scaffold."
       meta={<>11 steps · 2px → 233px · pure Fib</>}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--s-7)" }}>
         <div className="fibBox">
@@ -70,17 +70,13 @@ function GridSection() {
         <div className="fibBox">
           <div className="tile__label">PROPORTIONAL TILING (φ)</div>
           <p className="t-meta" style={{ marginTop: "var(--s-5)", marginBottom: "var(--s-6)", color: "var(--ash)", maxWidth: "42ch", lineHeight: 1.5 }}>
-            Layout columns, image crops, and module sizes lock to ratios drawn from this nested tile. No spiral drawn — only the rectangles that compose it.
+            The reading measure, the canvas and the window insets are rungs of the same sequence. No spiral drawn — only the rectangles that compose it.
           </p>
           <FibNest />
           <div style={{ marginTop: "var(--s-6)", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--s-5)" }}>
             <div>
               <div className="tile__label">READING</div>
-              <div className="t-meta" style={{ color: "var(--bone)", marginTop: "var(--s-3)" }}>610px <span style={{ color: "var(--ghost)" }}>· φ × column</span></div>
-            </div>
-            <div>
-              <div className="tile__label">COLUMN</div>
-              <div className="t-meta" style={{ color: "var(--bone)", marginTop: "var(--s-3)" }}>987px <span style={{ color: "var(--ghost)" }}>· φ × canvas</span></div>
+              <div className="t-meta" style={{ color: "var(--bone)", marginTop: "var(--s-3)" }}>610px <span style={{ color: "var(--ghost)" }}>· F₁₅</span></div>
             </div>
             <div>
               <div className="tile__label">CANVAS</div>
@@ -88,7 +84,11 @@ function GridSection() {
             </div>
             <div>
               <div className="tile__label">GUTTER</div>
-              <div className="t-meta" style={{ color: "var(--bone)", marginTop: "var(--s-3)" }}>55px <span style={{ color: "var(--ghost)" }}>· F₁₀</span></div>
+              <div className="t-meta" style={{ color: "var(--bone)", marginTop: "var(--s-3)" }}>34px <span style={{ color: "var(--ghost)" }}>· F₉</span></div>
+            </div>
+            <div>
+              <div className="tile__label">TOP INSET</div>
+              <div className="t-meta" style={{ color: "var(--bone)", marginTop: "var(--s-3)" }}>89px <span style={{ color: "var(--ghost)" }}>· F₁₁</span></div>
             </div>
           </div>
         </div>
@@ -158,36 +158,8 @@ function MotionSection() {
 /* ============================================================
    COMPONENTS — buttons, links, node card, badges
    ============================================================ */
-/* KeyButton — a physical keycap. Press = depress + LED flash. */
-function KeyButton({ children, legend = "↵", primary, onPress }) {
-  const [pressed, setPressed] = useStateS(false);
-  const [lit, setLit] = useStateS(false);
-
-  const fire = () => {
-    setPressed(true);
-    setLit(true);
-    onPress && onPress();
-    setTimeout(() => setPressed(false), 140);
-    setTimeout(() => setLit(false), 520);
-  };
-
-  const onKey = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fire(); } };
-
-  return (
-    <button
-      className={"key " + (pressed ? "key--down " : "") + (lit ? "key--lit " : "") + (primary ? "key--primary" : "")}
-      onClick={fire}
-      onKeyDown={onKey}
-    >
-      <span className="key__cap">
-        <span className="key__legendTop">{legend}</span>
-        <span className="key__label">{children}</span>
-      </span>
-      <span className="key__shadow" aria-hidden="true" />
-    </button>
-  );
-}
-
+/* The KEY specimen renders the shipping KeyButton from
+   app/shared/key-button.jsx: a physical keycap, press = depress + LED flash. */
 function ComponentsSection() {
   return (
     <Section num="08" title="Components" id="components"
@@ -480,7 +452,6 @@ function PhotoSection() {
   );
 }
 
-window.KeyButton = KeyButton;
 window.GridSection = GridSection;
 window.MotionSection = MotionSection;
 window.ComponentsSection = ComponentsSection;

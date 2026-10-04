@@ -18,11 +18,7 @@ const PROJECT_DATA = {
     place: "Munich, DE",
     role: "Product design · PCB · firmware · manufacturing",
     stack: ["ZMK", "Zephyr 4.1", "KiCad", "Ergogen", "Fusion 360", "ISP1807", "nPM1300"],
-    primitive: "slab",
     model: "models/wafer_demo.glb",
-    modelFit: 3.4,
-    modelPose: { x: 1.05, y: 0, z: 0 },
-    demoSize: { d: 200, w: 110, h: 14 },
     metrics: [
       { value: "4-8", unit: "mm enclosure" },
       { value: "36",  unit: "keys" },
@@ -188,8 +184,6 @@ const PROJECT_DATA = {
     place: "Munich, DE",
     role: "Solo · firmware · architecture",
     stack: ["C", "Zephyr", "LVGL", "BLE", "IMU"],
-    primitive: "sphere",
-    demoSize: { d: 38, w: 38, h: 38 },
     metrics: [
       { value: "10k+", unit: "lines of C" },
       { value: "ø38",  unit: "mm body" },
@@ -239,8 +233,6 @@ const PROJECT_DATA = {
     place: "Munich, DE",
     role: "Maintainer · open source",
     stack: ["C", "ZMK", "Devicetree", "Streamlit", "Python"],
-    primitive: "torus",
-    demoSize: { d: 64, w: 64, h: 18 },
     metrics: [
       { value: "★ 25", unit: "github stars" },
       { value: "2",    unit: "curve modes" },
@@ -285,9 +277,7 @@ const PROJECT_DATA = {
     place: "Munich → Kyiv",
     role: "Embedded firmware · interaction · production integration",
     stack: ["C", "ARM Cortex-M0", "PY32F002A", "Black Magic Probe", "GitHub Actions"],
-    primitive: "cone",
     model: "models/ci-clop-mark.glb",
-    demoSize: { d: 120, w: 28, h: 28 },
     metrics: [
       { value: "1→2", unit: "physical buttons" },
       { value: "3",   unit: "legacy brightness steps" },
@@ -362,9 +352,7 @@ PROJECT_DATA["0x03"] = {
   place: "Munich → Kyiv",
   role: "Architecture · application · security model · tooling",
   stack: ["C#", ".NET / WPF", "Avalonia", "Black Magic Probe", "arm-none-eabi-gdb", "SQLite", "Ed25519"],
-  primitive: "slab",
   model: "models/iskra-mark.glb",
-  demoSize: { d: 120, w: 28, h: 28 },
   metrics: [
     { value: "3",   unit: "operator languages" },
     { value: "3",   unit: "trust repositories" },
@@ -445,10 +433,7 @@ PROJECT_DATA["0x06"] = {
   place: "Munich, DE",
   role: "Design · front-end · desktop build",
   stack: ["TypeScript", "React", "Tauri", "ZMK Studio protocol", "Vite", "Rust"],
-  primitive: "slab",
   model: "models/wafer-mark.glb",
-  modelFit: 3.2,
-  demoSize: { d: 0, w: 0, h: 0 },
   metrics: [
     { value: "168", unit: "bindings on a 42-key split" },
     { value: "1", unit: "keypress per binding" },
@@ -503,9 +488,7 @@ PROJECT_DATA["0x07"] = {
   place: "Munich, DE",
   role: "Maintainer · integration · fork",
   stack: ["C", "ZMK", "Zephyr", "Raw HID", "Split BLE", "nice!view"],
-  primitive: "slab",
   model: "models/keyboard-display.opt.glb",
-  demoSize: { d: 36, w: 22, h: 4 },
   metrics: [
     { value: "5",      unit: "host payloads" },
     { value: "2",      unit: "halves · synced" },
@@ -536,7 +519,6 @@ PROJECT_DATA["0x07"] = {
     { kind: "HOST APP", label: "zzeneg/qmk-hid-host · companion",       href: "https://github.com/zzeneg/qmk-hid-host" },
     { kind: "CREDITS",  label: "nice-view-hid · forked & extended",     href: "https://github.com/zzeneg/zmk-nice-view-hid" },
   ],
-  link: { label: "VIEW ON GITHUB", href: "https://github.com/oleksandrmaslov/zmk-split-hid-display", hint: "ZMK MODULE · SOURCE" },
   prev: "0x06",
   next: "0x08",
 };
@@ -560,9 +542,7 @@ PROJECT_DATA["0x05"] = {
   place: "Munich, DE",
   role: "Embedded firmware · device behaviour · production integration",
   stack: ["C", "PY32", "ARM Cortex-M0", "Iskra pipeline"],
-  primitive: "slab",
   model: null,           // no GLB yet - the page draws the same node-shell proxy the universe shows
-  demoSize: { d: 48, w: 32, h: 10 },
   metrics: [
     { value: "1", unit: "fielded device family" },
     { value: "3", unit: "production layers shared with Ci-Clop" },
@@ -646,9 +626,7 @@ PROJECT_DATA["0x09"] = {
   place: "[ place ]",
   role: "[ role ]",
   stack: ["ZMK", "Zephyr", "Power"],
-  primitive: "slab",
   model: "models/soft-off-keycap.opt.glb",
-  demoSize: { d: 18, w: 18, h: 9 },   // [ real dimensions pending ]
   metrics: [
     { value: "TBD", unit: "[ headline number ]" },
     { value: "TBD", unit: "[ scale or scope ]" },
@@ -693,9 +671,7 @@ PROJECT_DATA["0x0A"] = {
   place: "[ place ]",
   role: "[ role ]",
   stack: ["Design"],
-  primitive: "slab",
   model: "models/sightseeing-mark.glb",
-  demoSize: { d: 64, w: 64, h: 6 },   // [ real dimensions pending ]
   metrics: [
     { value: "TBD", unit: "[ headline number ]" },
     { value: "TBD", unit: "[ scale or scope ]" },
@@ -740,9 +716,7 @@ PROJECT_DATA["0x0B"] = {
   place: "[ place ]",
   role: "[ role ]",
   stack: ["Visual", "Study"],
-  primitive: "slab",
   model: "models/silent-depth-mark.glb",
-  demoSize: { d: 64, w: 64, h: 6 },   // [ real dimensions pending ]
   metrics: [
     { value: "TBD", unit: "[ headline number ]" },
     { value: "TBD", unit: "[ scale or scope ]" },
@@ -787,9 +761,7 @@ PROJECT_DATA["0x0C"] = {
   place: "[ place ]",
   role: "[ role ]",
   stack: ["Design", "Editorial", "Client"],
-  primitive: "slab",
   model: "models/brionel-mark.glb",
-  demoSize: { d: 64, w: 64, h: 6 },   // [ real dimensions pending ]
   metrics: [
     { value: "TBD", unit: "[ headline number ]" },
     { value: "TBD", unit: "[ scale or scope ]" },
@@ -848,7 +820,6 @@ PROJECT_DATA["0x0D"] = {
   place: "Remote → Bulgaria",
   role: "Product design · frontend · conversion architecture · CRM integration",
   stack: ["React", "Vite", "Cloudflare Workers", "Airtable", "GitHub Pages"],
-  primitive: "slab",
   model: "models/bulgaria-mark.glb",
   metrics: [
     { value: "2",  unit: "conversion journeys" },

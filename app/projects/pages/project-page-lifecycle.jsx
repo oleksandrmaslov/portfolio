@@ -1,11 +1,11 @@
 /* ============================================================
    M.O. SYSTEM — SHARED PROJECT-PAGE LIFECYCLE
    ------------------------------------------------------------
-   Runtime ownership shared by the standard and handoff project-page
-   compositions. Wafer deliberately keeps its bespoke lifecycle: its live
-   keyboard demo has different renderer and interaction ownership.
+   Runtime ownership for the shared project-page template. Wafer
+   deliberately keeps its bespoke lifecycle: its live keyboard demo has
+   different renderer and interaction ownership.
 
-   This source must execute before standard-page.jsx / handoff-page.jsx.
+   This source must execute before standard-page.jsx.
    ============================================================ */
 (function installProjectPageLifecycle(global) {
   "use strict";
@@ -17,7 +17,6 @@
     const rig = global.__pageRig;
     if (rig) {
       rig.setIdle(false);
-      rig.setExplode(0);
       rig.toHandoff();
       global.__hv_exitSpin = true;
     }

@@ -78,7 +78,7 @@
   // --cin-k is a static preset — read it once instead of a
   // getComputedStyle (style+layout flush) every animation frame.
   var cinK = 0.67;
-  var lastVelW = -1, lastVigW = -1;
+  var lastVelW = -1;
   var raf = 0;
 
   function frame() {
@@ -95,7 +95,6 @@
     var velW = Math.round(vel * 200);
     if (velW !== lastVelW) {
       lastVelW = velW;
-      root.style.setProperty("--cin-vel", vel.toFixed(3));
       root.style.setProperty("--cin-vig", (0.30 + vel * 0.5).toFixed(3));
     }
     // Expose the velocity weight to the universe for its FOV and aberration kick.

@@ -5,28 +5,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Iskra — Maslov Oleksandr</title>
   <link rel="icon" href="data:," />
-  <meta name="description" content="Iskra · project case file · Maslov Oleksandr · volunteer flashing station for Energy for Ukraine · two-phase factory-safe firmware flashing, now with a 3D operator bench: inspect the board, match the firmware, flash it, watch it assemble." />
+  <meta name="description" content="Iskra · project case file · Maslov Oleksandr · volunteer flashing station for Energy for Ukraine · ARM Cortex-M boards flashed without a toolchain, from signed firmware catalogs with pre-flight checks and a record of every attempt." />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&family=Instrument+Serif:ital@1&display=swap" />
 
-  <link rel="stylesheet" href="app/shared/styles/tokens.css" />
-  <link rel="stylesheet" href="app/shared/styles/key.css" />
-  <link rel="stylesheet" href="app/shared/styles/layout.css?v=5f5aa9928092" />
-  <link rel="stylesheet" href="app/shared/styles/components.css" />
-  <link rel="stylesheet" href="app/projects/styles/base.css?v=e089f1e66160" />
-  <link rel="stylesheet" href="app/projects/styles/case-study.css?v=ccddb5f52dc2" />
-  <link rel="stylesheet" href="demo/base.css" />
-  <link rel="stylesheet" href="app/projects/components/ascii-photo.css" />
-  <link rel="stylesheet" href="app/shared/styles/pointer.css?v=5244ec5f4bcb" />
-  <link rel="stylesheet" href="app/shared/styles/scrollbar.css" />
-  <link rel="stylesheet" href="app/shared/styles/navigation.css?v=c12021497f97" />
+  <link rel="stylesheet" href="app/shared/styles/tokens.css?v=5ca18a260857" />
+  <link rel="stylesheet" href="app/shared/styles/key.css?v=ef916c222ca8" />
+  <link rel="stylesheet" href="app/projects/styles/base.css?v=53838dec7667" />
+  <link rel="stylesheet" href="app/projects/styles/case-study.css?v=72efd112e94e" />
+  <link rel="stylesheet" href="app/projects/components/ascii-photo.css?v=a7f5ae091383" />
+  <link rel="stylesheet" href="app/shared/styles/pointer.css?v=338712583abd" />
+  <link rel="stylesheet" href="app/shared/styles/scrollbar.css?v=fb565f1e1508" />
+  <link rel="stylesheet" href="app/shared/styles/navigation.css?v=0f2c1cc5fd7b" />
 </head>
 <body>
   <div id="root"></div>
 
-  <!-- Three.js (ESM) exposed on window.THREE for the Babel scripts below -->
+  <!-- Three.js (ESM) on window.THREE. A module script is deferred, so it runs
+       before the deferred page runtime below. -->
   <script type="importmap">
   {
     "imports": {
@@ -40,35 +38,22 @@
     import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
     import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
     import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
-    import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
-    window.THREE = Object.assign({}, THREE, { GLTFLoader, MeshoptDecoder, RoomEnvironment, RoundedBoxGeometry });
-    window.dispatchEvent(new Event("three-ready"));
+    window.THREE = Object.assign({}, THREE, { GLTFLoader, MeshoptDecoder, RoomEnvironment });
   </script>
 
-  <script src="app/data/projects.js?v=c95097033c03"></script>
+  <script src="app/data/projects.js?v=80fff50bac00"></script>
 
   <!-- React + precompiled page runtime -->
   <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" integrity="sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" integrity="sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1" crossorigin="anonymous"></script>
 
-  <!-- Shared system (Cursor, shell) -->
-  <script defer src="app/page-runtimes/iskra-page.js?v=7bdf456bed55"></script>
+  <!-- Page runtime: shared core, project data, hero rig, ASCII figures, the
+       page config below, pointer effects, KeyButton, project page and
+       scrollbar -->
+  <script defer src="app/page-runtimes/iskra-page.js?v=e1dd9cf0f324"></script>
 
-
-
-  <!-- ASCII photo reveal-lens (lab engine + React figure wrapper) -->
-
-
-  <!-- Project pieces -->
-
-
-
-
-
-
-
-
-  <!-- Page config — everything project-specific lives here -->
+  <!-- Page config — everything project-specific lives here. Inert in the
+       page: build.cjs compiles it into the page runtime above. -->
   <script type="text/plain" data-page-runtime-source="iskra-config">
     window.PAGE_CONFIG = {
       addr: "0x03",
@@ -83,24 +68,7 @@
         href: "https://github.com/oleksandrmaslov/iskra",
         hint: "FLASHING STATION · SOURCE",
       },
-      tweakDefaults: /*EDITMODE-BEGIN*/{
-        "idleSpin": true
-      }/*EDITMODE-END*/,
-      renderTweaks: (t, set) => (
-        <>
-          <TweakSection label="Model" />
-          <TweakToggle label="Idle auto-rotate" value={t.idleSpin}
-                       onChange={(v) => set("idleSpin", v)} />
-        </>
-      ),
     };
   </script>
-
-  <!-- Shared project page and pointer effects -->
-
-
-
-  <!-- Shared ASCII RAMP scrollbar -->
-
 </body>
 </html>

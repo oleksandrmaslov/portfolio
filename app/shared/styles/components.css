@@ -2,18 +2,6 @@
    M.O. SYSTEM — Shared components
    ============================================================ */
 
-/* keyboard hint in the shell */
-.shell__hint {
-  font-family: var(--ff-mono);
-  font-size: var(--fs-micro);
-  color: var(--ghost);
-  letter-spacing: var(--tr-caps);
-  text-transform: uppercase;
-  padding-left: var(--s-4);
-  border-left: 1px solid var(--hairline);
-  margin-left: var(--s-3);
-}
-
 /* ============================================================
    HERO — updated stage with 3D bus
    ============================================================ */

@@ -161,7 +161,7 @@ function TitleScreen() {
 
       {/* M.O. wordmark — bare ASCII, no sub-line, no hairline */}
       <div className="title__wordmark">
-        <AsciiHero text="M.O." cols={compact ? 64 : 108} rows={compact ? 16 : 20} />
+        <AsciiHero cols={compact ? 64 : 108} rows={compact ? 16 : 20} />
       </div>
 
       {/* control cluster — Continue cue + PROCEED, caption moved below */}

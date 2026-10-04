@@ -1,8 +1,12 @@
 /* ============================================================
-   M.O. SYSTEM — STANDARD PROJECT PAGE
+   M.O. SYSTEM — PROJECT PAGE
    ------------------------------------------------------------
-   Shared by canonical project pages. Each project loads this
-   file plus a small window.PAGE_CONFIG defined inline:
+   The page template every canonical project route composes through
+   (Wafer keeps its bespoke wafer-page.jsx). It speaks the generic
+   node handoff protocol (mo_node_*): arrival continues the flight's
+   yaw across the page swap, and leaving flies the model back to the
+   landing field it was opened from. Each route loads this file plus
+   a small window.PAGE_CONFIG defined inline:
 
      window.PAGE_CONFIG = {
        addr: "0x04",
@@ -17,60 +21,44 @@
          assignMaterial: { … },       //   ONLY for a GLB with no materials
          keepMaterials: true,         //   ONLY for a procedural hero
        },
-       photoSrc: "app/projects/components/wafer-sample.webp",
+       heroLayout: { mobile, tablet, desktop },   // optional, see below
+       bridgeSeam: true,            // the HTML paints #mo-seam, see below
        demo: {                      // bespoke PLAY DEMO …
          layerName: "TorchDemoLayer",
          hint: "TAIL SWITCH · MODES · SOS",
          label: "PLAY DEMO",
+         tweaks: { … },             //   handed to the layer as its `tweaks`
        },
-       link: { label, href },       // … or a link keycap instead
-       tweakDefaults: { … },
-       renderTweaks: (t, set) => <></>,
+       link: { label, href, hint }, // … or a link keycap instead
      };
 
-   Standard-page behavior:
+   Behaviour:
      · the node flight lands here like it does on every other route, and the
        arrival CONTINUES it — boot at the rest layout and at the yaw the
        flight ended on, then carry the turn forward. Do not go back to an
        unconditional beginHandoff(): that puts an arriving model in the
        centre of the screen and slides it right, which reads as the model
        drifting in from the left.
-     · no seam-bridge script in the page HTML yet, so the flight's last frame
-       is not painted over the boot gap the way it is on Wafer and the
-       handoff routes. The arrival itself is correct either way.
-     · footer prev/next follows the canonical data.file route
+     · bridgeSeam: the page HTML paints the flight's captured last frame
+       (#mo-seam) over the boot gap and this drops it once the model draws.
+       Six routes carry that script and set the flag. Silent Depth sets it
+       with no script, since it cannot be arrived at by flight; there it
+       only clears a stale capture. Kerfur, Iskra, Ci-Clop, Split HID
+       Display and ZMK-PointAccel have no seam-bridge script yet, so the
+       flight's last frame is not painted over their boot gap. The arrival
+       itself is correct either way.
+     · leave → the model flies back to the landing field.
+     · footer prev/next follows the canonical data.file route.
+
+   handoff-page.jsx used to be a second copy of this file that differed
+   only in bridgeSeam. The copies drifted once: its heroLayout read went
+   missing, so seven routes shipped a tuned override that did nothing.
    ============================================================ */
 const { useState: usePC, useEffect: useEPC, useRef: useRPC } = React;
 
 const PC = window.PAGE_CONFIG || {};
 const PC_IDLE_DRIFT = true;
 const PC_LIFECYCLE = window.MOProjectPageLifecycle;
-
-/* Shared project keycap button. */
-function PCKeyButton({ children, legend = "↵", primary, onPress }) {
-  const [pressed, setPressed] = usePC(false);
-  const [lit, setLit] = usePC(false);
-  const fire = (el) => {
-    setPressed(true); setLit(true);
-    onPress && onPress();
-    if (el && el.blur) el.blur();
-    setTimeout(() => setPressed(false), 140);
-    setTimeout(() => setLit(false), 520);
-  };
-  const onKey = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fire(e.currentTarget); } };
-  return (
-    <button
-      className={"key " + (pressed ? "key--down " : "") + (lit ? "key--lit " : "") + (primary ? "key--primary" : "")}
-      onClick={(e) => fire(e.currentTarget)} onKeyDown={onKey}>
-      <span className="key__cap" data-mo-cursor-mirror data-mo-cursor-opacity=".hv-demo">
-        <span className="key__legendTop">{legend}</span>
-        <span className="key__label">{children}</span>
-      </span>
-      <span className="key__shadow" aria-hidden="true" />
-    </button>
-  );
-}
-if (!window.KeyButton) window.KeyButton = PCKeyButton;
 
 /* layout → rig offset (shared project-page breakpoints).
    A page may override any breakpoint with PAGE_CONFIG.heroLayout —
@@ -110,13 +98,11 @@ function PCSectionBlock({ block, i }) {
       <div className="pp-body__photo">
         <AsciiMediaFigure
           kind={block.kind}
-          src={block.src || PC.photoSrc || "app/projects/components/wafer-sample.webp"}
+          src={block.src || "app/projects/components/wafer-sample.webp"}
           poster={block.poster}
           ratio={block.ratio}
           tone={block.tone}
           caption={block.caption}
-          id={(i + 1).toString().padStart(2, "0") + " / —"}
-          idx={i}
         />
       </div>
     );
@@ -171,7 +157,7 @@ function PCProjectLinks({ project }) {
   );
 }
 
-/* leave — fade the page, keep the model spinning, go home */
+/* leave — fade the page, keep the model spinning, fly back to the field */
 function pcLeaveToUniverse() {
   PC_LIFECYCLE.leaveToUniverse(PC);
 }
@@ -276,7 +262,6 @@ function ProjectPageApp() {
   const project = window.PROJECT_DATA[PC.addr];
   const [ready, setReady] = usePC(false);
   const [demo, setDemo] = usePC(false);
-  const [tweaks, setTweak] = useTweaks(PC.tweakDefaults || {});
 
   const stageRef = useRPC(null);
   const rigRef   = useRPC(null);
@@ -294,7 +279,7 @@ function ProjectPageApp() {
     heroLayoutParams: pcHeroLayoutParams,
     applyHeroLayout: pcApplyHeroLayout,
     idleDrift: PC_IDLE_DRIFT,
-    bridgeSeam: false,
+    bridgeSeam: PC.bridgeSeam === true,
   });
 
   const enterDemo = () => {
@@ -352,28 +337,19 @@ function ProjectPageApp() {
       {PC.demo && (
         <div className="hv-demo">
           <span className="hv-demo__hint" data-mo-cursor-mirror data-mo-cursor-opacity=".hv-demo"><span className="hv-demo__hintDot" />{PC.demo.hint}</span>
-          <PCKeyButton key={demo ? "demo-on" : "demo-off"} legend="▸" primary onPress={enterDemo}>{PC.demo.label || "PLAY DEMO"}</PCKeyButton>
+          <KeyButton key={demo ? "demo-on" : "demo-off"} legend="▸" primary ripple={false} blurOnPress cursorMirror=".hv-demo"
+            onPress={enterDemo}>{PC.demo.label || "PLAY DEMO"}</KeyButton>
         </div>
       )}
       {!PC.demo && PC.link && (
         <div className="hv-demo">
           <span className="hv-demo__hint" data-mo-cursor-mirror data-mo-cursor-opacity=".hv-demo"><span className="hv-demo__hintDot" />{PC.link.hint || "SOURCE · ARTIFACTS"}</span>
-          <PCKeyButton legend="↗" primary onPress={() => {
-            if (PC.link.self) {
-              document.body.classList.add("hv-exit");
-              setTimeout(() => { window.location.href = PC.link.href; }, 420);
-            } else {
-              window.open(PC.link.href, "_blank");
-            }
-          }}>{PC.link.label}</PCKeyButton>
+          <KeyButton legend="↗" primary ripple={false} blurOnPress cursorMirror=".hv-demo"
+            onPress={() => { window.open(PC.link.href, "_blank"); }}>{PC.link.label}</KeyButton>
         </div>
       )}
 
-      {DemoLayer && <DemoLayer active={demo} onClose={exitDemo} tweaks={tweaks} />}
-
-      <TweaksPanel>
-        {PC.renderTweaks ? PC.renderTweaks(tweaks, setTweak) : null}
-      </TweaksPanel>
+      {DemoLayer && <DemoLayer active={demo} onClose={exitDemo} tweaks={PC.demo.tweaks} />}
     </>
   );
 }

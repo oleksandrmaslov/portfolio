@@ -5,14 +5,11 @@
    the landing's own language: NODES in infinite space.
 
    The section is a tall scroll track; its progress is published
-   to `window.__mo_origin = { p, active, concept }` and READ by
-   scenes/universe.jsx inside its render loop, which drives one
-   of two concepts behind this DOM type:
+   to `window.__mo_origin = { p, active }` and READ by
+   scenes/universe.jsx inside its render loop, where the particle
+   field swarms to FORM "0x00" behind this DOM type.
 
-     01 ASSEMBLY — the particle field swarms to FORM "0x00"
-     02 HUB      — node 0x00 as a hub, project nodes ringing it
-
-   Over either, the identity statement resolves FROSTED → SHARP
+   Over it, the identity statement resolves FROSTED → SHARP
    (same progressive-blur language as the header). This is the
    literal setup for the later "dive into node 0x00" → Board.
    ============================================================ */
@@ -35,16 +32,10 @@ const _oClamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const _oLineEase = (p, at) => _oEase(_oClamp((p - (at - 0.24)) / 0.24, 0, 1));
 
 /* shared bridge object the universe render loop reads every frame */
-window.__mo_origin = window.__mo_origin || { p: 0, active: false, concept: "assembly" };
+window.__mo_origin = window.__mo_origin || { p: 0, active: false };
 
 function OriginBeat() {
   const secRef = useOR(null);
-  // Landing ships ONE concept: assembly. The HUB concept lives in its own
-  // exploration file, which sets window.__mo_origin_lock = "hub" before boot.
-  const concept = (typeof window !== "undefined" && window.__mo_origin_lock) || "assembly";
-
-  /* publish concept to the bridge */
-  useOE(() => { window.__mo_origin.concept = concept; }, [concept]);
 
   /* Scroll → progress, published to the bridge and painted directly.
      This track used to put every scroll frame through React reconciliation
@@ -187,13 +178,11 @@ function OriginBeat() {
                 transform: `translateY(${((1 - e) * 18).toFixed(1)}px)`,
                 color: "var(--bone)",
               };
-              const cls = "origin__line" +
-                (ln.em ? " origin__line--em" : "") +
-                (ln.ghost ? " origin__line--ghost" : "");
+              const cls = "origin__line" + (ln.em ? " origin__line--em" : "");
               return (
                 <span key={i} className={cls} style={style}>
                   <span data-mo-cursor-mirror data-mo-cursor-opacity=".origin__line,.origin__type,.origin__stage,.lp">
-                    {ln.t}{ln.dot ? <em className="origin__period">.</em> : null}
+                    {ln.t}
                   </span>
                 </span>
               );

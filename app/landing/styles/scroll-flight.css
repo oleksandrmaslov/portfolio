@@ -6,7 +6,6 @@
      while the camera surges forward
    · origin / work sticky stages fade before they ever un-stick,
      so no section is ever seen "sliding away" like a page
-   · tunnel-style iris for seam transits
    ============================================================ */
 
 /* ---------- TITLE — fixed stage, staggered lift-off ---------- */
@@ -20,10 +19,9 @@
 }
 /* Only the actual controls catch the pointer — everything else lets the
    visitor keep flying the universe. (Shields + ctl carry pointer-events:auto
-   from landing.css already.) The wordmark is deliberately NOT one of them: it
-   has no control in it, and its box covered the bottom of the hero. It tracks
-   the pointer from a window listener instead — see base.css. */
-.title__stage .title__wordmark { pointer-events: none; }
+   from base.css already.) The wordmark column is deliberately NOT one of them:
+   it has no control in it, and its box covered the bottom of the hero. It
+   tracks the pointer from a window listener instead — see base.css. */
 
 /* exit choreography — flight.js writes --flt-a/b/c (0..1, staggered) */
 .title__stage .title__wordmark .asciiHero { transform: translateY(calc(var(--flt-a, 0) * -6vh)) scale(calc(1 - var(--flt-a, 0) * 0.04)); }
@@ -103,21 +101,10 @@ body.fl-titleGone .title__stage { visibility: hidden; }
   .lp-workReel__sticky { animation-timeline: --flWorkTrack; }
 }
 
-/* ---------- TUNNEL IRIS — seam style "tunnel" ---------- */
-.fl-iris {
-  position: fixed;
-  inset: -2vmax;
-  z-index: 6;
-  pointer-events: none;
-  opacity: var(--fl-iris, 0);
-  background: radial-gradient(ellipse at 50% 50%, rgba(2, 4, 10, 0) 44%, rgba(2, 4, 10, 0.85) 76%, #02040a 95%);
-}
-
 @media (prefers-reduced-motion: reduce) {
   .title__stage .title__wordmark .asciiHero,
   .title__stage .title__wordmarkSub,
   .title__stage .title__idTop,
   .title__stage .title__ctl,
   .title__stage .title__frame { transform: none; filter: none; }
-  .fl-iris { display: none; }
 }

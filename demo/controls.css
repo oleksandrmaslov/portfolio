@@ -13,16 +13,19 @@
 /* taller rails (steppers, emotion bars) must never eclipse the
    top-right STOP / sound controls on short viewports: cap the rail
    to the space between the top controls and the bottom hint, and
-   let it scroll internally. Top controls also win the z-order. */
+   let it scroll internally. Top controls also win the z-order.
+   Desktop only: at 900px and below the rail is base.css's bottom
+   toolbar, which swipes sideways with no scrollbar and never
+   scrolls vertically — unscoped, this block overrode that. */
 .hvd__topRight { z-index: 7; }
-.hvd__rail {
-  max-height: calc(100vh - 170px);
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: var(--hairline) transparent;
+@media (min-width: 901px) {
+  .hvd__rail {
+    max-height: calc(100vh - 170px);
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--hairline) transparent;
+  }
 }
-.hvd__rail::-webkit-scrollbar { width: 4px; }
-.hvd__rail::-webkit-scrollbar-thumb { background: var(--hairline); }
 
 .hvd2-sw {
   flex: 1;

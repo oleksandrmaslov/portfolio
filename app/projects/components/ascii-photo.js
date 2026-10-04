@@ -12,8 +12,7 @@
    - color modes: mono(bone) | teal(signal) | full(sampled color)
 
    Usage:
-     const fx = new AsciiPhoto(canvas, { src: "wafer-sample.webp" });
-     fx.set({ cell: 16, feel: "scan", color: "full" });
+     const fx = new AsciiPhoto(canvas, { src: "wafer-sample.webp", cell: 16, feel: "scan" });
      fx.setPointer(u, v);  fx.setHover(true);  fx.toggleConvert();
 
    Coords: all UV are y-DOWN (top-left origin) to match the DOM.
@@ -54,7 +53,6 @@
     uniform float uCA;
     uniform int   uCAMode;     // 0 center, 1 cursor, 2 velocity, 3 pulse
     uniform vec2  uCADir;      // eased motion direction * move-amount
-    uniform float uPulse;      // node-pulse ring radius (<0 = inactive)
     uniform float uScan;
     uniform float uVig;
     uniform float uFeather;
@@ -263,7 +261,7 @@
       this.u = {};
       ["uTex", "uAtlas", "uRes", "uCanvasAspect", "uImgAspect", "uCellW", "uCellAspect",
        "uRampN", "uPointer", "uLensR", "uLensSoft", "uHover", "uConvertProg", "uFeel",
-       "uCA", "uCAMode", "uCADir", "uPulse", "uScan", "uVig", "uFeather", "uGamma", "uContrast", "uInvert", "uColor", "uTime",
+       "uCA", "uCAMode", "uCADir", "uScan", "uVig", "uFeather", "uGamma", "uContrast", "uInvert", "uColor", "uTime",
        "uVoid", "uSignal"].forEach(n => this.u[n] = gl.getUniformLocation(prog, n));
 
       gl.uniform1i(this.u.uTex, 0);
@@ -276,8 +274,6 @@
       this._prevPointer = { x: 0.5, y: 0.5 };
       this._caBoost = 0;       // velocity-driven CA, eased
       this._caDir = { x: 0, y: 0 };   // eased motion direction * move-amount
-      this._pulse = -1;        // node-pulse ring radius (<0 = inactive)
-      this._pulseT = 0;        // last pulse trigger time
       this.hover = 0; this.hoverTarget = 0;
       this.convert = 0; this.convertTarget = 0;
       this.imgAspect = 1; this.ready = false;
@@ -427,16 +423,7 @@
       this._wake();
     }
 
-    set(patch) {
-      Object.assign(this.o, patch);
-      if (patch.ramp || patch.cellAspect) this._buildAtlas();
-      if (patch.renderScale !== undefined || patch.dprCap !== undefined) this.resize();
-      this._dirty = true;
-      this._wake();
-    }
-
     setPointer(u, v) { this.pointer.x = u; this.pointer.y = v; this._dirty = true; this._wake(); }
-    pulse(now) { this._pulse = 0; this._pulseT = now || performance.now(); this._dirty = true; this._wake(); }
     setHover(on) { this.hoverTarget = on ? 1 : 0; if (on) this._skipVel = true; this._dirty = true; this._wake(); }
     toggleConvert() { this.setConvert(this.convertTarget <= 0.5); return this.convertTarget > 0.5; }
     setConvert(on) { this.convertTarget = on ? 1 : 0; this._dirty = true; this._wake(); }
@@ -470,7 +457,7 @@
       const mag = Math.sqrt(dpx * dpx + dpy * dpy);
       this._prevPointer.x = this.pointer.x; this._prevPointer.y = this.pointer.y;
       // first active frame after a gap: adopt the position without counting it
-      // as motion (prevents an enter/teleport from spiking velocity + auto-pulse).
+      // as motion (prevents an enter/teleport from spiking velocity).
       if (this._skipVel) { this._skipVel = false; this._caBoost *= 0.4; }
       const speed = Math.min(10, mag / Math.max(dt, 1e-3));
       const present = (this.hover > 0.04 || this.convert > 0.04) ? 1 : 0;
@@ -488,13 +475,6 @@
       this._dirX = this._caDir.x * dirAmt;
       this._dirY = this._caDir.y * dirAmt;
 
-      // (no discrete pulses — the ripple CA mode below is a continuous,
-      //  time-driven shader effect instead of a flick-triggered event.)
-      if (this._pulse >= 0) {
-        this._pulse += dt * 2.1 * this.o.speed;   // expand the ring
-        if (this._pulse > 1.7) this._pulse = -1;  // done
-      }
-
       // ---- idle skip: when nothing is animating and the lens is gone,
       // stop issuing GPU work. The canvas holds the last (plain-photo) frame.
       // Scanline shimmer needs continuous redraw only while ascii is visible. ----
@@ -510,7 +490,7 @@
 
       const animating = Math.abs(this.hoverTarget - this.hover) > 0.002 ||
         Math.abs(this.convertTarget - this.convert) > 0.002 ||
-        this.hover > 0.002 || this.convert > 0.002 || this._caBoost > 0.01 || this._pulse >= 0;
+        this.hover > 0.002 || this.convert > 0.002 || this._caBoost > 0.01;
       if (animating || (!this._usesVideoFrames && videoLive)) this._wake();
       if (!this.ready) return;
       if (!animating && !this._dirty) return;   // <-- the free-idle path
@@ -540,7 +520,6 @@
       gl.uniform1f(u.uCA, (o.ca + this._caBoost) * caEnv);
       gl.uniform1i(u.uCAMode, { center: 0, cursor: 1, velocity: 2, pulse: 3 }[o.caMode] ?? 1);
       gl.uniform2f(u.uCADir, this._dirX || 0, this._dirY || 0);
-      gl.uniform1f(u.uPulse, this._pulse);
       gl.uniform1f(u.uScan, o.scanlines);
       gl.uniform1f(u.uVig, o.vignette);
       gl.uniform1f(u.uFeather, o.feather);
@@ -575,21 +554,6 @@
       this.ready = false;
     }
   }
-
-  const RAMP_SYS = " ·:-=+*#%@";
-  const RAMP_FINE = " .'`^\",:;Il!i~+_-?][}{1)(|tfjrxnuvczXYUJCQ0OZmwqpdbkhao#MW&8%B@$";
-  const RAMP_BLOCK = " ░▒▓█";
-
-  AsciiPhoto.PRESETS = {
-    // The metaphor: an instrument lens that resolves a photo into the
-    // signal-teal terminal universe. Each variant is a different "scope".
-    subtle: { name: "Subtle lens", ramp: RAMP_SYS, cell: 16, lensR: 0.18, lensSoft: 0.64, ca: 0.1,  caVelocity: 0.7, caMode: "cursor",   feel: "dissolve", color: "full", feather: 0.55, scanlines: 0.16, vignette: 0.32, contrast: 1.12, invert: 1, speed: 1.0 },
-    full:   { name: "Full ASCII",  ramp: RAMP_SYS, cell: 14, lensR: 0.24, lensSoft: 0.4,  ca: 0.16, caVelocity: 1.0, caMode: "cursor",   feel: "scan",     color: "full", feather: 0.3,  scanlines: 0.3,  vignette: 0.5,  contrast: 1.2,  invert: 1, speed: 1.0 },
-    glitch: { name: "Glitch / CA", ramp: RAMP_SYS, cell: 20, lensR: 0.27, lensSoft: 0.45, ca: 0.2,  caVelocity: 2.2, caMode: "velocity", feel: "scan",     color: "teal", feather: 0.35, scanlines: 0.55, vignette: 0.62, contrast: 1.35, invert: 1, speed: 1.4 },
-    recon:  { name: "Recon scope", ramp: RAMP_SYS, cell: 12, lensR: 0.15, lensSoft: 0.28, ca: 0.12, caVelocity: 0.9, caMode: "pulse",    feel: "scan",     color: "teal", feather: 0.18, scanlines: 0.62, vignette: 0.7,  contrast: 1.45, invert: 1, speed: 1.6 },
-    stream: { name: "Datastream",  ramp: RAMP_FINE, cell: 9, lensR: 0.3,  lensSoft: 0.5,  ca: 0.18, caVelocity: 1.3, caMode: "velocity", feel: "scan",     color: "full", feather: 0.4,  scanlines: 0.22, vignette: 0.4,  contrast: 1.25, invert: 1, speed: 1.2 },
-    xray:   { name: "X-ray",       ramp: RAMP_BLOCK, cell: 16, lensR: 0.22, lensSoft: 0.55, ca: 0.1, caVelocity: 0.6, caMode: "center",   feel: "dissolve", color: "mono", feather: 0.5,  scanlines: 0.3,  vignette: 0.55, contrast: 1.6,  invert: 1, speed: 1.0 },
-  };
 
   global.AsciiPhoto = AsciiPhoto;
 })(window);

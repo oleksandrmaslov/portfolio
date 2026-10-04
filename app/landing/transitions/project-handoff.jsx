@@ -17,8 +17,7 @@
    soft crossfade, no travel, no spin.
 
    Session protocol (generic — the old mo_wafer_* keys are gone):
-     mo_node_handoff  JSON { addr, slug, yaw, arrive, returnTarget, timestamp }
-     mo_node_addr / mo_node_arrive / mo_node_yaw   (flat mirrors)
+     mo_node_addr / mo_node_arrive / mo_node_yaw
      mo_node_seam     JPEG dataURL (stored separately — large)
      mo_node_return / mo_node_return_addr / mo_node_return_target
      mo_node_return_origin
@@ -83,7 +82,7 @@ function NodeHandoff() {
     if (!rig || typeof rig.setProject !== "function") {
       if (rig) { try { rig.dispose(); } catch (_) {} }
       while (mount.firstChild) mount.removeChild(mount.firstChild);
-      rig = window.makeNodeRig(mount, { project, model: project.model, mode: "handoff", deferModel: true });
+      rig = window.makeNodeRig(mount, { project, model: project.model, deferModel: true });
       rigRef.current = rig;
     }
     if (!rig) return null;
@@ -198,7 +197,7 @@ function NodeHandoff() {
     }
     if (rig) { try { rig.dispose(); } catch (_) {} rigRef.current = null; }
     while (mount.firstChild) mount.removeChild(mount.firstChild);
-    rig = window.makeNodeRig(mount, { project, model: project.model, mode: "handoff" });
+    rig = window.makeNodeRig(mount, { project, model: project.model });
     rigRef.current = rig;
     prepRef.current = { addr: project.addr, promise: Promise.resolve(rig && rig.ready) };
     return rig;
@@ -242,10 +241,6 @@ function NodeHandoff() {
         const rig = buildRig(project);
         const go = () => {
           const yaw = rig && rig.getYaw ? rig.getYaw() : 0;
-          sessionStorage.setItem("mo_node_handoff", JSON.stringify({
-            addr: project.addr, slug: project.slug, yaw,
-            arrive: true, returnTarget: origin, timestamp: Date.now(),
-          }));
           sessionStorage.setItem("mo_node_addr", project.addr);
           sessionStorage.setItem("mo_node_yaw", String(yaw));
           sessionStorage.setItem("mo_node_arrive", "1");

@@ -5,8 +5,8 @@
    landing flight it SNAPS to the canonical pose (seam), then
    eases to the hero rest layout while the title resolves around it.
 
-   · bottom-right INSPECT keycap → dim the page, raise the model
-     fullscreen, drag-to-orbit + exploded view, ESC / STOP to exit.
+   · bottom-right PLAY DEMO keycap → the live keyboard demo
+     (demo/wafer-demo.js + demo/wafer-hud.jsx), ESC / STOP to exit.
    · leaving (ESC / wordmark / footer home) → the model flies back
      out and we return to wherever the user came from (universe title
      screen or the work reel).
@@ -19,18 +19,20 @@ const {
 } = React;
 
 /* Wafer hero config — the production page is fixed to the classic layout. */
-const HERO_LAYOUT = "right";   // "right" | "center" | "left"
+const HERO_LAYOUT = "right";   // the only hero layout case-study.css draws
 const IDLE_DRIFT = true;
 
-/* PLAY DEMO · tweakable defaults (Tweaks panel) */
-const WAFER_TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
-  "direction": "cinematic",
-  "hud": "full",
-  "explodeDist": 1,
-  "stagger": 0.65,
-  "thockPitch": 1,
-  "soundLevel": 0.8
-}/*EDITMODE-END*/;
+/* PLAY DEMO settings, handed to WaferDemoLayer as its `tweaks` prop. The HUD
+   copies them to window.__waferDemoTweaks, where wafer-demo.js and
+   wafer-sound.js read them. */
+const WAFER_DEMO_TWEAKS = {
+  direction: "cinematic",
+  hud: "full",
+  explodeDist: 1,
+  stagger: 0.65,
+  thockPitch: 1,
+  soundLevel: 0.8,
+};
 
 /* layout → rig offset (fraction of half-width), scale, vertical offset.
    Width-aware: on phones the board floats up-top and shrinks so the title
@@ -74,8 +76,6 @@ function SectionBlock({ block, i }) {
           ratio={block.ratio}
           tone={block.tone}
           caption={block.caption}
-          id={(i + 1).toString().padStart(2, "0") + " / —"}
-          idx={i}
         />
       </div>
     );
@@ -135,7 +135,7 @@ function leaveToUniverse() {
   window.__hv_leaving = true;
   document.documentElement.style.setProperty("--hv-stage-op", "1");
   // model stays on screen: ease back to CENTER + keep spinning (no shrink-away)
-  if (window.__waferRig) { window.__waferRig.setIdle(false); window.__waferRig.setExplode(0); window.__waferRig.toHandoff(); window.__hv_exitSpin = true; }
+  if (window.__waferRig) { window.__waferRig.setIdle(false); window.__waferRig.toHandoff(); window.__hv_exitSpin = true; }
   document.body.classList.add("hv-exit");            // page content fades; the model stage stays
   window.dispatchEvent(new CustomEvent("mo:project-rig-wake"));   // the loop may be asleep below the stage
   // Hand the model's live yaw to the landing so the reverse flight CONTINUES
@@ -263,7 +263,6 @@ function WaferProjectApp() {
   const project = window.PROJECT_DATA["0x01"];
   const [ready, setReady] = useWaferPageState(false);
   const [demo, setDemo] = useWaferPageState(false);
-  const [tweaks, setTweak] = useTweaks(WAFER_TWEAK_DEFAULTS);
 
   const stageRef = useWaferPageRef(null);
   const rigRef   = useWaferPageRef(null);
@@ -472,6 +471,8 @@ function WaferProjectApp() {
           key={demo ? "demo-on" : "demo-off"}
           legend={<span data-mo-cursor-mirror data-mo-cursor-opacity=".hv-demo">▸</span>}
           primary
+          ripple={false}
+          blurOnPress
           onPress={enterDemo}
         >
           <span data-mo-cursor-mirror data-mo-cursor-opacity=".hv-demo">PLAY DEMO</span>
@@ -479,27 +480,7 @@ function WaferProjectApp() {
       </div>
 
       {/* fullscreen demo stage + HUD (always mounted; controls its own fade) */}
-      <WaferDemoLayer active={demo} onClose={exitDemo} tweaks={tweaks} />
-
-      <TweaksPanel>
-        <TweakSection label="Demo" />
-        <TweakRadio label="Direction" value={tweaks.direction}
-                    options={["cinematic", "sandbox"]}
-                    onChange={(v) => setTweak("direction", v)} />
-        <TweakRadio label="HUD density" value={tweaks.hud}
-                    options={["full", "minimal"]}
-                    onChange={(v) => setTweak("hud", v)} />
-        <TweakSection label="Explode" />
-        <TweakSlider label="Distance" value={tweaks.explodeDist} min={0.6} max={1.8} step={0.05}
-                     onChange={(v) => setTweak("explodeDist", v)} />
-        <TweakSlider label="Stagger" value={tweaks.stagger} min={0} max={1} step={0.05}
-                     onChange={(v) => setTweak("stagger", v)} />
-        <TweakSection label="Sound" />
-        <TweakSlider label="Thock pitch" value={tweaks.thockPitch} min={0.7} max={1.3} step={0.05}
-                     onChange={(v) => setTweak("thockPitch", v)} />
-        <TweakSlider label="Field level" value={tweaks.soundLevel} min={0} max={1} step={0.05}
-                     onChange={(v) => setTweak("soundLevel", v)} />
-      </TweaksPanel>
+      <WaferDemoLayer active={demo} onClose={exitDemo} tweaks={WAFER_DEMO_TWEAKS} />
     </>
   );
 }

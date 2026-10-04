@@ -1,11 +1,13 @@
 /* ============================================================
    M.O. SYSTEM — Project page base styles
-   Shared by the seven canonical project pages.
+   Shared by every project page, under case-study.css.
    ============================================================ */
 
 /* ============================================================
    PAGE ENTRY / EXIT
    ============================================================ */
+/* The shorthand also clears tokens.css's dot-grid substrate, so project
+   pages sit on a flat void. */
 body {
   background: var(--void);
   overflow-x: clip;
@@ -21,14 +23,7 @@ body {
   from { opacity: 0; transform: translateY(12px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-/* ============================================================
-   FLY-IN OVERLAY — sits over everything for ~1.3s
-   ============================================================ */
-/* ============================================================
-   HERO
-   ============================================================ */
-/* metric strip */
-/* meta row */
+
 /* ============================================================
    SECTION HEAD (shared by Demo/Story/Links)
    ============================================================ */
@@ -162,11 +157,9 @@ body {
   background: rgba(13, 16, 24, 0.6);
   padding: var(--s-4);
   margin: 0;
-  max-width: 720px;
 }
 .ph__chrome {
   display: grid;
-  grid-template-columns: auto 1fr auto auto;
   align-items: center;
   gap: var(--s-4);
   padding-bottom: var(--s-4);
@@ -189,8 +182,6 @@ body {
 .ph__photo {
   position: relative;
   overflow: hidden;
-  background: var(--space);
-  aspect-ratio: 4 / 5;
 }
 .ph__phCorner {
   position: absolute;

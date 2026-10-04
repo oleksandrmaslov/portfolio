@@ -4,10 +4,10 @@
    Production board scene:
      · U1 is the ONLY chip — every other stop is now a realistic
        schematic-derived CLUSTER of small parts (LDO front-end,
-       crystal + load caps, decoupling bank + RF pi-filter with a
-       meandered 2.4 GHz antenna, LED driver, debounce)
+       decoupling bank + RF pi-filter with a meandered 2.4 GHz
+       antenna, debounce)
      · richer part library: MLCC, chip R, tantalum, inductor,
-       ferrite, SOT-23, SOT-223, LEDs, SMA diode, test points
+       ferrite, SOT-23, SOT-223, SMA diode, test points
      · escape routing off every MCU pin, per-cluster nets, edge
        bus lines, mounting holes, barcode, denser silkscreen
    window.MOBoard.build(mount) -> controller
@@ -59,14 +59,12 @@
     ctant: { l: 3.5, w: 2.8,  h: 1.9 },
     ind:   { l: 4.0, w: 4.0,  h: 2.0 },
     fb:    { l: 2.0, w: 1.25, h: 0.95 },
-    led:   { l: 2.0, w: 1.25, h: 0.75 },
     diode: { l: 4.3, w: 2.6,  h: 1.1 },
     sot23: { l: 2.9, w: 1.5,  h: 1.05 },
     sot223:{ l: 6.4, w: 3.4,  h: 1.6 },
     tp:    { l: 1.2, w: 1.2,  h: 0 },
-    xtal:  { l: 5.0, w: 3.2,  h: 1.0 },
   };
-  const TWO_PAD = { r:1, c:1, fb:1, led:1, diode:1, ctant:1, ind:1 };
+  const TWO_PAD = { r:1, c:1, fb:1, diode:1, ctant:1, ind:1 };
   function rr(cx, cz, dx, dz, w, d, rot) { return rot ? [cx + dz, cz + dx, d, w] : [cx + dx, cz + dz, w, d]; }
   function padsFor(k, cx, cz, rot) {
     const s = P[k], out = [];
@@ -74,7 +72,6 @@
     else if (k === "sot23") { out.push(rr(cx,cz,-0.95,1.15,0.6,0.8,rot), rr(cx,cz,0.95,1.15,0.6,0.8,rot), rr(cx,cz,0,-1.15,0.6,0.8,rot)); }
     else if (k === "sot223") { for (let i=-1;i<=1;i++) out.push(rr(cx,cz,i*2.1,2.2,1.0,1.5,rot)); out.push(rr(cx,cz,0,-2.1,3.4,1.7,rot)); }
     else if (k === "tp") { out.push([cx, cz, 1.15, 1.15]); }
-    else if (k === "xtal") { [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(m => out.push(rr(cx,cz,m[0]*1.9,m[1]*1.05,1.15,0.95,rot))); }
     return out;
   }
 
@@ -398,7 +395,7 @@
       x.fillStyle = "#9aa3b5"; x.font = `500 ${0.44*S}px 'Geist Mono', monospace`; x.textAlign = "center";
       x.fillText(p.ref, u, v - (D/2 + 0.72)*S);
       if (p.k === "ctant") { x.fillStyle = "#dfe3ec"; x.font = `700 ${0.6*S}px 'Geist Mono', monospace`; x.fillText("+", u - (s.l/2 + 0.75)*S, v); }
-      if (p.k === "diode" || p.k === "led") {
+      if (p.k === "diode") {
         x.strokeStyle = "rgba(220,226,238,0.8)"; x.lineWidth = 0.1*S;
         const bx = u - (L/2 + 0.42)*S;
         x.beginPath(); x.moveTo(bx, v - D*S/2); x.lineTo(bx, v + D*S/2); x.stroke();
@@ -598,11 +595,6 @@
     if (k === "r") twoEnd(mat(0x11141a, 0.05, 0.5));
     else if (k === "c") twoEnd(mat(0xb08d5a, 0.1, 0.5));
     else if (k === "fb") twoEnd(mat(0x3a3f47, 0.2, 0.5));
-    else if (k === "led") {
-      twoEnd(mat(0xe8eaec, 0.05, 0.4));
-      const dome = box(s.l*0.42, 0.28, s.w*0.7, new THREE.MeshStandardMaterial({ color: 0x073b33, emissive: 0x00f0c8, emissiveIntensity: 1.6, metalness: 0, roughness: 0.3 }));
-      dome.position.y = s.h + 0.14; g.add(dome);
-    }
     else if (k === "diode") {
       twoEnd(mat(0x0c0e13, 0.1, 0.5));
       const band = box(0.42, 0.03, s.w*0.9, mat(0xd8dbe2, 0, 0.6));
@@ -631,9 +623,6 @@
     else if (k === "tp") {
       const pad = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 0.08, 20), mat(0xd9b35e, 1.0, 0.3));
       pad.position.y = 0.04; g.add(pad);
-    }
-    else if (k === "xtal") {
-      const can = box(4.4, s.h, 2.7, mat(0xb9c0cc, 1.0, 0.28)); can.position.y = s.h/2; g.add(can);
     }
     return g;
   }
@@ -751,14 +740,13 @@
     });
   }
 
-  async function buildScene(mount, opts, lifecycle) {
-    const LITE = !!(opts && opts.lite);
+  async function buildScene(mount, lifecycle) {
     const THREE = window.THREE;
     if (!THREE) { console.warn("THREE missing"); return null; }
     const W = mount.clientWidth, H = mount.clientHeight;
 
-    const renderer = new THREE.WebGLRenderer({ antialias: !LITE, alpha: true, powerPreference: "high-performance" });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, LITE ? 1.25 : 2));
+    const renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true, powerPreference: "high-performance" });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.25));
     renderer.setSize(W, H);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -800,8 +788,8 @@
 
     // Preserve the close-up silkscreen at its authored resolution. The
     // non-color material maps can be smaller without softening PCB text.
-    const colorW = LITE ? 2048 : 4096;
-    const detailW = LITE ? 1024 : 4096;
+    const colorW = 2048;
+    const detailW = 1024;
     const colorTex = drawColor(colorW, Math.round(colorW * BOARD_D / BOARD_W));
     const specTex = drawSpec(detailW, Math.round(detailW * BOARD_D / BOARD_W));
     const bumpTex = drawBump(detailW, Math.round(detailW * BOARD_D / BOARD_W));
@@ -824,7 +812,7 @@
     const explodeStopIndex = STOPS.findIndex((stop) => stop.explode);
     const EXPLODE_STOP_T = explodeStopIndex >= 0 ? STOP_TS[explodeStopIndex] : -1;
 
-    /* Shared void and emergence. */
+    /* Shared void — a slow teal star field around the board. */
     const STAR_N = 380;
     const starGeo2 = new THREE.BufferGeometry();
     const starPos2 = new Float32Array(STAR_N * 3);
@@ -842,44 +830,6 @@
       transparent: true, opacity: 0.5, depthWrite: false,
     }));
     scene.add(starField2);
-
-    const ASM_N = 620;
-    const asmGeo2  = new THREE.BufferGeometry();
-    const asmPos2  = new Float32Array(ASM_N * 3);
-    const asmTar2  = new Float32Array(ASM_N * 3);
-    const asmSca2  = new Float32Array(ASM_N * 3);
-    const asmDelta2 = new Float64Array(ASM_N * 3);
-    const _tp = new THREE.Vector3();
-    for (let i = 0; i < ASM_N; i++) {
-      if (Math.random() < 0.7) {
-        curve.getPointAt(Math.random(), _tp);
-        asmTar2[i*3+0] = _tp.x + (Math.random() - 0.5) * 5;
-        asmTar2[i*3+1] = TOP + 0.4 + Math.random() * 2.2;
-        asmTar2[i*3+2] = _tp.z + (Math.random() - 0.5) * 5;
-      } else {
-        const st = STOPS[(Math.random() * STOPS.length) | 0];
-        const [px, pz] = TRACE_PTS[st.p];
-        const a = Math.random() * Math.PI * 2, rr2 = Math.random() * 7;
-        asmTar2[i*3+0] = px + Math.cos(a) * rr2;
-        asmTar2[i*3+1] = TOP + 0.5 + Math.random() * 2.5;
-        asmTar2[i*3+2] = pz + Math.sin(a) * rr2;
-      }
-      asmSca2[i*3+0] = asmTar2[i*3+0] + (Math.random() - 0.5) * 180;
-      asmSca2[i*3+1] = asmTar2[i*3+1] + 40 + Math.random() * 120;
-      asmSca2[i*3+2] = asmTar2[i*3+2] + 30 + Math.random() * 160;
-      asmPos2[i*3+0] = asmSca2[i*3+0];
-      asmPos2[i*3+1] = asmSca2[i*3+1];
-      asmPos2[i*3+2] = asmSca2[i*3+2];
-      asmDelta2[i*3+0] = asmTar2[i*3+0] - asmSca2[i*3+0];
-      asmDelta2[i*3+1] = asmTar2[i*3+1] - asmSca2[i*3+1];
-      asmDelta2[i*3+2] = asmTar2[i*3+2] - asmSca2[i*3+2];
-    }
-    asmGeo2.setAttribute("position", new THREE.BufferAttribute(asmPos2, 3).setUsage(THREE.DynamicDrawUsage));
-    const assembly2 = new THREE.Points(asmGeo2, new THREE.PointsMaterial({
-      color: 0x00f0c8, size: 1.1, sizeAttenuation: true,
-      transparent: true, opacity: 0, depthWrite: false,
-    }));
-    scene.add(assembly2);
     await yieldBuildPhase();
 
     // Async Wafer assets belong to this controller only. Keeping this state
@@ -904,45 +854,22 @@
     });
     await yieldBuildPhase();
 
-    const formMats = [];
-    scene.traverse((o) => {
-      if (o.isMesh && o.material) {
-        const mats = Array.isArray(o.material) ? o.material : [o.material];
-        mats.forEach((m) => { if (!formMats.includes(m)) formMats.push(m); });
-      }
-    });
-    let formMatsTransparent = false;
-
-    let composer = null, bokeh = null;
-    try {
-      if (!LITE && THREE.EffectComposer && THREE.BokehPass && THREE.RenderPass) {
-        composer = new THREE.EffectComposer(renderer);
-        composer.addPass(new THREE.RenderPass(scene, camera));
-        bokeh = new THREE.BokehPass(scene, camera, { focus: 30, aperture: 0.0009, maxblur: 0.006 });
-        composer.addPass(bokeh);
-        if (THREE.OutputPass) composer.addPass(new THREE.OutputPass());
-      }
-    } catch (e) { console.warn("composer failed", e); composer = null; }
-
     /* ---- controller ---- */
-    const tmpPos = new THREE.Vector3(), tmpLook = new THREE.Vector3(), tmpTan = new THREE.Vector3(), tmpSide = new THREE.Vector3(), UP = new THREE.Vector3(0,1,0);
+    const tmpPos = new THREE.Vector3(), tmpTan = new THREE.Vector3(), tmpSide = new THREE.Vector3(), UP = new THREE.Vector3(0,1,0);
     const camPos = new THREE.Vector3().copy(camera.position);
     const camLook = new THREE.Vector3(0,0,0);
     let curLook = new THREE.Vector3(0,0,0);
-
-    function stopTForIndex(i) { return STOP_TS[i]; }
 
     const HERO_POS = new THREE.Vector3(), HERO_LOOK = new THREE.Vector3();
     const NODE_POS = new THREE.Vector3(), NODE_LOOK = new THREE.Vector3();
     const tmpFinalPos = new THREE.Vector3(), tmpFinalLook = new THREE.Vector3();
     const pathTargetPos = new THREE.Vector3(), pathTargetLook = new THREE.Vector3();
-    let pathCacheT = NaN, pathCacheMode = "";
-    let lastAssemblyCe = NaN;
+    let pathCacheT = NaN;
 
-    function update(t, mode, dt, footerMix, introMix, nodeMix) {
+    // The board flight's only camera is the PROBE: it rides the trace.
+    function update(t, dt, footerMix, nodeMix) {
       t = Math.max(0, Math.min(1, t));
       footerMix = Math.max(0, Math.min(1, footerMix || 0));
-      introMix = Math.max(0, Math.min(1, introMix || 0));
       nodeMix = Math.max(0, Math.min(1, nodeMix || 0));
       const ease = 1 - Math.pow(0.0015, dt / 1000);
       const nowMs = performance.now();
@@ -955,22 +882,16 @@
 
       // Board render wakes can repeat while the scroll-derived path parameter
       // is unchanged. CatmullRom getPointAt/getTangentAt perform arc-length
-      // lookup work; reuse their exact result until t or the view mode changes.
-      if (t !== pathCacheT || mode !== pathCacheMode) {
-        if (mode === "bench") {
-          curve.getPointAt(t, pathTargetLook);
-          pathTargetPos.set(pathTargetLook.x + 6, 26, pathTargetLook.z + 26);
-        } else {
-          curve.getPointAt(t, pathTargetPos);
-          curve.getTangentAt(t, tmpTan);
-          tmpSide.copy(tmpTan).cross(UP).normalize();
-          pathTargetPos.addScaledVector(tmpTan, -8).addScaledVector(tmpSide, 7);
-          pathTargetPos.y += 12;
-          curve.getPointAt(Math.min(1, t + 0.05), pathTargetLook);
-          pathTargetLook.y += 0.2;
-        }
+      // lookup work; reuse their exact result until t changes.
+      if (t !== pathCacheT) {
+        curve.getPointAt(t, pathTargetPos);
+        curve.getTangentAt(t, tmpTan);
+        tmpSide.copy(tmpTan).cross(UP).normalize();
+        pathTargetPos.addScaledVector(tmpTan, -8).addScaledVector(tmpSide, 7);
+        pathTargetPos.y += 12;
+        curve.getPointAt(Math.min(1, t + 0.05), pathTargetLook);
+        pathTargetLook.y += 0.2;
         pathCacheT = t;
-        pathCacheMode = mode;
       }
       tmpPos.copy(pathTargetPos);
       camLook.copy(pathTargetLook);
@@ -986,13 +907,6 @@
         HERO_LOOK.set(0, -2, 2);
         tmpFinalPos.lerp(HERO_POS, fe);
         tmpFinalLook.lerp(HERO_LOOK, fe);
-      }
-
-      if (introMix > 0) {
-        const ie = introMix < 0.5 ? 2*introMix*introMix : 1 - Math.pow(-2*introMix+2, 2)/2;
-        tmpFinalPos.x -= 9 * ie;
-        tmpFinalPos.y += 30 * ie;
-        tmpFinalPos.z += 24 * ie;
       }
 
       camera.position.copy(tmpFinalPos);
@@ -1027,47 +941,17 @@
       }
 
       starField2.rotation.y += dt * 0.00002;
-      const conv = 1 - introMix;
-      if (introMix > 0.001) {
-        const ce = conv < 0.5 ? 2*conv*conv : 1 - Math.pow(-2*conv+2, 2)/2;
-        if (ce !== lastAssemblyCe) {
-          const ap = assembly2.geometry.attributes.position.array;
-          for (let i = 0; i < ASM_N * 3; i++) ap[i] = asmSca2[i] + asmDelta2[i] * ce;
-          assembly2.geometry.attributes.position.needsUpdate = true;
-          lastAssemblyCe = ce;
-        }
-        assembly2.material.opacity = Math.sin(Math.min(1, conv) * Math.PI) * 0.85;
-        assembly2.material.size = 1.4 - conv * 0.5;
-        const fo = Math.min(1, conv / 0.55);
-        const foe = fo < 0.5 ? 2*fo*fo : 1 - Math.pow(-2*fo+2, 2)/2;
-        if (!formMatsTransparent) { formMats.forEach(m => { m.transparent = true; }); formMatsTransparent = true; }
-        formMats.forEach(m => { m.opacity = foe; });
-        starField2.material.opacity = 0.18 + conv * 0.32;
-      } else if (formMatsTransparent) {
-        formMats.forEach(m => { m.opacity = 1; m.transparent = false; });
-        assembly2.material.opacity = 0;
-        starField2.material.opacity = 0.5;
-        formMatsTransparent = false;
-      }
-
-      if (bokeh) {
-        const focusDist = camera.position.distanceTo(curLook);
-        bokeh.uniforms.focus.value += (focusDist - bokeh.uniforms.focus.value) * 0.1;
-      }
       rim.position.copy(curLook); rim.position.y += 8;
 
       return active;
     }
 
-    function render() { if (composer) composer.render(); else renderer.render(scene, camera); }
+    function render() { renderer.render(scene, camera); }
     function setSize(w, h) {
       renderer.setSize(w, h); camera.aspect = w / h; camera.updateProjectionMatrix();
-      if (composer) composer.setSize(w, h);
     }
     function dispose() {
       waferState.disposed = true;
-      if (bokeh && bokeh.dispose) bokeh.dispose();
-      if (composer && composer.dispose) composer.dispose();
       const geometries = new Set();
       const materials = new Set();
       const textures = new Set([colorTex, specTex, bumpTex]);
@@ -1101,7 +985,7 @@
     // Leaving this until presRef becomes visible put the entire first-frame
     // shader/geometry cost directly on the About takeover.
     try {
-      update(0, "probe", 16, 0, 0, 1);
+      update(0, 16, 0, 1);
       if (renderer.compileAsync) await renderer.compileAsync(scene, camera);
       else if (renderer.compile) renderer.compile(scene, camera);
       await yieldBuildPhase(250);
@@ -1113,13 +997,13 @@
     return { update, render, setSize, dispose, stops: STOPS, domElement: renderer.domElement };
   }
 
-  async function build(mount, opts) {
+  async function build(mount) {
     const lifecycle = {
       waferState: { parts: [], materials: [], disposed: false },
     };
     const existingCanvases = new Set(mount.querySelectorAll("canvas"));
     try {
-      return await buildScene(mount, opts, lifecycle);
+      return await buildScene(mount, lifecycle);
     } catch (error) {
       // A constructor/texture failure can happen before a controller exists,
       // so BoardFlight has nothing it can call dispose() on. Cancel late model
@@ -1140,5 +1024,5 @@
     }
   }
 
-  window.MOBoard = { build, STOPS, makeOutputSwitch: () => buildComponent("switch") };
+  window.MOBoard = { build, STOPS };
 })();

@@ -85,11 +85,11 @@ body:not(.fl-titleGone) .bf-ch__card,
    The hit box is the <pre>, NOT its column: the column runs to
    `right: tc-x + max(240px, 14vw)` for layout, so blocking on it put a wide
    invisible slab across the bottom of the hero where a drag did nothing. The
-   <pre> is `width: max-content` (base.css), so this is exactly the ASCII you
-   can see. The wordmark's cursor bubble does not depend on this — it reads the
-   pointer from a window listener and lights up either way. */
-.lp-title .title__stage .title__wordmark { pointer-events: none; }
-/* The two states that retire the title's controls — the exit engaging
+   column stays `pointer-events: none` (base.css); the <pre> is
+   `width: max-content` (base.css), so this is exactly the ASCII you can see.
+   The wordmark's cursor bubble does not depend on this — it reads the
+   pointer from a window listener and lights up either way.
+   The two states that retire the title's controls — the exit engaging
    (`fl-titleDim`, scroll-flight.css) and the explore overlay (`mo-explore`,
    base.css) — have to retire this with them. Their `none` sits on the wordmark
    column, so an unconditional `auto` down here would out-specify it and leave

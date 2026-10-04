@@ -373,19 +373,6 @@
 .badge--pulse  { color: var(--pulse); border-color: var(--pulse-dim); }
 
 /* ============================================================
-   CURSOR — custom probe
-   ============================================================ */
-.cursor {
-  position: fixed;
-  top: 0; left: 0;
-  width: var(--cursor-size);
-  height: var(--cursor-size);
-  transform: translate(-50%, -50%);
-  z-index: 9000;
-  pointer-events: none;
-  mix-blend-mode: difference;
-}
-/* ============================================================
    VOICE / LEXICON
    ============================================================ */
 .voiceGrid {

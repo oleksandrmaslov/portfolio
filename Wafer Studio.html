@@ -11,17 +11,14 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&family=Instrument+Serif:ital@1&display=swap" />
 
-  <link rel="stylesheet" href="app/shared/styles/tokens.css" />
-  <link rel="stylesheet" href="app/shared/styles/key.css" />
-  <link rel="stylesheet" href="app/shared/styles/layout.css?v=5f5aa9928092" />
-  <link rel="stylesheet" href="app/shared/styles/components.css" />
-  <link rel="stylesheet" href="app/projects/styles/base.css?v=e089f1e66160" />
-  <link rel="stylesheet" href="app/projects/styles/case-study.css?v=ccddb5f52dc2" />
-  <link rel="stylesheet" href="demo/base.css" />
-  <link rel="stylesheet" href="app/projects/components/ascii-photo.css" />
-  <link rel="stylesheet" href="app/shared/styles/pointer.css?v=5244ec5f4bcb" />
-  <link rel="stylesheet" href="app/shared/styles/scrollbar.css" />
-  <link rel="stylesheet" href="app/shared/styles/navigation.css?v=c12021497f97" />
+  <link rel="stylesheet" href="app/shared/styles/tokens.css?v=5ca18a260857" />
+  <link rel="stylesheet" href="app/shared/styles/key.css?v=ef916c222ca8" />
+  <link rel="stylesheet" href="app/projects/styles/base.css?v=53838dec7667" />
+  <link rel="stylesheet" href="app/projects/styles/case-study.css?v=72efd112e94e" />
+  <link rel="stylesheet" href="app/projects/components/ascii-photo.css?v=a7f5ae091383" />
+  <link rel="stylesheet" href="app/shared/styles/pointer.css?v=338712583abd" />
+  <link rel="stylesheet" href="app/shared/styles/scrollbar.css?v=fb565f1e1508" />
+  <link rel="stylesheet" href="app/shared/styles/navigation.css?v=0f2c1cc5fd7b" />
 </head>
 <body>
   <div id="root"></div>
@@ -61,37 +58,24 @@
     import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
     import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
     import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
-    import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
     import { KTX2Loader } from "three/addons/loaders/KTX2Loader.js";
-    window.THREE = Object.assign({}, THREE, { GLTFLoader, MeshoptDecoder, RoomEnvironment, RoundedBoxGeometry, KTX2Loader });
-    window.dispatchEvent(new Event("three-ready"));
+    window.THREE = Object.assign({}, THREE, { GLTFLoader, MeshoptDecoder, RoomEnvironment, KTX2Loader });
   </script>
 
-  <script src="app/data/projects.js?v=c95097033c03"></script>
+  <script src="app/data/projects.js?v=80fff50bac00"></script>
 
   <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" integrity="sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" integrity="sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1" crossorigin="anonymous"></script>
 
-  <script defer src="app/page-runtimes/wafer-studio-project.js?v=d499b8b894ff"></script>
-
-  <!-- ASCII photo reveal-lens -->
-
-
-  <!-- Solid-material tuning for production GLBs -->
-
-
-  <!-- Project rendering and shared components -->
-
-
-
-
-
+  <!-- Shared core, project data, hero rig and ASCII figures -->
+  <script defer src="app/page-runtimes/wafer-studio-project.js?v=2c8069e87eda"></script>
 
   <!-- Page config — everything project-specific lives here -->
   <script>
     window.PAGE_CONFIG = {
       addr: "0x06",
       docTitle: "Wafer Studio — Maslov Oleksandr",
+      bridgeSeam: true,   // drop the #mo-seam frame painted above once the model draws
       hero: {
         model: "models/wafer-mark.glb",
         modelFit: 2.1,
@@ -110,10 +94,7 @@
     };
   </script>
 
-  <!-- Project page with the generic node-handoff protocol -->
-  <script defer src="app/page-runtimes/wafer-studio-page.js?v=758e2cb6e9fa"></script>
-
-
-
+  <!-- Pointer effects, KeyButton, the shared project page and scrollbar -->
+  <script defer src="app/page-runtimes/wafer-studio-page.js?v=be99f94e7c62"></script>
 </body>
 </html>

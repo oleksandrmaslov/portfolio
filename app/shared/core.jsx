@@ -1,5 +1,5 @@
 /* ============================================================
-   M.O. SYSTEM — Shared site core (grid, cursor, shell)
+   M.O. SYSTEM — Shared site core (bfcache restore, model warm-up, cursor)
    ============================================================ */
 
 const { useState, useEffect, useRef } = React;
@@ -65,13 +65,8 @@ function Cursor() {
     node.before(cursorHome);
     const onMenu = (event) => {
       const dialog = event.detail?.dialog;
-      if (event.detail?.open && dialog) {
-        dialog.appendChild(node);
-        node.classList.add("cursor--menu");
-      } else {
-        cursorHome.after(node);
-        node.classList.remove("cursor--menu");
-      }
+      if (event.detail?.open && dialog) dialog.appendChild(node);
+      else cursorHome.after(node);
     };
     window.addEventListener("mo:menu", onMenu);
 
@@ -187,18 +182,4 @@ function Cursor() {
   );
 }
 
-/* ============================================================
-   SHELL — fixed top nav
-   ============================================================ */
-function Shell() {
-  return <>
-    <PortfolioHeader context="Design system" />
-    <nav className="site-sections" aria-label="Design system sections">
-      {["brief", "color", "type", "grid", "motion", "components", "voice"].map(id =>
-        <a key={id} href={"#" + id}>{id}</a>)}
-    </nav>
-  </>;
-}
-
 window.Cursor = Cursor;
-window.Shell = Shell;

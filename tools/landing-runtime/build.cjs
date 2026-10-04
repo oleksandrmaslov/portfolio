@@ -25,14 +25,13 @@ const MODEL_VIEWER = "app/projects/rendering/model-viewer.jsx";
 const SOLID_MATERIALS = "app/projects/rendering/solid-materials.js";
 const SOLID_HERO = "app/projects/rendering/solid-hero-rig.jsx";
 const HANDOFF_RIG = "app/projects/rendering/project-handoff-rig.jsx";
-const TWEAK_PANEL = "app/projects/components/tweak-panel.jsx";
 const ASCII_ENGINE = "app/projects/components/ascii-photo.js";
 const ASCII_FIGURE = "app/projects/components/ascii-photo.jsx";
 const POINTER_EFFECTS = "app/shared/pointer-effects.js";
 const SCROLLBAR = "app/shared/scrollbar.js";
 const PROJECT_PAGE_LIFECYCLE = "app/projects/pages/project-page-lifecycle.jsx";
 const STANDARD_PAGE = "app/projects/pages/standard-page.jsx";
-const HANDOFF_PAGE = "app/projects/pages/handoff-page.jsx";
+const KEY_BUTTON = "app/shared/key-button.jsx";
 
 // Keep this in the same order as the former text/babel tags in the shipping
 // landing HTML. Each unit is transformed independently because the classic
@@ -65,6 +64,19 @@ function phase(id, sources) {
     jsx("app/shared/navigation.jsx")] : [source]) };
 }
 
+// Every canonical project route composes through the one page template. A
+// route that paints the landing flight's last frame (the SEAM BRIDGE script)
+// says so with PAGE_CONFIG.bridgeSeam; nothing here differs per route.
+function projectPageSources() {
+  return [
+    classic(POINTER_EFFECTS),
+    jsx(PROJECT_PAGE_LIFECYCLE),
+    jsx(KEY_BUTTON),
+    jsx(STANDARD_PAGE),
+    classic(SCROLLBAR),
+  ];
+}
+
 function handoffDefinition(html, slug, options = {}) {
   const projectSources = [
     jsx(CORE),
@@ -75,18 +87,13 @@ function handoffDefinition(html, slug, options = {}) {
     jsx(SOLID_HERO),
   ];
   if (options.projectHandoffRig) projectSources.push(jsx(HANDOFF_RIG));
-  projectSources.push(jsx(TWEAK_PANEL), jsx(ASCII_FIGURE));
+  projectSources.push(jsx(ASCII_FIGURE));
   return {
     html,
     plainPageConfig: true,
     phases: [
       phase(`${slug}-project`, projectSources),
-      phase(`${slug}-page`, [
-        classic(POINTER_EFFECTS),
-        jsx(PROJECT_PAGE_LIFECYCLE),
-        jsx(HANDOFF_PAGE),
-        classic(SCROLLBAR),
-      ]),
+      phase(`${slug}-page`, projectPageSources()),
     ],
   };
 }
@@ -100,18 +107,12 @@ function standardDefinition(html, slug, options = {}) {
     jsx(MODEL_VIEWER),
     classic(SOLID_MATERIALS),
     jsx(SOLID_HERO),
-    jsx(TWEAK_PANEL),
     jsx(ASCII_FIGURE),
   );
   if (options.hud) sources.push(jsx(options.hud));
   if (options.compiledConfig) {
     sources.push(inlineJsx(`${slug}-config`, `${html}#PAGE_CONFIG`, "window.PAGE_CONFIG"));
-    sources.push(
-      classic(POINTER_EFFECTS),
-      jsx(PROJECT_PAGE_LIFECYCLE),
-      jsx(STANDARD_PAGE),
-      classic(SCROLLBAR),
-    );
+    sources.push(...projectPageSources());
     return { html, phases: [phase(`${slug}-page`, sources)] };
   }
   return {
@@ -119,12 +120,7 @@ function standardDefinition(html, slug, options = {}) {
     plainPageConfig: true,
     phases: [
       phase(`${slug}-project`, sources),
-      phase(`${slug}-page`, [
-        classic(POINTER_EFFECTS),
-        jsx(PROJECT_PAGE_LIFECYCLE),
-        jsx(STANDARD_PAGE),
-        classic(SCROLLBAR),
-      ]),
+      phase(`${slug}-page`, projectPageSources()),
     ],
   };
 }
@@ -139,7 +135,7 @@ const pageDefinitions = [
       phase("all-projects-project", [
         jsx(CORE),
         jsx(MODEL_VIEWER), classic(SOLID_MATERIALS),
-        inlineJsx("all-projects-key-button", "All Projects.html#KeyButton", "function KeyButton"),
+        jsx(KEY_BUTTON),
       ]),
       phase("all-projects-page", [jsx("app/projects/index/app.jsx"), classic(SCROLLBAR)]),
     ],
@@ -158,6 +154,7 @@ const pageDefinitions = [
       jsx(MODEL_VIEWER), classic(SOLID_MATERIALS),
       jsx("app/design-system/event-bus.jsx"),
       jsx("app/design-system/foundations.jsx"),
+      jsx(KEY_BUTTON),
       jsx("app/design-system/patterns.jsx"),
       jsx("app/design-system/app.jsx"),
       classic(SCROLLBAR),
@@ -185,7 +182,7 @@ const pageDefinitions = [
     html: "Wafer.html",
     phases: [phase("wafer-page", [
       jsx(CORE),
-      inlineJsx("wafer-key-button", "Wafer.html#KeyButton", "function KeyButton"),
+      jsx(KEY_BUTTON),
       classic("demo/wafer-sound.js"),
       classic("demo/wafer-board.js"),
       classic("demo/wafer-demo.js"),
@@ -194,7 +191,6 @@ const pageDefinitions = [
       jsx(PROJECT_DATA),
       jsx(MODEL_VIEWER),
       jsx(SOLID_HERO),
-      jsx(TWEAK_PANEL),
       jsx(ASCII_FIGURE),
       jsx("demo/wafer-hud.jsx"),
       classic(POINTER_EFFECTS),
@@ -373,6 +369,10 @@ function assetHash(relativePath) {
 }
 
 function stampDataAssets(html) {
+  // Local stylesheets carry a content hash too, so a returning visitor never
+  // pairs a fresh runtime with a cached stylesheet from before an edit.
+  html = html.replace(/href="((?:app|demo)\/[^"?]+\.css)(?:\?v=[a-f0-9]{12})?"/g,
+    (_match, file) => `href="${file}?v=${assetHash(file)}"`);
   for (const relativePath of ["app/data/projects.js", "app/projects/data.jsx"]) {
     const stamped = `src="${relativePath}?v=${assetHash(relativePath)}"`;
     const parts = html.split(`src="${relativePath}`);

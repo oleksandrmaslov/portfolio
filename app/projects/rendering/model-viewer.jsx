@@ -1,17 +1,14 @@
 /* ============================================================
    M.O. SYSTEM — Shared project model utilities
-   Cached GLB loading, model fitting, and primitive mesh creation.
+   Cached GLB loading and model fitting.
 
    Exposes:
      window.loadProjectModel(url, THREE)
      window.preloadModels(urls, THREE)
      window.fitModelToSize(root, THREE, targetSize)
-     window.makePrimitiveMesh(kind, THREE, { wireframe })
    ============================================================ */
 
 (function () {
-  const SIGNAL = 0x00f0c8;
-
   /* ============================================================
      GLB model loader · shared cache · cloned per consumer
      ============================================================
@@ -157,65 +154,5 @@
     root.position.sub(centre.multiplyScalar(s));
     root.scale.multiplyScalar(s);
     return box;
-  };
-
-  /* ---------- geometry per primitive kind ---------- */
-  function makePrimitiveGeometry(kind, THREE) {
-    switch (kind) {
-      case "slab": {
-        // rounded-box approximation via beveled box (ExtrudeGeometry from a rect shape)
-        // fall back to BoxGeometry — simpler + reads as a "wafer"
-        const g = new THREE.BoxGeometry(2.6, 0.18, 1.7, 1, 1, 1);
-        return g;
-      }
-      case "sphere":
-        return new THREE.SphereGeometry(0.9, 36, 24);
-      case "torus":
-        return new THREE.TorusGeometry(0.85, 0.22, 18, 48);
-      case "cone":
-        return new THREE.ConeGeometry(0.6, 2.2, 32, 1, false);
-      default:
-        return new THREE.BoxGeometry(1.4, 1.4, 1.4);
-    }
-  }
-
-  /* ---------- shared mesh factory ---------- */
-  // For tile-overlay: wireframe = true → returns a LineSegments
-  // For demo page:   wireframe = false → returns a Mesh (solid)
-  window.makePrimitiveMesh = function (kind, THREE, opts = {}) {
-    const wire = !!opts.wireframe;
-    const geo = makePrimitiveGeometry(kind, THREE);
-
-    if (wire) {
-      const wireGeo = new THREE.EdgesGeometry(geo, 25);
-      const mat = new THREE.LineBasicMaterial({
-        color: opts.color ?? SIGNAL,
-        transparent: true,
-        opacity: opts.opacity ?? 0.9,
-        depthWrite: false,
-      });
-      const line = new THREE.LineSegments(wireGeo, mat);
-      line.userData.kind = kind;
-      // dispose original geo — we only need edges
-      geo.dispose();
-      return line;
-    } else {
-      const mat = new THREE.MeshStandardMaterial({
-        color: 0x0e1218,
-        roughness: 0.42,
-        metalness: 0.55,
-        emissive: 0x06121b,
-        emissiveIntensity: 0.35,
-      });
-      const mesh = new THREE.Mesh(geo, mat);
-      // signal-edge wireframe overlay
-      const edges = new THREE.LineSegments(
-        new THREE.EdgesGeometry(geo, 25),
-        new THREE.LineBasicMaterial({ color: SIGNAL, transparent: true, opacity: 0.45, depthWrite: false })
-      );
-      mesh.add(edges);
-      mesh.userData.kind = kind;
-      return mesh;
-    }
   };
 })();

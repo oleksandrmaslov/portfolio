@@ -95,9 +95,9 @@ function makeTileTexture(p, THREE) {
     }
   }
 
-  // Skip the canvas wireframe graphic when a real 3D model or mini-PCB
-  // overlays the card — otherwise the green primitive shows through behind it.
-  if (!p.model && !p.pcbBoard) {
+  // Skip the canvas graphic when a real 3D model overlays the card —
+  // otherwise the green line art shows through behind it.
+  if (!p.model) {
     x.save();
     x.translate(270, 320);
     x.strokeStyle = "#00f0c8";
@@ -190,44 +190,6 @@ function drawGraphic(x, p) {
       x.globalAlpha = 1;
       break;
     }
-    case "accel": {
-      x.beginPath();
-      for (let i = 0; i <= 80; i++) {
-        const t = i / 80;
-        const xx = (t - 0.5) * 240;
-        const yy = -Math.pow(t, 2.6) * 170 + 70;
-        if (i === 0) x.moveTo(xx, yy); else x.lineTo(xx, yy);
-      }
-      x.stroke();
-      x.strokeStyle = "#1a2030";
-      x.beginPath(); x.moveTo(-120, 70); x.lineTo(120, -80); x.stroke();
-      x.beginPath(); x.moveTo(-120, 70); x.lineTo(120, 70); x.stroke();
-      x.beginPath(); x.moveTo(-120, 70); x.lineTo(-120, -100); x.stroke();
-      x.fillStyle = "#5b6478";
-      for (let i = 1; i <= 4; i++) {
-        x.fillRect(-120 + i * 48 - 0.5, 70 - 3, 1, 6);
-        x.fillRect(-120 - 3, 70 - i * 38 - 0.5, 6, 1);
-      }
-      x.strokeStyle = "#00f0c8";
-      x.fillStyle = "#00f0c8";
-      break;
-    }
-    case "torch": {
-      x.beginPath();
-      x.moveTo(-50, 60); x.lineTo(50, 60);
-      x.lineTo(110, -90); x.lineTo(-110, -90); x.closePath();
-      x.stroke();
-      x.beginPath(); x.rect(-50, 60, 100, 70); x.stroke();
-      x.beginPath(); x.arc(0, -10, 16, 0, Math.PI * 2); x.fill();
-      for (let i = -2; i <= 2; i++) {
-        x.globalAlpha = 0.3;
-        x.beginPath();
-        x.moveTo(i * 16, -90); x.lineTo(i * 24, -150);
-        x.stroke();
-      }
-      x.globalAlpha = 1;
-      break;
-    }
     default: {
       for (let i = 0; i < 4; i++) {
         const s = 30 + i * 30;
@@ -305,7 +267,6 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
   const overlayRef = React.useRef(null);
   const [hover, setHover] = React.useState(null);
   const [activeAddr, setActiveAddr] = React.useState(null);
-  const [status, setStatus] = React.useState({ yaw: "0", pit: "0", vel: "0", tile: "—" });
   const [idleNote, setIdleNote] = React.useState(false);
 
   const hoverObjRef = React.useRef(null);
@@ -645,7 +606,6 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         composer.addPass(cursorFx.effectPass);
         composer.addPass(new OutputPass());
         useComposer = true;
-        window.__mo_useComposer = true;
         window.__mo_dofOn = !!bokehPass;
       }
     } catch (error) {
@@ -654,7 +614,6 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       cursorFx = null;
       composer = null;
       useComposer = false;
-      window.__mo_useComposer = false;
       window.__mo_dofOn = false;
     }
     // audio-reactive level (smoothed) — the field breathes with the sound
@@ -983,30 +942,15 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       tiles.push(mesh);
 
       // ---- per-tile 3D overlay
-      // Two paths:
-      //   (a) project has a `model` URL → load the GLB with its real materials
-      //   (b) otherwise → procedural wireframe primitive as before
-      // Both paths register a single "wire" entry in tileWires so the existing
-      // follow/rotate/visibility logic in the frame loop works unchanged.
-      if (p.pcbBoard && window.makeAboutPCBMesh) {
-        // About node: float the actual PCB used by window.MOBoard.
-        // on the card, and let the GLB-overlay frame logic below drive it
-        // (scale/yaw/opacity) by tagging it as a loaded model.
-        const board = window.makeAboutPCBMesh(THREE);
-        board.userData.parentTile = mesh;
-        board.userData.prim = "pcb";
-        board.userData.addr = p.addr;
-        board.userData.isModel = true;
-        board.userData.loaded = true;
-        board.userData.loadedAt = performance.now();
-        tilesGroup.add(board);
-        tileWires.push(board);
-      } else if (p.model && window.loadProjectModel) {
+      // A project with a `model` URL loads its GLB with its real materials into
+      // a holder registered in tileWires, so the frame loop can follow, turn
+      // and fade it with its card. A project without one (Kerfur, Venovisor)
+      // keeps the line art makeTileTexture drew into the card itself.
+      if (p.model && window.loadProjectModel) {
         // Reserve a placeholder Group right away so frame ordering doesn't blink.
         const holder = new THREE.Group();
         holder.userData = {
           parentTile: mesh,
-          prim: p.prim || "model",
           addr: p.addr,
           isModel: true,
           loaded: false,
@@ -1020,8 +964,6 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
           state: "queued",
           run: () => window.loadProjectModel(p.model, THREE).then((root) => {
           if (universeDisposed) return;
-          // Centre + scale so longest edge ~2 world units; outer scale.setScalar
-          // then matches what the wireframe used to do (0.28 of that).
           // Fit so longest edge = 2 world units; the frame loop then sets the
           // outer holder scale (≈0.85 idle, 1.10 on focus) so the model reads
           // as the card's hero, not a small inset.
@@ -1063,20 +1005,6 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         };
         modelJobs.push(job);
         modelJobByAddr.set(p.addr, job);
-      } else if (p.prim && window.makePrimitiveMesh) {
-        const wire = window.makePrimitiveMesh(p.prim, THREE, {
-          wireframe: true,
-          color: 0x00f0c8,
-          opacity: 0.85,
-        });
-        wire.scale.setScalar(0.28);                  // tiny — fits in the upper area of the card
-        wire.userData.parentTile = mesh;
-        wire.userData.prim = p.prim;
-        wire.userData.addr = p.addr;
-        // Cone sits horizontally — same as on the project page
-        if (p.prim === "cone") wire.rotation.set(0, 0, Math.PI / 2);
-        tilesGroup.add(wire);
-        tileWires.push(wire);
       }
     });
     // The greeting card is part of the opening composition and is also the
@@ -1103,7 +1031,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       tilePhaseSin[i] = Math.sin(ang);
       tilePhaseSin2[i] = Math.sin(ang * 2);
     }
-    /* CLEARED FIELD — one ring, four scales.
+    /* CLEARED FIELD — one ring, two scales.
        Every beat that needs the cards out of its way puts them on a ring
        around whatever the beat is about. Both x and y come from the ring
        angle, so two nodes can only share a screen position if they share an
@@ -1157,24 +1085,8 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     function targetForTile(mode, i, t) {
       if (listCollapse) return indexRingTarget(i, tileTargets.length, t);
       const target = tileTargets[i];
-      if (mode === "origin") {
-        const concept = (window.__mo_origin && window.__mo_origin.concept) || "assembly";
-        const m = tiles[i];
-        const addr = m && m.userData.project.addr;
-        const fIdx = MO_FEATURED.indexOf(addr || "");
-        // ASSEMBLY: clear ALL nodes far out so the particle glyph reads clean.
-        if (concept === "assembly") return scatter(i, 19, 11, -22, 5);
-        // HUB: featured nodes ring the hub, the rest drift back.
-        if (fIdx >= 0) {
-          const ang = (fIdx / Math.max(1, MO_FEATURED.length)) * Math.PI * 2 - Math.PI / 2 + t * 0.00004;
-          return target.set(
-            ORIGIN_CENTER.x + Math.cos(ang) * ORIGIN_RING_R,
-            ORIGIN_CENTER.y + Math.sin(ang) * ORIGIN_RING_R * 0.62,
-            ORIGIN_CENTER.z + Math.sin(ang * 1.3) * 1.4,
-          );
-        }
-        return scatter(i, 16, 9, -18, 4);
-      }
+      // ORIGIN: clear ALL nodes far out so the "0x00" particle glyph reads clean.
+      if (mode === "origin") return scatter(i, 19, 11, -22, 5);
       if (mode === "reel") {
         // WORK REEL — the featured tiles parade past the lens (positions 1–4).
         // At the final stop ("Open the universe") every node — all 12 —
@@ -1355,74 +1267,13 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     const AMB_DEPTH_SPAN = Math.hypot(BOX.x, BOX.y, BOX.z) * 0.5 + AMB_SCALE;
     const sortAmbientBackToFront = (a, b) => b.userData.depth - a.userData.depth;
 
-    /* ---------- ORIGIN hub — node 0x00 (the self) ----------
-       A special, larger node that only matters in `origin` mode. Every
-       project node radiates from it. This is the literal target of the
-       later "dive into node 0x00" → About · Board transition. */
+    /* ---------- ORIGIN anchor — where node 0x00 (the self) forms ---------- */
     const ORIGIN_CENTER = new THREE.Vector3(0, 0, -9);   // in front of a levelled camera
-    const ORIGIN_RING_R = 6.2;                            // project nodes ring radius
-
-    function makeOriginTexture() {
-      const oc = document.createElement("canvas");
-      oc.width = 256; oc.height = 256;
-      const g = oc.getContext("2d");
-      g.clearRect(0, 0, 256, 256);
-      const cx = 128, cy = 128;
-      // concentric rings
-      g.strokeStyle = "#00f0c8";
-      for (let i = 0; i < 3; i++) {
-        g.globalAlpha = 0.9 - i * 0.28;
-        g.lineWidth = 2 - i * 0.4;
-        g.beginPath(); g.arc(cx, cy, 30 + i * 26, 0, Math.PI * 2); g.stroke();
-      }
-      g.globalAlpha = 1;
-      // crosshair ticks
-      g.strokeStyle = "#00f0c8"; g.lineWidth = 1.5;
-      [[0,-1],[0,1],[-1,0],[1,0]].forEach(([dx,dy]) => {
-        g.beginPath();
-        g.moveTo(cx + dx * 84, cy + dy * 84);
-        g.lineTo(cx + dx * 98, cy + dy * 98);
-        g.stroke();
-      });
-      // core
-      g.fillStyle = "#00f0c8";
-      g.beginPath(); g.arc(cx, cy, 7, 0, Math.PI * 2); g.fill();
-      g.fillStyle = "#04060d";
-      g.beginPath(); g.arc(cx, cy, 3, 0, Math.PI * 2); g.fill();
-      const t = new THREE.CanvasTexture(oc);
-      t.colorSpace = THREE.SRGBColorSpace;
-      return t;
-    }
-
-    const originGroup = new THREE.Group();
-    scene.add(originGroup);
-    originGroup.visible = false;
-
-    const originHub = new THREE.Sprite(new THREE.SpriteMaterial({
-      map: makeOriginTexture(), transparent: true, opacity: 0, depthWrite: false, depthTest: false,
-    }));
-    originHub.position.copy(ORIGIN_CENTER);
-    originHub.scale.set(4.2, 4.2, 1);
-    originGroup.add(originHub);
-
-    // radiating links hub → each featured project node
-    const featuredTiles = tiles.filter(m => MO_FEATURED.includes(m.userData.project.addr));
-    const originLinks = featuredTiles.map((tile) => {
-      const geo = new THREE.BufferGeometry();
-      geo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(6), 3));
-      const line = new THREE.Line(geo, new THREE.LineBasicMaterial({
-        color: 0x00f0c8, transparent: true, opacity: 0, depthWrite: false, depthTest: false,
-      }));
-      line.userData = { tile };
-      originGroup.add(line);
-      return line;
-    });
 
     /* ---------- ASSEMBLY cloud — particles that swarm to FORM "0x00" ----------
-       Concept 01. A dedicated point cloud whose rest state is scattered through
-       the box; in origin/assembly mode each point flies to a target sampled from
-       a canvas-rendered "0x00" glyph, giving a 3D constellation of the self. */
-
+       A dedicated point cloud whose rest state is scattered through the box;
+       in origin mode each point flies to a target sampled from a
+       canvas-rendered "0x00" glyph, giving a 3D constellation of the self. */
 
     // Denser than the original 560 so the strokes read, but kept modest. This
     // is a single THREE.Points (one draw call); the only per-frame cost is the
@@ -2080,10 +1931,6 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         const b = tileViewportBounds(m);
         return onScreenBox(b) ? b : null;
       },
-      fly(v) {
-        cam.vel = Math.max(-22, Math.min(22, cam.vel + v));
-        stopDrift(); fireInteract();
-      },
       setExplore(on) {
         const next = !!on;
         mount.style.touchAction = next ? "none" : "pan-y pinch-zoom";
@@ -2126,9 +1973,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         gyroAnnounced = false;
         resetGyroCalibration();
       },
-      isGyro() { return gyroOn; },
       isGyroActive() { return gyroOn && gyroReady; },
-      recenterGyro() { if (gyroOn && gyroReady) rebaseGyroToExploreTarget(); },
     };
 
     /* ---------- raycasting ---------- */
@@ -2288,10 +2133,9 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       // only pay for a React re-render when the hovered PROJECT actually
       // changes — moving within the same card is free.
       if (hoverObjRef.current === m) return;
-      const screen = tileScreenBounds(m);
-      if (!screen) return;
+      if (!tileScreenBounds(m)) return;
       hoverObjRef.current = m;
-      setHover({ project: m.userData.project, screen });
+      setHover({ project: m.userData.project });
       emitTileHover(m.userData.project.addr);
       // the touch disturbs the field — a soft ripple spreads from the node
       if (window.__mo_disturb) window.__mo_disturb(cx, cy, 0.3);
@@ -2351,7 +2195,6 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         window.__mo_open_project(p, originRect);
         return;
       }
-      sessionStorage.setItem("mo_navigate_from_addr", p.addr);
       document.body.classList.add("landing-exit");
       setTimeout(() => { window.location.href = p.file; }, 380);
     }
@@ -2393,7 +2236,6 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     // Hoisted scratch — reused every frame so the hot loops allocate nothing.
     const _camDir   = new THREE.Vector3();
     const _off      = new THREE.Vector3();
-    const _localOff = new THREE.Vector3();
     const _lookM    = new THREE.Matrix4();
     const _baseQ    = new THREE.Quaternion();
     const _offQ     = new THREE.Quaternion();
@@ -2649,19 +2491,16 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       const _flTransit = _fl.seg === "toOrigin" || _fl.seg === "toWork" || _fl.seg === "toAbout";
       let _flowDX = 0, _flowDY = 0, _flowDZ = 0;
       {
-        const cfgF = window.__mo_flightCfg || {};
-        const styleMul = cfgF.style === "calm" ? 0.45 : 1;
-        const warpMul  = (cfgF.warp != null ? cfgF.warp : 65) / 65;
         let flowTarget = 0, rollTarget = 0;
         if (!exploreOn && _flTransit && !FLOW_RM) {
           const tt = Math.max(0, Math.min(1, _fl.t || 0));
           const bell = Math.sin(Math.PI * tt);          // ease in and out of the leg
-          flowTarget = (3.4 + Math.min(24, _fl.speed || 0) * 0.6) * bell * styleMul * warpMul;
+          flowTarget = (3.4 + Math.min(24, _fl.speed || 0) * 0.6) * bell;
           const legRoll = _fl.seg === "toWork" ? 1 : _fl.seg === "toAbout" ? -0.7 : -0.45;
           // Optional page-level scaler (window.__mo_fx.legRoll)
           // tempers the toWork bank; defaults to 1 so other pages are unchanged.
           const legRollMul = window.__mo_fx && window.__mo_fx.legRoll != null ? window.__mo_fx.legRoll : 1;
-          rollTarget = legRoll * 0.055 * bell * styleMul * Math.min(1.3, warpMul) * legRollMul;
+          rollTarget = legRoll * 0.055 * bell * legRollMul;
         }
         flowSm    += (flowTarget - flowSm)    * ease10;
         camRollFX += (rollTarget - camRollFX) * (1 - decay93);
@@ -2766,13 +2605,13 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       if (mode === "drift") {
         for (const m of tiles) {
           // If a fresh drift target was queued on mode-change, ease toward it
-          // and DO NOT wrap — grid/ambient positions sit outside the wrap box
-          // (z = ±16 vs box half-depth 13), so wrapping here would teleport the
-          // tile across the camera before the lerp could play. Skip the wrap
-          // until we've landed inside the box, then resume normal wrapping.
+          // and DO NOT wrap — the origin and reel scatter rings sit 22–25u out,
+          // past TILE_BOX's 18.2 half-depth, so wrapping here would teleport
+          // the tile across the camera before the lerp could play. Skip the
+          // wrap until we've landed inside the box, then resume normal wrapping.
           const dt2 = m.userData.driftTarget;
           if (dt2) {
-            const rate = 0.025;          // matches forward grid → ambient feel
+            const rate = 0.025;          // same ease the origin beat arranges with
             m.position.lerp(dt2, 1 - Math.pow(1 - rate, dt / 16));
             if (m.position.distanceToSquared(dt2) < 0.09) {
               m.userData.driftTarget = null;
@@ -2786,78 +2625,48 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       // stars wrap in a larger box for parallax illusion
       wrapPointsAroundCamera(stars, SBOX, SBOX_HALF);
 
-      /* small per-tile overlays — wireframe primitives OR loaded GLBs.
-         Both branches follow their parent tile, rotate, and fade with it.
-         Models are centred on the card face and pushed further toward camera
-         so they read as the hero element; wireframes sit small above the art. */
+      /* per-tile model overlays — each loaded GLB follows its parent tile,
+         turns, and fades with it. Models are centred on the card face and
+         pushed toward the camera so they read as the hero element. */
       // World-direction is constant for all overlays this frame — fetch once.
       camera.getWorldDirection(_camDir);
       for (const wire of tileWires) {
         const parent = wire.userData.parentTile;
         if (!parent) continue;
-        const isModel = !!wire.userData.isModel;
-        // Offset toward viewer — bigger for full models so they clear the card.
-        const forwardDist = isModel ? 1.4 : 0.6;
-        _off.copy(_camDir).multiplyScalar(-forwardDist);
-        // Card-local offset: models can be nudged to their visual centre;
-        // wireframes stay just above the card art.
-        const modelOffset = isModel ? parent.userData.project.modelOffset : null;
-        _localOff.set(
-          modelOffset ? (modelOffset.x || 0) : 0,
-          isModel ? (modelOffset ? (modelOffset.y || 0) : 0) : parent.scale.y * 1.05,
-          modelOffset ? (modelOffset.z || 0) : 0,
-        ).applyQuaternion(parent.quaternion);
+        // Offset toward the viewer so the model clears the card.
+        _off.copy(_camDir).multiplyScalar(-1.4);
         wire.position.set(
-          parent.position.x + _off.x + _localOff.x,
-          parent.position.y + _off.y + _localOff.y,
-          parent.position.z + _off.z + _localOff.z,
+          parent.position.x + _off.x,
+          parent.position.y + _off.y,
+          parent.position.z + _off.z,
         );
-        // Continuous slow rotation. Loaded GLBs are the "hero" presentation —
-        // they get a gentle yaw-only drift so the form stays readable and
-        // mostly faces the camera. Wireframe primitives still tumble as
-        // before (cheap, abstract, more decorative).
-        if (!FLOW_RM && isModel) {
-          wire.rotation.y += dt * 0.00015;
-        } else if (!FLOW_RM && wire.userData.prim === "cone") {
-          wire.rotation.y += dt * 0.00072;
-        } else if (!FLOW_RM) {
-          wire.rotation.y += dt * 0.0006;
-          wire.rotation.x += dt * 0.00024;
-        }
-        // Match parent visibility
-        const tileOp = parent.material.opacity;
-        const overlayOp = Math.min(0.95, tileOp * 1.15);
-        if (isModel) {
-          // Loaded GLB — fade every material in the subtree, and hide
-          // the whole group below a threshold so we don't pay for invisible draws.
-          if (wire.userData.loaded) {
-            // Soft fade-in from the moment the GLB lands, so the model eases up
-            // instead of popping (the parent tile may already be fully visible).
-            const mFade = THREE.MathUtils.smoothstep(now - (wire.userData.loadedAt || now), 0, 600);
-            // Per request: loaded GLB models render FULLY SOLID at rest —
-            //  (1) no 0.95 cap (use the full distance opacity, clamped to 1), and
-            //  (2) no mode dimming (use the tile's pre-dim base opacity).
-            // Distance fade and the load fade-in are preserved.
-            const modelTileOp = parent.userData.modelOpacityBase != null
-              ? parent.userData.modelOpacityBase
-              : tileOp;
-            const modelOp = Math.min(1, modelTileOp * 1.15) * mFade;
-            wire.visible = modelOp > 0.02;
-            if (modelOp !== wire.userData.lastModelOpacity) {
-              const fadeMaterials = wire.userData.fadeMaterials || [];
-              for (const material of fadeMaterials) material.opacity = modelOp;
-              wire.userData.lastModelOpacity = modelOp;
-            }
+        // A gentle yaw-only drift so the form stays readable and mostly faces
+        // the camera.
+        if (!FLOW_RM) wire.rotation.y += dt * 0.00015;
+        // Fade every material in the subtree, and hide the whole group below a
+        // threshold so we don't pay for invisible draws.
+        if (wire.userData.loaded) {
+          // Soft fade-in from the moment the GLB lands, so the model eases up
+          // instead of popping (the parent tile may already be fully visible).
+          const mFade = THREE.MathUtils.smoothstep(now - (wire.userData.loadedAt || now), 0, 600);
+          // Per request: loaded GLB models render FULLY SOLID at rest —
+          //  (1) no 0.95 cap (use the full distance opacity, clamped to 1), and
+          //  (2) no mode dimming (use the tile's pre-dim base opacity).
+          // Distance fade and the load fade-in are preserved.
+          const modelTileOp = parent.userData.modelOpacityBase != null
+            ? parent.userData.modelOpacityBase
+            : parent.material.opacity;
+          const modelOp = Math.min(1, modelTileOp * 1.15) * mFade;
+          wire.visible = modelOp > 0.02;
+          if (modelOp !== wire.userData.lastModelOpacity) {
+            const fadeMaterials = wire.userData.fadeMaterials || [];
+            for (const material of fadeMaterials) material.opacity = modelOp;
+            wire.userData.lastModelOpacity = modelOp;
           }
-        } else {
-          // Procedural wireframe primitive — single material
-          wire.material.opacity = overlayOp;
         }
-        // Pop with focus — models start much larger than wireframes.
+        // Pop with focus.
         const isFocused = focusAddrNow && wire.userData.addr === focusAddrNow;
-        const baseScale  = isModel ? 0.85 : 0.28;
-        const focusScale = isModel ? 1.10 : 0.42;
-        const targetScale = isFocused ? focusScale : baseScale;
+        const targetScale = isFocused ? 1.10 : 0.85;
         wire.scale.lerp(_vScale.set(targetScale, targetScale, targetScale), ease10);
       }
 
@@ -2879,7 +2688,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         _lookM.lookAt(camera.position, m.position, camera.up);
         _baseQ.setFromRotationMatrix(_lookM);
 
-        // Per-card constant offset so each tile floats at its own angle (suppressed in grid)
+        // Per-card constant offset so each tile floats at its own angle (damped in the reel)
         const offFactor = mode === "reel" ? 0.15 : 1.0;
         _euler.set(
           m.userData.offsetPitch * offFactor,
@@ -3099,35 +2908,15 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
          begin assembling the instant the section enters view and always melts
          cleanly when you scroll away — no "stuck formed" or "never appeared". */
       {
-        const ob = window.__mo_origin || { p: 0, active: false, concept: "assembly" };
-        const concept = ob.concept || "assembly";
+        const ob = window.__mo_origin || { p: 0, active: false };
         const op = Math.max(0, Math.min(1, ob.p || 0));
         const eP = op < 0.5 ? 2*op*op : 1 - Math.pow(-2*op+2, 2)/2;  // easeInOut
-
-        // ---- HUB concept (exploration only) ----
-        const showHub = (mode === "origin") && concept === "hub";
-        originGroup.visible = showHub;
-        if (showHub) {
-          originHub.material.opacity = 0.25 + eP * 0.75;
-          const pulse = 1 + Math.sin(now * 0.0025) * 0.04;
-          originHub.scale.set(4.2 * pulse, 4.2 * pulse, 1);
-          for (const link of originLinks) {
-            const tile = link.userData.tile;
-            const la = link.geometry.attributes.position.array;
-            la[0] = ORIGIN_CENTER.x; la[1] = ORIGIN_CENTER.y; la[2] = ORIGIN_CENTER.z;
-            la[3] = tile.position.x; la[4] = tile.position.y; la[5] = tile.position.z;
-            link.geometry.attributes.position.needsUpdate = true;
-            link.material.opacity = eP * 0.45;
-          }
-        }
-
-        // ---- DIVE ignition (about gateway → board) ----
 
         // ---- target formedness (0 = pure field, 1 = full glyph) ----
         // Continuous: rises with origin-section scroll whenever the section is in
         // its active band. Never keyed to `mode`.
         let formTarget = 0;
-        if (ob.active && concept !== "hub") formTarget = eP;
+        if (ob.active) formTarget = eP;
         // Ease toward the target so entry/exit is always gradual (no pop when the
         // section's active flag toggles mid-scroll).
         formActual += (formTarget - formActual) * (1 - decay91);
@@ -3140,7 +2929,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         // ── Field-follow — keeps the scatter source in NEAR space ──
         // While the glyph is even slightly formed we STOP wrapping the field and
         // instead slide every home (and its rendered point) by the camera's
-        // per-frame delta. Origin/dive ease the camera toward world-0, and free
+        // per-frame delta. The arranged beats ease the camera toward world-0, and free
         // flight can start far out; without this the home cloud stays frozen in
         // world space, gets left behind, and partially-formed particles streak
         // in from that one distant point instead of scattering from up close.
@@ -3290,14 +3079,10 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         // +0.055 growth made "0x00" read as soft blobs up close.
         assemblyPts.material.size = 0.1 + formP * 0.015 + arrCollapse * 0.07 + _lvlS * 0.04;
 
-        assemblyGroup.position.set(0, 0, 0);
-        assemblyGroup.scale.set(1, 1, 1);
-
+        // formP feeds the topology and DoF below; the audio reads mode + formP.
         const debugState = window.__mo_debug || (window.__mo_debug = {});
         debugState.mode = mode;
-        debugState.active = !!ob.active;
         debugState.formP = +formP.toFixed(2);
-        debugState.camZ = +cam.pos.z.toFixed(1);
       }
 
       /* ── constellation layer ── */
@@ -3307,27 +3092,9 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
              transit is felt through FOV + aberration, not extra geometry ── */
       const FLbr = window.__mo_flight || {};
       const warpNow = Math.max(0, Math.min(1.4, FLbr.warp || 0));
-      const MC = (window.__mo_cam = window.__mo_cam || {});
-      MC.x = cam.pos.x; MC.y = cam.pos.y; MC.z = cam.pos.z;
-      MC.yaw = cam.yaw; MC.pitch = cam.pitch; MC.vel = cam.vel;
 
-      /* status ~ 3hz */
+      // Counts rendered frames; the first one announces mo:first-frame below.
       frameI++;
-      if (frameI % 18 === 0) {
-        const yawDeg = ((cam.yaw * 180 / Math.PI) % 360 + 360) % 360;
-        const next = {
-          yaw: yawDeg.toFixed(0).padStart(3, "0"),
-          pit: (cam.pitch * 180 / Math.PI).toFixed(0),
-          vel: cam.vel.toFixed(1),
-          tile: hoverObjRef.current?.userData?.project?.addr || activeAddrRef.current || "—",
-        };
-        // Return the previous object when nothing changed. A fresh object here
-        // failed Object.is every time and reconciled the whole Universe subtree
-        // 3.3x/second forever, including with the camera completely still.
-        setStatus((prev) => (prev
-          && prev.yaw === next.yaw && prev.pit === next.pit
-          && prev.vel === next.vel && prev.tile === next.tile) ? prev : next);
-      }
 
       // Scene grade — advance grain and keep live-tunable uniforms in sync.
       // Velocity weight (written by cinematic.js) leans on the aberration
@@ -3420,25 +3187,18 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       else if (scene.environment && scene.environment.dispose) scene.environment.dispose();
       tiles.forEach(m => { m.geometry.dispose(); m.material.map?.dispose(); m.material.dispose(); });
       tileWires.forEach(w => {
-        if (w.userData && w.userData.isModel) {
-          w.traverse((obj) => {
-            if (obj.isMesh) {
-              obj.geometry?.dispose();
-              obj.material?.dispose();
-            }
-          });
-        } else {
-          w.geometry?.dispose();
-          w.material?.dispose();
-        }
+        w.traverse((obj) => {
+          if (obj.isMesh) {
+            obj.geometry?.dispose();
+            obj.material?.dispose();
+          }
+        });
       });
       ambientBatches.forEach(batch => batch.geo.dispose());
       ambientMat.dispose();
       ambientAtlas.texture.dispose();
       starGeo.dispose();
       asmGeo.dispose(); assemblyPts.material.dispose();
-      originHub.material.map?.dispose(); originHub.material.dispose();
-      originLinks.forEach(l => { l.geometry.dispose(); l.material.dispose(); });
       constGeo.dispose(); constMat.dispose();
       if (renderer.renderLists) renderer.renderLists.dispose();
       if (renderer.forceContextLoss) renderer.forceContextLoss();
@@ -3473,7 +3233,6 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       }
       delete window.__mo_universe;
       delete window.__mo_arrival_start;
-      delete window.__mo_cam;
     };
   }, []);
 
@@ -3488,28 +3247,9 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         />
       )}
 
-      <div className="universe__reticle" aria-hidden="true">
-        <span /><span /><span /><span />
-      </div>
-
       <div className={"universe__whisper " + (idleNote ? "is-on" : "")} aria-hidden="true">
         <span className="universe__whisperDot" />
         the field notices you
-      </div>
-
-      {/* center crosshair removed per request */}
-
-      <div className="universe__hud universe__hud--bl">
-        <div className="universe__hudRow"><span className="universe__hudKey">YAW</span><span className="universe__hudVal">{status.yaw}°</span></div>
-        <div className="universe__hudRow"><span className="universe__hudKey">PITCH</span><span className="universe__hudVal">{status.pit}°</span></div>
-        <div className="universe__hudRow"><span className="universe__hudKey">VEL</span><span className="universe__hudVal">{status.vel}</span></div>
-        <div className="universe__hudRow"><span className="universe__hudKey">FOCUS</span><span className="universe__hudVal">{status.tile}</span></div>
-      </div>
-      <div className="universe__hud universe__hud--br">
-        <div className="universe__hudRow"><span className="universe__hudKey">DRAG</span><span className="universe__hudVal">ROTATE</span></div>
-        <div className="universe__hudRow"><span className="universe__hudKey">WHEEL</span><span className="universe__hudVal">FLY</span></div>
-        <div className="universe__hudRow"><span className="universe__hudKey">CLICK</span><span className="universe__hudVal">AIM</span></div>
-        <div className="universe__hudRow"><span className="universe__hudKey">SPACE</span><span className="universe__hudVal">∞</span></div>
       </div>
     </div>
   );
