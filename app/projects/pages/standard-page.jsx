@@ -1,8 +1,12 @@
 /* ============================================================
-   M.O. SYSTEM — STANDARD PROJECT PAGE
+   M.O. SYSTEM — PROJECT PAGE
    ------------------------------------------------------------
-   Shared by canonical project pages. Each project loads this
-   file plus a small window.PAGE_CONFIG defined inline:
+   The page template every canonical project route composes through
+   (Wafer keeps its bespoke wafer-page.jsx). It speaks the generic
+   node handoff protocol (mo_node_*): arrival continues the flight's
+   yaw across the page swap, and leaving flies the model back to the
+   landing field it was opened from. Each route loads this file plus
+   a small window.PAGE_CONFIG defined inline:
 
      window.PAGE_CONFIG = {
        addr: "0x04",
@@ -17,7 +21,8 @@
          assignMaterial: { … },       //   ONLY for a GLB with no materials
          keepMaterials: true,         //   ONLY for a procedural hero
        },
-       photoSrc: "app/projects/components/wafer-sample.webp",
+       heroLayout: { mobile, tablet, desktop },   // optional, see below
+       bridgeSeam: true,            // the HTML paints #mo-seam, see below
        demo: {                      // bespoke PLAY DEMO …
          layerName: "TorchDemoLayer",
          hint: "TAIL SWITCH · MODES · SOS",
@@ -28,17 +33,27 @@
        renderTweaks: (t, set) => <></>,
      };
 
-   Standard-page behavior:
+   Behaviour:
      · the node flight lands here like it does on every other route, and the
        arrival CONTINUES it — boot at the rest layout and at the yaw the
        flight ended on, then carry the turn forward. Do not go back to an
        unconditional beginHandoff(): that puts an arriving model in the
        centre of the screen and slides it right, which reads as the model
        drifting in from the left.
-     · no seam-bridge script in the page HTML yet, so the flight's last frame
-       is not painted over the boot gap the way it is on Wafer and the
-       handoff routes. The arrival itself is correct either way.
-     · footer prev/next follows the canonical data.file route
+     · bridgeSeam: the page HTML paints the flight's captured last frame
+       (#mo-seam) over the boot gap and this drops it once the model draws.
+       Six routes carry that script and set the flag. Silent Depth sets it
+       with no script, since it cannot be arrived at by flight; there it
+       only clears a stale capture. Kerfur, Iskra, Ci-Clop, Split HID
+       Display and ZMK-PointAccel have no seam-bridge script yet, so the
+       flight's last frame is not painted over their boot gap. The arrival
+       itself is correct either way.
+     · leave → the model flies back to the landing field.
+     · footer prev/next follows the canonical data.file route.
+
+   handoff-page.jsx used to be a second copy of this file that differed
+   only in bridgeSeam. The copies drifted once: its heroLayout read went
+   missing, so seven routes shipped a tuned override that did nothing.
    ============================================================ */
 const { useState: usePC, useEffect: useEPC, useRef: useRPC } = React;
 
@@ -110,7 +125,7 @@ function PCSectionBlock({ block, i }) {
       <div className="pp-body__photo">
         <AsciiMediaFigure
           kind={block.kind}
-          src={block.src || PC.photoSrc || "app/projects/components/wafer-sample.webp"}
+          src={block.src || "app/projects/components/wafer-sample.webp"}
           poster={block.poster}
           ratio={block.ratio}
           tone={block.tone}
@@ -171,7 +186,7 @@ function PCProjectLinks({ project }) {
   );
 }
 
-/* leave — fade the page, keep the model spinning, go home */
+/* leave — fade the page, keep the model spinning, fly back to the field */
 function pcLeaveToUniverse() {
   PC_LIFECYCLE.leaveToUniverse(PC);
 }
@@ -294,7 +309,7 @@ function ProjectPageApp() {
     heroLayoutParams: pcHeroLayoutParams,
     applyHeroLayout: pcApplyHeroLayout,
     idleDrift: PC_IDLE_DRIFT,
-    bridgeSeam: false,
+    bridgeSeam: PC.bridgeSeam === true,
   });
 
   const enterDemo = () => {

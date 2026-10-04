@@ -32,7 +32,6 @@ const POINTER_EFFECTS = "app/shared/pointer-effects.js";
 const SCROLLBAR = "app/shared/scrollbar.js";
 const PROJECT_PAGE_LIFECYCLE = "app/projects/pages/project-page-lifecycle.jsx";
 const STANDARD_PAGE = "app/projects/pages/standard-page.jsx";
-const HANDOFF_PAGE = "app/projects/pages/handoff-page.jsx";
 
 // Keep this in the same order as the former text/babel tags in the shipping
 // landing HTML. Each unit is transformed independently because the classic
@@ -65,6 +64,18 @@ function phase(id, sources) {
     jsx("app/shared/navigation.jsx")] : [source]) };
 }
 
+// Every canonical project route composes through the one page template. A
+// route that paints the landing flight's last frame (the SEAM BRIDGE script)
+// says so with PAGE_CONFIG.bridgeSeam; nothing here differs per route.
+function projectPageSources() {
+  return [
+    classic(POINTER_EFFECTS),
+    jsx(PROJECT_PAGE_LIFECYCLE),
+    jsx(STANDARD_PAGE),
+    classic(SCROLLBAR),
+  ];
+}
+
 function handoffDefinition(html, slug, options = {}) {
   const projectSources = [
     jsx(CORE),
@@ -81,12 +92,7 @@ function handoffDefinition(html, slug, options = {}) {
     plainPageConfig: true,
     phases: [
       phase(`${slug}-project`, projectSources),
-      phase(`${slug}-page`, [
-        classic(POINTER_EFFECTS),
-        jsx(PROJECT_PAGE_LIFECYCLE),
-        jsx(HANDOFF_PAGE),
-        classic(SCROLLBAR),
-      ]),
+      phase(`${slug}-page`, projectPageSources()),
     ],
   };
 }
@@ -106,12 +112,7 @@ function standardDefinition(html, slug, options = {}) {
   if (options.hud) sources.push(jsx(options.hud));
   if (options.compiledConfig) {
     sources.push(inlineJsx(`${slug}-config`, `${html}#PAGE_CONFIG`, "window.PAGE_CONFIG"));
-    sources.push(
-      classic(POINTER_EFFECTS),
-      jsx(PROJECT_PAGE_LIFECYCLE),
-      jsx(STANDARD_PAGE),
-      classic(SCROLLBAR),
-    );
+    sources.push(...projectPageSources());
     return { html, phases: [phase(`${slug}-page`, sources)] };
   }
   return {
@@ -119,12 +120,7 @@ function standardDefinition(html, slug, options = {}) {
     plainPageConfig: true,
     phases: [
       phase(`${slug}-project`, sources),
-      phase(`${slug}-page`, [
-        classic(POINTER_EFFECTS),
-        jsx(PROJECT_PAGE_LIFECYCLE),
-        jsx(STANDARD_PAGE),
-        classic(SCROLLBAR),
-      ]),
+      phase(`${slug}-page`, projectPageSources()),
     ],
   };
 }

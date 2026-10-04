@@ -78,6 +78,9 @@
     window.PAGE_CONFIG = {
       addr: "0x0B",
       docTitle: "Silent Depth — Maslov Oleksandr",
+      // No seam overlay on this route (see above). The flag only clears a
+      // stale captured frame, the same as on every other handoff route.
+      bridgeSeam: true,
       hero: {
         model: "models/silent-depth-mark.glb",
         modelFit: 2.1,   // keep equal to rigFit for 0x0B in app/data/projects.js
