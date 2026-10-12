@@ -18,7 +18,7 @@
    and hands control back.
 
    The remaining timeline derives segment progress and coordinates the title
-   exit stagger, stage presence, doppler wind, seam accents.
+   exit stagger, stage presence and seam accents.
    ============================================================ */
 (function () {
   /* The work reel's scroll geometry, mirrored from app/landing/sections/work.jsx:
@@ -42,55 +42,7 @@
   var easeIO = function (t) { return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; };
   var easeOut = function (t) { return 1 - Math.pow(1 - t, 3); };
 
-  /* windUpdate() reads its on switch from C.doppler; the wind is always on. */
-  var C = { doppler: true };
-
-  /* ---------- doppler wind (own tiny layer over MOSound's context) ---------- */
-  var W = { built: false };
-  function windBuild() {
-    try {
-      var MS = window.MOSound;
-      if (!MS) return;
-      var ctx = MS.ctx;
-      if (!ctx) return;
-      var len = ctx.sampleRate * 2;
-      var buf = ctx.createBuffer(1, len, ctx.sampleRate);
-      var d = buf.getChannelData(0);
-      for (var i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
-      W.src = ctx.createBufferSource(); W.src.buffer = buf; W.src.loop = true;
-      W.bp = ctx.createBiquadFilter(); W.bp.type = "bandpass"; W.bp.frequency.value = 420; W.bp.Q.value = 0.85;
-      W.lp = ctx.createBiquadFilter(); W.lp.type = "lowpass"; W.lp.frequency.value = 3400;
-      W.g = ctx.createGain(); W.g.gain.value = 0;
-      W.src.connect(W.bp); W.bp.connect(W.lp); W.lp.connect(W.g); W.g.connect(ctx.destination);
-      W.src.start();
-      // low body that BENDS with velocity — the felt doppler
-      W.sub = ctx.createOscillator(); W.sub.type = "sine"; W.sub.frequency.value = 49;
-      W.subG = ctx.createGain(); W.subG.gain.value = 0;
-      W.sub.connect(W.subG); W.subG.connect(ctx.destination);
-      W.sub.start();
-      W.ctx = ctx;
-      W.built = true;
-    } catch (e) {}
-  }
-  function windUpdate(surge, C) {
-    var MS = window.MOSound;
-    var on = MS && !MS.isMuted() && C.doppler && !reduceMotion;
-    if (on && !W.built) windBuild();
-    if (!W.built) return;
-    try {
-      var t = W.ctx.currentTime;
-      var s = clamp01(surge);
-      var vol = MS && MS.getVolume ? MS.getVolume() : 0.5;
-      // deliberately quiet — the transit swoosh is a whisper, not a wash
-      W.g.gain.setTargetAtTime(on ? Math.pow(s, 1.6) * 0.045 * vol : 0, t, 0.09);
-      W.bp.frequency.setTargetAtTime(320 + s * 2100, t, 0.11);
-      W.src.playbackRate.setTargetAtTime(0.72 + s * 0.9, t, 0.12);
-      W.subG.gain.setTargetAtTime(on ? Math.pow(s, 2) * 0.016 * vol : 0, t, 0.12);
-      W.sub.frequency.setTargetAtTime(49 * (1 + s * 0.22), t, 0.1);
-    } catch (e) {}
-  }
-
-  /* seam crossings — the carrier field acknowledges departures AND arrivals */
+  /* seam crossings — announce departures and arrivals to the sampled score */
   var prevSeg = "title";
   function segChanged(seg) {
     var transit = seg === "toOrigin" || seg === "toWork" || seg === "toAbout";
@@ -98,14 +50,6 @@
       (prevSeg === "toOrigin" || prevSeg === "toWork" || prevSeg === "toAbout");
     try { window.dispatchEvent(new CustomEvent("mo:seam", { detail: { seg: seg, from: prevSeg } })); } catch (e) {}
     if (!transit && !arrived) return;
-    var CF = window.CarrierField, MS = window.MOSound;
-    var ok = CF && MS && !MS.isMuted() && CF.isWoken() && CF.ctx() && CF.ctx().state === "running";
-    if (ok) {
-      try {
-        if (transit) { CF.carrierAccent(0.28); CF.scrollTrickle(110); }
-        else CF.carrierAccent(0.18);            // soft "lock" on arrival
-      } catch (e) {}
-    }
     if (window.__mo_disturb && !reduceMotion && transit) {
       window.__mo_disturb(window.innerWidth / 2, layout.vh * 0.5, 0.5);
     }
@@ -436,8 +380,6 @@
     setVar("--fl-origin", stagePresence(rO, vh), sections.origin.el);
     setVar("--fl-work", stagePresence(rW, vh), sections.work.el);
 
-    /* ── sound ── */
-    windUpdate(surgeSm, C);
   }
 
   function boot() {

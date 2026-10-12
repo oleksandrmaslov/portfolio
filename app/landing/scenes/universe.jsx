@@ -2435,7 +2435,6 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
           if (!ARR.burst && ap >= 0.42) {
             ARR.burst = true;
             if (window.__mo_disturb) window.__mo_disturb(window.innerWidth / 2, window.innerHeight * 0.52, 1.35);
-            try { if (window.CarrierField && window.CarrierField.isWoken() && window.MOSound && !window.MOSound.isMuted()) window.CarrierField.carrierAccent(1); } catch (_) {}
           }
         }
       }

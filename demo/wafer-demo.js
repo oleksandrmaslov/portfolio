@@ -98,7 +98,7 @@
 
     board = window.makeWaferBoard(THREE);
     scene.add(board.group);
-    board.onPartLand = (p) => { if (sound) sound.partLand(p.kind); emitLand(p); };
+    board.onPartLand = emitLand;
 
     raycaster = new THREE.Raycaster();
     pointerV = new THREE.Vector2();
@@ -346,11 +346,15 @@
       const reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
       /* sound — gesture-chained */
-      if (!sound) sound = window.makeWaferDemoSound();
+      if (!sound) sound = window.makeWaferDemoSound((state) => {
+        st.soundOn = state.intent;
+        emit("sound", st.soundOn);
+        emit("soundStatus", state.status);
+      });
       const saved = localStorage.getItem("mo_demo_sound");
       st.soundOn = saved == null ? true : saved === "1";
       sound.setMuted(!st.soundOn);
-      sound.setLevel((window.__waferDemoTweaks || {}).soundLevel || 0.8);
+      sound.setLevel((window.__waferDemoTweaks || {}).soundLevel ?? 0.8);
       sound.start();
 
       Object.assign(cam, { yaw: -1.85, pitch: 0.95, dist: 10.4, y: 0.05 });

@@ -14,11 +14,11 @@ const deferred = () => {
 
 // Exercise the real engine with controlled downloads, decoding, and context
 // transitions. No browser, audio playback, network, or wall-clock timers.
-function harness(t) {
+function harness(t, options = {}) {
   const requests = [], decodes = [], intervals = new Map(), timeouts = new Map();
   let timerId = 0, contextCount = 0, gains = 0, panners = 0;
   const sources = [];
-  const parameter = () => ({ value: 0, setValueAtTime() {}, linearRampToValueAtTime() {}, cancelAndHoldAtTime() {}, cancelScheduledValues() {} });
+  const parameter = () => ({ value: 0, ramps: [], setValueAtTime() {}, linearRampToValueAtTime(value,at) { this.ramps.push([value,at]); }, cancelAndHoldAtTime() {}, cancelScheduledValues() {} });
   const audioNode = () => ({
     gain: parameter(), threshold: parameter(), knee: parameter(), ratio: parameter(),
     attack: parameter(), release: parameter(), connect() {}, disconnect() {},
@@ -28,7 +28,7 @@ function harness(t) {
     constructor() { contextCount++; this.state = 'suspended'; this.currentTime = 0; this.destination = {}; }
     createGain() { gains++; return audioNode(); }
     createStereoPanner() { panners++; return {...audioNode(), pan:parameter()}; }
-    createBufferSource() { const source={...audioNode(), playbackRate:parameter(), start() {}, stop() {}};sources.push(source);return source; }
+    createBufferSource() { const source={...audioNode(), playbackRate:parameter(), start() {}, stop(at) { this.stoppedAt=at; }};sources.push(source);return source; }
     createDynamicsCompressor() { return audioNode(); }
     createAnalyser() { return audioNode(); }
     addEventListener(type, listener) { if (type === 'statechange') this.onStateChange = listener; }
@@ -50,6 +50,7 @@ function harness(t) {
     setTimeout(fn) { const id = ++timerId; timeouts.set(id, fn); return id; },
     clearTimeout(id) { timeouts.delete(id); },
     async fetch(url, { signal }) {
+      url = new URL(url);
       if (url.pathname.endsWith('/instruments.json')) return { ok: true, json: async () => manifest };
       const bytes = deferred();
       requests.push({ direction: path.basename(url.pathname, '.mp3'), signal, bytes });
@@ -58,12 +59,12 @@ function harness(t) {
       return { ok: true, arrayBuffer: () => bytes.promise };
     }
   });
-  const engine = new mockWindow.MOGenerativeField({direction:'workshop'});
+  const engine = new mockWindow.MOGenerativeField({direction:'workshop', ...options});
   t.after(() => engine.destroy());
   return {
     engine, requests, decodes, intervals, timeouts, sources, get gains(){return gains;}, get panners(){return panners;}, get contextCount() { return contextCount; },
     download(index) { requests[index].bytes.resolve(new ArrayBuffer(8)); },
-    decode(index) { decodes[index].resolve({ length: 32, numberOfChannels: 1 }); }
+    decode(index, buffer = { length: 32, numberOfChannels: 1 }) { decodes[index].resolve(buffer); }
   };
 }
 
@@ -189,4 +190,37 @@ test('meter polling does not publish React control state on every scheduler tick
   for(let i=0;i<20;i++){e.context.currentTime+=.15;e.tick();}
   assert.equal(changes,initial);
   e.stop(true);assert.ok(changes>initial);
+});
+
+
+test('demo cues can end exactly while landing notes retain their release tail', async t => {
+  const h=harness(t),e=h.engine;const starting=e.start();
+  await until(()=>h.requests.length===1);h.download(0);
+  await until(()=>h.decodes.length===1);h.decode(0);await starting;
+  const note={kind:'marimba',note:65,gain:.1,duration:.15,pan:0};
+  e.voice({...note,tail:0,attack:.0005},0);
+  assert.equal([...e.voices][0].gain.gain.ramps[0][1],.0005);
+  assert.ok(Math.abs(h.sources.at(-1).stoppedAt-.155)<1e-9);
+  e.voice(note,0);
+  assert.equal([...e.voices][1].gain.gain.ramps[0][1],.005);
+  assert.ok(Math.abs(h.sources.at(-1).stoppedAt-.435)<1e-9);
+});
+
+
+for(const cancel of [false,true]) test(`supplemental key samples ${cancel?'cancel without playback':'share the existing voice pool'}`, async t => {
+  const extraSamples={file:'http://sound.test/keys.wav',entries:[{kind:'key-down',note:62,offset:0,duration:.42}]};
+  const h=harness(t,{extraSamples}),e=h.engine,starting=e.start();
+  await until(()=>h.requests.length===1);h.download(0);
+  await until(()=>h.decodes.length===1);h.decode(0);
+  await until(()=>h.requests.length===2);h.download(1);
+  await until(()=>h.decodes.length===2);
+  if(cancel)e.stop(true);
+  const keys={length:32000,numberOfChannels:2};h.decode(1,keys);await starting;
+  assert.equal(e.running,!cancel);
+  if(cancel)assert.equal(e.bank,null);
+  else {
+    e.voice({kind:'key-down',note:62,gain:.2,duration:.3,pan:0,tail:0},0);
+    assert.equal(h.sources.at(-1).buffer,keys);
+    assert.equal(h.contextCount,1);
+  }
 });

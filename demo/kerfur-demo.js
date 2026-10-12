@@ -484,11 +484,15 @@
       body.face.setIndicator(null);
 
       const reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      if (!sound) sound = window.makeKerfurDemoSound();
+      if (!sound) sound = window.makeKerfurDemoSound((state) => {
+        st.soundOn = state.intent;
+        emit("sound", st.soundOn);
+        emit("soundStatus", state.status);
+      });
       const saved = localStorage.getItem("mo_demo_sound");
       st.soundOn = saved == null ? true : saved === "1";
       sound.setMuted(!st.soundOn);
-      sound.setLevel((window.__demoTweaks || {}).soundLevel || 0.8);
+      sound.setLevel((window.__demoTweaks || {}).soundLevel ?? 0.8);
       sound.start();
 
       Object.assign(cam, { yaw: -1.5, pitch: 0.7, dist: 9.4, y: 0 });

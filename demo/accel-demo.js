@@ -415,11 +415,15 @@
       recenter(true);
 
       const reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      if (!sound) sound = window.makeAccelDemoSound();
+      if (!sound) sound = window.makeAccelDemoSound((state) => {
+        st.soundOn = state.intent;
+        emit("sound", st.soundOn);
+        emit("soundStatus", state.status);
+      });
       const saved = localStorage.getItem("mo_demo_sound");
       st.soundOn = saved == null ? true : saved === "1";
       sound.setMuted(!st.soundOn);
-      sound.setLevel((window.__demoTweaks || {}).soundLevel || 0.8);
+      sound.setLevel((window.__demoTweaks || {}).soundLevel ?? 0.8);
       sound.start();
 
       lastT = 0;
