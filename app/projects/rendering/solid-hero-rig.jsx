@@ -100,6 +100,8 @@
   };
   // Arrival weight: the spring's peak, as a fraction of scale and in yaw.
   const OVERSHOOT = { scale: 0.01, yaw: 2 * DEG };
+  // The dock's magnetic snap: tighter in pose (the brief's ceiling is 2% and 1 degree).
+  const DOCK = { scale: 0.015, yaw: 0.8 * DEG };
   /* Wind-up: the lift off the card (scale), the tilt toward the viewer and a
      counter-rotation AGAINST the coming turn, reached in WIND.ms and unwound
      by the travel. The page's leave winds up lift and tilt; the counter-turn
@@ -604,9 +606,11 @@
         cur.match = quat ? 1 : 0;
         cur.beat = 1;   // the card's look
         matchFrom = quat;
+        if (quat && look !== 1) { docking = true; dockQ.identity(); }   // the tilt rides dockQ, the dress starts at `look`
         Object.assign(tgt, cur);
         applyToScene();
         applyMatch();
+        if (docking) cur.match = tgt.match = look;
         applyToScene();
       },
       snapToLayout(fracX, scale = 1, offY = 0, yaw = RIG.arriveYaw) {
@@ -674,6 +678,42 @@
         // the approach: as much as the size can run ahead and still only grow
         flight.approach = Math.max(0, Math.min(PATH.approach, (1 - flight.from.scale / flight.to.scale) / 8));
         solveFlight();
+      },
+      /* The reverse on the SAME engine: the magnetic dock. T is a live screen
+         target { cx, cy, vw, vh, span, quat, fov } (the card's model, from
+         __mo_universe.cardTarget). The turn is solved once here (turnMin, by
+         default the dock's 150 degrees, so the long way unless the short way
+         already turns 150) and its whole turns locked, so a card creeping
+         across the +-180 boundary cannot flip it mid-flight; retarget(T) then
+         follows the live card every frame. setFlight runs it on the same
+         eased progress, arc and bank as the forward, opening on the
+         counter-turn; at p = 1 the drawn pose IS T and the spring snaps it
+         home, while setFlight(1) keeps it on the live card. */
+      dockTo(T, opts = {}) {
+        foldSettle(); wind = null; beatMs = -1; roll = 0;
+        applyToScene();
+        const R0 = pivot.quaternion.clone();
+        docking = true; dockQ.copy(R0);
+        const y0 = T.quat && modelRoot ? yawFor(_qCard.fromArray(T.quat), RIG.arrivePitch) : RIG.arriveYaw;
+        flight = { dock: true, from: { ...cur }, to: { ...cur, beat: 1, match: 1 }, R0, R1: new THREE.Quaternion(), turnMin: opts.turnMin == null ? 150 : opts.turnMin, duration: opts.duration || 1100, windUp: false, approach: 0, yEnd0: y0, yPrev: y0, landed: false };
+        flight.total = F.turn(cur.yaw, y0, flight.turnMin);
+        this.retarget(T);
+      },
+      retarget(T) {
+        const f = flight;
+        if (!f || !f.dock) return;
+        const s = screenState(T.cx, T.cy, T.vw, T.vh, this.scaleForSpan(T.span, T.fov), T.fov);
+        Object.assign(f.to, { offX: s.offX, offY: s.offY, scale: s.scale, fov: T.fov, dist: RIG.camZ, pitch: RIG.arrivePitch });
+        let y = f.yPrev;
+        if (T.quat && modelRoot) {
+          _qCard.fromArray(T.quat);
+          const raw = yawFor(_qCard, RIG.arrivePitch);
+          y = f.yPrev + (raw - f.yPrev) - TAU * Math.round((raw - f.yPrev) / TAU);   // unwrap near the last
+          residualFor(_qCard, y, RIG.arrivePitch, f.R1);
+        } else f.R1.identity();
+        f.yPrev = y;
+        f.to.yaw = f.from.yaw + f.total + (y - f.yEnd0);
+        if (!f.landed) solveFlight();
       },
       setFlight(p, ms = 0) {
         if (!flight) return;

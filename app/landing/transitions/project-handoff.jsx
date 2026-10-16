@@ -34,11 +34,31 @@
    trajectory as their node-shell proxy. Reduced motion -> the rig appears
    at the hero layout, no travel, no turn, no spring.
 
+   REVERSE is the MAGNETIC DOCK on the same engine (rig.dockTo / retarget /
+   setFlight). The page winds the hero up (lift, tilt) and leaves at once,
+   handing over its exact screen pose; the seam keeps lifting under the boot
+   (#mo-seam-back, __mo_seamBreath) so nothing waits on a still frame; the
+   landing counter-turns, then travels the same arc with the same bank and
+   a 150-360 degree turn (the long way unless the short way turns 150) onto
+   the card's LIVE pose (__mo_universe.cardTarget), springs home with a
+   1.5% / 0.8 degree overshoot, and on impact flashes the card's frame and
+   sends one ripple through the field (__mo_disturb). A field return lands
+   on the field exactly as it was clicked (mo_node_view, moReturnView). See
+   the REVERSE effect for the phases and fallbacks.
+
    Session protocol (generic — the old mo_wafer_* keys are gone):
      mo_node_addr / mo_node_arrive / mo_node_state (rig.handoff(): yaw, spring, signature)
      mo_node_seam     WebP dataURL with alpha (stored separately — large)
      mo_node_return / mo_node_return_addr / mo_node_return_target
-     mo_node_return_origin
+     mo_node_return_origin   work | universe, written by the forward; a page
+                             with neither an arrival nor mo_node_ring drops it
+     mo_node_back     the page's screen pose { cx, cy, span, quat, fov, vw,
+                      vh, addr, t }: "<- UNIVERSE" and every pagehide
+     mo_node_seam_back  the page's last frame, "<- UNIVERSE" only
+     mo_node_ring     the ring's PREV/NEXT keep the inherited origin
+     mo_node_view     the field as a FIELD tile was clicked (__mo_universe
+                      .viewState: camera, every tile, every card model's
+                      yaw, scrollY, viewport, t, addr, the card's centre)
    ============================================================ */
 const { useState: useNH, useEffect: useNHE, useRef: useNHR } = React;
 
@@ -46,6 +66,8 @@ const { useState: useNH, useEffect: useNHE, useRef: useNHR } = React;
    way turns that much, so 180 is always the long way) and dockTurnMin (the
    reverse's) are per project through model.handoffPose. */
 const NH_DEFAULTS = { duration: 1300, turnMin: 180, dockTurnMin: 150 };
+/* The dock: travel (drawn ms), the budgets of its waits, and the failsafe. */
+const NH_DOCK = { ms: 1100, seam: 4000, acquire: 1500, model: 700, park: 2500, contact: 600 };
 /* The field's reaction to a lift, on the travel's progress p: the veil dims
    it (most of it while the model lifts, the rest as it lands, so the seam is
    the page's own void) and __mo_lift racks the Universe's focus off the
@@ -74,8 +96,13 @@ const NH_SEAM_MAX = 1000;
 const NH_NAV_STUCK = 4000;
 
 function nhClearStale() {
-  for (const k of ["mo_node_arrive", "mo_node_yaw", "mo_node_return", "mo_node_return_addr", "mo_node_return_target"]) sessionStorage.removeItem(k);
+  for (const k of ["mo_node_arrive", "mo_node_state", "mo_node_return", "mo_node_return_addr", "mo_node_return_target", "mo_node_back", "mo_node_seam_back", "mo_node_view"]) sessionStorage.removeItem(k);
 }
+function nhDropSeamBack() {
+  const seam = document.getElementById("mo-seam-back");
+  if (seam) seam.remove();
+}
+
 /* Where a return docks: COMPUTED, never restored. The reel stop when the
    node is featured and the visitor came from the reel; otherwise the
    greeting slot in the field (universe.jsx driftHome), which is also where
@@ -90,6 +117,8 @@ window.moReturnDest = (ret) => {
   return ret.dest;
 };
 
+
+const NH_SKIP = ["wheel", "touchstart", "keydown", "pointerdown"];
 
 function nhHasPendingReturn() {
   try { return sessionStorage.getItem("mo_node_return") === "1"; }
@@ -202,7 +231,6 @@ function NodeHandoff() {
   }, []);
 
   useNHE(() => {
-    if (returningRef.current) return;
     const firstProject = () => (window.MO_PROJECTS || []).find((project) => project.universe !== false && project.file);
     const prime = () => {
       const project = firstProject();
@@ -446,22 +474,178 @@ function NodeHandoff() {
     return () => { window.removeEventListener("mo:nodeFlight", onFly); };
   }, [mode]);
 
-  /* ---------- REVERSE: returning from a project page ---------- */
-  useNHE(() => {
-    if (!returningRef.current) return;
-    sessionStorage.removeItem("mo_node_return");
-    const addr = sessionStorage.getItem("mo_node_return_addr") || "";
-    const returnTarget = sessionStorage.getItem("mo_node_return_target") || "work";
-    sessionStorage.removeItem("mo_node_return_target");
-    sessionStorage.removeItem("mo_node_return_addr");
-    const project = window.MO_PROJECT_BY_ADDR && window.MO_PROJECT_BY_ADDR[addr];
-    if (!project) {
+  /* ---------- REVERSE: the magnetic dock, project page → its card ----------
+     ONE gesture on the forward's engine. Phases, one rAF loop:
+       SEAM     the rig starts on the page's record (startFromScreen in the
+                hero's dress) under #mo-seam-back, keeping the seam's slow
+                lift (breathe); 2 painted frames drop it
+       ACQUIRE  wait for __mo_universe.cardTarget(addr) to be on screen (and
+                its model in, up to NH_DOCK.model), still lifting
+       TRAVEL   rig.dockTo: the counter-turn, then one eased progress along
+                the arc with the bank and the turn (solved once and locked),
+                retargeted to the LIVE card every frame; the Universe and
+                the veil open from p = 0.6 and its focus racks back in
+       IMPACT   p = 1: the card's frame flashes (mo:dock-contact) and one
+                ripple runs through the field at the card (__mo_disturb)
+       PARK     the spring snaps it home while it tracks the card; wait for
+                the card's model to be in and the target still
+       HANDOVER unlift (mo:handoff-lift null); the rig hides once the card
+                has drawn its model twice. The rig is KEPT for the next
+                forward flight.
+     Fallback ladder: 1 park (≤ NH_DOCK.park), 2 a 250 ms fade over the card
+     (no model, or the budget ran out), 3 reduced motion and 4 no target /
+     no tile: the 700 ms .wf--dissolve at the computed scroll, 5 input, the
+     menu or the failsafe timer: jump to the end state.
+     breathe(now): the seam's lift (index.html, __mo_seamBreath) carried on
+     by the rig until the travel starts; null when there is no seam. */
+  const dockHome = (rig, project, dest, seamHold, breathe = null) => {
+    const addr = project.addr;
+    const hp = Object.assign({}, NH_DEFAULTS, (project.model && project.model.handoffPose) || {});
+    const S = window.moFlight.SETTLE;
+    const mount = mountRef.current, wf = mount && mount.parentNode;
+    if (mount) { mount.style.transition = "none"; mount.style.opacity = ""; }
+    nhVeilEl("", "");   // a frozen forward (bfcache) left it driven inline
+    nhLift(1);          // the field comes back into focus as it opens
+    let phase = seamHold ? "seam" : "acquire";
+    let last = performance.now(), phaseAt = last, painted = 0, clock = null, opened = false, done = false;
+    const lift = (a) => window.dispatchEvent(new CustomEvent("mo:handoff-lift", { detail: { addr: a } }));
+    const aim = (T) => ({ cx: T.cx, cy: T.cy, vw: window.innerWidth, vh: window.innerHeight, span: T.span, quat: T.quat, fov: T.fov });
+    const cardTarget = () => { const u = window.__mo_universe; return u && u.cardTarget ? u.cardTarget(addr) : null; };
+    const open = (ms) => {
+      if (opened) return;
+      opened = true; fadeUniverse(1, ms);
+      if (wf) wf.classList.add("wf--open");
+      document.body.classList.remove("wf-lift");
+    };
+
+    const finish = () => {
+      if (done) return;
+      done = true;
+      cancelAnimationFrame(rafRef.current);
+      clearTimeout(failsafe);
+      for (const t of NH_SKIP) window.removeEventListener(t, skip, true);
+      window.removeEventListener("mo:menu", skip);
+      nhDropSeamBack();
+      lift(null);
+      nhLift(0);
+      if (mount) { mount.style.transition = "none"; mount.style.opacity = "0"; }   // same callback as the rig's last frame
+      if (!opened) fadeUniverse(1, 0);
+      document.body.classList.remove("wf-lift");
+      if (wf) wf.classList.remove("wf--open", "wf--dissolve");
+      document.body.classList.remove("wf-flying");
       returningRef.current = false;
       nhClearStale();
+      sessionStorage.removeItem("mo_node_seam");
+      window.__mo_return = null;
+      prepRef.current = { addr, promise: Promise.resolve(rig.ready) };   // warm for the next forward flight
+      setHolding(false);
       setMode("idle");
-      return;
-    }
-    const hp = Object.assign({}, NH_DEFAULTS, (project.model && project.model.handoffPose) || {});
+      setTimeout(() => { if (mount && !returningRef.current && modeRef.current === "idle") { mount.style.opacity = ""; mount.style.transition = ""; } }, 120);
+    };
+    // rung 3 and 4: the field comes back under a fading rig, at the computed scroll
+    const dissolve = () => {
+      phase = "out";
+      nhDropSeamBack();
+      lift(null);
+      nhLift(0);
+      opened = true;
+      fadeUniverse(1, 700);
+      document.body.classList.remove("wf-lift");
+      if (wf) wf.classList.add("wf--dissolve");
+      setTimeout(finish, 760);
+    };
+    // rung 2: land on the card, then fade the rig while the card brings its own model in
+    const fadeOut = () => {
+      phase = "out";
+      lift(null);
+      open(250);
+      if (mount) { mount.style.transition = "opacity 250ms cubic-bezier(0.16,1,0.3,1)"; mount.style.opacity = "0"; }
+      setTimeout(finish, 260);
+    };
+    // rung 5: input, the menu (it re-hosts the Universe canvas) or a stalled loop
+    const skip = () => finish();
+    for (const t of NH_SKIP) window.addEventListener(t, skip, { capture: true, passive: true });
+    window.addEventListener("mo:menu", skip);
+    const failsafe = setTimeout(finish, NH_DOCK.seam + NH_DOCK.acquire + NH_DOCK.ms + NH_DOCK.park + 1000);
+
+    const loop = (now) => {
+      rafRef.current = 0;
+      if (done || phase === "out") return;
+      const dt = now - last; last = now;
+      const T = phase === "seam" ? null : cardTarget();
+      if (breathe && (phase === "seam" || phase === "acquire")) breathe(now);
+      if (phase === "acquire") {
+        // Prefer the card's model (its pose solves the turn) for up to
+        // NH_DOCK.model; a card still loading after that is flown at as its
+        // quad and the model is picked up live in flight.
+        if (T && T.resolvable && (T.isModel || T.ready || now - phaseAt > NH_DOCK.model)) {
+          rig.dockTo(aim(T), { turnMin: hp.dockTurnMin, duration: NH_DOCK.ms });
+          clock = window.moFlight.clock(NH_DOCK.ms);
+          phase = "travel"; phaseAt = now;
+        } else if (now - phaseAt > NH_DOCK.acquire) { dissolve(); return; }
+      } else if (phase !== "seam") {
+        if (T && T.resolvable) rig.retarget(aim(T));
+        if (phase === "travel") {
+          const p = clock.tick(dt);
+          rig.setFlight(p, clock.ms);
+          if (p >= 0.6) open(420);
+          nhLift(1 - nhSmooth(0.6, 1, p));
+          if (p >= 1) {
+            // IMPACT: the frame flashes, one ripple runs through the field at the card
+            phase = "park"; phaseAt = now;
+            window.dispatchEvent(new CustomEvent("mo:dock-contact", { detail: { addr } }));
+            if (T && T.resolvable && window.__mo_disturb) window.__mo_disturb(T.cx, T.cy, 0.75);
+          }
+        } else rig.setFlight(1);
+      }
+      rig.update(dt);
+      rig.render();
+      if (phase === "seam") {
+        if (rig.ready) painted++;
+        if (painted >= 2) {
+          nhDropSeamBack();   // the same frame: a fade would only ghost it
+          if (NH_REDUCED || dest === "none") { dissolve(); return; }
+          phase = "acquire"; phaseAt = now;
+        } else if (now - phaseAt > NH_DOCK.seam) { dissolve(); return; }
+      } else if (phase === "park") {
+        const home = rig.settleMs >= S.BACK;
+        if (home && T && T.isModel && T.ready && T.stable) {
+          phase = "handover"; phaseAt = now;
+          lift(null);
+        } else if ((home && T && !T.isModel && T.ready) || now - phaseAt > NH_DOCK.park) { fadeOut(); return; }
+      } else if (phase === "handover") {
+        if ((T && T.drawn >= 2) || now - phaseAt > NH_DOCK.contact) { finish(); return; }
+      }
+      rafRef.current = requestAnimationFrame(loop);
+    };
+    rafRef.current = requestAnimationFrame(loop);
+  };
+
+  /* A fresh load: "<- UNIVERSE", or Back without bfcache (index.html's
+     inline script turns a fresh page record into a return). */
+  useNHE(() => {
+    if (!returningRef.current) return;
+    const ss = sessionStorage;
+    const ret = window.__mo_return || (window.__mo_return = { addr: ss.getItem("mo_node_return_addr") || "", target: ss.getItem("mo_node_return_target") || "universe", rec: null });
+    for (const k of ["mo_node_return", "mo_node_return_addr", "mo_node_return_target"]) ss.removeItem(k);
+    const project = window.MO_PROJECT_BY_ADDR && window.MO_PROJECT_BY_ADDR[ret.addr];
+    const bail = () => {
+      nhDropSeamBack();
+      returningRef.current = false;
+      window.__mo_return = null;
+      fadeUniverse(1, 0);
+      document.body.classList.remove("wf-flying");
+      nhClearStale();
+      nhLift(0);
+      setMode("idle");
+    };
+    if (!project) { bail(); return; }
+    const dest = window.moReturnDest(ret);
+    // The scroll is set at commit, under the seam: computed, or the clicked
+    // field's own (moReturnView, which the Universe restores at mount).
+    const view = dest === "field" ? window.moReturnView(ret) : null;
+    const y = dest === "reel" ? window.moReelStopY(project.addr) : view ? view.scrollY : 0;
+    window.scrollTo(0, y || 0);
     setHud({ addr: project.addr, name: project.name.toUpperCase() });
     setHolding(false);
     setMode("return");
@@ -470,87 +654,27 @@ function NodeHandoff() {
 
     requestAnimationFrame(() => {
       const rig = buildRig(project);
-      if (!rig) {
-        returningRef.current = false;
-        fadeUniverse(1, 600);
-        document.body.classList.remove("wf-flying");
-        nhClearStale();
-        setMode("idle");
-        return;
+      if (!rig) { bail(); return; }
+      const rec = ret.rec && ret.rec.addr === project.addr ? ret.rec : null;
+      const vw = window.innerWidth, vh = window.innerHeight;
+      let breathe = null;
+      if (rec) {
+        // The page's pose exactly, in the hero's dress (look 0), times the
+        // seam's lift so far: index.html runs it as a WAAPI scale about the
+        // hero's centre (smoothstep), and the rig carries it on.
+        const place = (k) => rig.startFromScreen(rec.cx * vw / (rec.vw || vw), rec.cy * vh / (rec.vh || vh), vw, vh, rig.scaleForSpan(rec.span * k, rec.fov), rec.quat, rec.fov, 0);
+        const sb = window.__mo_seamBreath;
+        if (sb && !NH_REDUCED) {
+          const t0 = sb.anim && sb.anim.startTime != null ? sb.anim.startTime : sb.t0;
+          breathe = (now) => { const x = Math.max(0, Math.min(1, (now - t0) / sb.ms)); place(1 + sb.lift * x * x * (3 - 2 * x)); };
+          breathe(performance.now());
+        } else place(1);
+      } else {
+        // No record (the hero was not drawn): the forward's own end pose.
+        const L = window.moHeroLayout(project.addr, vw);
+        rig.snapToLayout(L.fracX, L.scale, L.offY);
       }
-      const seamYaw = parseFloat(sessionStorage.getItem("mo_node_yaw"));
-      rig.snapHandoff();
-      if (isFinite(seamYaw)) rig.setYaw(seamYaw);
-
-      let last = performance.now();
-      const HOLD = NH_REDUCED ? 240 : 620;
-      let dissolved = false;
-      const dissolve = () => {
-        if (dissolved) return; dissolved = true;
-        fadeUniverse(1, 700);
-        const el = document.querySelector(".wf");
-        if (el) el.classList.add("wf--dissolve");
-        // land back where the user left from
-        const featIdx = (window.MO_FEATURED_ADDRS || []).indexOf(project.addr);
-        if (returnTarget === "work" && featIdx >= 0) {
-          const work = document.getElementById("work");
-          if (work) {
-            // scroll to the exact reel stop of this card (mirror of work.jsx jumpToStop)
-            const N = (window.MO_FEATURED_ADDRS || []).length;
-            const STOPS = N + 2, PADS = 0.6, TOTAL_V = STOPS + PADS;
-            const total = work.offsetHeight - window.innerHeight;
-            const padN = PADS / TOTAL_V;
-            const target = padN + ((featIdx + 1) / (STOPS - 1)) * (1 - 2 * padN);
-            window.scrollTo({ top: work.offsetTop + target * total, behavior: "auto" });
-          }
-        } else if (returnTarget === "work") {
-          const work = document.getElementById("work");
-          if (work) window.scrollTo({ top: work.getBoundingClientRect().top + window.scrollY, behavior: "auto" });
-        } else {
-          window.scrollTo({ top: 0, behavior: "auto" });           // universe / field
-        }
-        setTimeout(() => {
-          document.body.classList.remove("wf-flying");
-          cancelAnimationFrame(rafRef.current);
-          if (rigRef.current) { try { rigRef.current.dispose(); } catch (_) {} rigRef.current = null; }
-          const m = mountRef.current; if (m) { while (m.firstChild) m.removeChild(m.firstChild); }
-          if (el) el.classList.remove("wf--dissolve");
-          returningRef.current = false;
-          nhClearStale();
-          sessionStorage.removeItem("mo_node_seam");
-          setMode("idle");
-        }, 760);
-      };
-      /* HOLD is a MINIMUM, not a schedule. The forward flight already waits for
-         the model to paint before it releases; the return leg used to dissolve
-         on a flat timer, so on a cold landing boot - which is exactly what a
-         return is - a heavy GLB could still be decoding when the flight ended
-         and the visitor saw the field come back with nothing flying home.
-         models/wafer_demo.glb is 802 KB with 94k triangles and KTX2 textures,
-         so it is the one that loses that race first. Hold until it has actually
-         painted a couple of frames, capped so a failed load cannot strand the
-         transition. */
-      const t0 = performance.now();
-      let painted = 0;
-      const readyToDissolve = (now) => {
-        const elapsed = now - t0;
-        if (elapsed >= HOLD + NH_HOLD_MAX) return true;   // give up waiting
-        return painted >= 2 && elapsed >= HOLD;
-      };
-      // rAF stops in a hidden tab; this guarantees the transition still ends.
-      const dissolveTimer = setTimeout(dissolve, HOLD + NH_HOLD_MAX + 400);
-      const loop = (now) => {
-        const dt = now - last; last = now;
-        if (!NH_REDUCED) rig.nudgeYaw(Math.min(50, dt) * hp.spinSpeed);
-        rig.update(dt);
-        rig.render();
-        if (rig.ready) painted++;
-        if (!dissolved && readyToDissolve(now)) { clearTimeout(dissolveTimer); dissolve(); }
-        if (!dissolved) rafRef.current = requestAnimationFrame(loop);
-        else rig.render();
-      };
-      rafRef.current = requestAnimationFrame(loop);
-      void dissolveTimer;
+      dockHome(rig, project, dest, true, breathe);
     });
   }, []);
 

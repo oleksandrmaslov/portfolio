@@ -27,6 +27,11 @@
   transition: opacity 460ms var(--e-out);
 }
 .wf--on .wf__veil { opacity: 1; }
+/* The reverse dock opens the field under the flying model from 60% of its
+   travel, so the card is up before the model lands on it. */
+.wf--on.wf--open .wf__veil { opacity: 0; }
+.wf--on.wf--open .wf__tag { animation: wfTagOut 300ms var(--e-out) both; }
+@keyframes wfTagOut { from { opacity: 1; } to { opacity: 0; } }
 .wf__mount { position: absolute; inset: 0; opacity: 1; transition: opacity 160ms var(--e-out); }
 /* The forward lift: the page's own content steps back at once so the model
    separates from the field, which the flight dims (the veil, driven inline
