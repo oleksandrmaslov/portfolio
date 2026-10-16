@@ -29,7 +29,7 @@
       short: "Ultrathin wireless split keyboard",
       tags: ["Hardware", "ZMK", "Zephyr", "Product Design"],
       model: mdl({
-        ready: true, src: "models/wafer_demo.glb",
+        ready: true, src: "models/wafer.glb",
         rigFit: 4.0,   // matches this project's page hero
         rigPose: { x: -0.92, y: 0, z: 0 },
         menuPose: { x: -0.28, y: 0.08, z: -0.04 },

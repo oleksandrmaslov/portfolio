@@ -18,7 +18,7 @@ const PROJECT_DATA = {
     place: "Munich, DE",
     role: "Product design · PCB · firmware · manufacturing",
     stack: ["ZMK", "Zephyr 4.1", "KiCad", "Ergogen", "Fusion 360", "ISP1807", "nPM1300"],
-    model: "models/wafer_demo.glb",
+    model: "models/wafer.glb",
     metrics: [
       { value: "4-8", unit: "mm enclosure" },
       { value: "36",  unit: "keys" },

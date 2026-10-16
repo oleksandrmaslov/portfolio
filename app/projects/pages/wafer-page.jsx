@@ -288,7 +288,7 @@ function WaferProjectApp() {
   useWaferPageEffect(() => {
     document.title = "Wafer — Maslov Oleksandr";
     const mount = stageRef.current;
-    const rig = window.makeWaferRig(mount, { model: "models/wafer_demo.glb" });
+    const rig = window.makeWaferRig(mount, { model: (window.PROJECT_DATA && window.PROJECT_DATA["0x01"] || {}).model });
     rigRef.current = rig;
     window.__waferRig = rig;
     if (!rig) { setReady(true); return; }

@@ -49,7 +49,7 @@
   window.makeWaferRig = function (mount, opts = {}) {
     const THREE = window.THREE;
     if (!THREE || !mount) return null;
-    const initialModelUrl = opts.model || "models/wafer_demo.glb";
+    const initialModelUrl = opts.model || null;
     const initialPose = opts.pose || RIG.pose;
 
     const sz = () => ({ w: mount.clientWidth || 1, h: mount.clientHeight || 1 });
