@@ -51,6 +51,55 @@
     return Object.assign({}, HERO_LAYOUT[key], over[key]);
   };
 
+  /* ---- THE FLIGHT ENGINE — one definition for both directions ----
+     Designed motion, not a tween to be simplified: one eased progress
+     carries position (along an arc), size, lens, look, a bank and the turn;
+     the turn is solved to land exactly; a closed-form spring carries the
+     arrival's weight and crosses the page swap as state (ms, amplitudes), so
+     the page continues the motion the landing started.
+       clock(ms)            drawn-time progress: each frame counts at most
+                            50 ms, so a stalled frame cannot teleport
+       ease(t, m)           in-out power EASE_K: a fast middle (peak speed
+                            EASE_K times the mean) and long soft ends; m > 0
+                            bends its last stretch to end at slope m, which
+                            hands velocity to the spring, and stays monotonic
+       turn(from, to, min)  the signed yaw that lands exactly on `to`, the
+                            LONG way round unless the short way already turns
+                            `min` degrees: the showcase turn
+       settle(ms)           the spring's offset, peak 1 at PEAK ms, back at
+                            BACK ms, 0 from END ms
+       SLOPE                settle's start velocity per ms (unit peak) */
+  const TAU = Math.PI * 2, DEG = Math.PI / 180;
+  const SETTLE = (() => {
+    const BACK = 300, wd = Math.PI / BACK, zeta = 0.6;   // back on its rest at 300 ms; the next lobe is 9.5% of the first
+    const sigma = wd * zeta / Math.sqrt(1 - zeta * zeta);
+    const PEAK = Math.atan(wd / sigma) / wd;
+    const F = Math.exp(-sigma * PEAK) * Math.sin(wd * PEAK);
+    return { BACK, END: 2 * BACK, PEAK, SLOPE: wd / F, f: (ms) => (ms <= 0 || ms >= 2 * BACK ? 0 : Math.exp(-sigma * ms) * Math.sin(wd * ms) / F) };
+  })();
+  // Peak speed EASE_K times the mean, at mid-travel (cubic-bezier(.83,0,.17,1) is ~5): where the edge-on turn passes.
+  const EASE_K = 3.5;
+  const power = (t) => (t < 0.5 ? Math.pow(2 * t, EASE_K) / 2 : 1 - Math.pow(2 - 2 * t, EASE_K) / 2);
+  window.moFlight = {
+    clock(duration) {
+      let ms = 0;
+      return { tick(dt) { ms += Math.min(50, Math.max(0, dt)); return this.p; }, get p() { return Math.min(1, ms / duration); }, get ms() { return ms; } };
+    },
+    // P + m·(t − P)·t²: slope m at the end, 0 at the start, monotonic for m <= 1.2 (flight.test.cjs)
+    ease(t, m = 0) { t = Math.max(0, Math.min(1, t)); const P = power(t); return P + m * (t - P) * t * t; },
+    /* The short way when it already turns `min` degrees, otherwise the long
+       way: 360 minus the short delta. min 180 (the forward) is always the
+       long way, so the turn falls in [180, 360]; min 150 (the dock) in
+       [150, 360]. Either way it lands exactly on `to`. */
+    turn(from, to, min = 180) {
+      let d = to - from; d -= TAU * Math.round(d / TAU);
+      return Math.abs(d) >= min * DEG - 1e-9 ? d : d - (d < 0 ? -TAU : TAU);
+    },
+    settle: SETTLE.f,
+    SETTLE,
+  };
+  // Arrival weight: the spring's peak, as a fraction of scale and in yaw.
+  const OVERSHOOT = { scale: 0.01, yaw: 2 * DEG };
   const lerp = (a, b, t) => a + (b - a) * t;
   const damp = (cur, tgt, rate, dt) => lerp(cur, tgt, 1 - Math.pow(1 - rate, dt / 16));
 
