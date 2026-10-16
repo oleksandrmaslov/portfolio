@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Wafer — object study</title>
+  <link rel="icon" href="data:," />
+  <!-- resolve like a root route: the shared demo audio fetches its samples relative to the document -->
+  <base href="../" />
+  <!-- Lab surface: excluded from the Pages deploy. Stage: ?stage=light (default) | ?stage=dark -->
+  <script>
+    document.documentElement.dataset.stage =
+      new URLSearchParams(location.search).get("stage") === "dark" ? "dark" : "light";
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500&display=swap" />
+  <style>
+    html, body { margin: 0; height: 100%; overflow: hidden; background: #f5f5f7; }
+    html[data-stage="dark"], html[data-stage="dark"] body { background: #0a0b0d; }
+    canvas {
+      position: fixed; inset: 0; width: 100%; height: 100%; display: block;
+      touch-action: none; cursor: grab; outline: none;
+      opacity: 0; transition: opacity 1.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    canvas.is-ready { opacity: 1; }
+    canvas.is-dragging { cursor: grabbing; }
+    canvas.is-key { cursor: pointer; }
+    /* dimension marks: a 1 px line draws itself, the end ticks land, then the caption */
+    #marks { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+    #marks .mark { opacity: 0; transition: opacity 0.3s ease; }
+    #marks .mark.on { opacity: 1; }
+    #marks line { stroke: var(--mark); stroke-width: 1; stroke-linecap: round; }
+    #marks .dim { stroke-dasharray: var(--len); stroke-dashoffset: var(--len); transition: stroke-dashoffset 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+    #marks .mark.on .dim { stroke-dashoffset: 0; }
+    #marks .tick { opacity: 0; transition: opacity 0.2s ease 0.45s; }
+    #marks .mark.on .tick { opacity: 1; }
+    #marks text { fill: var(--mark); font: 500 12px/1 system-ui, -apple-system, "SF Pro Text", sans-serif; letter-spacing: -0.01em; opacity: 0; transition: opacity 0.35s ease 0.55s; }
+    #marks .mark.on text { opacity: 1; }
+    #marks .compass { opacity: 0; transition: opacity 0.16s ease; }
+    #marks .compass.on { opacity: 1; transition-delay: 0.12s; }
+    #marks .compass line { stroke-dasharray: 2 3; }
+    canvas.is-grip { cursor: ew-resize; }
+    canvas.is-gripping { cursor: grabbing; }
+    :root { --mark: #1d1d1f; --ink: #1d1d1f; --ink2: #6e6e73; --rule: rgba(0, 0, 0, 0.16); --tick: #86868b; --glass: rgba(245, 245, 247, 0.72); }
+    html[data-stage="dark"] { --mark: #f5f5f7; --ink: #f5f5f7; --ink2: #a1a1a6; --rule: rgba(255, 255, 255, 0.22); --tick: #6e6e73; --glass: rgba(10, 11, 13, 0.62); }
+    @media (prefers-reduced-transparency: reduce) {
+      :root { --glass: #f5f5f7; } html[data-stage="dark"] { --glass: #0a0b0d; }
+      #caption { -webkit-backdrop-filter: none; backdrop-filter: none; }
+    }
+    @media (prefers-contrast: more) {
+      :root { --ink2: #1d1d1f; --rule: rgba(0, 0, 0, 0.6); --tick: #1d1d1f; }
+      html[data-stage="dark"] { --ink2: #f5f5f7; --rule: rgba(255, 255, 255, 0.7); --tick: #f5f5f7; }
+    }
+
+    /* the caption: Apple's "Title. One sentence." — and the live region */
+    #caption {
+      position: fixed; left: 50%; bottom: 76px; width: max-content; max-width: min(36em, calc(100% - 32px)); margin: 0; padding: 7px 14px;
+      translate: -50% 0; text-align: center; border-radius: 14px;
+      background: var(--glass); -webkit-backdrop-filter: blur(20px) saturate(1.8); backdrop-filter: blur(20px) saturate(1.8);   /* legible over the object too */
+      font: 400 17px/1.35 system-ui, -apple-system, "SF Pro Text", sans-serif; letter-spacing: -0.01em;
+      color: var(--ink2); opacity: 0; transform: translateY(6px);
+      transition: opacity 0.3s ease 0.2s, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1) 0.2s;
+    }
+    #caption.on { opacity: 1; transform: none; }
+    #caption:not(.on) { pointer-events: none; }
+    #caption b { color: var(--ink); font-weight: 600; }
+    #caption a { color: inherit; text-underline-offset: 3px; }
+
+    /* the line: one hairline, a tick per place, the magnet ring as playhead */
+    #line { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); touch-action: none; user-select: none; -webkit-user-select: none; }
+    #line ol { display: flex; margin: 0; padding: 0; list-style: none; position: relative; }
+    #line ol::before { content: ""; position: absolute; left: 24px; right: 24px; top: 50%; height: 1px; background: var(--rule); }
+    #line li.more { margin-left: 28px; }
+    #line button {
+      position: relative; width: 48px; height: 48px; padding: 0; border: 0; background: none;
+      cursor: pointer; color: var(--ink2); font: 500 12px/1 system-ui, -apple-system, "SF Pro Text", sans-serif; letter-spacing: -0.01em;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #line button::before { content: ""; position: absolute; left: 50%; top: 50%; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: var(--tick); }
+    #line button span { position: absolute; left: 50%; bottom: calc(50% + 13px); transform: translateX(-50%); white-space: nowrap; opacity: 0; transition: opacity 0.2s ease; pointer-events: none; }
+    #line button:hover span, #line button:focus-visible span, #line button[aria-current] span { opacity: 1; }
+    #line button[aria-current] span { color: var(--ink); }
+    #line button:focus-visible { outline: none; }
+    #line button:focus-visible::after { content: ""; position: absolute; inset: 8px; border-radius: 10px; box-shadow: 0 0 0 2px var(--ink); }
+    #line .head {
+      position: absolute; left: 0; top: 50%; width: 14px; height: 14px; margin: -8.5px 0 0 -8.5px;
+      border: 1.5px solid var(--ink); border-radius: 50%; pointer-events: none;
+      transform: translateX(var(--x, 24px)) scaleX(var(--stretch, 1));
+    }
+    #line .head::after { content: ""; position: absolute; left: 50%; top: 50%; width: 4px; height: 4px; margin: -2px; border-radius: 50%; background: var(--ink); transform: scale(0); transition: transform 0.15s ease; }
+    #line .head.held::after { transform: scale(1); }   /* held by magnets */
+    #line.scrub, #line.scrub button { cursor: grabbing; }
+
+    #sound {
+      position: fixed; right: 22px; bottom: 22px; height: 48px; padding: 0 12px; border: 0; background: none; cursor: pointer;
+      color: var(--ink2); font: 500 12px/1 system-ui, -apple-system, "SF Pro Text", sans-serif; letter-spacing: -0.01em;
+    }
+    #sound[aria-pressed="false"] { text-decoration: line-through; text-decoration-thickness: 1px; }
+    #sound:hover { color: var(--ink); }
+    #sound:focus-visible { outline: 2px solid var(--ink); outline-offset: -6px; border-radius: 10px; }
+
+    @media (max-width: 900px) {
+      #caption { bottom: 72px; font-size: 15px; }
+      #line li.more { margin-left: 12px; }
+      #line button { width: 40px; }
+      #line ol::before { left: 20px; right: 20px; }
+      #sound { right: 4px; bottom: 76px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      #marks .dim, #marks .tick, #marks text { transition: opacity 0.2s ease; stroke-dashoffset: 0; }
+      #caption { transform: none; transition: opacity 0.15s ease; }
+    }
+    .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  </style>
+</head>
+<body>
+  <canvas id="stage" tabindex="0" role="img"
+    aria-label="Wafer, a 36-key wireless split keyboard with a black aluminium case. Drag to turn it, scroll or pinch to zoom, double-click to reset, and type on your own keyboard to press its keys."></canvas>
+  <svg id="marks" aria-hidden="true"></svg>
+  <p id="caption" aria-live="polite"></p>
+  <nav id="line" aria-label="Places" data-ui><ol></ol><i class="head" aria-hidden="true"></i></nav>
+  <button id="sound" type="button" aria-pressed="true" data-ui>Sound</button>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+  <!-- the portfolio's sampled demo audio, loaded as Wafer.html loads it (window.makeWaferDemoSound) -->
+  <script src="app/landing/audio/generative-score.js"></script>
+  <script src="app/landing/audio/sample-engine.js"></script>
+  <script src="demo/music-score.js"></script>
+  <script src="demo/sample-sound.js"></script>
+  <script src="demo/wafer-sound.js"></script>
+  <script type="module" src="lab/wafer.js"></script>
+</body>
+</html>
