@@ -1883,6 +1883,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     const INDEX_COLLAPSE_MS = 620;
 
     let menuSnapshot = null;
+    let cardTargetLast = null;   // cardTarget's previous answer, for `stable`
     const clearMenuSnapshot = () => { menuSnapshot?.remove(); menuSnapshot = null; };
     window.__mo_universe = {
       // The native dialog temporarily hosts this same canvas. Its small
@@ -1943,6 +1944,40 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         if (!m || !m.visible) return null;
         const b = tileViewportBounds(m);
         return onScreenBox(b) ? b : null;
+      },
+      /* The dock's LIVE target (project-handoff.jsx, the reverse): where the
+         card's model is drawn this frame, lifted or not, as the forward's own
+         origin shape ({ cx, cy, span, quat, fov } from modelViewportBounds,
+         so the two directions cannot disagree), plus
+           resolvable  on screen, so a flight can aim at it
+           ready       the model is in, faded up and at full opacity
+           drawn       frames the card has drawn its model whole (unlifted)
+           stable      the target held still (< 0.5 px, < 0.2 deg) 2 frames
+         With no model to read (still loading, or a node without one) it is
+         the card quad, isModel false, span 0.8 of its height; ready then
+         means there is no model coming. Called once per flight frame. */
+      cardTarget(addr) {
+        const holder = tileWires.find((o) => o.userData.isModel && o.userData.addr === addr);
+        let T = holder && holder.userData.loaded ? modelViewportBounds(addr, true) : null;
+        if (T) {
+          const u = holder.userData;
+          T.ready = u.mFade >= 1 && u.lastModelOpacity >= 0.98;
+          T.drawn = u.drawn || 0;
+        } else {
+          const m = tiles.find((t) => t.userData.project.addr === addr);
+          const b = m && m.visible ? tileViewportBounds(m) : null;
+          if (!b) { cardTargetLast = null; return null; }
+          T = { x: b.x, y: b.y, w: b.w, h: b.h, isModel: false, addr, cx: b.x + b.w / 2, cy: b.y + b.h / 2,
+            span: 0.8 * b.h / window.innerHeight, quat: null, fov: camera.fov, ready: !holder, drawn: 0 };
+        }
+        T.resolvable = onScreenBox(T);
+        const L = cardTargetLast;
+        const still = L && L.addr === addr && Math.abs(L.cx - T.cx) < 0.5 && Math.abs(L.cy - T.cy) < 0.5 &&
+          (!T.quat || !L.quat || 2 * Math.acos(Math.min(1, Math.abs(T.quat[0] * L.quat[0] + T.quat[1] * L.quat[1] + T.quat[2] * L.quat[2] + T.quat[3] * L.quat[3]))) < 0.2 * Math.PI / 180);
+        T.stillN = still ? L.stillN + 1 : 0;
+        T.stable = T.stillN >= 2;
+        cardTargetLast = T;
+        return T;
       },
       setExplore(on) {
         const next = !!on;
@@ -2070,10 +2105,12 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     const _mvbBox = new THREE.Box3();
     const _mvbScale = new THREE.Vector3();
     const _mvbQuat = new THREE.Quaternion();
+    /* ignoreLift: the dock reads a card whose model it is drawing itself, so
+       the card's copy is hidden (liftedAddr) but still placed, every frame. */
     function modelViewportBounds(addr, ignoreLift = false) {
       const holder = tileWires.find(o =>
         o.userData && o.userData.isModel && o.userData.addr === addr &&
-        o.userData.loaded && o.visible);
+        o.userData.loaded && (ignoreLift ? o.userData.lastModelOpacity > 0.02 : o.visible));
       if (!holder) return null;
       // modelBox skips glow, halos and haze, so they never size the flight.
       window.MOStudio.modelBox(THREE, holder, _mvbBox);
@@ -2397,7 +2434,11 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
 
     const onHandoffLift = (e) => { liftedAddr = (e.detail && e.detail.addr) || null; wakeUniverseLoop(); };
     window.addEventListener("mo:handoff-lift", onHandoffLift);
+    /* Only an UNCLAIMED restore (mo:page-restored) shows the cards whole. A
+       bare pageshow can land after mount on a slow load, mid-dock, and a
+       claimed bfcache restore docks the lifted card itself. */
     const onUniversePageWake = (e) => {
+      if (e.type === "mo:page-restored") liftedAddr = null;
       scheduleModelPump();
       wakeUniverseLoop();
     };
@@ -2697,6 +2738,9 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
           // The handoff lifts its copy of this model off the card: from then
           // the flight draws it, so the card must not draw a second one.
           wire.visible = modelOp > 0.02 && wire.userData.addr !== liftedAddr;
+          // cardTarget's bookkeeping: the fade-in, and frames drawn whole
+          wire.userData.mFade = mFade;
+          wire.userData.drawn = wire.visible ? (wire.userData.drawn || 0) + 1 : 0;
           if (modelOp !== wire.userData.lastModelOpacity) {
             const fadeMaterials = wire.userData.fadeMaterials || [];
             for (const material of fadeMaterials) { material.opacity = modelOp; material.userData.fade = modelOp; }
