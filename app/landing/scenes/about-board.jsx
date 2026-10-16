@@ -682,54 +682,59 @@
     }
   }
 
-  /* ---- REAL Wafer exploded view (actual part GLBs, world-aligned) ---- */
+  /* ---- REAL Wafer exploded view (models/wafer.glb, parts looked up by node name, world-aligned) ---- */
   const WAFER_H = { key:1.06, case:0.60, display:0.40, switches:0.18, usbc:-0.36, plate:-0.82, antenna:-0.62, softoff:-0.54, pcb:-0.52, mcu:-0.42 };
   const WAFER_EXPLODE = 0.30;   // how far the exploded view actually opens
-  function buildWaferReal(group, state) {
-    const load = window.loadProjectModel;
-    if (!load) { console.warn("[board3] loadProjectModel missing"); return; }
+  async function buildWaferReal(group, state) {
+    const load = window.loadProjectModel, S = window.MOStudio;
+    if (!load || !S) { console.warn("[board3] loadProjectModel/MOStudio missing"); return; }
     const files = ["case_L","case_R","plate_L","plate_R","pcb_L","pcb_R","usbc_L","usbc_R","switches_L","switches_R","mcu","display_L","display_R","antenna_L","antenna_R","softoff_L","softoff_R"];
     for (const s of ["L","R"]) { for (let r=0;r<3;r++) for (let c=0;c<5;c++) files.push(`key_${s}_r${r}c${c}`); for (let t=0;t<3;t++) files.push(`key_${s}_t${t}`); }
-    Promise.all(files.map(f => load("models/wafer_parts/"+f+".glb", THREE).then(root=>({f,root})).catch(()=>null))).then(ok => {
-      // Model requests can finish after a navigation disposed this controller.
-      // Their roots share cached geometry/materials, so dropping them is safer
-      // than disposing GPU state still owned by another consumer.
-      if (state.disposed) return;
-      ok = ok.filter(Boolean);
-      if (!ok.length) return;
-      const holder = new THREE.Group();
-      for (const {root} of ok) holder.add(root);
-      const box = new THREE.Box3().setFromObject(holder);
-      const size = new THREE.Vector3(); box.getSize(size);
-      const centre = new THREE.Vector3(); box.getCenter(centre);
-      const dims = [size.x, size.y, size.z];
-      const upI = dims.indexOf(Math.min(...dims));
-      let longI = dims.indexOf(Math.max(...dims)); if (longI === upI) longI = (upI+1)%3;
-      const ax = i => new THREE.Vector3(i===0?1:0, i===1?1:0, i===2?1:0);
-      const UPm = ax(upI), LONGm = ax(longI);
-      let capMean = 0, capN = 0;
-      for (const {f,root} of ok) { if (!f.startsWith("key_")) continue; const b=new THREE.Box3().setFromObject(root), c=new THREE.Vector3(); b.getCenter(c); capMean += c.sub(centre).dot(UPm); capN++; }
-      if (capN && capMean < 0) UPm.multiplyScalar(-1);
-      const base = dims[longI];
-      for (const {f,root} of ok) {
-        const kind = f.startsWith("key_") ? "key" : f.replace(/_[LR]$/,"");
-        const b = new THREE.Box3().setFromObject(root), c = new THREE.Vector3(); b.getCenter(c);
-        const rel = c.sub(centre);
-        const horiz = rel.clone().addScaledVector(UPm, -rel.dot(UPm));
-        const vec = new THREE.Vector3().addScaledVector(UPm, (WAFER_H[kind]||0)*base*0.35).addScaledVector(horiz, 0.4);
-        const wrap = new THREE.Group(); wrap.add(root); wrap.userData.vec = vec; holder.add(wrap);
-        state.parts.push(wrap);
-        root.traverse(o => { if (o.isMesh && o.material) { const m = o.material = o.material.clone(); m.transparent = true; if ("envMapIntensity" in m) m.envMapIntensity = 1.2; state.materials.push(m); } });
-      }
-      holder.position.copy(centre).multiplyScalar(-1);
-      const align = new THREE.Group(); align.add(holder);
-      const q = new THREE.Quaternion().setFromUnitVectors(UPm.clone(), new THREE.Vector3(0,1,0));
-      align.quaternion.copy(q);
-      const lw = LONGm.clone().applyQuaternion(q);
-      align.rotateOnWorldAxis(new THREE.Vector3(0,1,0), -Math.atan2(lw.z, lw.x));
-      align.scale.setScalar(13 / Math.max(1e-3, base));
-      group.add(align);
-    });
+    let src, pcb;
+    try { [src, pcb] = await Promise.all([load(S.WAFER_URL, THREE), S.pcbMaps(THREE)]); } catch (_) { return; }
+    // The request can finish after a navigation disposed this controller.
+    // The root shares cached geometry, so dropping it is safer than freeing
+    // GPU state still owned by another consumer.
+    if (state.disposed) return;
+    const done = S.finish(THREE, src, S.WAFER_URL, { tier: "parts", pcb });
+    src.updateMatrixWorld(true);
+    // gltfpack may insert dequantisation nodes: attach() keeps each part's world pose, add() would drop it.
+    const holder = new THREE.Group();
+    const ok = [];
+    for (const f of files) { const root = src.getObjectByName(f); if (root) ok.push({ f, root }); }
+    if (!ok.length) return;
+    for (const {root} of ok) holder.attach(root);
+    const box = new THREE.Box3().setFromObject(holder);
+    const size = new THREE.Vector3(); box.getSize(size);
+    const centre = new THREE.Vector3(); box.getCenter(centre);
+    const dims = [size.x, size.y, size.z];
+    const upI = dims.indexOf(Math.min(...dims));
+    let longI = dims.indexOf(Math.max(...dims)); if (longI === upI) longI = (upI+1)%3;
+    const ax = i => new THREE.Vector3(i===0?1:0, i===1?1:0, i===2?1:0);
+    const UPm = ax(upI), LONGm = ax(longI);
+    let capMean = 0, capN = 0;
+    for (const {f,root} of ok) { if (!f.startsWith("key_")) continue; const b=new THREE.Box3().setFromObject(root), c=new THREE.Vector3(); b.getCenter(c); capMean += c.sub(centre).dot(UPm); capN++; }
+    if (capN && capMean < 0) UPm.multiplyScalar(-1);
+    const base = dims[longI];
+    for (const {f,root} of ok) {
+      const kind = f.startsWith("key_") ? "key" : f.replace(/_[LR]$/,"");
+      const b = new THREE.Box3().setFromObject(root), c = new THREE.Vector3(); b.getCenter(c);
+      const rel = c.sub(centre);
+      const horiz = rel.clone().addScaledVector(UPm, -rel.dot(UPm));
+      const vec = new THREE.Vector3().addScaledVector(UPm, (WAFER_H[kind]||0)*base*0.35).addScaledVector(horiz, 0.4);
+      const wrap = new THREE.Group(); holder.add(wrap); wrap.attach(root); wrap.userData.vec = vec;
+      state.parts.push(wrap);
+    }
+    // The finish made these for this clone alone, so fading them touches no other consumer.
+    for (const m of done.materials) { m.transparent = true; if (state.env) m.envMap = state.env.texture; state.materials.push(m); }
+    holder.position.copy(centre).multiplyScalar(-1);
+    const align = new THREE.Group(); align.add(holder);
+    const q = new THREE.Quaternion().setFromUnitVectors(UPm.clone(), new THREE.Vector3(0,1,0));
+    align.quaternion.copy(q);
+    const lw = LONGm.clone().applyQuaternion(q);
+    align.rotateOnWorldAxis(new THREE.Vector3(0,1,0), -Math.atan2(lw.z, lw.x));
+    align.scale.setScalar(13 / Math.max(1e-3, base));
+    group.add(align);
   }
 
   function yieldBuildPhase(timeout = 180) {
@@ -775,6 +780,8 @@
       }
       if (pmrem) pmrem.dispose();
     }
+    // The Wafer's finished materials see the studio room, not the board's.
+    try { lifecycle.waferState.env = window.MOStudio.studioEnvironment(THREE, renderer, window.MOStudio.ROOM, 128); } catch (_) {}
     await yieldBuildPhase();
 
     const camera = new THREE.PerspectiveCamera(40, W / H, 0.5, 400);
@@ -955,7 +962,16 @@
       const geometries = new Set();
       const materials = new Set();
       const textures = new Set([colorTex, specTex, bumpTex]);
+      // The Wafer's geometry and textures are loader-cached or studio-shared:
+      // freeing them would make the Universe and the handoff re-upload. Only
+      // its materials are this controller's.
+      const wafer = new Set();
+      if (deviceGroup) deviceGroup.traverse((o) => wafer.add(o));
       scene.traverse((object) => {
+        if (wafer.has(object)) {
+          [].concat(object.material || []).forEach((material) => material && material.dispose && materials.add(material));
+          return;
+        }
         if (object.geometry && object.geometry.dispose) geometries.add(object.geometry);
         const objectMaterials = object.material
           ? (Array.isArray(object.material) ? object.material : [object.material])
@@ -973,6 +989,7 @@
       materials.forEach((material) => material.dispose());
       textures.forEach((texture) => texture && texture.dispose());
       if (envTarget) envTarget.dispose();
+      if (waferState.env) waferState.env.dispose();
       if (renderer.renderLists) renderer.renderLists.dispose();
       renderer.dispose();
       if (renderer.forceContextLoss) renderer.forceContextLoss();
@@ -1011,6 +1028,7 @@
       lifecycle.waferState.disposed = true;
       lifecycle.waferState.parts.length = 0;
       lifecycle.waferState.materials.length = 0;
+      if (lifecycle.waferState.env) lifecycle.waferState.env.dispose();
       mount.querySelectorAll("canvas").forEach((canvas) => {
         if (existingCanvases.has(canvas)) return;
         try {
