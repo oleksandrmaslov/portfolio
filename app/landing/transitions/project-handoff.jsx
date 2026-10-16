@@ -68,6 +68,10 @@ const NH_REDUCED = !!(window.matchMedia && window.matchMedia("(prefers-reduced-m
    on the card instead of releasing a one-frame teleport into the flight. */
 const NH_HOLD_MAX = 900;
 const NH_SEAM_MAX = 1000;
+/* A navigation that never commits (cancelled, a 204, a stop) leaves the
+   landing on the flight's last frame with the card's model lifted. pagehide
+   clears this; if it has not come by then, the landing restores itself. */
+const NH_NAV_STUCK = 4000;
 
 function nhClearStale() {
   for (const k of ["mo_node_arrive", "mo_node_yaw", "mo_node_return", "mo_node_return_addr", "mo_node_return_target"]) sessionStorage.removeItem(k);
@@ -164,6 +168,8 @@ function NodeHandoff() {
         rigRef.current = null;
       }
       prepRef.current = { addr: "", promise: null };
+      nhClearStale();
+      sessionStorage.removeItem("mo_node_seam");
       const mount = mountRef.current;
       if (mount) while (mount.firstChild) mount.removeChild(mount.firstChild);
       const wf = document.querySelector(".wf");
@@ -295,6 +301,8 @@ function NodeHandoff() {
               try { seam = rig && rig.captureFrame ? rig.captureFrame() : null; } catch (_) {}
             }
             try { if (seam) sessionStorage.setItem("mo_node_seam", seam); } catch (_) {}
+            const stuck = setTimeout(() => { if (window.__mo_restorePage) window.__mo_restorePage(); }, NH_NAV_STUCK);
+            window.addEventListener("pagehide", () => clearTimeout(stuck), { once: true });
             window.location.href = project.file;
           });
         };

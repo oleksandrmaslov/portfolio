@@ -8,12 +8,12 @@ const { useState, useEffect, useRef } = React;
    flags it had at navigation time. Clear one-way exit state before the saved
    frame is shown again; otherwise Back can restore a fully transparent page. */
 (function restorePersistedPage() {
-  window.addEventListener("pageshow", (event) => {
-    if (!event.persisted) return;
-    window.__hv_leaving = false;
-    window.__hv_exitSpin = false;   // otherwise the hero keeps spinning and never sleeps
+  /* Also called by the landing handoff when a project navigation never
+     commits: the same one-way exit state is left behind either way. */
+  window.__mo_restorePage = () => {
+    window.__hv_leaving = false;    // otherwise the stage loop never sleeps
     window.__mo_universe_pause = false;
-    document.body.classList.remove("hv-exit", "landing-exit", "wf-flying");
+    document.body.classList.remove("hv-exit", "hv-leave", "landing-exit", "wf-flying", "wf-lift");
     const universe = document.querySelector(".universeBg");
     if (universe) {
       if (universe.__moFadeT) clearTimeout(universe.__moFadeT);
@@ -23,6 +23,12 @@ const { useState, useEffect, useRef } = React;
       universe.style.transition = "";
     }
     window.dispatchEvent(new CustomEvent("mo:page-restored"));
+  };
+  window.addEventListener("pageshow", (event) => {
+    if (!event.persisted) return;
+    const offer = new CustomEvent("mo:bf-reverse", { cancelable: true });
+    window.dispatchEvent(offer);
+    if (!offer.defaultPrevented) { window.__mo_restorePage(); return; }
   });
 })();
 
