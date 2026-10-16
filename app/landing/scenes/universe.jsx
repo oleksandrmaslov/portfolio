@@ -356,32 +356,15 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     scene.fog = new THREE.Fog(0x04060d, 22, 38);
 
     const camera = new THREE.PerspectiveCamera(58, w / h, 0.3, 200);
-    scene.add(new THREE.AmbientLight(0xffffff, 0.9));
-    // Card models use real PBR materials. Unlike lighting-independent matcaps,
-    // real metal renders pure black without an environment map and key light. Add
-    // a cheap one-time PMREM environment + a key/rim light so they read.
-    let _pmrem = null, _roomEnvironment = null, _environmentTarget = null;
+    // The card models are finished by MOStudio and lit by its field room plus
+    // one flat ambient. Every non-model material in this scene is unlit, so
+    // this reaches model pixels only.
+    scene.add(new THREE.AmbientLight(0xffffff, window.MOStudio.FIELD_AMBIENT));
+    let _environmentTarget = null;
     try {
-      _pmrem = new THREE.PMREMGenerator(renderer);
-      _roomEnvironment = new THREE.RoomEnvironment();
-      _environmentTarget = _pmrem.fromScene(_roomEnvironment, 0.06);
+      _environmentTarget = window.MOStudio.studioEnvironment(THREE, renderer, window.MOStudio.FIELD_ROOM, 128);
       scene.environment = _environmentTarget.texture;
     } catch (_) {}
-    finally {
-      if (_roomEnvironment) {
-        if (_roomEnvironment.dispose) _roomEnvironment.dispose();
-        else _roomEnvironment.traverse((object) => {
-          if (object.geometry && object.geometry.dispose) object.geometry.dispose();
-          const mats = object.material ? (Array.isArray(object.material) ? object.material : [object.material]) : [];
-          mats.forEach((material) => material && material.dispose && material.dispose());
-        });
-      }
-      if (_pmrem) _pmrem.dispose();
-    }
-    { const _k = new THREE.DirectionalLight(0xffffff, 1.6); _k.position.set(2.4, 3.2, 2.6); scene.add(_k);
-      // Range scales with TILE_BOX: at 26 this reached the whole field when the
-      // cards sat 7-11u out, and left the far half of a 11-17u spread unlit.
-      const _r = new THREE.PointLight(0x00f0c8, 1.6, 36); _r.position.set(-3, 1.6, -2); scene.add(_r); }
 
     /* ============================================================
        UNIVERSE RENDERING PATH — post-processing composer
@@ -923,7 +906,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       const tex = makeTileTexture(p, THREE);
       const mat = new THREE.MeshBasicMaterial({
         map: tex, transparent: true, opacity: 1.0,
-        side: THREE.DoubleSide, depthWrite: false,
+        side: THREE.DoubleSide, depthWrite: false, forceSinglePass: true,
       });
       const geo = new THREE.PlaneGeometry(TILE_W, TILE_H);
       const mesh = new THREE.Mesh(geo, mat);
@@ -966,16 +949,16 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
           // Fit so longest edge = 2 world units; the frame loop then sets the
           // outer holder scale (≈0.85 idle, 1.10 on focus) so the model reads
           // as the card's hero, not a small inset.
+          // Finish before fitting: the studio may merge or add parts (glow,
+          // halos) that the fit must not see twice.
+          const done = window.MOStudio.finish(THREE, root, p.model, { tier: "field" });
           window.fitModelToSize(root, THREE, p.modelFit || 2);
-          // Keep each model's real materials; material-less
-          // models (e.g. the flashlight) get a solid house material instead.
-          if (p.assignMaterial && window.applySolidMaterials) window.applySolidMaterials(root, THREE, p.assignMaterial);
-          else if (window.tuneRealMaterials) window.tuneRealMaterials(root, THREE, { envMapIntensity: 2.2 });
-          // card overlays fade with distance / wrap → materials must be transparent
+          // card overlays fade with distance / wrap → materials must be
+          // transparent, sprites (halos) included
           const fadeMaterials = [];
           const seenFadeMaterials = new Set();
           root.traverse((o) => {
-            if (!o.isMesh || !o.material) return;
+            if (!o.material) return;
             (Array.isArray(o.material) ? o.material : [o.material]).forEach((m) => {
               m.transparent = true;
               if (!seenFadeMaterials.has(m)) {
@@ -996,8 +979,19 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
           poseGroup.add(root);
           holder.add(poseGroup);
           holder.visible = true;
+          // Link the programs now rather than on the card's first frame in view
+          // (compile walks visible objects only, so this follows visible = true).
+          // Compile against the composer's target: a program built for the
+          // canvas (sRGB out, tone-mapped) is a second program the field never draws.
+          try {
+            const previousTarget = renderer.getRenderTarget();
+            if (composer) renderer.setRenderTarget(composer.readBuffer);
+            renderer.compile(holder, camera, scene);
+            renderer.setRenderTarget(previousTarget);
+          } catch (_) {}
           holder.userData.loaded = true;
           holder.userData.fadeMaterials = fadeMaterials;
+          holder.userData.ownMaterials = done.materials;
           holder.userData.lastModelOpacity = NaN;
           holder.userData.loadedAt = performance.now();   // drives a soft fade-in
           }),
@@ -2059,7 +2053,8 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         o.userData && o.userData.isModel && o.userData.addr === addr &&
         o.userData.loaded && o.visible);
       if (!holder) return null;
-      _mvbBox.setFromObject(holder);
+      // modelBox skips glow, halos and haze, so they never size the flight.
+      window.MOStudio.modelBox(THREE, holder, _mvbBox);
       if (_mvbBox.isEmpty()) return null;
       const rect = mountRect;
       camera.getWorldDirection(camDirTmp);
@@ -2658,7 +2653,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
           wire.visible = modelOp > 0.02;
           if (modelOp !== wire.userData.lastModelOpacity) {
             const fadeMaterials = wire.userData.fadeMaterials || [];
-            for (const material of fadeMaterials) material.opacity = modelOp;
+            for (const material of fadeMaterials) { material.opacity = modelOp; material.userData.fade = modelOp; }
             wire.userData.lastModelOpacity = modelOp;
           }
         }
@@ -3185,12 +3180,9 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       else if (scene.environment && scene.environment.dispose) scene.environment.dispose();
       tiles.forEach(m => { m.geometry.dispose(); m.material.map?.dispose(); m.material.dispose(); });
       tileWires.forEach(w => {
-        w.traverse((obj) => {
-          if (obj.isMesh) {
-            obj.geometry?.dispose();
-            obj.material?.dispose();
-          }
-        });
+        // Only the materials finish() made: model geometry, textures and any
+        // sealed material are shared with the loader cache and the studio.
+        if (w.userData.ownMaterials) w.userData.ownMaterials.forEach((m) => m.dispose());
       });
       ambientBatches.forEach(batch => batch.geo.dispose());
       ambientMat.dispose();
