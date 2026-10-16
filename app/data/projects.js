@@ -15,7 +15,13 @@
      LOOKS in app/projects/rendering/studio.js, keyed by src.
    ============================================================ */
 (function () {
-  const HANDOFF_DEFAULTS = { scale: 0.60, restX: 0.46, offsetY: 0, spinSpeed: 0.0039, duration: 1200 };
+  /* handoffPose: the forward flight's travel (ms) and its showcase turn's
+     turnMin (degrees: the long way round unless the short way already turns
+     that much, see moFlight.turn; 180 is always the long way, 180-360), and
+     dockTurnMin, the reverse dock's (150-360). Where the forward lands is not
+     here: it is the page's own heroLayout, through moHeroLayout; the dock
+     lands on the card. */
+  const HANDOFF_DEFAULTS = { duration: 1300, turnMin: 180, dockTurnMin: 150 };   // + the spring (89 ms here, 211 ms on the page) ≈ 1.65 s to settled
   /* heroLayout: per-breakpoint overrides of the hero's rest (fracX, scale,
      offY) for a mark that has to sit clear of the title column. The page and
      the flight both read it through window.moHeroLayout. */

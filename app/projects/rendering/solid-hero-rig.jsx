@@ -100,6 +100,19 @@
   };
   // Arrival weight: the spring's peak, as a fraction of scale and in yaw.
   const OVERSHOOT = { scale: 0.01, yaw: 2 * DEG };
+  /* Wind-up: the lift off the card (scale), the tilt toward the viewer and a
+     counter-rotation AGAINST the coming turn, reached in WIND.ms and unwound
+     by the travel. The page's leave winds up lift and tilt; the counter-turn
+     needs the turn's direction, so the flight that knows it plays it. */
+  const WIND = { ms: 140, lift: 0.03, pitch: 7 * DEG, counter: 8 * DEG };
+  /* The travel's shape. arc: a bow off the chord, to its upper side, as a
+     fraction of the chord. bank: the roll into the lateral screen speed, at
+     most `bank`, ~76% of it at bankV half-widths per second, exactly 0 where
+     the travel starts and lands (the ease's slope is 0 there). approach: the
+     forward's size runs a little ahead of its position (toward the camera),
+     capped so the size still only ever grows. */
+  const PATH = { arc: 0.16, bank: 15 * DEG, bankV: 0.5, approach: 0.05 };
+  const reducedMotion = () => !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
   const lerp = (a, b, t) => a + (b - a) * t;
   const damp = (cur, tgt, rate, dt) => lerp(cur, tgt, 1 - Math.pow(1 - rate, dt / 16));
 
@@ -192,6 +205,7 @@
       residualFor(_qCard, cur.yaw, cur.pitch, matchQ);
       if (docking) dockQ.copy(matchQ);
       matchFrom = null;
+      if (flight && !flight.dock) { flight.from.yaw = cur.yaw; solveFlight(); }   // the model came in after the travel began
     }
 
     let modelReady = false;
@@ -325,6 +339,24 @@
     let idleSpin = 0;
     let idleEnabled = false;
     const EASE_RATE = 0.16, YAW_RATE = 0.22;
+    const F = window.moFlight;
+    let flight = null;   // flyTo/dockTo + setFlight: { from, to, turnMin, m, amp, ... }
+    let roll = 0;        // the bank (PATH.bank), set by setFlight only: 0 whenever no travel runs
+    let settle = null;   // the arrival spring: { ms, aS, aY, run, skip, onBack }
+    let wind = null;     // windUp: { ms, s0, p0 } while the page's leave lifts the hero
+
+    /* The turn lands exactly on the rest yaw (moFlight.turn), and the two
+       channels that overshoot (scale, yaw) arrive with the spring's start
+       velocity: their ease's end slope m is solved from the overshoot, so the
+       travel and the settle are one curve. A move too small to carry the full
+       overshoot carries a proportionally smaller one. */
+    function solveFlight() {
+      const f = flight, T = f.duration, K = F.SETTLE.SLOPE * T, M = 1.2, O = f.dock ? DOCK : OVERSHOOT;
+      if (!f.dock) f.to.yaw = f.from.yaw + F.turn(f.from.yaw, RIG.arriveYaw, f.turnMin);   // the dock's is live (retarget)
+      const dY = f.to.yaw - f.from.yaw, dS = f.to.scale - f.from.scale;
+      f.m = { yaw: Math.min(M, O.yaw * K / Math.max(1e-6, Math.abs(dY))), scale: Math.min(M, O.scale * f.to.scale * K / Math.max(1e-6, Math.abs(dS))) };
+      f.amp = { yaw: Math.sign(dY) * f.m.yaw * Math.abs(dY) / K, scale: Math.sign(dS) * f.m.scale * Math.abs(dS) / (K * f.to.scale) };
+    }
 
     function halfWidthAt(dist) {
       const vh = 2 * dist * Math.tan((RIG.fov * Math.PI / 180) / 2);
@@ -342,12 +374,14 @@
     }
 
     function applyToScene() {
-      pivot.scale.setScalar(cur.scale);
+      const k = settle ? F.settle(settle.ms) : 0;
+      pivot.scale.setScalar(cur.scale * (1 + (settle ? settle.aS * k : 0)));
       pivot.position.set(cur.offX, cur.offY, 0);
-      spin.rotation.y = cur.yaw + idleSpin;
+      spin.rotation.y = cur.yaw + idleSpin + (settle ? settle.aY * k : 0);
       spin.rotation.x = cur.pitch;
       if (docking) pivot.quaternion.copy(dockQ);
       else pivot.quaternion.slerpQuaternions(Q_ID, matchQ, cur.match);
+      if (roll) pivot.quaternion.premultiply(_qRoll.setFromAxisAngle(Z_AXIS, roll));   // the bank, about the view axis
       if (look) dress.set(look, cur.match, beatMs >= 0 && !hasBeat() ? beatMs / BEAT_MS : -1);
       camera.position.z = cur.dist;
       if (camera.fov !== cur.fov) { camera.fov = cur.fov; camera.updateProjectionMatrix(); }
@@ -372,6 +406,12 @@
       cur.match = damp(cur.match, tgt.match, EASE_RATE, dt);
       cur.fov   = damp(cur.fov,   tgt.fov,   EASE_RATE, dt);
       if (idleEnabled) idleSpin += dt * 0.00004;
+      if (settle && settle.run) {
+        if (settle.skip) settle.skip = false;   // the frame that landed is drawn at the landing itself
+        else settle.ms += dt;
+        if (settle.onBack && settle.ms >= F.SETTLE.BACK) { const cb = settle.onBack; settle.onBack = null; cb(); }
+        if (settle.ms >= F.SETTLE.END) settle = null;
+      }
       applyToScene();
     }
 
@@ -400,8 +440,6 @@
         }
         return menuMotion;
       },
-      setEaseRate(r) { easeRate = r; },
-      setYawRate(r) { yawRate = r; },
       /* quat: the card model's camera-relative pose. With it the first frame
          is the card's model in pose and dress, held until setLayout. fov: the
          card camera's. Pose and span alone leave the field's wider lens out,
@@ -410,6 +448,7 @@
          look: the dress to start in, 1 the field's (a card), 0 the hero's
          (the dock starts from a page). */
       startFromScreen(cx, cy, vw, vh, scale, quat = null, fov = RIG.fov, look = 1) {
+        flight = null; settle = null; wind = null; docking = false; roll = 0;
         const s = screenState(cx, cy, vw, vh, scale, fov);
         offFracX = s.offX / halfWidthAt(RIG.camZ);
         Object.assign(cur, { offX: s.offX, offY: s.offY, scale, dist: RIG.camZ, fov, yaw: RIG.arriveYaw, pitch: RIG.arrivePitch });
@@ -422,6 +461,7 @@
         applyToScene();
       },
       snapToLayout(fracX, scale = 1, offY = 0, yaw = RIG.arriveYaw) {
+        flight = null; settle = null; wind = null; docking = false; roll = 0;
         offFracX = fracX;
         tgt.scale = scale; tgt.offY = offY; tgt.pitch = RIG.arrivePitch; tgt.dist = RIG.camZ; tgt.yaw = yaw;
         recomputeOffX();
@@ -451,6 +491,82 @@
       setIdle(on) { idleEnabled = on; },
       setLayout(fracX, scale = 1, offY = 0) {
         offFracX = fracX; tgt.scale = scale; tgt.offY = offY; tgt.match = 0; tgt.fov = RIG.fov; recomputeOffX();
+      },
+      /* The handoff travel, ONE gesture. flyTo fixes both ends: from where
+         the rig is now (the card) to a layout from moHeroLayout (the page's
+         settled hero), with the showcase turn solved by moFlight.turn
+         (turnMin degrees: the long way unless the short way turns that much).
+         setFlight(p, ms) then puts every quantity on one eased progress: p = 1
+         IS the layout, pose and lens, with no residual card tilt, no bow and
+         no bank; ms is drawn time since the travel began and drives only the
+         wind-up (a lift, a tilt toward the viewer and a counter-turn that
+         peak at WIND.ms and unwind with the travel). At p = 1 the spring
+         starts on its own and update() runs it; the page continues it
+         (handoff/arrive). */
+      flyTo(fracX, scale = 1, offY = 0, opts = {}) {
+        docking = false;
+        this.setLayout(fracX, scale, offY);
+        tgt.pitch = RIG.arrivePitch; tgt.dist = RIG.camZ;
+        flight = { from: { ...cur }, to: { ...tgt, beat: opts.beat === false ? cur.beat : 0 }, turnMin: opts.turnMin == null ? 180 : opts.turnMin, duration: opts.duration || 1300, windUp: opts.windUp !== false };
+        // the approach: as much as the size can run ahead and still only grow
+        flight.approach = Math.max(0, Math.min(PATH.approach, (1 - flight.from.scale / flight.to.scale) / 8));
+        solveFlight();
+      },
+      setFlight(p, ms = 0) {
+        if (!flight) return;
+        const f = flight, t = Math.max(0, Math.min(1, p)), e = F.ease(t);
+        for (const k in f.to) cur[k] = lerp(f.from[k], f.to[k], k === "yaw" || k === "scale" ? F.ease(t, f.m[k]) : e);
+        // the arc: a bow off the chord to its upper side, 4e(1 - e), so 0 at both ends
+        const dx = f.to.offX - f.from.offX, dy = f.to.offY - f.from.offY, side = dx >= 0 ? 1 : -1;
+        const nx = -dy * side * PATH.arc, ny = dx * side * PATH.arc;
+        cur.offX += nx * 4 * e * (1 - e); cur.offY += ny * 4 * e * (1 - e);
+        // the bank: into the lateral screen speed (half-widths per second), from the ease's own slope
+        const h = 1e-3, de = (F.ease(t + h) - F.ease(t - h)) / (Math.min(1, t + h) - Math.max(0, t - h));
+        const vx = (dx + nx * 4 * (1 - 2 * e)) * de * 1000 / f.duration;
+        roll = -PATH.bank * Math.tanh(vx / (RIG.camZ * Math.tan(cur.fov * DEG / 2) * (camera.aspect || w / h)) / PATH.bankV);
+        // the approach: the size a little ahead of the position, back to 0 at the end (forward only)
+        if (f.approach) cur.scale *= 1 + 4 * f.approach * e * (1 - e);
+        // the wind-up: tilt and counter-turn peak at WIND.ms, unwound by the
+        // travel; the lift rises slower (2.5x), into the travel's own growth,
+        // so the size has one rise and never a step
+        const wu = Math.sin(Math.PI / 2 * Math.min(1, ms / WIND.ms)) * (1 - e);
+        if (f.windUp) { cur.scale *= 1 + WIND.lift * Math.sin(Math.PI / 2 * Math.min(1, ms / (WIND.ms * 2.5))) * (1 - e); cur.pitch += WIND.pitch * wu; }
+        cur.yaw -= Math.sign(f.to.yaw - f.from.yaw) * WIND.counter * wu;
+        if (f.dock) {
+          dockQ.slerpQuaternions(f.R0, f.R1, e);
+          if (t >= 1 && !f.landed) {
+            f.landed = true;
+            settle = { ms: 0, aS: f.amp.scale, aY: f.amp.yaw, run: true, skip: true, onBack: null };
+          }
+        } else if (t >= 1) {
+          Object.assign(cur, f.to);
+          settle = { ms: 0, aS: f.amp.scale, aY: f.amp.yaw, run: true, skip: true, onBack: null };
+          flight = null;
+        }
+        if (t >= 1) roll = 0;
+        Object.assign(tgt, cur);
+        applyToScene();
+      },
+      get turn() { return flight ? flight.to.yaw - flight.from.yaw : null; },
+      get settleMs() { return settle ? settle.ms : F.SETTLE.END; },
+      /* The hand-over across the page swap: everything the page needs to
+         continue this frame that its own layout cannot tell it. */
+      handoff() {
+        return { yaw: cur.yaw, ms: settle ? settle.ms : F.SETTLE.END, aS: settle ? settle.aS : 0, aY: settle ? settle.aY : 0, beat: cur.beat };
+      },
+      /* The page's side: boot on the flight's last frame (state from
+         moArrival, layout from moHeroLayout) and hold it, spring paused,
+         until release(onBack) — the page has drawn it and dropped the seam.
+         onBack fires once, when the spring is back on its rest. */
+      arrive(state, layout) {
+        this.snapToLayout(layout.fracX, layout.scale, layout.offY, state.yaw);
+        cur.beat = tgt.beat = state.beat == null ? 1 : state.beat;
+        settle = state.ms < F.SETTLE.END ? { ms: state.ms, aS: state.aS || 0, aY: state.aY || 0, run: false, skip: false, onBack: null } : null;
+        applyToScene();
+      },
+      release(onBack) {
+        if (!settle || settle.ms >= F.SETTLE.BACK) { if (settle) settle.run = true; onBack(); return; }
+        settle.run = true; settle.onBack = onBack;
       },
       resetOrbit() { tgt.yaw = RIG.arriveYaw; tgt.pitch = RIG.arrivePitch; },
       dispose() {
