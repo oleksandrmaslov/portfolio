@@ -310,7 +310,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     renderer.setSize(w, h);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     mount.appendChild(renderer.domElement);
-    let menuObjects = null;
+    let menuObjects = null, menuEnv = null;   // the menu's own lighter room (MOStudio.MENU), built on first open
 
     // Visibility gate — the universe is a full-screen hero background, so once
     // the user scrolls past it there's no reason to keep driving the GPU. The
@@ -1886,7 +1886,10 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
           menuSnapshot.getContext("2d").drawImage(renderer.domElement, 0, 0);
           renderer.domElement.parentNode.appendChild(menuSnapshot);
         }
-        if (!menuObjects) menuObjects = window.createMenuObjects(THREE, renderer, scene.environment, asmLocal, wakeUniverseLoop);
+        if (!menuObjects) {
+          try { menuEnv = window.MOStudio.studioEnvironment(THREE, renderer, window.MOStudio.MENU.room, 128); } catch (_) {}
+          menuObjects = window.createMenuObjects(THREE, renderer, menuEnv ? menuEnv.texture : scene.environment, asmLocal, wakeUniverseLoop);
+        }
         menuObjects.open(dialog, keyboard);
         wakeUniverseLoop();
         return true;
@@ -3167,6 +3170,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       clearTimeout(idleTimer);
       clearMenuSnapshot();
       if (menuObjects) menuObjects.dispose();
+      if (menuEnv) menuEnv.dispose();
       if (cursorFx) cursorFx.destroy();
       if (bokehPass && bokehPass.dispose) bokehPass.dispose();
       if (composer && composer.dispose) composer.dispose();

@@ -9,11 +9,11 @@
     scene.environment = environment;
     const camera = new THREE.OrthographicCamera(0, 1, 1, 0, 0.1, 2000);
     camera.position.z = 1000;
-    scene.add(new THREE.HemisphereLight(0xe6e8ee, 0x232a3a, 2.2));
-    const key = new THREE.DirectionalLight(0xffffff, 3.4);
-    key.position.set(-200, 450, 800); scene.add(key);
-    const rim = new THREE.DirectionalLight(0x00f0c8, 1.8);
-    rim.position.set(400, 100, -200); scene.add(rim);
+    // The studio room in the environment, one flat fill, a key from upper left and an edge light from behind.
+    const MENU = window.MOStudio.MENU;
+    const key = new THREE.DirectionalLight(0xffffff, MENU.key), rim = new THREE.DirectionalLight(MENU.rimColor, MENU.rim);
+    key.position.set(-200, 450, 800); rim.position.set(400, 100, -200);
+    scene.add(new THREE.AmbientLight(0xffffff, MENU.ambient), key, rim);
 
     const ids = ["work", "about", "contact", "index"];
     const entries = ids.map((id, index) => {
@@ -46,16 +46,11 @@
       if (!project?.model?.src || !window.loadProjectModel) return;
       window.loadProjectModel(project.model.src, THREE).then(root => {
         if (disposed) return;
-        // GLB clones share geometry/textures with the cached field. Clone only
-        // materials; the menu must never free or recolor a Universe resource.
-        if (project.model.assignMaterial && window.applySolidMaterials) {
-          window.applySolidMaterials(root, THREE, project.model.assignMaterial);
-        } else if (window.tuneRealMaterials) {
-          window.tuneRealMaterials(root, THREE, { envMapIntensity: 1.6 });
-        } else {
-          root.traverse(o => { if (o.material) o.material = Array.isArray(o.material) ? o.material.map(m => m.clone()) : o.material.clone(); });
-        }
-        own(root, false);
+        // GLB clones share geometry/textures with the cached field. The menu
+        // owns only the materials finish() made, so it never frees a Universe resource.
+        const done = window.MOStudio.finish(THREE, root, project.model.src, { tier: "field" });
+        done.exposure.value *= 2 ** (MENU.ev[done.look.kind] || 0);   // this call's own uniform: the field's copies keep theirs
+        done.materials.forEach((m) => materials.add(m));
         window.fitModelToSize(root, THREE, size);
         const holder = new THREE.Group(); holder.add(root);
         const pose = project.model.menuPose || project.model.cardPose?.pose || project.model.rigPose || {};
@@ -94,6 +89,7 @@
 
     const output = window.makeMoOutputSwitch(THREE);
     if (output) {
+      output.traverse((o) => { if (o.material) [].concat(o.material).forEach((m) => window.MOStudio.tone(m)); });
       own(output, true);
       switchButton = output.getObjectByName("SW1.actuator");
       switchRest = switchButton?.position.y || 0;
@@ -127,7 +123,6 @@
       renderer.setPixelRatio(lease.ratio);
       renderer.setSize(lease.size.x, lease.size.y);
       renderer.setClearColor(lease.color, lease.alpha);
-      renderer.toneMapping = lease.tone; renderer.toneMappingExposure = lease.exposure;
       renderer.autoClear = lease.autoClear;
       lease = null; dialog = host = null;
     }
@@ -139,11 +134,10 @@
         lease = { parent: renderer.domElement.parentNode, style: renderer.domElement.style.cssText,
           ratio: renderer.getPixelRatio(), size: renderer.getSize(new THREE.Vector2()),
           color: renderer.getClearColor(new THREE.Color()).clone(), alpha: renderer.getClearAlpha(),
-          tone: renderer.toneMapping, exposure: renderer.toneMappingExposure, autoClear: renderer.autoClear };
+          autoClear: renderer.autoClear };
         host.appendChild(renderer.domElement);
         renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
         renderer.setClearColor(0x04060d, 0);
-        renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.25;
         renderer.autoClear = true;
         enterAt = performance.now(); exitAt = 0; exitId = null; last = 0;
         instant = keyboard || reduced.matches;

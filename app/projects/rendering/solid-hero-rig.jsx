@@ -264,7 +264,7 @@
       recomputeOffX();
     }
 
-    let menuMotion = null;
+    let menuMotion = null, menuEnv = null;
     /* ---- shared rig controls ---- */
     const api = {
       el: renderer.domElement,
@@ -272,7 +272,8 @@
       render, update, setSize, setModel,
       getMenuMotion() {
         if (!menuMotion) {
-          menuMotion = window.createMenuMotion(THREE, renderer, scene.environment);
+          menuEnv = window.MOStudio.studioEnvironment(THREE, renderer, window.MOStudio.MENU.room, 128);
+          menuMotion = window.createMenuMotion(THREE, renderer, menuEnv.texture);
           const close = menuMotion.closeMenu;
           menuMotion.closeMenu = () => { close(); const size = sz(); setSize(size.w, size.h); };
         }
@@ -330,6 +331,7 @@
         clearModel();
         try { mount.removeChild(renderer.domElement); } catch (_) {}
         if (envTarget) envTarget.dispose();
+        if (menuEnv) menuEnv.dispose();
         if (renderer.renderLists) renderer.renderLists.dispose();
         renderer.dispose();
         if (renderer.forceContextLoss) renderer.forceContextLoss();

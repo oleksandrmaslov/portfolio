@@ -76,10 +76,8 @@
     const parking = document.createElement("div"); parking.appendChild(renderer.domElement);
     renderer.setSize(1, 1); renderer.outputColorSpace = THREE.SRGBColorSpace;
     let target = null;
-    const pmrem = new THREE.PMREMGenerator(renderer), room = new THREE.RoomEnvironment();
-    try { target = pmrem.fromScene(room, .06); }
-    catch (_) { /* Direct menu lights still describe the models. */ }
-    finally { room.dispose(); pmrem.dispose(); }
+    try { target = window.MOStudio.studioEnvironment(THREE, renderer, window.MOStudio.MENU.room, 128); }
+    catch (_) { /* The ambient fill still describes the models. */ }
     const motion = window.createMenuMotion(THREE, renderer, target?.texture);
     const dispose = motion.dispose; let disposed = false;
     motion.dispose = () => { if (disposed) return; disposed = true; dispose(); target?.dispose(); renderer.dispose(); renderer.forceContextLoss(); };
