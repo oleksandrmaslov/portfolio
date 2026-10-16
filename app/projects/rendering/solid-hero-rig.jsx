@@ -235,7 +235,7 @@
     applyToScene();
 
     function update(dt) {
-      dt = Math.min(50, dt);
+      dt = Math.max(0, Math.min(50, dt));
       if (modelUpdate) {
         try { modelUpdate(performance.now(), dt); }
         catch (error) {

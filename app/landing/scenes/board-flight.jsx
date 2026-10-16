@@ -99,7 +99,7 @@ function BoardFlight() {
         renderRaf = 0;
         if (disposed) return;
         if (presRef.current <= _bfRenderEps || document.hidden || document.body.classList.contains("mo-menu-open")) return;
-        const dt = Math.min(50, now - last); last = now;
+        const dt = Math.max(0, Math.min(50, now - last)); last = now;
         const a = ctrl.update(tRef.current, dt, footRef.current, nodeRef.current);
         ctrl.render();
         if (a !== undefined) setActive((prev) => (prev === a ? prev : a));
