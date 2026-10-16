@@ -15,7 +15,7 @@ function LandingApp() {
      one jump once the committed DOM actually contains the section. */
   useEA(() => {
     const id = decodeURIComponent(window.location.hash.slice(1));
-    if (!id) return;
+    if (!id || window.__mo_return) return;   // a return computes its own scroll (project-handoff.jsx)
     let secondRaf = 0;
     const firstRaf = requestAnimationFrame(() => {
       secondRaf = requestAnimationFrame(() => {

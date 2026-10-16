@@ -198,6 +198,47 @@
   <link rel="stylesheet" href="app/shared/styles/navigation.css?v=0f2c1cc5fd7b" />
 </head>
 <body>
+  <!-- REVERSE DOCK, before anything paints (AGENTS.md, "The reverse dock").
+       A return is "<- UNIVERSE" (mo_node_return) or browser Back with a fresh
+       page record. It is parsed once into window.__mo_return; the page's last
+       frame is painted over the boot (#mo-seam-back), still lifting, until the
+       dock's rig has drawn it, and the landing owns the scroll (no native
+       restore). -->
+  <script>
+    (function () {
+      try {
+        var ss = sessionStorage, rec = null;
+        try { rec = JSON.parse(ss.getItem("mo_node_back")); } catch (e) {}
+        var seam = ss.getItem("mo_node_seam_back");
+        ss.removeItem("mo_node_back"); ss.removeItem("mo_node_seam_back");
+        if (!rec || rec.cx == null) rec = null;
+        if (ss.getItem("mo_node_return") !== "1") {
+          var nav = performance.getEntriesByType && performance.getEntriesByType("navigation")[0];
+          if (!rec || !(Date.now() - rec.t < 5000) || !nav || nav.type !== "back_forward") return;
+          ss.setItem("mo_node_return", "1");
+          ss.setItem("mo_node_return_addr", rec.addr);
+          ss.setItem("mo_node_return_target", ss.getItem("mo_node_return_origin") || "universe");
+          ss.removeItem("mo_node_return_origin");
+          seam = null;   // a Back captures no seam: the rig appears from the veil
+        }
+        if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+        window.__mo_return = { addr: ss.getItem("mo_node_return_addr") || "", target: ss.getItem("mo_node_return_target") || "universe", rec: rec };
+        if (!rec || !seam) return;
+        var d = document.createElement("div");
+        d.id = "mo-seam-back";
+        d.style.cssText = "position:fixed;inset:0;z-index:901;pointer-events:none;background:#04060d url(" + seam + ") center / 100% 100% no-repeat;"
+          + "transform-origin:" + (rec.cx * innerWidth / (rec.vw || innerWidth)) + "px " + (rec.cy * innerHeight / (rec.vh || innerHeight)) + "px;";
+        document.body.appendChild(d);
+        /* The page's wind-up keeps lifting under the boot, so nothing waits on
+           a still frame: a slow scale about the hero's centre, smoothstep
+           (cubic-bezier(1/3,0,2/3,1) IS 3t^2-2t^3), which the dock's rig
+           carries on exactly from its startTime (project-handoff.jsx). */
+        var sb = window.__mo_seamBreath = { t0: performance.now(), ms: 1500, lift: 0.03, anim: null };
+        if (d.animate && !(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches))
+          sb.anim = d.animate([{ transform: "scale(1)" }, { transform: "scale(" + (1 + sb.lift) + ")" }], { duration: sb.ms, easing: "cubic-bezier(0.3333,0,0.6667,1)", fill: "forwards" });
+      } catch (e) {}
+    })();
+  </script>
   <div id="mo-pl" role="status" aria-live="polite" aria-atomic="true" aria-busy="true" aria-label="Loading Oleksandr Maslov's project universe">
     <div class="mo-pl__line">
       <i class="mo-pl__rail mo-pl__rail--left" aria-hidden="true"></i>
