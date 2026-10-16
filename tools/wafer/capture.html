@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>wafer capture</title>
+  <link rel="icon" href="data:," />
+  <!-- Build input, not a page: tools/wafer/build.mjs capture drives it headless (see that file's header).
+       It reads what the GPU holds and the lab draws, so the pack stage never needs a browser:
+         · each palette strip of switches_L/R and display_L/R (KTX2, so there is no pixel array to read)
+         · the two MIP panels, drawn once by lab/mip.js exactly as the gallery drew them
+         · the two PCB artworks, decoded from KTX2 to 1024 px WebP for the explosions -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500&display=swap" />
+  <script type="importmap">
+    { "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    } }
+  </script>
+</head>
+<body>
+<script type="module">
+import * as THREE from "three";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { KTX2Loader } from "three/addons/loaders/KTX2Loader.js";
+import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
+import { FullScreenQuad } from "three/addons/postprocessing/Pass.js";
+import { loadScreens, makeScreen, drawConnected, drawPeripheral } from "../../lab/mip.js";
+
+const PARTS = "../../models/wafer_parts/";
+const PCB_SIZE = 1024, WEBP_QUALITY = 0.9;
+
+/* The study's palette swap: parts that index a 4-texel-per-entry strip gltfpack built from the CAD
+   appearances get a strip that says what each entry is made of. [CAD colour, sRGB, roughness, metalness, tag]
+   (moved from lab/materials-wafer.js) */
+const SWAP = {
+  display: [
+    ["#faf2d1", "#b8742a", 0.35, 0],             // flex cable: amber polyimide
+    ["#737373", "#0d0e10", 0.15, 0],             // panel mask
+    ["#fafafa", "#18191c", 0.08, 0],             // panel glass
+    ["#c1c1c1", "#babdb8", 0.40, 0, "active"],   // active area: the panel is drawn over it
+    ["#8cd68c", "#111213", 0.50, 0],             // module PCB, black like the real one
+  ],
+  switches: [                                    // Kailh PG1316S
+    ["#e2e2d9", "#e6dcc4", 0.50, 0],             // housing: milky, translucent POM
+    ["#ffdebd", "#e8cba4", 0.45, 0],
+    ["#ffffff", "#efe8d8", 0.45, 0],
+    ["#e9e9f9", "#d2d4d8", 0.20, 1],             // stainless rods
+    ["#e0e0e0", "#c9cbce", 0.30, 1],             // stainless scissor frame
+    ["#ededed", "#c9cbce", 0.30, 1],
+    ["#828282", "#a6a8ac", 0.35, 1],
+    ["#898989", "#a6a8ac", 0.35, 1],
+  ],
+};
+
+/* Read the exported strip back off the GPU (it is KTX2, so there is no pixel array to read). */
+function readPalette(THREE, renderer, tex) {
+  const n = Math.max(1, Math.round(tex.image.width / 4));
+  const rt = new THREE.WebGLRenderTarget(n, 1);
+  const quad = new FullScreenQuad(new THREE.MeshBasicMaterial({ map: tex }));
+  const prev = renderer.getRenderTarget(), tone = renderer.toneMapping;
+  renderer.toneMapping = THREE.NoToneMapping;
+  renderer.setRenderTarget(rt);
+  quad.render(renderer);
+  const px = new Uint8Array(n * 4);
+  renderer.readRenderTargetPixels(rt, 0, 0, n, 1, px);
+  renderer.setRenderTarget(prev);
+  renderer.toneMapping = tone;
+  rt.dispose(); quad.material.dispose(); quad.dispose();
+  return Array.from({ length: n }, (_, i) => new THREE.Color().setRGB(px[i * 4] / 255, px[i * 4 + 1] / 255, px[i * 4 + 2] / 255));
+}
+
+function swapEntries(THREE, renderer, src, table) {
+  const refs = table.map(([cad]) => new THREE.Color(cad));
+  return readPalette(THREE, renderer, src.map).map((c) => {
+    let best = 0, bd = Infinity;
+    refs.forEach((r, i) => {
+      const d = (r.r - c.r) ** 2 + (r.g - c.g) ** 2 + (r.b - c.b) ** 2;
+      if (d < bd) { bd = d; best = i; }
+    });
+    return table[best].slice(1);
+  });
+}
+
+const renderer = new THREE.WebGLRenderer({ antialias: false, alpha: false, preserveDrawingBuffer: true });
+renderer.setPixelRatio(1);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.NoToneMapping;
+const ktx2 = new KTX2Loader().setTranscoderPath("https://unpkg.com/three@0.160.0/examples/jsm/libs/basis/").detectSupport(renderer);
+const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).setKTX2Loader(ktx2);
+const part = async (name) => {
+  const scene = (await loader.loadAsync(PARTS + name + ".glb")).scene;
+  let mesh = null;
+  scene.traverse((o) => { if (o.isMesh && !mesh) mesh = o; });
+  scene.updateMatrixWorld(true);
+  return mesh;
+};
+const px = (w, h) => { const out = new Uint8Array(w * h * 4); renderer.getContext().readPixels(0, 0, w, h, renderer.getContext().RGBA, renderer.getContext().UNSIGNED_BYTE, out); return out; };
+
+/* A texture drawn 1:1 onto the canvas, v = 0 on the top row (glTF's convention), read back as the canvas holds it. */
+function drawFlat(tex, size) {
+  renderer.setSize(size, size, false);
+  const g = new THREE.PlaneGeometry(2, 2), uv = g.attributes.uv;
+  for (let i = 0; i < uv.count; i++) uv.setY(i, 1 - uv.getY(i));
+  const m = new THREE.MeshBasicMaterial({ map: tex });
+  const cam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 2), scene = new THREE.Scene();
+  scene.add(new THREE.Mesh(g, m)); cam.position.z = 1;
+  renderer.render(scene, cam);
+  g.dispose(); m.dispose();
+}
+
+/* The PCB mesh seen from above, unlit, through `tex`: the orientation check renders the KTX2 original and the WebP the same way. */
+function drawBoard(mesh, tex, size) {
+  renderer.setSize(size, size, false);
+  const box = new THREE.Box3().setFromObject(mesh), c = box.getCenter(new THREE.Vector3()), s = box.getSize(new THREE.Vector3());
+  const h = Math.max(s.x, s.y) / 2 * 1.05, cam = new THREE.OrthographicCamera(-h, h, h, -h, 0.001, 10);
+  cam.position.set(c.x, c.y, box.max.z + 1); cam.lookAt(c.x, c.y, c.z);
+  const scene = new THREE.Scene(), m = new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide });
+  const clone = new THREE.Mesh(mesh.geometry, m); clone.matrixAutoUpdate = false; clone.matrix.copy(mesh.matrixWorld);
+  scene.add(clone);
+  renderer.setClearColor(0x000000, 1);
+  renderer.render(scene, cam);
+  m.dispose();
+  return px(size, size);
+}
+const meanDiff = (a, b) => { let s = 0, n = 0; for (let i = 0; i < a.length; i += 4) { if (!(a[i] | a[i + 1] | a[i + 2] | b[i] | b[i + 1] | b[i + 2])) continue; s += Math.abs(a[i] - b[i]) + Math.abs(a[i + 1] - b[i + 1]) + Math.abs(a[i + 2] - b[i + 2]); n += 3; } return n ? s / n : 0; };
+const stdLuma = (a) => { let s = 0, s2 = 0, n = 0; for (let i = 0; i < a.length; i += 4) { const l = 0.2126 * a[i] + 0.7152 * a[i + 1] + 0.0722 * a[i + 2]; s += l; s2 += l * l; n++; } return Math.sqrt(Math.max(0, s2 / n - (s / n) ** 2)); };
+const loadTex = (url) => new THREE.TextureLoader().loadAsync(url).then((t) => { t.colorSpace = THREE.SRGBColorSpace; t.flipY = false; t.wrapS = t.wrapT = THREE.RepeatWrapping; return t; });
+
+window.capture = async () => {
+  const out = { palettes: {}, panels: {}, pcb: {}, pcbCheck: {} };
+  for (const name of ["switches_L", "switches_R", "display_L", "display_R"]) {
+    const mesh = await part(name);
+    out.palettes[name] = swapEntries(THREE, renderer, mesh.material, SWAP[name.replace(/_[LR]$/, "")]);
+  }
+  // nice!view class, 68 x 160, 1-bit, reflective: drawn once, as the gallery's makeWaferScreens drew it
+  const screens = { status: makeScreen(THREE, renderer), media: makeScreen(THREE, renderer) };
+  const designs = await loadScreens();
+  drawConnected(screens.status, designs.connected, { time: "12:34", layer: "Base", profile: 0 });
+  drawPeripheral(screens.media, designs.peripheral, { playing: true, title: "Patience", artist: "LOW ROAR" });
+  out.panels.status = screens.status.c.toDataURL("image/png");
+  out.panels.media = screens.media.c.toDataURL("image/png");
+  out.fonts = [...document.fonts].filter((f) => f.status === "loaded").map((f) => `${f.family} ${f.weight}`);
+  for (const side of ["L", "R"]) {
+    const mesh = await part("pcb_" + side), map = mesh.material.map;
+    drawFlat(map, PCB_SIZE);
+    const flat = px(PCB_SIZE, PCB_SIZE);
+    const webp = renderer.domElement.toDataURL("image/webp", WEBP_QUALITY);
+    out.pcb[side] = webp;
+    // the check: the board through its KTX2 map, through the WebP, and through the WebP turned upside down
+    const decoded = await loadTex(webp), flipped = await loadTex(webp);
+    flipped.flipY = true;
+    const a = drawBoard(mesh, map, 512), b = drawBoard(mesh, decoded, 512), f = drawBoard(mesh, flipped, 512);
+    out.pcbCheck[side] = { source: map.image.width + "x" + map.image.height, std: +stdLuma(flat).toFixed(2), diff: +meanDiff(a, b).toFixed(3), flippedDiff: +meanDiff(a, f).toFixed(3) };
+    decoded.dispose(); flipped.dispose();
+  }
+  return out;
+};
+window.captureReady = true;
+</script>
+</body>
+</html>
