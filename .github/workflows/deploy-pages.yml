@@ -52,8 +52,10 @@ jobs:
             --exclude='.agents/' \
             --exclude='_site/' \
             --exclude='face-test.html' \
+            --exclude='lab/' \
             --exclude='tools/' \
             --exclude='studies/' \
+            --exclude='models/wafer_parts/' \
             --exclude='*.md' \
             --exclude='app/*.jsx' \
             --exclude='app/**/*.jsx' \

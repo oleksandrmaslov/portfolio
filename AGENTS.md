@@ -260,7 +260,7 @@ sources in `studies/media/bulgaria_2026/_source/`; the seven files beside them
 are crops taken from those pages, so a figure that needs different bounds is
 **re-cut, never re-shot**. Full-page captures land at the repo root by default
 and the deploy rsyncs everything except `.git/ .github/ .agents/ _site/
-face-test.html tools/ studies/ *.md` — so a 10 MB screenshot left in the root
+face-test.html lab/ tools/ studies/ models/wafer_parts/ *.md` — so a 10 MB screenshot left in the root
 ships to production. Move sources into `studies/` first.
 
 Its `tone` values are measured, not guessed. Mean luminance against the 140
