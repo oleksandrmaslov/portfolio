@@ -1,11 +1,11 @@
 /* ============================================================
    M.O. SYSTEM — WAFER DEMO BOARD (production GLB parts)
    ------------------------------------------------------------
-   Board loader for the 53 production exploded-part GLBs
-   (models/wafer_parts/*.glb — meshopt+quantized, each carrying
-   its real material) and reassembles them, including the two
-   USB-C connectors (usbc_L/usbc_R), which explode as their own
-   layer like every other part.
+   Board loader for models/wafer.glb: one file, its 53 production
+   parts looked up by node name and finished by MOStudio (tier
+   "parts", with the PCB artwork), including the two USB-C
+   connectors (usbc_L/usbc_R), which explode as their own layer
+   like every other part.
 
    Parts are world-aligned, so dropped into one parent they snap
    into the full keyboard. We then:
@@ -24,9 +24,8 @@
    ============================================================ */
 (function () {
   const SIGNAL = 0x00f0c8;
-  const PARTS_DIR = "models/wafer_parts/";
 
-  /* ---- the 53 part files ---- */
+  /* ---- the 53 part names (nodes of models/wafer.glb) ---- */
   const STRUCT_FILES = [
     "case_L", "case_R", "plate_L", "plate_R", "pcb_L", "pcb_R",
     "usbc_L", "usbc_R",
@@ -157,18 +156,20 @@
     /* ---------- build (async) ---------- */
     function build() {
       const loader = window.loadProjectModel;
-      if (!loader) { console.warn("[wafer-board] loadProjectModel missing"); return; }
+      const S = window.MOStudio;
+      if (!loader || !S) { console.warn("[wafer-board] loadProjectModel/MOStudio missing"); return; }
 
-      Promise.all(ALL_FILES.map((f) =>
-        loader(PARTS_DIR + f + ".glb", THREE)
-          .then((root) => ({ f, root }))
-          .catch((e) => { console.warn("[wafer-board] part failed", f, e); return null; })
-      )).then((loaded) => {
-        const ok = loaded.filter(Boolean);
-        if (!ok.length) { console.warn("[wafer-board] no parts loaded"); return; }
+      Promise.all([loader(S.WAFER_URL, THREE), S.pcbMaps(THREE)]).then(([src, pcb]) => {
+        S.finish(THREE, src, S.WAFER_URL, { tier: "parts", pcb });
+        src.updateMatrixWorld(true);
+        const ok = [];
+        for (const f of ALL_FILES) { const root = src.getObjectByName(f); if (root) ok.push({ f, root }); }
+        if (!ok.length) { console.warn("[wafer-board] no parts found"); return; }
 
-        // 1) drop every part into recenter (world-aligned → they assemble)
-        for (const { root } of ok) recenter.add(root);
+        // 1) move every part into recenter (world-aligned → they assemble).
+        // gltfpack may insert dequantisation nodes, so each part keeps its pose
+        // in the file (not attach(): the board group may already be posed).
+        for (const { root } of ok) { root.matrixWorld.decompose(root.position, root.quaternion, root.scale); recenter.add(root); }
 
         // 2) assembled bbox in model space → axes, centre, scale
         const box = new THREE.Box3().setFromObject(recenter);
@@ -234,6 +235,8 @@
             const meta = parseKey(f) || {};
             const inner = new THREE.Group();   // press travel
             wrap.add(inner);
+            // add(), not attach(): wrap and inner are identity, and attach() would refresh recenter's world matrix, so
+            // every later part's box would be measured aligned and scaled instead of in model space
             inner.add(root);
 
             // find the cap mesh + its centre/size (model space, == inner-local)
@@ -241,11 +244,10 @@
             root.traverse((o) => { if (o.isMesh && !cap) cap = o; });
             const capH = (partB.max.clone().sub(partB.min)).dot(UP) || base * 0.03;
 
-            // per-cap material clone for emissive press/hover/sweep glow
+            // per-cap copy for emissive press/hover/sweep glow; copy() keeps the grain and Neutral hooks
             if (cap) {
-              const sm = cap.material.clone();
+              const sm = S.copy(cap.material);
               sm.emissive = new THREE.Color(SIGNAL); sm.emissiveIntensity = 0;
-              if ("envMapIntensity" in sm) sm.envMapIntensity = 1.25;
               cap.material = sm;
               cap.userData.isKey = true;
               allMeshes.push({ mesh: cap, solidMat: sm });
@@ -291,15 +293,9 @@
             const distN = clamp01(Math.abs(rel.dot(LONG)) / (base * 0.5 + 1e-3));
             parts.push({ wrap, vec, stagger: cfg.stag + distN * 0.10 + Math.random() * 0.03, kind, prevT: 0, t: 0, key });
           } else {
-            wrap.add(root);
-            // clone structural materials so view-modes/tuning don't touch the cache
-            root.traverse((o) => {
-              if (!o.isMesh) return;
-              const sm = o.material.clone();
-              if ("envMapIntensity" in sm) sm.envMapIntensity = 1.3;
-              o.material = sm;
-              allMeshes.push({ mesh: o, solidMat: sm });
-            });
+            wrap.add(root);   // identity wrap: see the key branch
+            // the finish made these materials for this clone, so view modes swap them freely
+            root.traverse((o) => { if (o.isMesh) allMeshes.push({ mesh: o, solidMat: o.material }); });
             parts.push({ wrap, vec, stagger: cfg.stag, kind, prevT: 0, t: 0 });
           }
         }
@@ -309,7 +305,7 @@
         board.ready = true;
         setExplode(pendingExplode, performance.now());
         if (board._onReady) board._onReady();
-      });
+      }).catch((e) => console.warn("[wafer-board] model failed", e));
     }
 
     /* ---------- layers ---------- */
@@ -331,7 +327,7 @@
     }
     function xrayFor(rec) {
       if (!rec.xrayMat) {
-        const m = rec.solidMat.clone();
+        const m = window.MOStudio.copy(rec.solidMat);
         m.transparent = true; m.opacity = 0.16; m.depthWrite = false;
         m.emissive = new THREE.Color(SIGNAL); m.emissiveIntensity = 0.05;
         rec.xrayMat = m;

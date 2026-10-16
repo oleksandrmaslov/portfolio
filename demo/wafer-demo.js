@@ -14,7 +14,6 @@
            turntable · explode · sound
    ============================================================ */
 (function () {
-  const SIGNAL = 0x00f0c8;
   const lerp = (a, b, t) => a + (b - a) * t;
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const ease = (t) => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;   // in-out cubic
@@ -30,7 +29,7 @@
   /* intro boot lines (HUD console) */
   const BOOT_LINES = [
     "WAFER · LIVE DEMO · R3",
-    "GEOMETRY · REAL CAD · 51 PARTS",
+    "GEOMETRY · REAL CAD · 53 PARTS",
     "MATRIX · 36 KEYS · ZMK · NRF52840",
     "AUDIO · 0X00 FIELD · NODE 0X01 SHADE",
     "ASSEMBLING —",
@@ -72,7 +71,7 @@
     const THREE = window.THREE;
     if (!THREE || !mountEl) return false;
 
-    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance", preserveDrawingBuffer: true });
+    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -84,17 +83,9 @@
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
 
-    if (THREE.RoomEnvironment) {
-      try {
-        const pmrem = new THREE.PMREMGenerator(renderer);
-        scene.environment = pmrem.fromScene(new THREE.RoomEnvironment(), 0.04).texture;
-      } catch (_) {}
-    }
-    scene.add(new THREE.AmbientLight(0xffffff, 0.42));
-    const key = new THREE.DirectionalLight(0xffffff, 1.25);
-    key.position.set(2.4, 4.2, 2.6); scene.add(key);
-    const rim = new THREE.PointLight(SIGNAL, 1.5, 18); rim.position.set(-3.2, 1.8, -2.6); scene.add(rim);
-    const fill = new THREE.PointLight(0x4a6b9c, 0.55, 18); fill.position.set(3.4, -2.0, 1.6); scene.add(fill);
+    // The studio room and the Wafer's two lights; ACES 1.06 now reaches only the legends, x-ray and wire.
+    try { scene.environment = window.MOStudio.studioEnvironment(THREE, renderer, window.MOStudio.ROOM, 256).texture; } catch (_) {}
+    window.MOStudio.lights(THREE, scene).set(window.MOStudio.look(window.MOStudio.WAFER_URL));
 
     board = window.makeWaferBoard(THREE);
     scene.add(board.group);
