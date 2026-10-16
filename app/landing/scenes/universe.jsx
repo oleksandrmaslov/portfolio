@@ -824,7 +824,11 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
        Returns a CAMERA-RELATIVE offset. At mount the camera is at the origin,
        so the two uses agree by construction.
        ============================================================ */
-    function driftHome(i, out, jitter) {
+    // Who greets you: registry order on a first visit, the returning node on
+    // a field return (its index takes slot 0 and the first node takes its).
+    const greetIdx = RET_DEST === "field" && !RET_VIEW ? Math.max(0, projects.findIndex((p) => p.addr === RET.addr)) : 0;
+    function driftHome(index, out, jitter) {
+      const i = index === greetIdx ? 0 : (index === 0 ? greetIdx : index);
       if (i === 0) {
         // THE FIRST NODE GREETS YOU. Placed in front on purpose rather than
         // left to wherever the spiral drops it: a visitor who arrives to empty
@@ -833,6 +837,8 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         // title greets you the same way the first arrival did. Registry order
         // decides who this is — app/data/projects.js puts Wafer first.
         out.copy(GREET_POS);
+        // Portrait phones: keep it on screen (0.45 of the half-width at its depth).
+        out.x = Math.min(out.x, 0.45 * -out.z * Math.tan(camera.fov * Math.PI / 360) * camera.aspect);
         return jitter ? out.applyAxisAngle(_AXIS_Y, cam.yaw) : out;
       }
       /* LATITUDE BAND. `1 - (i / (N-1)) * 2` runs latitude +1 → -1, which
