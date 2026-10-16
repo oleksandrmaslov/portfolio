@@ -86,7 +86,48 @@
     pivot.add(spin);
     scene.add(pivot);
 
+    /* The handoff starts AS the card's model: the card's camera-relative pose
+       (the rig camera has no rotation, so that is a world pose) is split into
+       a yaw (its twist about the spin axis, which the flight's turn carries
+       on from) and a residual tilt on the pivot (matchQ). The tilt and the
+       dress start as the field's, both weighted by cur.match, which the
+       flight takes to 0. */
+    const Q_ID = new THREE.Quaternion();
+    const matchQ = new THREE.Quaternion();
+    const _qInner = new THREE.Quaternion();
+    const _qCard = new THREE.Quaternion();
+    const X_AXIS = new THREE.Vector3(1, 0, 0), Z_AXIS = new THREE.Vector3(0, 0, 1);
+    const _qRoll = new THREE.Quaternion();
+    let matchFrom = null;   // [x, y, z, w] from the Universe; applied once the model is in
     let look = null;
+    /* A camera-relative world pose Q = R · Rx(pitch) · Ry(yaw) · holder · root.
+       yawFor: the yaw that leaves the residual R smallest, the twist about Y
+       of Rx(-pitch)·Q·(holder·root)⁻¹ (exact, lab/port/tmp/reverse/spin.check.mjs).
+       residualFor: R for a given yaw. Both directions split a pose this way. */
+    const _qPitch = new THREE.Quaternion(), _eSpin = new THREE.Euler();
+    function yawFor(q, pitch) {
+      _qInner.copy(holder.quaternion).multiply(modelRoot.quaternion).invert();
+      _qInner.premultiply(q).premultiply(_qPitch.setFromAxisAngle(X_AXIS, -pitch));
+      return 2 * Math.atan2(_qInner.y, _qInner.w);
+    }
+    function residualFor(q, yaw, pitch, out) {
+      _qInner.setFromEuler(_eSpin.set(pitch, yaw, 0)).multiply(holder.quaternion).multiply(modelRoot.quaternion).invert();
+      return out.copy(q).multiply(_qInner);
+    }
+    /* The dock carries its residual tilt on its own quaternion (dockQ) so the
+       light dress (cur.match) and the tilt can travel separately: it leaves
+       the page in the hero's dress and lands in the field's. */
+    const dockQ = new THREE.Quaternion();
+    let docking = false;
+    function applyMatch() {
+      if (!matchFrom || !modelRoot) return;
+      _qCard.fromArray(matchFrom);
+      cur.yaw = tgt.yaw = yawFor(_qCard, cur.pitch);
+      residualFor(_qCard, cur.yaw, cur.pitch, matchQ);
+      if (docking) dockQ.copy(matchQ);
+      matchFrom = null;
+    }
+
     let modelReady = false;
     let modelUpdate = null;
     let modelRoot = null;
@@ -150,6 +191,7 @@
       modelOwnsGeometry = !!config.ownsGeometry;
       ownedMaterials = nextOwnedMaterials;
       holder.add(root);
+      applyMatch();
       modelReady = true;
       if (config.onReady) config.onReady();
       return true;
@@ -208,14 +250,15 @@
       onReady: opts.onReady,
     });
 
-    /* ---- eased state (cur) toward targets (tgt) ---- */
-    const cur = { offX: 0, offY: 0, scale: 1, yaw: RIG.arriveYaw, pitch: RIG.arrivePitch, dist: RIG.camZ };
+    /* ---- eased state (cur) toward targets (tgt) ----
+       beat is the signature level (beatOf): 1 is the look as finish()
+       made it, 0 the dark state an arrival wakes from. */
+    const cur = { offX: 0, offY: 0, scale: 1, yaw: RIG.arriveYaw, pitch: RIG.arrivePitch, dist: RIG.camZ, match: 0, fov: RIG.fov, beat: 1 };
     const tgt = { ...cur };
     let offFracX = 0;
     let idleSpin = 0;
     let idleEnabled = false;
-    let easeRate = 0.16;
-    let yawRate = 0.22;
+    const EASE_RATE = 0.16, YAW_RATE = 0.22;
 
     function halfWidthAt(dist) {
       const vh = 2 * dist * Math.tan((RIG.fov * Math.PI / 180) / 2);
@@ -223,14 +266,25 @@
     }
     function recomputeOffX() { tgt.offX = offFracX * halfWidthAt(tgt.dist); }
 
-    const HANDOFF = { offX: 0, offY: 0, scale: RIG.handoffScale, pitch: RIG.arrivePitch, dist: RIG.camZ };
+    const HANDOFF = { offX: 0, offY: 0, scale: RIG.handoffScale, pitch: RIG.arrivePitch, dist: RIG.camZ, match: 0, fov: RIG.fov };
+
+    /* A screen centre (viewport px) at a lens, as this rig's offsets: the
+       pure half of startFromScreen, which the dock's live target reuses. */
+    function screenState(cx, cy, vw, vh, scale, fov) {
+      const halfH = RIG.camZ * Math.tan((fov * Math.PI / 180) / 2), halfW = halfH * (vw / vh);
+      return { offX: (cx - vw / 2) / (vw / 2) * halfW, offY: -(cy - vh / 2) / (vh / 2) * halfH, scale, halfW };
+    }
 
     function applyToScene() {
       pivot.scale.setScalar(cur.scale);
       pivot.position.set(cur.offX, cur.offY, 0);
       spin.rotation.y = cur.yaw + idleSpin;
       spin.rotation.x = cur.pitch;
+      if (docking) pivot.quaternion.copy(dockQ);
+      else pivot.quaternion.slerpQuaternions(Q_ID, matchQ, cur.match);
+      if (look) dress.set(look, cur.match, beatMs >= 0 && !hasBeat() ? beatMs / BEAT_MS : -1);
       camera.position.z = cur.dist;
+      if (camera.fov !== cur.fov) { camera.fov = cur.fov; camera.updateProjectionMatrix(); }
     }
     applyToScene();
 
@@ -243,13 +297,14 @@
           modelUpdate = null;
         }
       }
-      const R = easeRate;
-      cur.offX  = damp(cur.offX,  tgt.offX,  R, dt);
-      cur.offY  = damp(cur.offY,  tgt.offY,  R, dt);
-      cur.scale = damp(cur.scale, tgt.scale, R, dt);
-      cur.yaw   = damp(cur.yaw,   tgt.yaw,   yawRate, dt);
-      cur.pitch = damp(cur.pitch, tgt.pitch, yawRate, dt);
-      cur.dist  = damp(cur.dist,  tgt.dist,  R, dt);
+      cur.offX  = damp(cur.offX,  tgt.offX,  EASE_RATE, dt);
+      cur.offY  = damp(cur.offY,  tgt.offY,  EASE_RATE, dt);
+      cur.scale = damp(cur.scale, tgt.scale, EASE_RATE, dt);
+      cur.yaw   = damp(cur.yaw,   tgt.yaw,   YAW_RATE, dt);
+      cur.pitch = damp(cur.pitch, tgt.pitch, YAW_RATE, dt);
+      cur.dist  = damp(cur.dist,  tgt.dist,  EASE_RATE, dt);
+      cur.match = damp(cur.match, tgt.match, EASE_RATE, dt);
+      cur.fov   = damp(cur.fov,   tgt.fov,   EASE_RATE, dt);
       if (idleEnabled) idleSpin += dt * 0.00004;
       applyToScene();
     }
@@ -281,17 +336,23 @@
       },
       setEaseRate(r) { easeRate = r; },
       setYawRate(r) { yawRate = r; },
-      startFromScreen(cx, cy, vw, vh, scale) {
-        const halfH = RIG.camZ * Math.tan((RIG.fov * Math.PI / 180) / 2);
-        const aspect = vw / vh;
-        const halfW = halfH * aspect;
-        const fracX = (cx - vw / 2) / (vw / 2);
-        const fracY = -(cy - vh / 2) / (vh / 2);
-        offFracX = fracX * (halfW / halfWidthAt(RIG.camZ));
-        cur.scale = scale; cur.dist = RIG.camZ;
-        cur.offX = fracX * halfW; cur.offY = fracY * halfH;
-        cur.yaw = RIG.arriveYaw; cur.pitch = RIG.arrivePitch;
+      /* quat: the card model's camera-relative pose. With it the first frame
+         is the card's model in pose and dress, held until setLayout. fov: the
+         card camera's. Pose and span alone leave the field's wider lens out,
+         and a deep pose (a Wafer seen end-on) then starts ~15% off its card;
+         the rig takes that lens and eases back to its own on the travel.
+         look: the dress to start in, 1 the field's (a card), 0 the hero's
+         (the dock starts from a page). */
+      startFromScreen(cx, cy, vw, vh, scale, quat = null, fov = RIG.fov, look = 1) {
+        const s = screenState(cx, cy, vw, vh, scale, fov);
+        offFracX = s.offX / halfWidthAt(RIG.camZ);
+        Object.assign(cur, { offX: s.offX, offY: s.offY, scale, dist: RIG.camZ, fov, yaw: RIG.arriveYaw, pitch: RIG.arrivePitch });
+        cur.match = quat ? 1 : 0;
+        cur.beat = 1;   // the card's look
+        matchFrom = quat;
         Object.assign(tgt, cur);
+        applyToScene();
+        applyMatch();
         applyToScene();
       },
       snapToLayout(fracX, scale = 1, offY = 0, yaw = RIG.arriveYaw) {
@@ -299,6 +360,7 @@
         tgt.scale = scale; tgt.offY = offY; tgt.pitch = RIG.arrivePitch; tgt.dist = RIG.camZ; tgt.yaw = yaw;
         recomputeOffX();
         cur.scale = scale; cur.offY = offY; cur.pitch = RIG.arrivePitch; cur.dist = RIG.camZ; cur.yaw = yaw; cur.offX = tgt.offX;
+        cur.match = tgt.match = 0; cur.fov = tgt.fov = RIG.fov;
         applyToScene();
       },
       beginHandoff() {
@@ -322,7 +384,7 @@
       setYawTarget(y) { tgt.yaw = y; },
       setIdle(on) { idleEnabled = on; },
       setLayout(fracX, scale = 1, offY = 0) {
-        offFracX = fracX; tgt.scale = scale; tgt.offY = offY; recomputeOffX();
+        offFracX = fracX; tgt.scale = scale; tgt.offY = offY; tgt.match = 0; tgt.fov = RIG.fov; recomputeOffX();
       },
       resetOrbit() { tgt.yaw = RIG.arriveYaw; tgt.pitch = RIG.arrivePitch; },
       dispose() {

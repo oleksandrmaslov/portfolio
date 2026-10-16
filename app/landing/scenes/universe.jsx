@@ -2056,7 +2056,9 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     }
 
     const _mvbBox = new THREE.Box3();
-    function modelViewportBounds(addr) {
+    const _mvbScale = new THREE.Vector3();
+    const _mvbQuat = new THREE.Quaternion();
+    function modelViewportBounds(addr, ignoreLift = false) {
       const holder = tileWires.find(o =>
         o.userData && o.userData.isModel && o.userData.addr === addr &&
         o.userData.loaded && o.visible);
@@ -2083,7 +2085,20 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         if (sy < minY) minY = sy;
         if (sy > maxY) maxY = sy;
       }
-      return { x: minX, y: minY, w: maxX - minX, h: maxY - minY, isModel: true };
+      /* What the flight needs to start AS this model: where its centre
+         projects (fit() parks the modelBox centre on the pose group's origin),
+         its longest edge as a fraction of the viewport height (fit() makes that
+         edge modelFit; the box above is a world AABB, not the edge), and its
+         pose relative to the camera. */
+      const pose = holder.children[0], root = pose.children[0];
+      pose.getWorldPosition(v3);
+      const depth = _tsbCamRel.copy(v3).sub(camera.position).dot(camDirTmp);
+      const edge = holder.userData.parentTile.userData.project.modelFit * pose.getWorldScale(_mvbScale).x;
+      const span = edge / (2 * depth * Math.tan(camera.fov * Math.PI / 360));
+      v3.project(camera);
+      const quat = camera.quaternion.clone().invert().multiply(root.getWorldQuaternion(_mvbQuat)).toArray();
+      return { x: minX, y: minY, w: maxX - minX, h: maxY - minY, isModel: true,
+        addr, cx: (v3.x * 0.5 + 0.5) * rect.width + rect.left, cy: (-v3.y * 0.5 + 0.5) * rect.height + rect.top, span, quat, fov: camera.fov };
     }
 
     /* ---------- screen-space tile CORNERS (perimeter order) ----------

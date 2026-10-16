@@ -276,28 +276,29 @@ function NodeHandoff() {
         const usableOrigin = !!originRect && originRect.w > 1 && originRect.h > 1 &&
           originRect.x + originRect.w > 0 && originRect.y + originRect.h > 0 &&
           originRect.x < vw && originRect.y < vh;
+        const matched = !!(originRect && originRect.quat);    // the card's own model: see tileBounds
 
         const travels = !NH_REDUCED && usableOrigin;
         if (travels) {
-          const cx = Math.max(0, Math.min(vw, originRect.x + originRect.w / 2));
-          const cy = Math.max(0, Math.min(vh, originRect.y + originRect.h / 2));
-          /* Size the rig so the model keeps the on-screen height it already had
-             on the card. The rig frames its model to `rigFit` world units at
+          const cx = Math.max(0, Math.min(vw, matched ? originRect.cx : originRect.x + originRect.w / 2));
+          const cy = Math.max(0, Math.min(vh, matched ? originRect.cy : originRect.y + originRect.h / 2));
+          /* The rig frames its model's longest edge to `rigFit` world units at
              scale 1 and its frustum is `frustumH` world units tall at the model
-             plane, so a screen fraction f needs scale = f * frustumH / rigFit.
-             The old constant (rect height / 0.54vh) had nothing to do with
-             model size, which is why a mark tuned to read small on its card
-             arrived in the flight at roughly twice the size. */
+             plane, so an edge spanning a fraction f of the viewport height needs
+             scale = f * frustumH / rigFit. A card model hands over that exact
+             fraction (`span`) and its pose, so the flight starts AS the model on
+             the card. A box height is not that edge (a Wafer seen edge-on is
+             wide and flat, and started at a fifth of its size), so the card-quad
+             fallback keeps the estimate, capped at the hero size it lands on. */
           const R = window.WAFER_RIG || { fov: 38, camZ: 5.4, modelFit: 4.0 };
-          const frustumH = 2 * R.camZ * Math.tan((R.fov * Math.PI / 180) / 2);
+          const fov0 = (matched && originRect.fov) || R.fov;   // the card's lens: see startFromScreen
+          const frustumH = 2 * R.camZ * Math.tan((fov0 * Math.PI / 180) / 2);
           const rigFit = (project.model && project.model.rigFit) || R.modelFit || 4.0;
-          /* Never start larger than the hero size the flight lands on. When the
-             origin is the model's own box this rarely binds; when we fall back
-             to the card quad it does, and it is what stops a small mark from
-             arriving at full card height. */
-          const startScale = Math.max(0.06, Math.min(REST.scale, (originRect.h / vh) * frustumH / rigFit));
-          rig.startFromScreen(cx, cy, vw, vh, startScale);
           rig.setEaseRate(0.052);
+          const startScale = matched
+            ? originRect.span * frustumH / rigFit
+            : Math.max(0.06, Math.min(REST.scale, (originRect.h / vh) * frustumH / rigFit));
+          rig.startFromScreen(cx, cy, vw, vh, startScale, matched ? originRect.quat : null, fov0);
         } else {
           rig.snapToLayout(REST.fracX, REST.scale, REST.offY);      // no travel, no spin
         }
