@@ -200,7 +200,6 @@
       const config = {
         model: next.model || initialModelUrl,
         modelFit: next.modelFit || RIG.modelFit,
-        assignMaterial: next.assignMaterial,
         keepMaterials: next.keepMaterials === true,
         buildModel: next.buildModel,
         onReady: next.onReady,
@@ -237,7 +236,6 @@
       model: initialModelUrl,
       modelFit: opts.modelFit,
       pose: initialPose,
-      assignMaterial: opts.assignMaterial,
       keepMaterials: opts.keepMaterials,
       buildModel: opts.buildModel,
       onReady: opts.onReady,

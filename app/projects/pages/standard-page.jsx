@@ -18,7 +18,6 @@
                                       //   inside the rig's own loop
          pose: { x, y, z },           //   rest orientation override
          modelFit: 2.1,               //   longest edge; omit for the rig's 4.0
-         assignMaterial: { … },       //   ONLY for a GLB with no materials
          keepMaterials: true,         //   ONLY for a procedural hero
        },
        heroLayout: { mobile, tablet, desktop },   // optional, see below

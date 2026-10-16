@@ -11,6 +11,8 @@
      rigFit / rigPose — the hero rig's fit and pose; mirror the page hero
      cardPose { fit, pose } / handoffPose / menuPose — per-model tuning;
      NEVER hardcode orientation or scale inside React components.
+     The look (finish, exposure, LEDs) is not a registry field: it is
+     LOOKS in app/projects/rendering/studio.js, keyed by src.
    ============================================================ */
 (function () {
   const HANDOFF_DEFAULTS = { scale: 0.60, restX: 0.46, offsetY: 0, spinSpeed: 0.0039, duration: 1200 };

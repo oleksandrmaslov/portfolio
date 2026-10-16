@@ -35,7 +35,6 @@ const PROJECTS = (window.MO_PROJECTS || [])
     model: m.ready ? m.src : null,
     modelFit: cp.fit ? cp.fit * 1.9 : 5.0,
     modelPose: cp.pose || null,
-    assignMaterial: m.assignMaterial || null,
     mo: p,
   };
 });

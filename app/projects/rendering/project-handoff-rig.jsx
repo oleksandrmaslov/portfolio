@@ -81,7 +81,6 @@
       };
       if (model.ready && model.src) {
         config.model = model.src;
-        if (model.assignMaterial) config.assignMaterial = model.assignMaterial;
       } else {
         config.keepMaterials = true;
         config.buildModel = (THREE) => window.makeNodeProxy(THREE, project);

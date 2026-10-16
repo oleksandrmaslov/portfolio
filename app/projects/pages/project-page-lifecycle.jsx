@@ -81,9 +81,6 @@
         buildModel: hero.buildModel,
         pose: hero.pose,
         modelFit: hero.modelFit,
-        // Preserve both material routes. A procedural hero owns its authored
-        // materials; a material-less GLB needs the explicit assignment route.
-        assignMaterial: hero.assignMaterial,
         keepMaterials: hero.keepMaterials,
       });
       rigRef.current = rig;
