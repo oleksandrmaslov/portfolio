@@ -35,13 +35,10 @@ const WAFER_DEMO_TWEAKS = {
 };
 
 /* layout → rig offset (fraction of half-width), scale, vertical offset.
-   Width-aware: on phones the board floats up-top and shrinks so the title
-   sits clear beneath it and nothing clips the edge. */
+   window.moHeroLayout (solid-hero-rig.jsx) is the one definition: the
+   landing flight lands on exactly what it returns. */
 function heroLayoutParams() {
-  const w = window.innerWidth;
-  if (w <= 700)  return { fracX: 0,    scale: 0.58, offY: 0.95 };  // mobile · board up, title below
-  if (w <= 1000) return { fracX: 0.18, scale: 0.74, offY: 0.18 };  // tablet
-  return { fracX: 0.34, scale: 0.88, offY: 0 };                    // desktop · right
+  return window.moHeroLayout("0x01");
 }
 function applyHeroLayout(rig) {
   if (!rig) return;

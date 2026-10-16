@@ -34,6 +34,23 @@
   };
   window.WAFER_RIG = RIG;
 
+  /* ---- THE HERO LAYOUT — one definition for the page and the flight ----
+     Where a project's hero settles for this viewport: fracX (fraction of the
+     half-width), scale, offY. The landing flight lands on exactly this, so it
+     reads the same function the page does; a per-project override is the
+     registry's model.heroLayout ({ mobile, tablet, desktop }, any subset). */
+  const HERO_LAYOUT = {
+    mobile:  { fracX: 0,    scale: 0.58, offY: 0.95 },   // phones: the model up top, the title below
+    tablet:  { fracX: 0.18, scale: 0.74, offY: 0.18 },
+    desktop: { fracX: 0.34, scale: 0.88, offY: 0 },      // model right, title left
+  };
+  window.moHeroLayout = function (addr, width = window.innerWidth) {
+    const project = window.MO_PROJECT_BY_ADDR && window.MO_PROJECT_BY_ADDR[addr];
+    const over = (project && project.model && project.model.heroLayout) || {};
+    const key = width <= 700 ? "mobile" : width <= 1000 ? "tablet" : "desktop";
+    return Object.assign({}, HERO_LAYOUT[key], over[key]);
+  };
+
   const lerp = (a, b, t) => a + (b - a) * t;
   const damp = (cur, tgt, rate, dt) => lerp(cur, tgt, 1 - Math.pow(1 - rate, dt / 16));
 

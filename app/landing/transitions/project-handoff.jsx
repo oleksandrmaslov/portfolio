@@ -267,7 +267,8 @@ function NodeHandoff() {
         if (!rig) { setHolding(false); setTimeout(go, 200); return; }   // no rig: don't strand the hold
 
         const vw = window.innerWidth, vh = window.innerHeight;
-        const REST = { fracX: hp.restX, scale: hp.scale, offY: hp.offsetY };
+        // Where the page will settle, by the page's own layout function.
+        const REST = window.moHeroLayout(project.addr, vw);
 
         /* A rect is only a usable origin if it still overlaps the viewport.
            A reel card scrolled out of the sticky stage, or a universe tile

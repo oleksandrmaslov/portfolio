@@ -20,7 +20,6 @@
          modelFit: 2.1,               //   longest edge; omit for the rig's 4.0
          keepMaterials: true,         //   ONLY for a procedural hero
        },
-       heroLayout: { mobile, tablet, desktop },   // optional, see below
        bridgeSeam: true,            // the HTML paints #mo-seam, see below
        demo: {                      // bespoke PLAY DEMO …
          layerName: "TorchDemoLayer",
@@ -51,7 +50,8 @@
 
    handoff-page.jsx used to be a second copy of this file that differed
    only in bridgeSeam. The copies drifted once: its heroLayout read went
-   missing, so seven routes shipped a tuned override that did nothing.
+   missing, so seven routes shipped a tuned override that did nothing. The
+   override now lives in the registry, where the flight can read it too.
    ============================================================ */
 const { useState: usePC, useEffect: useEPC, useRef: useRPC } = React;
 
@@ -59,16 +59,12 @@ const PC = window.PAGE_CONFIG || {};
 const PC_IDLE_DRIFT = true;
 const PC_LIFECYCLE = window.MOProjectPageLifecycle;
 
-/* layout → rig offset (shared project-page breakpoints).
-   A page may override any breakpoint with PAGE_CONFIG.heroLayout —
-   { mobile, tablet, desktop } — when its model needs to sit clear of the
-   title column. Omitted keys keep the shared defaults. */
+/* layout → rig offset: window.moHeroLayout (solid-hero-rig.jsx), the one
+   definition the landing flight also lands on. A project whose model needs
+   to sit clear of the title column overrides breakpoints in the registry
+   (app/data/projects.js, model.heroLayout), never here. */
 function pcHeroLayoutParams() {
-  const w = window.innerWidth;
-  const o = (window.PAGE_CONFIG && window.PAGE_CONFIG.heroLayout) || {};
-  if (w <= 700)  return Object.assign({ fracX: 0,    scale: 0.58, offY: 0.95 }, o.mobile);
-  if (w <= 1000) return Object.assign({ fracX: 0.18, scale: 0.74, offY: 0.18 }, o.tablet);
-  return Object.assign({ fracX: 0.34, scale: 0.88, offY: 0 }, o.desktop);
+  return window.moHeroLayout(PC.addr);
 }
 function pcApplyHeroLayout(rig) {
   if (!rig) return;

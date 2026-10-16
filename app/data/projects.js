@@ -9,13 +9,21 @@
      ready    — a real GLB exists at src
      src      — GLB path (null → procedural proxy "node-shell")
      rigFit / rigPose — the hero rig's fit and pose; mirror the page hero
-     cardPose { fit, pose } / handoffPose / menuPose — per-model tuning;
+     cardPose { fit, pose } / handoffPose / menuPose / heroLayout — per-model tuning;
      NEVER hardcode orientation or scale inside React components.
      The look (finish, exposure, LEDs) is not a registry field: it is
      LOOKS in app/projects/rendering/studio.js, keyed by src.
    ============================================================ */
 (function () {
   const HANDOFF_DEFAULTS = { scale: 0.60, restX: 0.46, offsetY: 0, spinSpeed: 0.0039, duration: 1200 };
+  /* heroLayout: per-breakpoint overrides of the hero's rest (fracX, scale,
+     offY) for a mark that has to sit clear of the title column. The page and
+     the flight both read it through window.moHeroLayout. */
+  const MARK_LAYOUT = {
+    desktop: { fracX: 0.46, scale: 0.78, offY: 0.22 },
+    tablet:  { fracX: 0.26, scale: 0.66, offY: 0.30 },
+    mobile:  { fracX: 0,    scale: 0.50, offY: 1.05 },
+  };
   const mdl = (over) => Object.assign({
     ready: false, src: null,
     cardPose: { fit: 2.4 },
@@ -89,6 +97,7 @@
         ready: true, src: "models/venovisor-mark.glb",
         rigFit: 3.7,   // matches this project's page hero
         rigPose: { x: 0.12, y: Math.PI + 0.35, z: -0.62 },
+        heroLayout: MARK_LAYOUT,
         // universe.jsx multiplies cardPose.fit by 1.9: the approved card is 4.9
         cardPose: { fit: 4.9 / 1.9, pose: { x: 0.12, y: Math.PI + 0.35, z: -0.62 } },
       }),
@@ -104,6 +113,7 @@
         ready: true, src: "models/wafer-mark.glb",
         rigFit: 2.1,   // matches this project's page hero
         rigPose: { x: -0.2, y: 0, z: 0 },
+        heroLayout: MARK_LAYOUT,
         cardPose: { fit: 1.05 },
       }),
     },
@@ -146,6 +156,7 @@
         ready: true, src: "models/soft-off-keycap.opt.glb",
         rigFit: 2.0,   // matches this project\'s page hero
         rigPose: { x: -0.18, y: 0.38, z: 0 },
+        heroLayout: MARK_LAYOUT,
         cardPose: { fit: 1.0, pose: { x: -0.18, y: 0.38, z: 0 } },
       }),
     },
@@ -160,6 +171,7 @@
         ready: true, src: "models/sightseeing-mark.glb",
         rigFit: 2.1,   // matches this project\'s page hero
         rigPose: { x: -0.2, y: 0, z: 0 },
+        heroLayout: MARK_LAYOUT,
         cardPose: { fit: 1.05 },
       }),
     },
@@ -188,6 +200,7 @@
         ready: true, src: "models/silent-depth-mark.glb",
         rigFit: 2.1,   // matches this project's page hero
         rigPose: { x: -0.2, y: 0, z: 0 },
+        heroLayout: MARK_LAYOUT,
         cardPose: { fit: 1.05 },
       }),
     },
@@ -202,6 +215,7 @@
         ready: true, src: "models/brionel-mark.glb",
         rigFit: 2.1,   // matches this project\'s page hero
         rigPose: { x: -0.2, y: 0, z: 0 },
+        heroLayout: MARK_LAYOUT,
         cardPose: { fit: 1.05 },
       }),
     },
@@ -220,6 +234,7 @@
         ready: true, src: "models/bulgaria-mark.glb",
         rigFit: 2.1,   // matches this project's page hero
         rigPose: { x: -0.2, y: 0, z: 0 },
+        heroLayout: MARK_LAYOUT,
         cardPose: { fit: 1.05 },
       }),
     },
