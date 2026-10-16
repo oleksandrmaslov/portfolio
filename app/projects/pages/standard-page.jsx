@@ -32,10 +32,11 @@
 
    Behaviour:
      · the node flight lands here like it does on every other route, and the
-       arrival CONTINUES it — boot at the rest layout and at the yaw the
-       flight ended on, then carry the turn forward. Do not go back to an
-       unconditional beginHandoff(): that puts an arriving model in the
-       centre of the screen and slides it right, which reads as the model
+       arrival CONTINUES it — boot on the flight's last frame, already in this
+       page's rest layout (moHeroLayout, which the flight landed on), and
+       carry its spring on (window.moArrival, rig.arrive / release). Do not go
+       back to an unconditional beginHandoff(): that puts an arriving model in
+       the centre of the screen and slides it right, which reads as the model
        drifting in from the left.
      · bridgeSeam: the page HTML paints the flight's captured last frame
        (#mo-seam) over the boot gap and this drops it once the model draws.

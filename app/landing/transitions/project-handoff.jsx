@@ -35,7 +35,7 @@
    at the hero layout, no travel, no turn, no spring.
 
    Session protocol (generic — the old mo_wafer_* keys are gone):
-     mo_node_addr / mo_node_arrive / mo_node_yaw
+     mo_node_addr / mo_node_arrive / mo_node_state (rig.handoff(): yaw, spring, signature)
      mo_node_seam     WebP dataURL with alpha (stored separately — large)
      mo_node_return / mo_node_return_addr / mo_node_return_target
      mo_node_return_origin
@@ -275,9 +275,8 @@ function NodeHandoff() {
       requestAnimationFrame(() => {
         const rig = buildRig(project);
         const go = () => {
-          const yaw = rig && rig.getYaw ? rig.getYaw() : 0;
           sessionStorage.setItem("mo_node_addr", project.addr);
-          sessionStorage.setItem("mo_node_yaw", String(yaw));
+          if (rig) sessionStorage.setItem("mo_node_state", JSON.stringify(rig.handoff()));
           sessionStorage.setItem("mo_node_arrive", "1");
           sessionStorage.removeItem("mo_node_seam");
 

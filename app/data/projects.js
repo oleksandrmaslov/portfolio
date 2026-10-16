@@ -118,7 +118,7 @@
       model: mdl({
         ready: true, src: "models/wafer-mark.glb",
         rigFit: 2.1,   // matches this project's page hero
-        rigPose: { x: -0.2, y: 0, z: 0 },
+        rigPose: { x: -0.18, y: 0, z: 0 },   // and its pose: the page boots on the flight's last frame
         heroLayout: MARK_LAYOUT,
         cardPose: { fit: 1.05 },
       }),
@@ -239,7 +239,7 @@
       model: mdl({
         ready: true, src: "models/bulgaria-mark.glb",
         rigFit: 2.1,   // matches this project's page hero
-        rigPose: { x: -0.2, y: 0, z: 0 },
+        rigPose: { x: -0.35, y: 0, z: 0 },   // and its pose: the page boots on the flight's last frame
         heroLayout: MARK_LAYOUT,
         cardPose: { fit: 1.05 },
       }),

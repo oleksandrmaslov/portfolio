@@ -117,7 +117,9 @@
                    && sessionStorage.getItem("mo_node_addr") === config.addr;
       sessionStorage.removeItem("mo_node_arrive");
 
+      let arriving = arrived;   // held on the flight's last frame until the hero draws it
       const settleToRest = (yawTarget) => {
+        arriving = false;
         if (yawTarget != null && rig.setYawTarget) rig.setYawTarget(yawTarget);
         else rig.resetOrbit();
         applyHeroLayout(rig);
@@ -126,50 +128,38 @@
       };
 
       if (arrived) {
-        // Start at the angle painted by the landing flight, then continue
-        // forward to the next hero-rest-equivalent angle.
-        const rigGrade = global.WAFER_RIG;
-        const seamYaw = parseFloat(sessionStorage.getItem("mo_node_yaw"));
-        sessionStorage.removeItem("mo_node_yaw");
-        let bootYaw;
-        let restYaw;
-        if (isFinite(seamYaw)) {
-          bootYaw = seamYaw;
-          restYaw = rigGrade.arriveYaw;
-          while (restYaw < bootYaw + 0.25) restYaw += Math.PI * 2;
-        } else {
-          bootYaw = rigGrade.arriveYaw - 0.6;
-          restYaw = rigGrade.arriveYaw;
-        }
-        const layout = heroLayoutParams();
-        rig.snapToLayout(layout.fracX, layout.scale, layout.offY, bootYaw);
-        if (rig.setYawRate) rig.setYawRate(0.045);
-        setReady(true);
-        scheduleFrame(() => scheduleFrame(() => settleToRest(restYaw)));
-        scheduleTimer(() => { if (rig.setYawRate) rig.setYawRate(0.22); }, 1100);
-
-        if (bridgeSeam) {
-          const dropSeam = () => {
-            const seam = document.getElementById("mo-seam");
-            if (seam) {
-              seam.style.opacity = "0";
-              scheduleTimer(() => seam.remove(), 600);
-            }
-            sessionStorage.removeItem("mo_node_seam");
-          };
-          const waitReady = () => {
-            if (rig.ready) scheduleFrame(() => scheduleFrame(dropSeam));
-            else scheduleTimer(waitReady, 50);
-          };
-          waitReady();
-        }
+        // Boot ON the flight's last frame: its hand-over state (moArrival) in
+        // this page's own layout, which is the one the flight landed on. Hold
+        // it until the hero has drawn it, drop the seam, and let the rig carry
+        // the flight's spring on. When it is back at rest the page settles:
+        // the title enters (mo:hero-settled) and the signature beat plays.
+        const a = global.moArrival();
+        rig.arrive(a, heroLayoutParams());
+        const settled = () => {
+          settleToRest(a.yaw);
+          global.dispatchEvent(new CustomEvent("mo:hero-settled", { detail: { addr: config.addr } }));
+          rig.playBeat();
+        };
+        const dropSeam = () => {
+          // The seam image and the live hero are the same frame, so the
+          // bridge goes at once: a fade would only ghost the settle under it.
+          const seam = document.getElementById("mo-seam");
+          if (seam) seam.remove();
+          sessionStorage.removeItem("mo_node_seam");
+          rig.release(settled);
+        };
+        const waitReady = () => {
+          if (rig.ready) scheduleFrame(() => scheduleFrame(dropSeam));
+          else scheduleTimer(waitReady, 30);
+        };
+        waitReady();
       } else {
         if (bridgeSeam) {
           sessionStorage.removeItem("mo_node_seam");
           const seam = document.getElementById("mo-seam");
           if (seam) seam.remove();
         }
-        sessionStorage.removeItem("mo_node_yaw");
+        sessionStorage.removeItem("mo_node_state");
         rig.beginHandoff();
         scheduleTimer(settleToRest, 460);
       }
@@ -213,7 +203,7 @@
       const onResize = () => {
         if (!mount) return;
         rig.setSize(mount.clientWidth, mount.clientHeight);
-        if (!demoRef.current && !global.__hv_leaving) applyHeroLayout(rig);
+        if (!demoRef.current && !global.__hv_leaving && !arriving) applyHeroLayout(rig);
         syncLoop();
       };
       global.addEventListener("resize", onResize);

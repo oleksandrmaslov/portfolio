@@ -144,6 +144,19 @@
     return true;
   }
   const reducedMotion = () => !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+
+  /* What an arriving page boots on, read once: the flight's hand-over state
+     (rig.handoff()) — the yaw it landed on, the spring as it left it, the
+     signature level. The page lays itself out with moHeroLayout, the same
+     function the flight landed on, so no layout crosses the swap. */
+  window.moArrival = function () {
+    let state = null;
+    try { state = JSON.parse(sessionStorage.getItem("mo_node_state")); } catch (_) {}
+    sessionStorage.removeItem("mo_node_state");
+    if (!state || !isFinite(state.yaw)) state = { yaw: RIG.arriveYaw, ms: SETTLE.END, aS: 0, aY: 0, beat: 1 };
+    if (reducedMotion()) Object.assign(state, { ms: SETTLE.END, beat: 1 });   // end states only
+    return state;
+  };
   const lerp = (a, b, t) => a + (b - a) * t;
   const damp = (cur, tgt, rate, dt) => lerp(cur, tgt, 1 - Math.pow(1 - rate, dt / 16));
 

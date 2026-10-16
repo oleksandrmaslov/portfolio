@@ -2,8 +2,8 @@
    M.O. SYSTEM — Wafer project page
    ------------------------------------------------------------
    The wafer model (shared rig) is the hero. On arrival from the
-   landing flight it SNAPS to the canonical pose (seam), then
-   eases to the hero rest layout while the title resolves around it.
+   landing flight it boots on the flight's last frame, already in its
+   rest layout, finishes the flight's settle and then the title enters.
 
    · bottom-right PLAY DEMO keycap → the live keyboard demo
      (demo/wafer-demo.js + demo/wafer-hud.jsx), ESC / STOP to exit.
@@ -294,7 +294,9 @@ function WaferProjectApp() {
                  && sessionStorage.getItem("mo_node_addr") === "0x01";
     sessionStorage.removeItem("mo_node_arrive");
 
+    let arriving = arrived;   // held on the flight's last frame until the hero draws it
     const settleToRest = (yawTarget) => {
+      arriving = false;
       if (yawTarget != null) rig.setYawTarget(yawTarget);
       else rig.resetOrbit();                  // tgt.yaw → arriveYaw
       applyHeroLayout(rig);                    // slides to the width-aware rest
@@ -303,43 +305,33 @@ function WaferProjectApp() {
     };
 
     if (arrived) {
-      // SEAM: boot at the EXACT angle the landing flight ended on (passed via
-      // sessionStorage) so the captured seam frame and the live model line up
-      // with zero rotation jump. Then CONTINUE the turn forward to the next
-      // hero-rest-equivalent angle — completing one smooth ~360° across the
-      // page swap (the Cartier move), never spinning backward.
-      const RG = window.WAFER_RIG;
-      const seamYaw = parseFloat(sessionStorage.getItem("mo_node_yaw"));
-      sessionStorage.removeItem("mo_node_yaw");
-      let bootYaw, restYaw;
-      if (isFinite(seamYaw)) {
-        bootYaw = seamYaw;
-        restYaw = RG.arriveYaw;
-        while (restYaw < bootYaw + 0.25) restYaw += Math.PI * 2;   // next forward rest angle
-      } else {
-        bootYaw = RG.arriveYaw - 0.6;
-        restYaw = RG.arriveYaw;
-      }
-      const P = heroLayoutParams();
-      rig.snapToLayout(P.fracX, P.scale, P.offY, bootYaw);
-      rig.setYawRate(0.045);                  // gentle finish that matches the flight's spin speed
-      setReady(true);                         // content fades in around the model
-      requestAnimationFrame(() => requestAnimationFrame(() => settleToRest(restYaw)));
-      setTimeout(() => rig.setYawRate(0.22), 1100);   // restore snappy yaw for inspect-orbit
-      // drop the seam-bridge image once the live model is actually drawing
+      // SEAM: boot ON the flight's last frame (window.moArrival's hand-over
+      // state, in this page's own layout — the one the flight landed on),
+      // hold it until the hero has drawn it, drop the seam and let the rig
+      // carry the flight's spring on. Back at rest: the title enters
+      // (mo:hero-settled) and the two screens wake (the signature beat).
+      const a = window.moArrival();
+      rig.arrive(a, heroLayoutParams());
+      const settled = () => {
+        settleToRest(a.yaw);
+        window.dispatchEvent(new CustomEvent("mo:hero-settled", { detail: { addr: "0x01" } }));
+        rig.playBeat();
+      };
       const dropSeam = () => {
-        const s = document.getElementById("mo-seam");
-        if (s) { s.style.opacity = "0"; setTimeout(() => s.remove(), 600); }
+        // seam image and live hero are the same frame: drop it at once, a
+        // fade would only ghost the settle under it
+        const s = document.getElementById("mo-seam"); if (s) s.remove();
         sessionStorage.removeItem("mo_node_seam");
+        rig.release(settled);
       };
       const waitReady = () => {
-        if (rig.ready) { requestAnimationFrame(() => requestAnimationFrame(dropSeam)); }
-        else setTimeout(waitReady, 50);
+        if (rig.ready) requestAnimationFrame(() => requestAnimationFrame(dropSeam));
+        else setTimeout(waitReady, 30);
       };
       waitReady();
     } else {
       sessionStorage.removeItem("mo_node_seam");
-      sessionStorage.removeItem("mo_node_yaw");
+      sessionStorage.removeItem("mo_node_state");
       const s0 = document.getElementById("mo-seam"); if (s0) s0.remove();
       rig.beginHandoff();                     // direct load: appear centered, then settle
       setTimeout(settleToRest, 460);
@@ -373,7 +365,7 @@ function WaferProjectApp() {
     const onResize = () => {
       if (!mount) return;
       rig.setSize(mount.clientWidth, mount.clientHeight);
-      if (!demoRef.current && !window.__hv_leaving) applyHeroLayout(rig);   // re-anchor across breakpoints
+      if (!demoRef.current && !window.__hv_leaving && !arriving) applyHeroLayout(rig);   // re-anchor across breakpoints
       syncLoop();
     };
     window.addEventListener("resize", onResize);

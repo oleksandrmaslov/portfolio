@@ -101,8 +101,6 @@
       return rig.setModel(modelOptions(next, next.model));
     };
     rig.getProjectAddr = () => currentAddr;
-    rig.getYaw = () => rig.yaw;
-    rig.setYaw = (y) => { rig.snapToLayout(0, 1, 0, y); };
     rig.captureFrameAsync = async (tw = 1100) => {
       try {
         const cnv = rig.el;
