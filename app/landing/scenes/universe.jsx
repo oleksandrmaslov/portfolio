@@ -289,7 +289,12 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     let { w, h } = sz();
     // This mount is fixed to the viewport. Hover projection must not flush
     // layout after the ASCII wordmark and SVG have written their next frame.
-    let mountRect = mount.getBoundingClientRect();
+    // Its LAYOUT box, never getBoundingClientRect: `.universeBg` is CSS-scaled
+    // by board-flight (1 + 0.05·oe) and by landing-exit (1.08), a transform
+    // fires no resize, and a painted box cached under one (the menu's
+    // closeMenu -> onResize runs while the board is open) skewed every hover
+    // frame, hit test and flight origin for the life of the page.
+    let mountRect = { left: 0, top: 0, width: w, height: h };
 
     /* ---------- renderer / scene / camera ---------- */
     // MSAA on the drawing buffer is only worth paying for on the direct-render
@@ -2206,7 +2211,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     const onResize = () => {
       if (menuObjects?.active) { menuObjects.resize(); return; }
       const s = sz(); w = s.w; h = s.h;
-      mountRect = mount.getBoundingClientRect();
+      mountRect = { left: 0, top: 0, width: w, height: h };
       renderer.setSize(w, h);
       // ResizeObserver fires on any transition to 0x0, and w/0 bakes Infinity
       // (or NaN) into the projection matrix permanently — the scene then draws
