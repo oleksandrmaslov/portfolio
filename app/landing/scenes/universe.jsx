@@ -295,6 +295,8 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     // closeMenu -> onResize runs while the board is open) skewed every hover
     // frame, hit test and flight origin for the life of the page.
     let mountRect = { left: 0, top: 0, width: w, height: h };
+    let liftedAddr = null;   // the card model the handoff has taken over (mo:handoff-lift)
+    let wasFlying = false;
 
     /* ---------- renderer / scene / camera ---------- */
     // MSAA on the drawing buffer is only worth paying for on the direct-render
@@ -2383,7 +2385,9 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       } catch (_) {}
     }
 
-    const onUniversePageWake = () => {
+    const onHandoffLift = (e) => { liftedAddr = (e.detail && e.detail.addr) || null; wakeUniverseLoop(); };
+    window.addEventListener("mo:handoff-lift", onHandoffLift);
+    const onUniversePageWake = (e) => {
       scheduleModelPump();
       wakeUniverseLoop();
     };
@@ -2424,6 +2428,13 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         ensureProjectModel(focusAddrNow);
       }
       const isArranged = (mode === "reel" || mode === "origin");
+      /* A handoff flight is on (wf-flying): the camera holds still, so the
+         card the flight lifts from or docks onto stays where it was measured.
+         When it ends, stopDrift() hands the drift back through the same idle
+         timer a touch uses, so the field eases off again instead of lurching. */
+      const flying = document.body.classList.contains("wf-flying");
+      if (wasFlying && !flying) stopDrift();
+      wasFlying = flying;
       // A handful of the same dt-corrected decays feed dozens of objects.
       // Calculate each once; reusing the scalar is numerically identical to
       // repeating Math.pow for every tile, wire and state channel.
@@ -2487,7 +2498,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       }
 
       /* idle drift — only in drift mode */
-      if (!exploreOn && !FLOW_RM && driftActive && mode === "drift") {
+      if (!exploreOn && !FLOW_RM && driftActive && !flying && mode === "drift") {
         cam.vel += dt * 0.0008;     // tiny accel toward forward drift
         camTarget.yaw += dt * 0.000035;   // parallax drift carries most of the motion
         camTarget.pitch += Math.sin(now * 0.00022) * dt * 0.00003;
@@ -2592,7 +2603,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
            Damped to PDRIFT.focusDamp whenever a card is focused/hovered or the
            user is actively driving, so reading a label never feels seasick. */
         if (PDRIFT.amp > 0 && !FLOW_RM) {
-          const wantGain = (mode === "drift" && driftActive && !dragging && !activeAddrRef.current && !hoverObjRef.current)
+          const wantGain = flying ? 0 : (mode === "drift" && driftActive && !dragging && !activeAddrRef.current && !hoverObjRef.current)
             ? 1 : PDRIFT.focusDamp;
           const gainRate = wantGain < pdriftGain ? 8 : PDRIFT.ease;
           pdriftGain += (wantGain - pdriftGain) * (1 - Math.exp(-gainRate * dt / 1000));
@@ -2673,7 +2684,9 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
             ? parent.userData.modelOpacityBase
             : parent.material.opacity;
           const modelOp = Math.min(1, modelTileOp * 1.15) * mFade;
-          wire.visible = modelOp > 0.02;
+          // The handoff lifts its copy of this model off the card: from then
+          // the flight draws it, so the card must not draw a second one.
+          wire.visible = modelOp > 0.02 && wire.userData.addr !== liftedAddr;
           if (modelOp !== wire.userData.lastModelOpacity) {
             const fadeMaterials = wire.userData.fadeMaterials || [];
             for (const material of fadeMaterials) { material.opacity = modelOp; material.userData.fade = modelOp; }
@@ -3158,7 +3171,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       // The probe deliberately sees the 50ms-clamped dt. Loading hitches inside
       // its window otherwise count at full length and strip DoF from devices
       // that hold 30+ FPS once settled; the 30 FPS gate was tuned against this.
-      probeDoF(dt);
+      if (!flying) probeDoF(dt);   // a flight's frames are not this device's settled rate
       if (universeCanRender()) raf = requestAnimationFrame(frame);
     }
 
@@ -3236,6 +3249,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       window.removeEventListener("pagehide", onUniversePageHide);
       window.removeEventListener("pageshow", onUniversePageWake);
       window.removeEventListener("mo:page-restored", onUniversePageWake);
+      window.removeEventListener("mo:handoff-lift", onHandoffLift);
       if (pauseSignalInstalled) {
         const finalPauseValue = pauseSignalValue;
         try {

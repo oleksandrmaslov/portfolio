@@ -315,6 +315,9 @@ function NodeHandoff() {
         const matched = !!(originRect && originRect.quat);    // the card's own model: see tileBounds
 
         const travels = !NH_REDUCED && usableOrigin;
+        // A card model hands over in place: the mount appears on the frame the
+        // card stops drawing it (mo:handoff-lift) instead of fading over it.
+        if (mountRef.current) { mountRef.current.style.transition = matched && travels ? "none" : ""; mountRef.current.style.opacity = ""; }
         if (travels) {
           const cx = Math.max(0, Math.min(vw, matched ? originRect.cx : originRect.x + originRect.w / 2));
           const cy = Math.max(0, Math.min(vh, matched ? originRect.cy : originRect.y + originRect.h / 2));
@@ -376,6 +379,7 @@ function NodeHandoff() {
         let paintedFrames = 0;      // frames drawn with the model in the scene
         let travelFrames = 0;       // frames drawn with the mount committed visible (React has dropped .wf--hold)
         const wfRoot = mountRef.current && mountRef.current.parentNode;
+        let lifted = false;
 
         const loop = (now) => {
           const dt = now - last; last = now;
@@ -394,6 +398,13 @@ function NodeHandoff() {
           rig.update(dt);
           rig.render();
 
+          /* The mount is committed visible by the second travel frame; only
+             then does the card stop drawing its own copy, so the hand-over is
+             never a frame with no model at all. */
+          if (matched && travels && !lifted && rig.ready && travelFrames >= 1) {
+            lifted = true;
+            window.dispatchEvent(new CustomEvent("mo:handoff-lift", { detail: { addr: project.addr } }));
+          }
           if (rig.ready) paintedFrames++;
           else if (released) paintedFrames++;          // proxy nodes never flip ready
           if (!released && (paintedFrames >= 2 || now - t0 >= NH_HOLD_MAX)) release();
