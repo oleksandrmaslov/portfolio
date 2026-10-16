@@ -512,11 +512,17 @@ still carry hand-written `?v=` strings; bump them when you change those files.
   for `body.mo-menu-settled` with `mo:menu-settled` / `mo:menu`. Wafer's
   bespoke page lifecycle follows the same contract as
   `project-page-lifecycle.jsx`.
-- Back/forward cache restores a project page exactly as it left: hero centred
-  in the handoff pose, idle off, exit spin on. `core.jsx` clears
-  `__hv_exitSpin` with `__hv_leaving`, and both hero lifecycles settle the rig
-  to rest on `mo:page-restored`. Any new one-way exit flag needs the same
-  reset.
+- Back/forward cache restores a project page exactly as it left: hero wound
+  up for the leave, idle off. `core.jsx` clears `__hv_leaving` (which is also
+  what keeps the stage loop awake during a leave), and both hero lifecycles
+  settle the rig to rest on `mo:page-restored`. Any new one-way exit flag
+  needs the same reset. On the landing the restore is first OFFERED as a
+  cancelable `mo:bf-reverse`: the reverse dock claims it (below) and plays
+  from the frozen state; unclaimed, it cuts as before. A hero under PLAY DEMO (`hv-demoing`) sleeps; leaving the demo wakes
+  it. That reset is `window.__mo_restorePage()` in `core.jsx`, and it also
+  runs when a navigation never commits: the landing flight and both
+  `← UNIVERSE` exits arm a 4 s watchdog that `pagehide` disarms, so a
+  cancelled or 204 navigation cannot strand a lifted card or a faded page.
 - **The forward flight is one gesture, and it is designed motion.** Do not
   simplify it to a tween, re-add a rest pose the page then grows from, put a
   constant spin back on top, or let the turn take the short way. Its parts,
@@ -576,6 +582,117 @@ still carry hand-written `?v=` strings; bump them when you change those files.
   to its registry `rigFit` / `rigPose` — `studio.test.cjs` (h) checks all of
   them — since the page and the flight must draw the same frame. Reduced
   motion shows end states only: no travel, turn, spring or beat.
+- **The reverse is a magnetic dock, on the SAME engine.** Project page →
+  its card. It is not the forward played backwards, and it is not a fork:
+  `rig.dockTo` / `retarget` / `setFlight` share the forward's clock, ease,
+  arc, bank, turn solver and spring. Its parts:
+  1. **Wind-up on the page** (`rig.windUp()`, 140 ms, on `← UNIVERSE`, the
+     footer's "back to universe" and Esc): the idle turn and any spring are
+     folded in, the hero lifts 3% and tilts 7° toward the viewer. At the
+     wind-up's peak ONE frame draws the hero, records it, captures it and
+     navigates (`LEAVE_MS` = `WIND.ms`; it was 460 ms), so the load overlaps
+     the leave; `hv-leave` cuts the chrome's fade to 200 ms to match.
+  2. **The seam keeps lifting.** `index.html` paints `#mo-seam-back` and runs
+     a WAAPI scale on it about the hero's centre (3% over 1.5 s,
+     `cubic-bezier(1/3, 0, 2/3, 1)`, which IS smoothstep), recorded in
+     `window.__mo_seamBreath`. The dock's rig takes that lift over exactly
+     from the animation's `startTime` and carries it on until the travel
+     starts, so the visitor never waits on a still frame.
+  3. **Counter-turn, then travel** (1100 ms drawn): the 8° counter-turn
+     against the coming turn (the page cannot play it: only the landing
+     knows the turn's direction), then the forward's ease, arc and bank,
+     size shrinking continuously, lens 38 → the card's live fov, hero dress
+     → field dress, and the showcase turn with `handoffPose.dockTurnMin`
+     (150): the short way when it already turns 150°, otherwise the long
+     way, so 150–360°. It is solved and locked ONCE at the start, then
+     retargeted to the live card every frame (the card model creeps; its yaw
+     is unwrapped so it cannot flip the turn). The card's own creep is never
+     touched: an earlier build set the lifted card's creep phase
+     (`phaseCard`) to force a 60–120° band, and the long-way rule made that
+     unnecessary. The field opens from p = 0.6 and `__mo_lift` racks its
+     focus back in by p = 1.
+  4. **Impact and magnetic snap.** At p = 1 the drawn pose IS the card's
+     live pose (zero residual: the tilt rides `dockQ`, split by
+     `yawFor`/`residualFor`); scale and yaw arrive with velocity into the
+     same spring (`DOCK`: 1.5%, 0.8°) while `setFlight(1)` keeps tracking. On
+     that frame the card's hover frame flashes once (`mo:dock-contact` →
+     `.uhud--flash`, 250 ms) and ONE ripple runs through the field at the
+     card's centre (`window.__mo_disturb`, the shared pointer ripple).
+  5. **Hand-over.** Once the spring is back and the card's model is in,
+     faded up and still, the card is unlifted (`mo:handoff-lift` null) and
+     the rig hides on the frame after the card has drawn its model twice.
+     The rig is KEPT, so the next forward flight starts warm. The camera
+     held still while `wf-flying` was set; its drift comes back through
+     `stopDrift()`'s idle timer.
+
+  The protocol:
+  - **Keys.** `mo_node_back` is the page's record, `rig.screenPose()` =
+    `{ cx, cy, span, quat, fov, vw, vh, addr, t }`, written by the leave and
+    by every `pagehide` while the hero is drawn (that is what Back starts
+    from). `mo_node_seam_back` is the leave's last frame (WebP, alpha; never
+    on `pagehide`: a synchronous encode on every leave would tax every
+    navigation). `mo_node_ring` lets the ring's PREV/NEXT keep the inherited
+    `mo_node_return_origin`; a page booted with neither an arrival nor the
+    ring flag drops the origin and `mo_node_view` (`window.moPageReturn`,
+    `solid-hero-rig.jsx`, the one page-side definition, Wafer's page
+    included).
+  - **Before React** (`index.html`, top of `<body>`): `mo_node_return`, or a
+    `back_forward` navigation with a record under 5 s old, is a return. It is
+    parsed once into `window.__mo_return`, native scroll restoration is off,
+    and `#mo-seam-back` (z 901, void under the WebP) covers the boot.
+  - **Destination** (`window.moReturnDest`): the reel stop
+    (`window.moReelStopY(addr)`, the one stop formula, `work.jsx`) when the
+    node is featured and the origin is `work`; otherwise the field; `none`
+    for a node without a tile. The scroll is set at commit; `app.jsx`'s hash
+    replay yields to it.
+  - **The exact field-view restore** is a field return's FIRST choice. A
+    click on a FIELD tile (title view, drift mode) stores
+    `__mo_universe.viewState()` in `mo_node_view`: the camera's angles,
+    target angles, drift velocity, parallax gain and fov, and every card's
+    camera-relative position, rotation, scale, pending drift target and
+    model yaw, keyed by addr, plus scrollY, the viewport, the card's centre,
+    a timestamp and the addr. `window.moReturnView(ret)` accepts it only for
+    the same node, younger than 30 minutes, at the same viewport aspect
+    within 5%, with the card's centre well on screen; the Universe then
+    restores it at mount, before its first frame (camera at the origin, so
+    nothing else moves), and the dock lands where the visitor clicked. It is
+    a snapshot of STATE, not a second formula: `driftHome()` is still the
+    only definition of a free-drift position, it still composes the field
+    first, and `scatterTiles()` still uses it. Without a usable snapshot (a
+    direct link, All Projects, the menu, a ring move to another node, stale,
+    resized) the returning node takes the greeting slot instead (see "Where
+    the cards stand"). Reel returns keep `moReelStopY`; bfcache keeps its
+    frozen-state replay.
+  - **The Universe at mount** knows the return: the card is lifted from the
+    first frame, its model job starts first (and `core.jsx` warms it), a reel
+    return snaps the parade on its first reel frame, a field return restores
+    the snapshot or puts the node in the greeting slot.
+    `__mo_universe.cardTarget(addr)` is the live target
+    (`modelViewportBounds(addr, true)` reads a lifted card; the card quad
+    when there is no model), with `resolvable`, `ready`, `drawn` and
+    `stable`. The DOF probe skips flight frames. A bare `pageshow` no longer
+    unlifts; only an unclaimed restore does.
+  - **Phases** (`project-handoff.jsx`): SEAM (start on the record in the
+    hero's dress, carrying the seam's lift, drop the seam after 2 painted
+    frames) → ACQUIRE → TRAVEL (field and veil open from p = 0.6) → IMPACT
+    (flash, ripple) → PARK → HANDOVER. Back with bfcache claims
+    `mo:bf-reverse` (still frozen in `forward`, rig ready, context alive, a
+    tile, no reduced motion) and starts at ACQUIRE from the frozen forward
+    end. It reads no record: the leaving page writes `mo_node_back` from
+    another process and it lands ~50 ms AFTER `pageshow`, too late for a
+    synchronous claim.
+  - **Fallback ladder.** 1: park on the live target up to 2.5 s. 2: no model
+    on the card or the budget ran out: land on the card, unlift, fade the rig
+    over 250 ms. 3: reduced motion, and 4: no tile (`universe: false`) or no
+    target 1.5 s after the seam: the 700 ms `.wf--dissolve` at the computed
+    scroll. 5: wheel, touch, key, pointer-down, the menu, or the failsafe
+    timer: jump to the end state.
+  `lab/port/tmp/flight/reverse-probe2.cjs` measures it against the live card
+  (hand-over, seam with its lift, dock overshoot, turn, the one flash and
+  one ripple, the snapshot landing where the card was clicked, stale and
+  resized falling back, end state, scroll, camera, luma, click → hand-over
+  ≤ 2.8 s) for every entry path; run it with `forward-probe.cjs` after
+  touching either.
 - Build generated landing and page code with
   `npm run build --prefix tools/landing-runtime` (`npm.cmd` on Windows), verify
   freshness with `npm run check --prefix tools/landing-runtime`, and run the
@@ -605,6 +722,12 @@ A card placed in front only works if nothing stands in front of it, so any
 other card landing inside a 26° cone around that direction and nearer than
 `GREET_CLEAR_R` walks around the ring until it is clear. That is a rule and not
 a tuned phase offset on purpose: adding a project must not quietly re-break it.
+Registry order decides on a first visit only: a reverse dock that lands in the
+field without a usable field snapshot (see the exact field-view restore under
+"Runtime and validation") gives the RETURNING node the greeting slot
+(`greetIdx`; it takes slot 0 and the first node takes its spiral slot), so the
+card it docks onto is the one in front of you. On a portrait phone the greeting card is clamped to 0.45 of
+the half-width at its depth; at `GREET_POS.x` it sat past the right edge.
 
 **`driftHome(i, out, jitter)` is the only definition of a free-drift
 position.** It runs once per tile at mount to compose the opening view, and
