@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Wafer · SO THIN — a working prototype split keyboard</title>
+  <meta name="description" content="A working prototype: a 36-key wireless split keyboard, 4–8 mm depending where you measure. Turn the live 3D model and take it through eight places. By Oleksandr Maslov, Munich." />
+  <meta name="robots" content="noindex" />
+  <link rel="icon" href="data:," />
+  <!-- resolve like a root route: the shared demo audio fetches its samples relative to the document.
+       So an in-page anchor is written lab/wafer-story.html#id, and story.js scrolls instead of navigating. -->
+  <base href="../" />
+  <!-- Lab surface, excluded from the Pages deploy. Stage: ?stage=dark | ?stage=light, else the system's. -->
+  <script>
+    (function (d) {
+      var q = new URLSearchParams(location.search).get("stage");
+      d.dataset.stage = q === "dark" || (q !== "light" && matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light";
+      d.dataset.js = "";
+      // decided before first paint, so the layout never moves when the live model cannot start
+      var c = navigator.connection, m = matchMedia;
+      if (typeof WebGL2RenderingContext === "undefined") d.dataset.engine = "failed";
+      else if ((c && c.saveData) || m("(max-width: 760px) and (max-height: 520px)").matches || m("(forced-colors: active)").matches) d.dataset.engine = "saver";
+      // the photographs below the fold wait (data-src) until the live model has shown, or the reader scrolls
+      window.__promote = function () {
+        var i = document.querySelectorAll("img[data-src]");
+        for (var k = 0; k < i.length; k++) { i[k].src = i[k].getAttribute("data-src"); i[k].removeAttribute("data-src"); }
+      };
+      // fail open: if story.js has not started in 6 s the page reads as plain text and photographs (the hero shows its photograph);
+      // a late start takes the rescue back and restores the rest
+      window.__rescue = function () {
+        delete d.dataset.js;
+        if (!d.dataset.engine) { d.dataset.engine = "failed"; d.dataset.rescued = ""; }
+        window.__promote();
+      };
+      setTimeout(function () { if (!d.dataset.story) window.__rescue(); }, 6000);
+    })(document.documentElement);
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&family=Instrument+Serif:ital@1&display=swap" />
+  <!-- engine only: lab/mip.js draws the live screens in Montserrat. Not a page font, and never in story.css. -->
+  <link id="mont" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500&display=swap" media="print" onload="this.media='all'" />
+  <link rel="stylesheet" href="app/shared/styles/tokens.css" />
+  <link rel="stylesheet" href="lab/story.css" />
+  <noscript><style>.fallback { display: block !important; } .rv, .wipe { opacity: 1 !important; transform: none !important; clip-path: none !important; } img[data-src] { display: none; }</style></noscript>
+</head>
+<body>
+  <a class="skip" href="lab/wafer-story.html#content" data-jump="content">Skip to content</a>
+  <i class="sentinel" aria-hidden="true"></i>
+
+  <header class="hdr">
+    <a class="brand" href="lab/wafer-story.html" data-jump="top">Wafer</a>
+    <span class="tagline">SO THIN</span>
+    <span class="status">Working prototype</span>
+    <a class="hl" href="Wafer.html" data-wafer>Case study</a>
+    <button id="sound" class="snd" type="button" aria-pressed="false" data-ui>Sound <span class="st" aria-hidden="true">off</span></button>
+    <i class="sweep" aria-hidden="true"></i>
+  </header>
+
+  <main id="content" tabindex="-1">
+
+    <section id="hero" class="sec hero" data-layout="hero" data-place="0" aria-labelledby="h-hero">
+      <div class="wrap">
+        <div class="copy">
+          <p class="kicker rv0" style="--i: 0"><i class="dim" aria-hidden="true"></i><span>Working prototype · Munich · <span class="nb">since 03 / 2025</span></span></p>
+          <h1 id="h-hero" class="h1 rv0" style="--i: 1">Wafer.</h1>
+          <p class="lede rv0" style="--i: 2">A 36-key wireless split keyboard, <span class="nb"><span data-mark="thin">4</span>–<span data-mark="tall">8</span>&nbsp;mm</span> depending where you measure.</p>
+        </div>
+        <figure class="fallback" id="fallback">
+          <p class="fb-line" id="fb-failed">The live model didn’t start. This is the prototype instead.</p>
+          <div class="saver" id="saver">
+            <p>The live model waits for you.</p>
+            <button type="button" class="btn" id="load-live">Load the live model</button>
+          </div>
+          <div class="ph" style="aspect-ratio: 4 / 3"><img src="public/media/wafer/both-halves.webp" width="1500" height="1125" loading="lazy" decoding="async" alt="Both halves of Wafer side by side on a pale surface, keys up, the left screen showing a clock and the right screen a track title." /></div>
+          <figcaption class="cap"><i class="dim" aria-hidden="true"></i><span>both halves · screens on</span></figcaption>
+        </figure>
+        <div class="hero-foot">
+          <p class="note"><span class="live-only">Live 3D model of the keyboard, built from its CAD parts. </span>Photographs appear where I have them.</p>
+          <div class="hero-act live-only">
+            <p class="hint" id="hero-hint">Drag to turn it. Scroll to take it places.</p>
+            <div class="turn" role="group" aria-label="Turn the model"><button type="button" data-turn="-1" aria-label="Turn left">←</button><button type="button" data-turn="1" aria-label="Turn right">→</button></div>
+          </div>
+        </div>
+        <p class="sr" id="live-status" role="status"></p>
+        <noscript><p class="note nojs">This page is built around a live 3D model and needs JavaScript. The text and photographs below still read on their own.</p></noscript>
+      </div>
+    </section>
+
+    <canvas id="stage" tabindex="0" role="application" aria-roledescription="3D model" aria-describedby="stage-help"
+      aria-label="Live 3D model of Wafer, a 36-key wireless split keyboard with a black aluminium case"></canvas>
+    <p class="sr live-only" id="stage-help">Drag to turn it, or focus it and use the left and right arrow keys; Home puts it back. Type on your own keyboard to press its keys. Esc or Tab lets go.</p>
+    <svg id="marks" aria-hidden="true"></svg>
+
+    <section id="split" class="sec" data-layout="right" data-place="0" aria-labelledby="h-split">
+      <div class="wrap">
+        <div class="copy">
+          <p class="kicker rv"><i class="dim" aria-hidden="true"></i><span>01 / 08 · Desk</span></p>
+          <h2 id="h-split" class="h2 rv">Two halves.</h2>
+          <p class="lede rv">Thirty-six keys in two halves you can place shoulder-width apart. Wireless, with nothing between them.</p>
+          <p class="body rv">Flat on purpose: a thin split, not a contoured one. Numbers and symbols live on layers.</p>
+          <div class="hero-act live-only rv"><p class="hint live-only"><span class="fine">Click or Tab to it, then type on your keyboard. Esc lets go.</span><span class="coarse">Tap a key. The model types with you.</span></p><div class="turn" role="group" aria-label="Turn the model"><button type="button" data-turn="-1" aria-label="Turn left">←</button><button type="button" data-turn="1" aria-label="Turn right">→</button></div></div>
+          <figure class="fig wide-photo">
+            <div class="ph wipe" style="aspect-ratio: 15 / 14"><img data-src="public/media/wafer/hero-in-hand.webp" width="1125" height="1500" loading="lazy" decoding="async" style="object-position: 50% 100%" alt="A left half of Wafer held keys-up in a hand." /><noscript><img src="public/media/wafer/hero-in-hand.webp" width="1125" height="1500" loading="lazy" decoding="async" style="object-position: 50% 100%" alt="A left half of Wafer held keys-up in a hand." /></noscript></div>
+            <figcaption class="cap rv"><i class="dim" aria-hidden="true"></i><span>left half · in hand</span></figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <section id="profile" class="sec top" data-layout="profile" data-place="1" aria-labelledby="h-profile">
+      <div class="wrap">
+        <div class="copy">
+          <div class="p-text c-text">
+            <p class="kicker rv"><i class="dim" aria-hidden="true"></i><span>02 / 08 · Profile</span><span class="tag">FROM THE MODEL</span></p>
+            <div class="numeral rv">
+              <h2 id="h-profile" class="h2n"><span class="sr">Profile: </span><span data-mark="thin">4</span>–<span data-mark="tall">8</span>&nbsp;mm.<span class="sr"> From the model.</span></h2>
+              <div class="caliper" aria-hidden="true"><span data-mark="thin">4</span><i class="dim"></i><span><span data-mark="tall">8</span>&nbsp;mm</span></div>
+            </div>
+            <p class="lede rv">Stepped, not flat: about <span data-mark="thin">4</span>&nbsp;mm in the thin zones, about <span data-mark="tall">8</span>&nbsp;mm around the screens.</p>
+            <p class="body rv">Read off the 3D model: case alone, keycaps not counted. My one CAD section reads 4.624&nbsp;mm at one edge. No production drawing yet: design numbers, not a specification.</p>
+          </div>
+          <div class="p-figs">
+            <figure class="fig">
+              <div class="ph wipe" style="aspect-ratio: 2 / 1"><img data-src="public/media/wafer/side-profile.webp" width="1125" height="1500" loading="lazy" decoding="async" style="object-position: 50% 74%" alt="One Wafer half held edge-on in a hand against a window: a thin blade with a stepped top surface." /><noscript><img src="public/media/wafer/side-profile.webp" width="1125" height="1500" loading="lazy" decoding="async" style="object-position: 50% 74%" alt="One Wafer half held edge-on in a hand against a window: a thin blade with a stepped top surface." /></noscript></div>
+              <figcaption class="cap rv"><i class="dim" aria-hidden="true"></i><span>side profile · in hand</span></figcaption>
+            </figure>
+            <figure class="fig">
+              <div class="ph wipe" style="aspect-ratio: 728 / 471"><img data-src="public/media/wafer/journal-thin-profile.webp" width="728" height="471" loading="lazy" decoding="async" alt="CAD section of the case edge with a purple measurement line reading 4.624 mm." /><noscript><img src="public/media/wafer/journal-thin-profile.webp" width="728" height="471" loading="lazy" decoding="async" alt="CAD section of the case edge with a purple measurement line reading 4.624 mm." /></noscript></div>
+              <figcaption class="cap rv"><i class="dim" aria-hidden="true"></i><span>cad section · 4.624&nbsp;mm at one edge</span><span class="tag">CAD</span></figcaption>
+            </figure>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="screens" class="sec top" data-layout="low" data-place="2" aria-labelledby="h-screens">
+      <div class="wrap">
+        <div class="copy">
+          <div class="p-text">
+          <p class="kicker rv"><i class="dim" aria-hidden="true"></i><span>03 / 08 · Screens</span></p>
+          <h2 id="h-screens" class="h2 rv">Screens.</h2>
+          <p class="lede rv">Two memory-in-pixel panels, one per half. No backlight: they read by room light.</p>
+          <p class="body rv">On the prototype, the right screen shows what’s playing, the left the clock and layer. <span class="live-only">Here the page drives both: narration, typing, taps, volume. That part is a page trick.</span></p>
+          <p class="hint rv live-only">Tap a screen.</p>
+          <button type="button" class="btn rv live-only" id="next-profile" disabled>Next profile</button>
+          </div>
+          <div class="p-figs one">
+          <figure class="fig tall-photo">
+            <div class="ph wipe" style="aspect-ratio: 3 / 4"><img data-src="public/media/wafer/display-detail.webp" width="1125" height="1500" loading="lazy" decoding="async" alt="Close-up of both Wafer screens on a white surface. The left shows the clock at 13:46, a UA label, 50% volume, a profile row and Layer Base. The right shows Playing, the track Patience and the artist LOW ROAR, set along the long edge." /><noscript><img src="public/media/wafer/display-detail.webp" width="1125" height="1500" loading="lazy" decoding="async" alt="Close-up of both Wafer screens on a white surface. The left shows the clock at 13:46, a UA label, 50% volume, a profile row and Layer Base. The right shows Playing, the track Patience and the artist LOW ROAR, set along the long edge." /></noscript></div>
+            <figcaption class="cap rv"><i class="dim" aria-hidden="true"></i><span>memory-in-pixel · both halves</span></figcaption>
+          </figure>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tent" class="sec" data-layout="right" data-place="3" aria-labelledby="h-tent">
+      <div class="wrap">
+        <div class="copy">
+          <p class="kicker rv"><i class="dim" aria-hidden="true"></i><span>04 / 08 · Tent</span><span class="tag">CONCEPT</span></p>
+          <h2 id="h-tent" class="h2 rv">Tent.<span class="sr"> Concept, drawn not built.</span></h2>
+          <p class="lede rv">A puck under each half would lift the inner edge 15°, pinky edge on the desk.</p>
+          <p class="body rv">It’s a concept stand. Drawn, not built.</p>
+          <p class="hint rv live-only">Drag a half sideways.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="magnets" class="sec" data-layout="left" data-place="4" aria-labelledby="h-magnets">
+      <div class="wrap">
+        <div class="copy">
+          <p class="kicker rv"><i class="dim" aria-hidden="true"></i><span>05 / 08 · Magnets</span><span class="tag">MODELLED</span></p>
+          <h2 id="h-magnets" class="h2 rv">Magnets.<span class="sr"> Modelled, no photograph yet.</span></h2>
+          <p class="lede rv">A ring and a bar magnet in each back. Push the halves together.</p>
+          <p class="body rv">The ring pulls them into place; the bar steadies them. They’re plain magnets: no sensors, no sleep-on-fold. That would need a new board.</p>
+          <p class="hint rv live-only">Grab a half. Push it across.<span class="rail-hint"> Or use the rail.</span></p>
+        </div>
+      </div>
+    </section>
+
+    <section id="folded" class="sec" data-layout="right" data-place="5" aria-labelledby="h-folded">
+      <div class="wrap">
+        <div class="copy">
+          <p class="kicker rv"><i class="dim" aria-hidden="true"></i><span>06 / 08 · Folded</span><span class="tag">MODELLED</span><span class="tag">FROM THE MODEL</span></p>
+          <div class="numeral rv">
+            <h2 id="h-folded" class="h2n"><span class="sr">Folded: </span><span class="pre">About </span><span data-mark="fold">16</span>&nbsp;mm.<span class="sr"> Modelled, from the model.</span></h2>
+            <div class="caliper" aria-hidden="true"><span>0</span><i class="dim"></i><span><span data-mark="fold">16</span>&nbsp;mm</span></div>
+          </div>
+          <p class="lede rv">Back to back, one slab. Measured from the model.</p>
+          <p class="body rv">Keys and screens face outward, so it would need a sleeve; I haven’t made one. The real pair hasn’t been measured with calipers yet.</p>
+          <p class="hint rv live-only">Pull the halves apart.<span class="rail-hint"> Or use the rail.</span></p>
+        </div>
+      </div>
+    </section>
+
+    <section id="wall" class="sec" data-layout="left" data-place="6" aria-labelledby="h-wall">
+      <div class="wrap">
+        <div class="copy">
+          <p class="kicker rv"><i class="dim" aria-hidden="true"></i><span>07 / 08 · Wall</span><span class="tag">MODELLED</span></p>
+          <h2 id="h-wall" class="h2 rv">Wall.<span class="sr"> Modelled.</span></h2>
+          <p class="lede rv">The same magnets hold the halves to a steel panel.</p>
+          <p class="hint rv live-only">Drag to look around.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="fridge" class="sec" data-layout="right" data-place="7" aria-labelledby="h-fridge">
+      <div class="wrap">
+        <div class="copy">
+          <h2 id="h-fridge" class="h2s rv"><span class="sr">Fridge: </span>One more thing.</h2>
+          <p class="lede rv">It holds on a fridge, too.</p>
+          <p class="body rv">This one is a photograph.<span class="live-only photo-only"> The model’s right screen shows it in one bit.</span></p>
+          <figure class="fig">
+            <div class="pair">
+              <div class="ph wipe" style="aspect-ratio: 5 / 4"><img data-src="public/media/wafer/magnets-steel.webp" width="1125" height="1500" loading="lazy" decoding="async" style="object-position: 50% 0" alt="Both Wafer halves stuck to a white fridge door, keys facing out." /><noscript><img src="public/media/wafer/magnets-steel.webp" width="1125" height="1500" loading="lazy" decoding="async" style="object-position: 50% 0" alt="Both Wafer halves stuck to a white fridge door, keys facing out." /></noscript></div>
+              <canvas class="bit photo-only live-only" id="bit" width="68" height="160" role="img" aria-label="The same photograph as the model’s right screen draws it: one bit, dithered."></canvas>
+            </div>
+            <figcaption class="cap rv"><i class="dim" aria-hidden="true"></i><span>both halves · fridge door<span class="live-only photo-only"> · same photograph · one bit</span></span></figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <section id="build" class="sec sheet" data-layout="hidden" data-place="-1" aria-labelledby="h-build">
+      <div class="wrap grid">
+        <div class="b-head">
+          <p class="kicker rv"><i class="dim" aria-hidden="true"></i><span>Build record</span></p>
+          <h2 id="h-build" class="h2 rv">Thinness is a stack budget.</h2>
+          <p class="lede rv">Switches, board, battery, screens, magnets and an aluminium wall compete for the same few millimetres.</p>
+        </div>
+        <div class="b-body body rv">
+          <p>More than thirty printed cases came before the case went to CNC. That run was an iteration: it exposed tolerance problems, and where to add material back.</p>
+          <p>The case was ordered, not milled by me.</p>
+          <p>The battery reporting for the power chip lives in my own ZMK fork, not upstream.</p>
+        </div>
+        <figure class="fig f-assembly">
+          <div class="ph wipe" style="aspect-ratio: 3 / 4"><img data-src="public/media/wafer/assembly.webp" width="1125" height="1500" loading="lazy" decoding="async" alt="An assembled Wafer half on foam packaging, a bare half-board with its screen and USB-C port beside it, and two flat black top frames behind." /><noscript><img src="public/media/wafer/assembly.webp" width="1125" height="1500" loading="lazy" decoding="async" alt="An assembled Wafer half on foam packaging, a bare half-board with its screen and USB-C port beside it, and two flat black top frames behind." /></noscript></div>
+          <figcaption class="cap rv"><i class="dim" aria-hidden="true"></i><span>assembled half · bare pcb · top frames</span></figcaption>
+        </figure>
+        <figure class="fig f-cnc">
+          <div class="ph wipe" style="aspect-ratio: 1.57 / 1"><img data-src="public/media/wafer/journal-cnc-sim.webp" width="1082" height="717" loading="lazy" decoding="async" style="object-position: 50% 100%" alt="Fusion CAM simulation of the case: green stock, blue cut pockets, yellow toolpaths." /><noscript><img src="public/media/wafer/journal-cnc-sim.webp" width="1082" height="717" loading="lazy" decoding="async" style="object-position: 50% 100%" alt="Fusion CAM simulation of the case: green stock, blue cut pockets, yellow toolpaths." /></noscript></div>
+          <figcaption class="cap rv"><i class="dim" aria-hidden="true"></i><span>fusion · cnc simulation</span></figcaption>
+        </figure>
+        <figure class="fig f-sch">
+          <div class="ph wipe" style="aspect-ratio: 1165 / 789"><img data-src="public/media/wafer/journal-schematic.webp" width="1165" height="789" loading="lazy" decoding="async" alt="KiCad schematic, sheet 1 of 2: key matrix, power chip, USB-C, radio module and display connector." /><noscript><img src="public/media/wafer/journal-schematic.webp" width="1165" height="789" loading="lazy" decoding="async" alt="KiCad schematic, sheet 1 of 2: key matrix, power chip, USB-C, radio module and display connector." /></noscript></div>
+          <figcaption class="cap rv"><i class="dim" aria-hidden="true"></i><span>schematic · sheet 1/2 · kicad</span></figcaption>
+        </figure>
+        <figure class="fig f-vbat">
+          <div class="ph wipe" style="aspect-ratio: 893 / 810"><img data-src="public/media/wafer/journal-vbat-driver.webp" width="893" height="810" loading="lazy" decoding="async" alt="C source that reads battery voltage from the nPM1300 over I2C, with a short delay for the conversion." /><noscript><img src="public/media/wafer/journal-vbat-driver.webp" width="893" height="810" loading="lazy" decoding="async" alt="C source that reads battery voltage from the nPM1300 over I2C, with a short delay for the conversion." /></noscript></div>
+          <figcaption class="cap rv"><i class="dim" aria-hidden="true"></i><span>nPM1300 · battery reporting · my zmk fork</span></figcaption>
+        </figure>
+        <figure class="fig f-six">
+          <div class="ph wipe" style="aspect-ratio: 21 / 9"><img data-src="public/media/wafer/journal-six-layer-mistake.webp" width="1382" height="789" loading="lazy" decoding="async" style="object-position: 50% 12%" alt="KiCad view of dense multicolour routing around a large chip footprint on an early version of the board." /><noscript><img src="public/media/wafer/journal-six-layer-mistake.webp" width="1382" height="789" loading="lazy" decoding="async" style="object-position: 50% 12%" alt="KiCad view of dense multicolour routing around a large chip footprint on an early version of the board." /></noscript></div>
+          <figcaption class="cap rv"><i class="dim" aria-hidden="true"></i><span>board 1 · kicad · rebuilt twice</span></figcaption>
+        </figure>
+        <p class="b-credit body rv">The board began from Mikoto’s MCU schematic; I rebuilt it twice.</p>
+      </div>
+    </section>
+
+    <section id="spec" class="sec sheet" data-layout="hidden" data-place="-1" aria-labelledby="h-spec">
+      <div class="wrap">
+        <div class="s-head">
+          <h2 id="h-spec" class="h2 rv">Built, modelled, unproven.</h2>
+          <p class="lede rv">What exists, what comes from the model, and what isn’t proven.</p>
+        </div>
+        <ul class="legend rv" role="list">
+          <li><span class="tag">BUILT</span> exists on the prototype</li>
+          <li><span class="tag">FROM THE MODEL</span> read off the 3D model</li>
+          <li><span class="tag">MODELLED</span> shown in the model; no photograph of it on this page</li>
+          <li><span class="tag">CAD</span> a dimension read off a CAD section</li>
+          <li><span class="tag">CONCEPT</span> drawn, not built</li>
+          <li><span class="tag">NOT YET MEASURED</span> no data yet</li>
+        </ul>
+        <dl class="spec">
+          <div class="row rv"><dt>Keys</dt><dd><span class="val">36, 18 per half</span><span class="tag">BUILT</span></dd></div>
+          <div class="row rv"><dt>Switches</dt><dd><span class="val">Kailh PG1316S low-profile, soldered</span><span class="tag">BUILT</span></dd></div>
+          <div class="row rv"><dt>Case</dt><dd><span class="val">Aluminium case, ordered; black as photographed</span><span class="tag">BUILT</span></dd></div>
+          <div class="row rv"><dt>Thickness</dt><dd><span class="val"><span class="nb"><span data-mark="thin">4</span>–<span data-mark="tall">8</span>&nbsp;mm</span> depending where you measure</span><span class="tag">FROM THE MODEL</span><span class="note">The thin figure is the case alone, keycaps not counted; the 8 is the model’s tallest point, at the screens. The CAD section reads 4.624&nbsp;mm at one edge. No drawing of the production part exists yet.</span></dd></div>
+          <div class="row rv"><dt>Folded</dt><dd><span class="val">about <span data-mark="fold">16</span>&nbsp;mm (2 × 8.1&nbsp;mm)</span><span class="tag">FROM THE MODEL</span><span class="note">Back to back. The real pair hasn’t been measured with calipers yet.</span></dd></div>
+          <div class="row rv"><dt>Screens</dt><dd><span class="val">2 × 68 × 160 memory-in-pixel, 1-bit, no backlight</span><span class="tag">BUILT</span></dd></div>
+          <div class="row rv"><dt>Radio</dt><dd><span class="val">ISP1807 module (nRF52840), Bluetooth LE, one per half</span><span class="tag">BUILT</span></dd></div>
+          <div class="row rv"><dt>Power</dt><dd><span class="val">nPM1300 and USB-C on each half</span><span class="tag">BUILT</span></dd></div>
+          <div class="row rv"><dt>Battery</dt><dd><span class="val">one cell per half, 250&nbsp;mAh prototype cell</span><span class="tag">BUILT</span><span class="tag">NOT YET MEASURED</span><span class="note">Runtime has no data yet. Capacity is not runtime.</span></dd></div>
+          <div class="row rv"><dt>Board</dt><dd><span class="val">One custom PCB per half, designed in KiCad</span><span class="tag">BUILT</span></dd></div>
+          <div class="row rv"><dt>Magnets</dt><dd><span class="val">a ring and a bar in each back</span><span class="tag">MODELLED</span><span class="note">Geometry from the model. No photograph of the backs yet. Passive: no sensors.</span></dd></div>
+          <div class="row rv"><dt>Firmware</dt><dd><span class="val">ZMK on Zephyr, public repo; nPM1300 battery reporting in a personal fork, not upstream</span><span class="tag">BUILT</span></dd></div>
+          <div class="row rv"><dt>Layout</dt><dd><span class="val">36-key column stagger, three thumb keys per half, layers instead of a number row</span><span class="tag">BUILT</span></dd></div>
+        </dl>
+        <h3 class="ledger-h rv">Not yet proven</h3>
+        <ul class="ledger rv" role="list">
+          <li>Battery runtime. Radio performance inside the aluminium case. The folded pair measured with calipers, and whether it stays shut while walking.</li>
+          <li>Protection for keys and screens when folded.</li>
+          <li>Certification of the finished device. There is none yet.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="end" class="sec end" data-layout="end" data-place="0" aria-labelledby="h-end">
+      <div class="wrap">
+        <div class="copy">
+          <h2 id="h-end" class="h2n rv">Working prototype.</h2>
+          <div class="e-cols">
+            <div class="e-text">
+              <p class="body rv">Working electronics. Working firmware. Physical enclosure produced and iterated. Manufacturing validation still in progress.</p>
+              <p class="body rv">Designed by Oleksandr Maslov in Munich, since March 2025. It isn’t for sale.</p>
+            </div>
+            <blockquote class="quote rv"><p>The device now proves the architecture.</p><footer>From the case study · the ledger above is what it does not yet prove</footer></blockquote>
+          </div>
+          <div class="hero-act live-only rv"><p class="hint live-only" id="end-hint">Drag it. Type on it.</p><div class="turn" role="group" aria-label="Turn the model"><button type="button" data-turn="-1" aria-label="Turn left">←</button><button type="button" data-turn="1" aria-label="Turn right">→</button></div></div>
+          <ul class="links" role="list">
+            <li class="rv"><i class="dim" aria-hidden="true"></i><a class="hl" href="Wafer.html" data-wafer>Case study</a></li>
+            <li class="rv"><i class="dim" aria-hidden="true"></i><a class="hl" href="https://github.com/oleksandrmaslov/wafer-zmk-config" rel="noopener">Firmware config&nbsp;<span aria-hidden="true">↗</span></a></li>
+            <li class="rv"><i class="dim" aria-hidden="true"></i><a class="hl" href="https://blueprint.hackclub.com/projects/2800" rel="noopener">Build journal&nbsp;<span aria-hidden="true">↗</span></a></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <p>Oleksandr Maslov · Munich</p>
+    <p>Live model · three.js, from the CAD · photographs of the prototype, CAD, CAM and KiCad captures, one code screenshot</p>
+  </footer>
+
+  <p class="pill" id="pill" aria-hidden="true">Keys armed · Esc lets go</p>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+  <!-- the portfolio's sampled demo audio is not here: story.js loads it, in Wafer.html's order, on the first Sound toggle -->
+  <script type="module" src="lab/story.js" onerror="window.__rescue()"></script>
+</body>
+</html>
