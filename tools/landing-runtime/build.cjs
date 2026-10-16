@@ -17,12 +17,13 @@ const jsx = (file) => ({
   transform: true,
 });
 const classic = (file) => ({ file, transform: false });
+const esm = (file, global) => ({ file, esm: global });
 const inlineJsx = (id, label, needle) => ({ inline: id, label, needle, transform: true });
 
 const CORE = "app/shared/core.jsx";
 const PROJECT_DATA = "app/projects/data.jsx";
 const MODEL_VIEWER = "app/projects/rendering/model-viewer.jsx";
-const SOLID_MATERIALS = "app/projects/rendering/solid-materials.js";
+const STUDIO = "app/projects/rendering/studio.js";
 const SOLID_HERO = "app/projects/rendering/solid-hero-rig.jsx";
 const HANDOFF_RIG = "app/projects/rendering/project-handoff-rig.jsx";
 const ASCII_ENGINE = "app/projects/components/ascii-photo.js";
@@ -45,6 +46,7 @@ const landingSourceFiles = [
   "app/shared/key-button.jsx",
   "app/landing/components/ascii-wordmark.jsx",
   "app/projects/rendering/model-viewer.jsx",
+  "app/projects/rendering/studio.js",
   "app/projects/rendering/solid-hero-rig.jsx",
   "app/projects/rendering/project-handoff-rig.jsx",
   "app/landing/components/project-preview.jsx",
@@ -81,7 +83,7 @@ function handoffDefinition(html, slug, options = {}) {
   const projectSources = [
     jsx(CORE),
     classic(ASCII_ENGINE),
-    classic(SOLID_MATERIALS),
+    esm(STUDIO, "MOStudio"),
     jsx(PROJECT_DATA),
     jsx(MODEL_VIEWER),
     jsx(SOLID_HERO),
@@ -105,7 +107,7 @@ function standardDefinition(html, slug, options = {}) {
     classic(ASCII_ENGINE),
     jsx(PROJECT_DATA),
     jsx(MODEL_VIEWER),
-    classic(SOLID_MATERIALS),
+    esm(STUDIO, "MOStudio"),
     jsx(SOLID_HERO),
     jsx(ASCII_FIGURE),
   );
@@ -134,7 +136,7 @@ const pageDefinitions = [
     phases: [
       phase("all-projects-project", [
         jsx(CORE),
-        jsx(MODEL_VIEWER), classic(SOLID_MATERIALS),
+        jsx(MODEL_VIEWER), esm(STUDIO, "MOStudio"),
         jsx(KEY_BUTTON),
       ]),
       phase("all-projects-page", [jsx("app/projects/index/app.jsx"), classic(SCROLLBAR)]),
@@ -151,7 +153,7 @@ const pageDefinitions = [
     html: "Design System.html",
     phases: [phase("design-system-page", [
       jsx(CORE),
-      jsx(MODEL_VIEWER), classic(SOLID_MATERIALS),
+      jsx(MODEL_VIEWER), esm(STUDIO, "MOStudio"),
       jsx("app/design-system/event-bus.jsx"),
       jsx("app/design-system/foundations.jsx"),
       jsx(KEY_BUTTON),
@@ -189,7 +191,7 @@ const pageDefinitions = [
       classic("demo/wafer-board.js"),
       classic("demo/wafer-demo.js"),
       classic(ASCII_ENGINE),
-      classic(SOLID_MATERIALS),
+      esm(STUDIO, "MOStudio"),
       jsx(PROJECT_DATA),
       jsx(MODEL_VIEWER),
       jsx(SOLID_HERO),
@@ -247,6 +249,25 @@ function emitClassic(relativePath) {
     throw new Error(`Babel returned no output for ${relativePath}.`);
   }
   return `\n/* ---- ${relativePath} ---- */\n${result.code}\n;\n`;
+}
+
+// An ES module with no imports, inlined as window[global]. The lab and node
+// import the same file natively, so it stays a module on disk.
+function emitModule(relativePath, global) {
+  const source = readSource(relativePath);
+  if (/^\s*import\s/m.test(source)) throw new Error(`${relativePath} must not import: the build inlines it as window.${global}.`);
+  const result = Babel.transform(source, {
+    filename: relativePath,
+    sourceType: "module",
+    presets: [],
+    plugins: ["transform-modules-commonjs"],
+    comments: false,
+    compact: true,
+    minified: true,
+    sourceMaps: false,
+  });
+  if (!result || typeof result.code !== "string") throw new Error(`Babel returned no output for ${relativePath}.`);
+  return `\n/* ---- ${relativePath} ---- */\n(function(exports){${result.code}\n})(window.${global}={});\n`;
 }
 
 function escapeRegExp(value) {
@@ -357,6 +378,7 @@ function buildPageRuntime(definition, item, html) {
   ].join("\n");
   const body = item.sources.map((source) => {
     if (source.inline) return transformSource(inlineSource(html, source, definition.html), source.label);
+    if (source.esm) return emitModule(source.file, source.esm);
     return source.transform ? compile(source.file) : emitClassic(source.file);
   }).join("");
   return banner + body;
@@ -456,7 +478,8 @@ const landingBanner = [
 // Keep native dynamic imports in the lazy menu dependency loader. The env
 // preset would turn them into CommonJS require(), unavailable in the browser.
 const landingRuntime = landingBanner + landingSourceFiles.map(file =>
-  file === "app/shared/menu-renderer.js" ? emitClassic(file) : compile(file)).join("");
+  file === STUDIO ? emitModule(file, "MOStudio")
+    : file === "app/shared/menu-renderer.js" ? emitClassic(file) : compile(file)).join("");
 const landingRuntimeHash = hashText(landingRuntime);
 
 const pageStates = pageDefinitions.map((definition) => {
