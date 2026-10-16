@@ -2157,17 +2157,11 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       // sonify the click: strike this node + let the 0x00 carrier bloom
       if (window.MOSound && MOSound.open) MOSound.open(p.addr);
 
-      // Aim the camera at the tile first so the screen composes around it.
-      const rel = m.position.clone().sub(cam.pos);
-      const yaw = Math.atan2(rel.x, -rel.z);
-      const flat = Math.sqrt(rel.x * rel.x + rel.z * rel.z);
-      const pitch = Math.atan2(rel.y, flat);
-      camTarget.yaw   = nearestAngle(camTarget.yaw, yaw);
-      camTarget.pitch = Math.max(-1.45, Math.min(1.45, pitch));
-
-      // If this project has its own page, fly to it.
+      // If this project has its own page, fly to it. The camera holds still:
+      // the flight lifts the model out of the card exactly where the visitor
+      // sees it, so turning or dollying here only slid the card away from the
+      // origin the flight had already measured.
       if (p.file) {
-        cam.vel = Math.max(cam.vel, 6);   // small forward dolly = "clicking into"
         // where the model sits on screen NOW (card quad only as a fallback)
         const _mb = modelViewportBounds(p.addr);
         const originRect = onScreenBox(_mb) ? _mb : tileViewportBounds(m);
@@ -2175,6 +2169,12 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         return;
       }
 
+      // No page: aim the camera at the tile so the screen composes around it.
+      // forward = (-sin yaw, ., -cos yaw), so facing `rel` is atan2(-x, -z).
+      const rel = m.position.clone().sub(cam.pos);
+      const flat = Math.sqrt(rel.x * rel.x + rel.z * rel.z);
+      camTarget.yaw   = nearestAngle(camTarget.yaw, Math.atan2(-rel.x, -rel.z));
+      camTarget.pitch = Math.max(-1.45, Math.min(1.45, Math.atan2(rel.y, flat)));
       cam.vel = Math.max(cam.vel, 0);
       setActiveAddr(p.addr);
       if (onActive) onActive(p);
@@ -2453,7 +2453,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         }
         if (nearTile) {
           const rel = nearTile.position.clone().sub(cam.pos);
-          camTarget.yaw = nearestAngle(camTarget.yaw, Math.atan2(rel.x, -rel.z));
+          camTarget.yaw = nearestAngle(camTarget.yaw, Math.atan2(-rel.x, -rel.z));
           camTarget.pitch = Math.max(-1.2, Math.min(1.2, Math.atan2(rel.y, Math.sqrt(rel.x * rel.x + rel.z * rel.z))));
         }
         if (window.__mo_disturb) window.__mo_disturb(window.innerWidth / 2, window.innerHeight / 2, 0.9);
