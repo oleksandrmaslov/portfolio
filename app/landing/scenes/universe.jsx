@@ -264,7 +264,10 @@ function makeAmbientAtlas(labels, THREE) {
 function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = null }) {
   const mountRef   = React.useRef(null);
   const overlayRef = React.useRef(null);
+  const flashRef   = React.useRef(null);
+  const flashObjRef = React.useRef(null);
   const [hover, setHover] = React.useState(null);
+  const [flash, setFlash] = React.useState(null);   // the dock's contact flash
   const [activeAddr, setActiveAddr] = React.useState(null);
   const [idleNote, setIdleNote] = React.useState(false);
 
@@ -2446,6 +2449,20 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     window.addEventListener("pagehide", onUniversePageHide);
     window.addEventListener("pageshow", onUniversePageWake);
     window.addEventListener("mo:page-restored", onUniversePageWake);
+    /* CONTACT: the dock has landed. The card's teal frame (the hover HUD's
+       outline) flashes once, ~250 ms (.uhud--flash), then unmounts. */
+    let flashT = 0;
+    const onDockContact = (e) => {
+      const addr = e.detail && e.detail.addr;
+      const m = addr && tiles.find((t) => t.userData.project.addr === addr);
+      if (!m) return;
+      flashObjRef.current = m;
+      setFlash({ project: m.userData.project, n: Date.now() });
+      clearTimeout(flashT);
+      flashT = setTimeout(() => { flashObjRef.current = null; setFlash(null); }, 280);
+      wakeUniverseLoop();
+    };
+    window.addEventListener("mo:dock-contact", onDockContact);
 
     function scatterTiles() {
       // Hand the field back to free drift. The tile keeps its current position
@@ -2974,6 +2991,10 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
          targeting frame so its brackets hug the card's true (rotated) shape.
          No viewport clamp: the frame tracks the card exactly and clips
          naturally at the screen edge, instead of detaching to the corner. */
+      if (flashObjRef.current && flashRef.current && flashRef.current.__updateHUD) {
+        const corners = tileScreenCorners(flashObjRef.current);
+        if (corners) flashRef.current.__updateHUD(corners);
+      }
       if (hoverObjRef.current && overlayRef.current) {
         const corners = tileScreenCorners(hoverObjRef.current);
         const el = overlayRef.current;
@@ -3309,6 +3330,8 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       window.removeEventListener("pageshow", onUniversePageWake);
       window.removeEventListener("mo:page-restored", onUniversePageWake);
       window.removeEventListener("mo:handoff-lift", onHandoffLift);
+      window.removeEventListener("mo:dock-contact", onDockContact);
+      clearTimeout(flashT);
       if (pauseSignalInstalled) {
         const finalPauseValue = pauseSignalValue;
         try {
@@ -3336,6 +3359,14 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         <window.UniverseHoverCard
           project={hover.project}
           panelRef={overlayRef}
+        />
+      )}
+      {flash && window.UniverseHoverCard && (
+        <window.UniverseHoverCard
+          key={flash.n}
+          project={flash.project}
+          panelRef={flashRef}
+          flash
         />
       )}
 

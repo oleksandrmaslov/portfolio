@@ -1,7 +1,8 @@
 /* Card lock-on frame. Twelve fixed-size segments follow the projected quad
    through transforms only; no per-frame SVG geometry or layout coordinates.
-   The bright brackets, soft glow and faint outline retain the existing look. */
-function UniverseHoverCard({ project, panelRef }) {
+   The bright brackets, soft glow and faint outline retain the existing look.
+   flash: the dock's contact beat, the same frame flashed once with no tab. */
+function UniverseHoverCard({ project, panelRef, flash = false }) {
   const segments = React.useRef([]);
   const tabRef = React.useRef(null);
   React.useLayoutEffect(() => {
@@ -37,13 +38,13 @@ function UniverseHoverCard({ project, panelRef }) {
     return () => { delete el.__updateHUD; };
   }, [panelRef]);
   return (
-    <div className="uhud" ref={panelRef} aria-hidden="true">
+    <div className={"uhud" + (flash ? " uhud--flash" : "")} ref={panelRef} aria-hidden="true">
       <div className="uhud__lock" key={project.addr}>
         {Array.from({ length: 12 }, (_, i) => <span key={i} className={"uhud__segment " + (i < 4 ? "uhud__outline" : "uhud__bk")} ref={n => { segments.current[i] = n; }} />)}
       </div>
-      <div className="uhud__tab" ref={tabRef} key={"tab-" + project.addr}>
+      {!flash && <div className="uhud__tab" ref={tabRef} key={"tab-" + project.addr}>
         <span className="uhud__tabLabel"><span className="uhud__tabDot" />Open project</span>
-      </div>
+      </div>}
     </div>
   );
 }

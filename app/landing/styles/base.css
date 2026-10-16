@@ -427,6 +427,10 @@ body.mo-explore .universe__mount { touch-action: none; }
 /* Only transforms move. The layer dimensions never follow the card. */
 .uhud__lock {position:absolute;inset:0;animation:hudLockIn 240ms var(--e-out) both}
 @keyframes hudLockIn {from {opacity:0} to {opacity:1}}
+/* The dock's contact: the card's frame flashes once as the model snaps home. */
+.uhud--flash .uhud__lock {animation:hudFlash 250ms var(--e-out) both}
+.uhud--flash .uhud__outline {opacity:.6}
+@keyframes hudFlash {0% {opacity:0} 25% {opacity:1} 100% {opacity:0}}
 .uhud__segment {position:absolute;left:0;top:0;width:28px;height:1px;background:var(--signal);transform-origin:0 0;will-change:transform}
 .uhud__outline {opacity:.22}
 .uhud__bk {height:1.5px;box-shadow:0 0 5px var(--signal-glow)}
