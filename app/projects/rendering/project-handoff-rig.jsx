@@ -9,13 +9,13 @@
      · a procedural "node-shell" PROXY for nodes whose GLB isn't
        ready (model.ready === false) — honest, wireframe, address
        + carrier particle, no fake product shape;
-     · reusable setProject plus getYaw / setYaw / sync+async seam capture
-       on top of the classic API
-       (startFromScreen, setLayout, snapToLayout, setEaseRate,
-        nudgeYaw, update, render, dispose).
+     · reusable setProject plus async seam capture on top of the classic
+       API (startFromScreen, flyTo / dockTo, setFlight, handoff,
+       snapToLayout, captureFrame, update, render, dispose).
    ============================================================ */
 (function () {
   const SIGNAL = 0x00f0c8;
+  const NH_SEAM_TYPE = "image/webp";   // keeps alpha: see captureFrame in solid-hero-rig.jsx
 
   /* ---- procedural proxy: the "node-shell" ----
      A thin line construction: wireframe bounding volume, inner
@@ -103,16 +103,6 @@
     rig.getProjectAddr = () => currentAddr;
     rig.getYaw = () => rig.yaw;
     rig.setYaw = (y) => { rig.snapToLayout(0, 1, 0, y); };
-    rig.captureFrame = (tw = 1100) => {
-      try {
-        const cnv = rig.el;
-        if (!cnv || !cnv.width) return null;
-        const th = Math.round(tw * cnv.height / cnv.width);
-        const tc = document.createElement("canvas"); tc.width = tw; tc.height = th;
-        tc.getContext("2d").drawImage(cnv, 0, 0, tw, th);
-        return tc.toDataURL("image/jpeg", 0.82);
-      } catch (_) { return null; }
-    };
     rig.captureFrameAsync = async (tw = 1100) => {
       try {
         const cnv = rig.el;
@@ -123,7 +113,7 @@
         // through toBlob instead of the synchronous toDataURL hot path.
         tc.getContext("2d").drawImage(cnv, 0, 0, tw, th);
         if (!tc.toBlob) return rig.captureFrame(tw);
-        const blob = await new Promise((resolve) => tc.toBlob(resolve, "image/jpeg", 0.82));
+        const blob = await new Promise((resolve) => tc.toBlob(resolve, NH_SEAM_TYPE, 0.9));
         if (!blob) return null;
         return await new Promise((resolve) => {
           const reader = new FileReader();

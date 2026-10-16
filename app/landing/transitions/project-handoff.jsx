@@ -36,7 +36,7 @@
 
    Session protocol (generic — the old mo_wafer_* keys are gone):
      mo_node_addr / mo_node_arrive / mo_node_yaw
-     mo_node_seam     JPEG dataURL (stored separately — large)
+     mo_node_seam     WebP dataURL with alpha (stored separately — large)
      mo_node_return / mo_node_return_addr / mo_node_return_target
      mo_node_return_origin
    ============================================================ */

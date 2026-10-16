@@ -619,6 +619,21 @@
         beatMs = 0;
       },
       resetOrbit() { tgt.yaw = RIG.arriveYaw; tgt.pitch = RIG.arrivePitch; },
+      /* The seam: the frame just drawn, as a WebP with alpha (a JPEG
+         flattened the transparent ground to #000, a black frame at every
+         swap; a browser without WebP hands back PNG, which keeps alpha too).
+         Call it in the same task as render(): without preserveDrawingBuffer
+         the buffer is gone after the composite. */
+      captureFrame(tw = 1100) {
+        try {
+          const cnv = renderer.domElement;
+          if (!cnv || !cnv.width) return null;
+          const tc = document.createElement("canvas");
+          tc.width = tw; tc.height = Math.round(tw * cnv.height / cnv.width);
+          tc.getContext("2d").drawImage(cnv, 0, 0, tc.width, tc.height);
+          return tc.toDataURL("image/webp", 0.9);
+        } catch (_) { return null; }
+      },
       dispose() {
         menuMotion?.dispose();
         modelGeneration++;

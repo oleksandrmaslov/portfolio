@@ -34,13 +34,16 @@
         if (!img) return;
         var d = document.createElement("div");
         d.id = "mo-seam";
-        d.style.cssText = "position:fixed;inset:0;z-index:60;background:#04060d center center / cover no-repeat;transition:opacity .55s cubic-bezier(0.16,1,0.3,1);pointer-events:none;";
+        d.style.cssText = "position:fixed;inset:0;z-index:60;background:transparent center center / cover no-repeat;pointer-events:none;";
         d.style.backgroundImage = "url(" + img + ")";
-        d.appendChild(Object.assign(document.createElement("div"), {
-          className: "mo-seam__tag",
-          textContent: "VENOVISOR"
-        }));
         document.body.appendChild(d);
+        // The label is text, and text is a contentful paint: it waits for the
+        // frame to decode, so the browser keeps holding the landing's last
+        // frame (the same picture) instead of releasing on the bare void.
+        var tag = Object.assign(document.createElement("div"), { className: "mo-seam__tag", textContent: "VENOVISOR" });
+        var im = new Image(); im.src = img;
+        var label = function () { d.appendChild(tag); };
+        (im.decode ? im.decode() : Promise.resolve()).then(label, label);
       } catch (e) {}
     })();
   </script>
