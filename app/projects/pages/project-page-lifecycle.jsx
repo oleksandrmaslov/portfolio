@@ -174,7 +174,8 @@
         scheduleTimer(settleToRest, 460);
       }
 
-      const shouldRender = () => !document.hidden && !document.body.classList.contains("mo-menu-open") && (
+      const shouldRender = () => !document.hidden && !document.body.classList.contains("mo-menu-open")
+        && !document.body.classList.contains("hv-demoing") && (   // the hero is at opacity 0 under PLAY DEMO
         global.scrollY < global.innerHeight * 0.74
         || global.__hv_exitSpin
       );

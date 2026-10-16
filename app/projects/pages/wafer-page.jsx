@@ -352,7 +352,8 @@ function WaferProjectApp() {
     // while the stage is scrolled away, covered or hidden. The case file below
     // it is the longest on the site, and a permanent loop there never idled.
     let raf = 0, last = performance.now();
-    const shouldRender = () => !document.hidden && !document.body.classList.contains("mo-menu-open") && (
+    const shouldRender = () => !document.hidden && !document.body.classList.contains("mo-menu-open")
+      && !document.body.classList.contains("hv-demoing") && (   // the hero is at opacity 0 under PLAY DEMO
       window.scrollY < window.innerHeight * 0.74
       || window.__hv_exitSpin
     );
@@ -432,6 +433,7 @@ function WaferProjectApp() {
       applyHeroLayout(rig);
       if (IDLE_DRIFT) rig.setIdle(true);
     }
+    window.dispatchEvent(new CustomEvent("mo:project-rig-wake"));
     const op = Math.max(0, 1 - window.scrollY / (window.innerHeight * 0.72));
     document.documentElement.style.setProperty("--hv-stage-op", op.toFixed(3));
   };
