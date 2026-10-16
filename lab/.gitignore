@@ -1,0 +1,10 @@
+# Heavy screenshots and probe output from the port; the docs, harnesses
+# and the two owner screenshots beside them are kept.
+port/tmp/
+port/before/
+port/after/
+port/compare/
+port/gallery-before/
+port/gallery-after/
+port/demo-probe/
+port/test/
