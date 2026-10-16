@@ -458,6 +458,13 @@ here, and they are the things to check first when something behaves oddly:
   `MOStudio.copy()`, or build a fresh one from the `presets()` factory; calling
   `tone()` on a clone restores Neutral but not the grain. The PLAY DEMO's
   per-key caps are the case that bit.
+- **A cached `getBoundingClientRect()` of the Universe mount.** `.universeBg`
+  is CSS-scaled by board-flight (about 1.05 while the board is open) and by
+  `landing-exit`, and a transform fires no resize event, so a rect cached in
+  `onResize` stays scaled after the transform is gone. Reaching the reel
+  through the menu from About with the board open left every hover frame off
+  its card. Use the mount's layout box (`clientWidth`/`clientHeight`), never a
+  cached rect.
 
 Also fixed and worth not re-introducing: `applySolidMaterials` used to dispose
 the material it replaced, but `loadProjectModel` hands out `root.clone(true)`
