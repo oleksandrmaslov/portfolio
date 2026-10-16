@@ -3136,10 +3136,15 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         if (mode === "reel") focusT = 10.6;
         const formPNow = (window.__mo_debug && window.__mo_debug.formP) || 0;
         if (formPNow > 0.25) focusT = ORIGIN_CENTER.length();
+        /* A handoff lifting a model off the field (project-handoff.jsx sets
+           __mo_lift 0..1 on its travel) racks the focus off the cards, so the
+           model separates from them; the dock racks it back in. */
+        const liftNow = window.__mo_lift || 0;
+        if (liftNow) focusT += (2 - focusT) * liftNow;
         _focusS += (focusT - _focusS) * (1 - decay93);
         bokehPass.uniforms.focus.value = _focusS;
-        bokehPass.uniforms.aperture.value = GRADE.aperture;
-        bokehPass.uniforms.maxblur.value = GRADE.maxblur;
+        bokehPass.uniforms.aperture.value = GRADE.aperture * (1 + 5 * liftNow);
+        bokehPass.uniforms.maxblur.value = GRADE.maxblur * (1 + 0.8 * liftNow);
       }
 
       if (useComposer && composer) {

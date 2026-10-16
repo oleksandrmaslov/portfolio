@@ -28,6 +28,11 @@
 }
 .wf--on .wf__veil { opacity: 1; }
 .wf__mount { position: absolute; inset: 0; opacity: 1; transition: opacity 160ms var(--e-out); }
+/* The forward lift: the page's own content steps back at once so the model
+   separates from the field, which the flight dims (the veil, driven inline
+   on the travel's progress) and defocuses (__mo_lift). */
+body.wf-lift .lp,
+body.wf-lift .lp-shell { opacity: 0; transition: opacity 260ms var(--e-out); }
 
 /* HANDOFF HOLD — the rig is mounted and already drawing, but the reader still
    has to see the card it is about to lift out of. While .wf--hold is set the

@@ -8,13 +8,31 @@
        detail: { project, originRect, origin }   // origin: work|universe|all-projects
      }));
 
-   Choreography = the Wafer reference: model lifts out of the card,
-   universe dims, model travels to the hero rest while turning
-   ~270°, the last frame is stashed as a seam, the project page
-   continues the same yaw. Per-project overrides come from
-   projects-data.js (handoffPose). Nodes without a ready GLB fly
-   the same trajectory as their node-shell proxy. Reduced motion →
-   soft crossfade, no travel, no spin.
+   FORWARD is ONE gesture (the engine is window.moFlight and the rig's
+   flyTo / setFlight / handoff, solid-hero-rig.jsx), five beats:
+     wind-up   140 ms: the model lifts off the card (3% toward the camera),
+               tilts 7 degrees toward the viewer and counter-turns 8 degrees
+               AGAINST the coming turn; the field starts to dim and defocus
+     travel    1300 ms drawn, one in-out power ease (peak speed 3.5x the
+               mean, at mid-travel): position along an arc (a bow off the
+               chord), size (only ever growing, a little ahead of the
+               position: the approach), lens 58 -> 38, look, a bank into the
+               lateral speed (<= 15 degrees, 0 at both ends) and the SHOWCASE
+               TURN: always the long way round to the hero's rest yaw, so
+               180-360 degrees (moFlight.turn, handoffPose.turnMin), landing
+               exactly on moHeroLayout(addr), the page's own final layout
+     settle    scale and yaw arrive with velocity and hand it to a spring
+               (~1% / ~2 degrees); the landing leaves at its peak, the one
+               still frame, stashed as the seam; the page carries it on
+               (mo_node_state), so there is no rest pose to grow from
+     beat      the page's signature beat once the spring is home
+   The field reacts on the same progress: the veil dims it (60% while the
+   model lifts, the rest as it lands) and __mo_lift racks the Universe's
+   depth of field off the cards; the camera never moves. This is designed
+   motion: do not flatten it to a tween, re-add a second scale phase or put
+   a constant spin back on top. Nodes without a ready GLB fly the same
+   trajectory as their node-shell proxy. Reduced motion -> the rig appears
+   at the hero layout, no travel, no turn, no spring.
 
    Session protocol (generic — the old mo_wafer_* keys are gone):
      mo_node_addr / mo_node_arrive / mo_node_yaw
@@ -24,7 +42,21 @@
    ============================================================ */
 const { useState: useNH, useEffect: useNHE, useRef: useNHR } = React;
 
-const NH_DEFAULTS = { duration: 1200, spinSpeed: 0.0039, scale: 0.92, restX: 0.46, offsetY: 0 };
+/* duration, turnMin (the forward's, degrees: the long way unless the short
+   way turns that much, so 180 is always the long way) and dockTurnMin (the
+   reverse's) are per project through model.handoffPose. */
+const NH_DEFAULTS = { duration: 1300, turnMin: 180, dockTurnMin: 150 };
+/* The field's reaction to a lift, on the travel's progress p: the veil dims
+   it (most of it while the model lifts, the rest as it lands, so the seam is
+   the page's own void) and __mo_lift racks the Universe's focus off the
+   cards (universe.jsx, the Bokeh uniforms; nothing where DoF is off). */
+const nhSmooth = (a, b, x) => { const t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+const nhVeil = (p) => 0.6 * nhSmooth(0, 0.3, p) + 0.4 * nhSmooth(0.55, 1, p);
+const nhLift = (v) => { window.__mo_lift = v; };
+const nhVeilEl = (opacity, transition) => {
+  const veil = document.querySelector(".wf__veil");
+  if (veil) { veil.style.opacity = opacity; veil.style.transition = transition; }
+};
 const NH_REDUCED = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
 /* The original click path built a fresh WebGLRenderer, environment prefilter
    and GLB consumer. Measured cold on a laptop, that was 380ms to construct and
@@ -136,6 +168,9 @@ function NodeHandoff() {
       if (mount) while (mount.firstChild) mount.removeChild(mount.firstChild);
       const wf = document.querySelector(".wf");
       if (wf) wf.classList.remove("wf--dissolve");
+      if (mount) mount.style.transition = "";
+      nhVeilEl("", "");
+      nhLift(0);
       returningRef.current = false;
       modeRef.current = "idle";
       setHolding(false);
@@ -295,13 +330,15 @@ function NodeHandoff() {
           const fov0 = (matched && originRect.fov) || R.fov;   // the card's lens: see startFromScreen
           const frustumH = 2 * R.camZ * Math.tan((fov0 * Math.PI / 180) / 2);
           const rigFit = (project.model && project.model.rigFit) || R.modelFit || 4.0;
-          rig.setEaseRate(0.052);
           const startScale = matched
             ? originRect.span * frustumH / rigFit
             : Math.max(0.06, Math.min(REST.scale, (originRect.h / vh) * frustumH / rigFit));
           rig.startFromScreen(cx, cy, vw, vh, startScale, matched ? originRect.quat : null, fov0);
+        } else if (NH_REDUCED) {
+          rig.snapToLayout(REST.fracX, REST.scale, REST.offY);      // end state only
         } else {
-          rig.snapToLayout(REST.fracX, REST.scale, REST.offY);      // no travel, no spin
+          // No origin to travel from: the gesture is the turn alone, in place.
+          rig.snapToLayout(REST.fracX, REST.scale, REST.offY, window.WAFER_RIG.arriveYaw - 270 * Math.PI / 180);
         }
 
         /* One clock for the whole flight: the render loop. Timers are throttled
@@ -313,45 +350,61 @@ function NodeHandoff() {
         let last = t0;
         let navigated = false;
         let released = false;
-        let releasedAt = 0;
         const dur = NH_REDUCED ? 420 : hp.duration;
+        const clock = window.moFlight.clock(dur);   // drawn time, each frame capped at 50 ms
         const fire = () => { if (navigated) return; navigated = true; clearTimeout(failsafe); go(); };
 
         /* Release = the model is drawable at the card. Only now do we cover the
            universe and start the travel, so the reader sees the whole move
            instead of its final frame. */
-        const release = (now) => {
+        const release = () => {
           if (released) return;
           released = true;
-          releasedAt = now;
           setHolding(false);
-          fadeUniverse(0, 420);
-          if (travels) rig.setLayout(REST.fracX, REST.scale, REST.offY);
+          if (NH_REDUCED) fadeUniverse(0, 420);
+          else {
+            // the field dims and defocuses on the travel's own progress (nhVeil, __mo_lift)
+            nhVeilEl("0", "none");
+            document.body.classList.add("wf-lift");
+            rig.flyTo(REST.fracX, REST.scale, REST.offY, { turnMin: hp.turnMin, duration: dur, windUp: travels });
+          }
         };
 
         // If rAF stops entirely (tab hidden mid-flight) still reach the page.
-        const failsafe = setTimeout(fire, NH_HOLD_MAX + dur + 1200);
+        const failsafe = setTimeout(fire, NH_HOLD_MAX + dur + 1400);
 
         let paintedFrames = 0;      // frames drawn with the model in the scene
-        let travelFrames = 0;       // frames drawn since the travel began
+        let travelFrames = 0;       // frames drawn with the mount committed visible (React has dropped .wf--hold)
+        const wfRoot = mountRef.current && mountRef.current.parentNode;
 
         const loop = (now) => {
           const dt = now - last; last = now;
-          if (!NH_REDUCED) rig.nudgeYaw(Math.min(50, dt) * hp.spinSpeed);
+          // The travel's one progress. It advances by drawn time, so a frame
+          // stalled on a shader compile cannot teleport the model. The first
+          // visible frame draws p = 0, the card itself; p then reaches 1
+          // exactly, and the rig's spring takes over from that frame.
+          if (travelFrames > 1) clock.tick(dt);   // travelFrames 1 is the first frame the mount shows: p = 0
+          const p = released ? clock.p : 0;
+          if (released && !NH_REDUCED) {
+            rig.setFlight(p, clock.ms);
+            nhVeilEl(nhVeil(p).toFixed(3), "none");
+            nhLift(nhSmooth(0, 0.35, p));
+            if (p >= 1) fadeUniverse(0, 0);   // under the full veil: as before, the landing leaves with the field hidden
+          }
           rig.update(dt);
           rig.render();
 
           if (rig.ready) paintedFrames++;
           else if (released) paintedFrames++;          // proxy nodes never flip ready
-          if (!released && (paintedFrames >= 2 || now - t0 >= NH_HOLD_MAX)) release(now);
-          if (released) travelFrames++;
+          if (!released && (paintedFrames >= 2 || now - t0 >= NH_HOLD_MAX)) release();
+          if (released && !(wfRoot && wfRoot.classList.contains("wf--hold"))) travelFrames++;
 
-          /* Leave for the page on time, but never before the travel has had
-             real frames to show. On a cold GPU the wall clock runs out while
-             the first frames are still compiling, which is what made the model
-             look like it teleported. The failsafe timer above is the backstop
-             if frames stop arriving altogether. */
-          if (released && now - releasedAt >= dur && travelFrames >= 10) { fire(); return; }
+          /* Leave at the spring's peak: the one still moment after the
+             landing, so the frame the page holds through its load is at
+             rest, and the page carries the spring on from it. Reduced motion
+             leaves on p = 1. The failsafe timer above is the backstop if
+             frames stop arriving altogether. */
+          if (released && p >= 1 && (NH_REDUCED || rig.settleMs >= window.moFlight.SETTLE.PEAK)) { fire(); return; }
           if (!navigated) rafRef.current = requestAnimationFrame(loop);
         };
         rafRef.current = requestAnimationFrame(loop);
