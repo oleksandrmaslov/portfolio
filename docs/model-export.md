@@ -1,5 +1,7 @@
 # Wafer — Fusion 360 to demo GLB export guide
 
+> Historical. The Wafer now ships as `models/wafer.glb`, built by `tools/wafer/build.mjs` from `models/wafer_parts/`. The site loads no KTX2 transcoder any more: do not use `-tc`.
+
 > Production contract for `demo/wafer-board.js`: keep every live demo
 > feature (pressable caps, staggered explode, X-ray/wire/matcap, layers) while
 > exporting replacement geometry.

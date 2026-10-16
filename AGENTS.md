@@ -753,8 +753,7 @@ Place shared GLBs in `models/`, then update the matching record in
 code read (`featured`, which `MO_FEATURED_ADDRS` replaced, `nodeClass`,
 `pagePose`, `primitive`, `demoSize`, and unused `mdl()`/`cardPose` keys) were
 removed on 2026-10-04; a new field needs a reader in the same change. Nodes without a finished
-model deliberately retain their proxy representation — Kerfur and Venovisor are
-the two left.
+model deliberately retain their proxy representation — Kerfur is the one left.
 
 Run every incoming GLB through `npx gltfpack -i <in>.glb -o models/<slug>-mark.glb -c`
 before wiring it up. `-c` is meshopt compression, which
@@ -765,6 +764,15 @@ meshes, three materials and its clearcoat/emissive extensions intact. The
 packed file declares `KHR_mesh_quantization` and `EXT_meshopt_compression` as
 *required*, so a route that forgets the decoder fails to load the model
 outright rather than degrading.
+
+Two exceptions. A model that carries a custom vertex attribute (`_PRINTZ`, the
+print height the layer lines read) is packed with `lab/tools/pack-glb.mjs`,
+because gltfpack 1.3 drops custom attributes; `venovisor-mark.glb` therefore
+requires only `EXT_meshopt_compression`. The Wafer is built, not exported:
+`node tools/wafer/build.mjs pack` merges `models/wafer_parts/` into
+`models/wafer.glb` (creased normals, palettes, the two panels; see the tool's
+header). No shipped GLB carries `KHR_lights_punctual` or KTX2;
+`studio.test.cjs` fails if one does.
 
 The shipping project pages load live experiences from `demo/`, sometimes
 through project-page components rather than an obvious direct HTML tag. Keep
