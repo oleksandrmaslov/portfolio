@@ -142,17 +142,7 @@
 
   /* Fit-and-centre helper — recentres a loaded model on its bounding-box
      centre and scales it so its longest edge equals `targetSize` world units.
-     Returns the bounding box for any further measurement work. */
-  window.fitModelToSize = function (root, THREE, targetSize) {
-    const box = new THREE.Box3().setFromObject(root);
-    const size = new THREE.Vector3();
-    box.getSize(size);
-    const centre = new THREE.Vector3();
-    box.getCenter(centre);
-    const longest = Math.max(size.x, size.y, size.z) || 1;
-    const s = targetSize / longest;
-    root.position.sub(centre.multiplyScalar(s));
-    root.scale.multiplyScalar(s);
-    return box;
-  };
+     Returns the bounding box for any further measurement work. The studio
+     owns the box: it never counts a finish's glow or halo. */
+  window.fitModelToSize = function (root, THREE, size) { return window.MOStudio.fit(THREE, root, size); };
 })();
