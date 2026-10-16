@@ -15,6 +15,23 @@ const { useState: useL, useEffect: useE, useLayoutEffect: useLE, useRef: useR } 
 
 /* ── featured nodes — one source of truth ─────────────────── */
 const FEATURED_ADDRS = window.MO_FEATURED_ADDRS || ["0x01", "0x03", "0x04", "0x06"];
+const REEL_PADS = 0.6;   // scroll held on the title before the first stop and after the last
+
+/* The scroll Y that centres reel stop `stopIdx` (0 the title, 1..N the cards,
+   N + 1 SHOW ALL): the ONE definition. jumpToStop and the reverse dock's
+   destination (window.moReelStopY) both read it, live from the layout. */
+function workReelStopY(stopIdx) {
+  const el = document.getElementById("work");
+  if (!el) return null;
+  const total = Math.max(0, el.offsetHeight - window.innerHeight);
+  if (total <= 0) return null;
+  const STOPS = WORKS.length + 2, padN = REEL_PADS / (STOPS + REEL_PADS);
+  return el.getBoundingClientRect().top + window.scrollY + (padN + (stopIdx / (STOPS - 1)) * (1 - 2 * padN)) * total;
+}
+window.moReelStopY = (addr) => {
+  const i = WORKS.findIndex((w) => w.addr === addr);
+  return i < 0 ? null : workReelStopY(i + 1);
+};
 const WORKS = FEATURED_ADDRS
   .map(addr => (window.MO_PROJECTS || []).find(p => p.addr === addr))
   .filter(Boolean);
@@ -59,7 +76,7 @@ function Work({ onHoverWork }) {
 
   const N      = WORKS.length;
   const STOPS  = N + 2;
-  const PADS   = 0.6;
+  const PADS   = REEL_PADS;
   const TOTAL_V = STOPS + PADS;
 
   const activeCardIdx = Math.max(0, activeStop - 1);
@@ -234,21 +251,8 @@ function Work({ onHoverWork }) {
   const initialRailShiftVW = 50 - initialCenterVW;
 
   const jumpToStop = (stopIdx) => {
-    const el = sectionRef.current;
-    if (!el) return;
-    let { top, total } = layoutRef.current;
-    // The passive effect normally owns this cache. Keep keyboard/mouse stop
-    // controls usable even in the narrow first-commit window before it runs.
-    if (total <= 0) {
-      const rect = el.getBoundingClientRect();
-      top = rect.top + window.scrollY;
-      total = Math.max(0, el.offsetHeight - window.innerHeight);
-      layoutRef.current = { top, total };
-    }
-    if (total <= 0) return;
-    const padN = PADS / TOTAL_V;
-    const target = padN + (stopIdx / (STOPS - 1)) * (1 - 2 * padN);
-    window.scrollTo({ top: top + target * total, behavior: "smooth" });
+    const y = workReelStopY(stopIdx);
+    if (y != null) window.scrollTo({ top: y, behavior: "smooth" });
   };
 
   return (

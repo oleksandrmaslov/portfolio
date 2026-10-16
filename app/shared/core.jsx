@@ -51,7 +51,9 @@ const { useState, useEffect, useRef } = React;
     if (done) return;
     done = true;
     if (typeof window.preloadModels !== "function") return;
-    const greeting = (window.UNIVERSE_PROJECTS || []).find(p => p.model);
+    // A return warms the card it docks onto; a first visit, the greeting.
+    const list = window.UNIVERSE_PROJECTS || [], ret = window.__mo_return;
+    const greeting = (ret && list.find(p => p.addr === ret.addr && p.model)) || list.find(p => p.model);
     if (greeting && greeting.model) window.preloadModels([greeting.model]);
   }, 0);
 })();

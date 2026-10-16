@@ -76,6 +76,20 @@ const NH_NAV_STUCK = 4000;
 function nhClearStale() {
   for (const k of ["mo_node_arrive", "mo_node_yaw", "mo_node_return", "mo_node_return_addr", "mo_node_return_target"]) sessionStorage.removeItem(k);
 }
+/* Where a return docks: COMPUTED, never restored. The reel stop when the
+   node is featured and the visitor came from the reel; otherwise the
+   greeting slot in the field (universe.jsx driftHome), which is also where
+   "no origin" lands (a direct link, All Projects, the menu); "none" for a
+   node with no tile (universe: false) or no record. The Universe reads it
+   at mount to compose the field; it is cached on the record. */
+window.moReturnDest = (ret) => {
+  if (ret.dest) return ret.dest;
+  const p = window.MO_PROJECT_BY_ADDR && window.MO_PROJECT_BY_ADDR[ret.addr];
+  ret.dest = !p || p.universe === false ? "none"
+    : ret.target === "work" && (window.MO_FEATURED_ADDRS || []).indexOf(ret.addr) >= 0 ? "reel" : "field";
+  return ret.dest;
+};
+
 
 function nhHasPendingReturn() {
   try { return sessionStorage.getItem("mo_node_return") === "1"; }

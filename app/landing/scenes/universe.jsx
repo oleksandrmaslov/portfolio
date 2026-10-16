@@ -296,6 +296,16 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     // frame, hit test and flight origin for the life of the page.
     let mountRect = { left: 0, top: 0, width: w, height: h };
     let liftedAddr = null;   // the card model the handoff has taken over (mo:handoff-lift)
+    /* A RETURN (the reverse dock, project-handoff.jsx) is known before the
+       first frame: its card is lifted from mount on (the flight draws it),
+       its model loads first, and its destination shapes the field: a reel
+       return snaps the parade to its stop, a field return puts the node in
+       the greeting slot. Reduced motion has no dock, so nothing is lifted. */
+    const RET = window.__mo_return && window.moReturnDest ? window.__mo_return : null;
+    const RET_DEST = RET ? window.moReturnDest(RET) : "none";
+    const RET_RM = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+    if (RET && RET_DEST !== "none" && !RET_RM) liftedAddr = RET.addr;
+    let snapArranged = RET_DEST === "reel";
     let wasFlying = false;
 
     /* ---------- renderer / scene / camera ---------- */
@@ -1010,7 +1020,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     // The greeting card is part of the opening composition and is also the
     // default transition warm-up target. Start it immediately; the remainder
     // flow through the bounded two-slot idle pump above.
-    if (modelJobs.length) startModelJob(modelJobs[0]);
+    if (modelJobs.length) startModelJob((RET && modelJobByAddr.get(RET.addr)) || modelJobs[0]);
     scheduleModelPump();
 
     /* ---------- Arranged-mode target positions ----------
@@ -2709,7 +2719,9 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
           // The collapse has to visibly complete inside the navigation
           // delay, so it eases faster than drift and faster than the reel.
           const rate = listCollapse ? 0.155 : mode === "reel" ? 0.18 : 0.025;
-          m.position.lerp(target, 1 - Math.pow(1 - rate, dt / 16));
+          // A reel return is composed on its first reel frame, not flown in.
+          if (snapArranged && mode === "reel") m.position.copy(target);
+          else m.position.lerp(target, 1 - Math.pow(1 - rate, dt / 16));
         }
 
         // For meshes (not cameras), Object3D.lookAt aligns local +Z to target.
@@ -2729,7 +2741,8 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         _baseQ.multiply(_offQ);
 
         // SOFT slerp — cards re-orient slowly so they feel like floating objects
-        m.quaternion.slerp(_baseQ, mode === "reel" ? 1 - decay88 : 1 - decay94);
+        if (snapArranged && mode === "reel") m.quaternion.copy(_baseQ);
+        else m.quaternion.slerp(_baseQ, mode === "reel" ? 1 - decay88 : 1 - decay94);
 
         // Band-pass visibility per mode
         const dist = m.position.distanceTo(camera.position);
@@ -2797,6 +2810,8 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         m.material.opacity = uD.opSm * arrFade;
         uD.modelOpacityBase = uD.mobSm * arrFade;
       }
+
+      if (mode === "reel") snapArranged = false;
 
       /* ambient pulse + depth-batch rebuild. The nodes keep their original
          world positions, scale, pulse and wrap fade; only submission changes. */

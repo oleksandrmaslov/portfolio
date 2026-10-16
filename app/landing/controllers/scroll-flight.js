@@ -128,7 +128,11 @@
     // Keep the read phase together: one layout flush, never interleaved with
     // the per-frame style writes below.
     var vh = window.innerHeight;
-    var y = cachedScrollY;
+    // Live, not the cache: a scroll set in this same frame (the hash replay,
+    // the reverse dock's destination) has not reached the scroll event yet,
+    // and a stale cache stored #work.top as 0 and then docked the page away.
+    var y = window.scrollY;
+    cachedScrollY = y;
     var rT = eT.getBoundingClientRect();
     var rO = eO.getBoundingClientRect();
     var rW = eW.getBoundingClientRect();
