@@ -517,6 +517,65 @@ still carry hand-written `?v=` strings; bump them when you change those files.
   `__hv_exitSpin` with `__hv_leaving`, and both hero lifecycles settle the rig
   to rest on `mo:page-restored`. Any new one-way exit flag needs the same
   reset.
+- **The forward flight is one gesture, and it is designed motion.** Do not
+  simplify it to a tween, re-add a rest pose the page then grows from, put a
+  constant spin back on top, or let the turn take the short way. Its parts,
+  in order (the engine is `window.moFlight` and the rig's `flyTo` /
+  `setFlight` / `handoff` in `solid-hero-rig.jsx`):
+  1. **Wind-up** (140 ms, from the first frame the mount shows): a 3% lift
+     toward the camera (on a 2.5x slower envelope, so it runs into the
+     travel's own growth and the size has ONE rise), a 7° tilt toward the
+     viewer and an 8° counter-turn AGAINST the coming turn (`WIND`). It masks
+     the swap from the card's model to the rig's. That first frame is p = 0
+     exactly: the card's own size, centre, pose and lens.
+  2. **Travel with a showcase turn** (1300 ms drawn, `handoffPose.duration`).
+     Position, size, lens (58 → 38), the light dress and the turn all run on
+     ONE eased progress: `moFlight.ease`, an in-out power (`EASE_K` 3.5, so
+     peak speed 3.5x the mean, at mid-travel, and long soft ends), from the
+     card to the page hero's **final settled layout**,
+     `window.moHeroLayout(addr)`, the one function both page templates lay
+     their hero out with (a per-project override is the registry's
+     `model.heroLayout`, never a page config). On the same progress (`PATH`):
+     the position follows an **arc** (a bow off the chord to its upper side,
+     16% of it, `4e(1 − e)`, so 0 at both ends); the model **banks** into its
+     lateral screen speed (≤ 15°, `tanh`, from the ease's own slope, so
+     exactly 0 at the start and at the seam); and its size runs slightly
+     ahead of its position (the **approach**, capped so the size still only
+     ever grows). The **turn** is `moFlight.turn(from, rest, turnMin)`: the
+     short way only when it already turns `turnMin` degrees, otherwise the
+     LONG way, 360° minus the short delta. The forward's `turnMin` is 180
+     (`handoffPose.turnMin`), so every click turns 180–360°, ~270° on
+     average, and still lands exactly on the hero's rest yaw. The card creeps
+     (0.15 rad/s), so the short way alone was under 120° on ~2/3 of clicks.
+  3. **The field reacts**, on the same progress, and the camera does not
+     move: `.wf__veil` is driven inline (60% while the model lifts, the rest
+     as it lands, so the seam is the page's own void), `body.wf-lift` steps
+     the landing's own content back, and `window.__mo_lift` (0..1) racks the
+     Universe's existing Bokeh pass off the cards (focus toward 2u, aperture
+     up to 6x, `maxblur` 1.8x; nothing where DoF is off). No new program.
+  4. **Settle.** Scale and yaw arrive with velocity and hand it to a
+     closed-form spring (`moFlight.settle`: ~1% and ~2° overshoot, peak at
+     89 ms, back at 300 ms). The landing navigates at the spring's peak, the
+     one still moment, and stores `rig.handoff()` in `mo_node_state`; the page
+     boots with `window.moArrival()` + `rig.arrive()` already in its final
+     layout and continues the spring with `rig.release()`.
+  5. **Signature beat**, on the page, one shot after the settle, run inside
+     the rig's own loop: Ci-Clop's LEDs off → subtle, the Venovisor's red glow,
+     the Wafer's two screens from blank glass, and for every other model a
+     600 ms key-light sweep (`MOStudio.lights` `set(look, field, sweep)`).
+     Existing uniforms and lights only, no new programs. The flight takes the
+     beat level to 0 so the page can wake it. The page title's existing
+     entrance (`hv-page--ready`) starts on `mo:hero-settled`, not at boot.
+  There is no whoosh: the sample bank (`instruments.json`) has no fitting
+  sample, and no asset or second engine is added for one.
+  `lab/port/tmp/flight/forward-probe.cjs` measures all of it across the
+  navigation (first frame, the long turn on every run, bank 0 at the seam,
+  one monotonic size rise, the seam, luma). The seam is captured with alpha
+  (WebP); a JPEG flattened the void to #000 and every arrival flashed black.
+  Every route with a GLB hero must keep `hero.modelFit` and `hero.pose` equal
+  to its registry `rigFit` / `rigPose` — `studio.test.cjs` (h) checks all of
+  them — since the page and the flight must draw the same frame. Reduced
+  motion shows end states only: no travel, turn, spring or beat.
 - Build generated landing and page code with
   `npm run build --prefix tools/landing-runtime` (`npm.cmd` on Windows), verify
   freshness with `npm run check --prefix tools/landing-runtime`, and run the
@@ -687,7 +746,9 @@ There is one page template. `handoff-page.jsx` was a copy of
 `standard-page.jsx` that differed only in `bridgeSeam`; the copies had already
 drifted once (the seven handoff routes shipped a `heroLayout` override that the
 copy never read), so they were merged on 2026-10-04 and the seven former
-handoff pages now set `bridgeSeam: true` in their `PAGE_CONFIG`. The template
+handoff pages now set `bridgeSeam: true` in their `PAGE_CONFIG`. That override
+then moved again, out of `PAGE_CONFIG` into the registry's `model.heroLayout`,
+because the landing flight has to land on it and cannot see a page config. The template
 must forward the whole hero option set from `PAGE_CONFIG.hero`: a key it does
 not forward is a key that silently does nothing — that is how `keepMaterials`
 can look set and not be. Wafer keeps its own bespoke page,
