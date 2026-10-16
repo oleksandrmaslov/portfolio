@@ -106,7 +106,26 @@ project-page headers and from the board-flight end screen on 2026-08-23, since
 the end screen is a contact beat and an internal reference is not a way to
 reach a person. Do not orphan the route by removing that last link too.
 `face-test.html` is a local test surface and is explicitly excluded from
-deployment. Internal folders
+deployment. So is `lab/`, which holds studies being perfected before they are
+merged into a route — currently `lab/wafer.html`, the photoreal Wafer object
+study (`?stage=dark` for the dark variant). It is plain ES modules outside the
+landing-runtime build (`wafer.js`, plus `mip.js` for the two live screens,
+`props.js`, `motion.js` and `places.js`, the eight places and the one path
+through them), reads `models/wafer_parts/` directly, and sets
+`<base href="../">` so the shared demo audio resolves its samples as it does on
+a root route. `node lab/motion.check.mjs` checks the motion maths and
+`node lab/places.check.mjs` sweeps the path for collisions.
+`lab/materials.html` is the model gallery. It renders through the site's own
+`app/projects/rendering/studio.js` (no copy) and is where a look change is
+judged before it ships; `lab/studio.js` holds only what the study needs on top
+(its light and dark stages, the JS curve and its exact inverse), and
+`node lab/studio.check.mjs` checks those.
+`lab/wafer-story.html` (with `story.css` and `story.js`) is a standalone
+product-story page built on the same engine. It sets `window.WAFER_EMBED`
+before importing `wafer.js`, and every embed branch is dead code in the study.
+`node lab/story.check.mjs` holds its honesty rules, structure and byte budget.
+`lab/models-handoff.md` is the plan for bringing the other models to the same
+standard without touching their GLBs. Internal folders
 and source files can be reorganized, but do not rename a public root HTML route
 or change its outward links without an explicit migration and redirect plan.
 
