@@ -25,7 +25,6 @@ const PROJECT_DATA = "app/projects/data.jsx";
 const MODEL_VIEWER = "app/projects/rendering/model-viewer.jsx";
 const STUDIO = "app/projects/rendering/studio.js";
 const SOLID_HERO = "app/projects/rendering/solid-hero-rig.jsx";
-const HANDOFF_RIG = "app/projects/rendering/project-handoff-rig.jsx";
 const ASCII_ENGINE = "app/projects/components/ascii-photo.js";
 const ASCII_FIGURE = "app/projects/components/ascii-photo.jsx";
 const POINTER_EFFECTS = "app/shared/pointer-effects.js";
@@ -79,7 +78,7 @@ function projectPageSources() {
   ];
 }
 
-function handoffDefinition(html, slug, options = {}) {
+function handoffDefinition(html, slug) {
   const projectSources = [
     jsx(CORE),
     classic(ASCII_ENGINE),
@@ -87,9 +86,8 @@ function handoffDefinition(html, slug, options = {}) {
     jsx(PROJECT_DATA),
     jsx(MODEL_VIEWER),
     jsx(SOLID_HERO),
+    jsx(ASCII_FIGURE),
   ];
-  if (options.projectHandoffRig) projectSources.push(jsx(HANDOFF_RIG));
-  projectSources.push(jsx(ASCII_FIGURE));
   return {
     html,
     plainPageConfig: true,
@@ -178,7 +176,7 @@ const pageDefinitions = [
   handoffDefinition("Sightseeing.html", "sightseeing"),
   handoffDefinition("Silent Depth.html", "silent-depth"),
   standardDefinition("Split HID Display.html", "split-hid-display"),
-  handoffDefinition("Venovisor.html", "venovisor", { projectHandoffRig: true }),
+  handoffDefinition("Venovisor.html", "venovisor"),
   handoffDefinition("Wafer Studio.html", "wafer-studio"),
   {
     html: "Wafer.html",

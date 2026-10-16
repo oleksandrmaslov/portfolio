@@ -83,7 +83,13 @@
       statement: "Firmware for the next generation of a vein-finding device used by medics in Ukraine.",
       short: "Vein-finder firmware · next generation",
       tags: ["Firmware", "Medical", "Volunteer"],
-      model: mdl({ rigFit: 2.6 }),   // node-shell proxy until a GLB lands
+      model: mdl({
+        ready: true, src: "models/venovisor-mark.glb",
+        rigFit: 3.7,   // matches this project's page hero
+        rigPose: { x: 0.12, y: Math.PI + 0.35, z: -0.62 },
+        // universe.jsx multiplies cardPose.fit by 1.9: the approved card is 4.9
+        cardPose: { fit: 4.9 / 1.9, pose: { x: 0.12, y: Math.PI + 0.35, z: -0.62 } },
+      }),
     },
     {
       addr: "0x06", slug: "wafer-studio", name: "Wafer Studio",
@@ -223,7 +229,7 @@
   window.MO_PROJECT_BY_ADDR = {};
   for (const p of window.MO_PROJECTS) window.MO_PROJECT_BY_ADDR[p.addr] = p;
 
-  /* TODO(models): Venovisor and Kerfur have no GLB yet, so they render
-     the "node-shell" proxy.
+  /* TODO(models): Kerfur has no GLB yet, so it renders the "node-shell"
+     proxy.
      To wire a future model: set ready: true + src: "models/<file>.glb". */
 })();

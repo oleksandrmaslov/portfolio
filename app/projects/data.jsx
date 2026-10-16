@@ -542,7 +542,7 @@ PROJECT_DATA["0x05"] = {
   place: "Munich, DE",
   role: "Embedded firmware · device behaviour · production integration",
   stack: ["C", "PY32", "ARM Cortex-M0", "Iskra pipeline"],
-  model: null,           // no GLB yet - the page draws the same node-shell proxy the universe shows
+  model: "models/venovisor-mark.glb",
   metrics: [
     { value: "1", unit: "fielded device family" },
     { value: "3", unit: "production layers shared with Ci-Clop" },

@@ -944,7 +944,7 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
       // ---- per-tile 3D overlay
       // A project with a `model` URL loads its GLB with its real materials into
       // a holder registered in tileWires, so the frame loop can follow, turn
-      // and fade it with its card. A project without one (Kerfur, Venovisor)
+      // and fade it with its card. A project without one (Kerfur)
       // keeps the line art makeTileTexture drew into the card itself.
       if (p.model && window.loadProjectModel) {
         // Reserve a placeholder Group right away so frame ordering doesn't blink.
