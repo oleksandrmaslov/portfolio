@@ -117,6 +117,22 @@ window.moReturnDest = (ret) => {
   return ret.dest;
 };
 
+/* A FIELD return lands on the field exactly as it was clicked: the snapshot
+   the forward took (mo_node_view, __mo_universe.viewState), when it is this
+   node's, younger than 30 minutes, taken at this viewport aspect (5%) and
+   its card was well on screen. The Universe restores it at mount, before
+   its first frame. It is STATE, not a formula: driftHome stays the only
+   definition of a free-drift position, and the greeting slot is the
+   fallback. Cached on the record. */
+window.moReturnView = (ret) => {
+  if (ret.view !== undefined) return ret.view;
+  let v = null;
+  try { v = JSON.parse(sessionStorage.getItem("mo_node_view")); } catch (_) {}
+  const a = window.innerWidth / window.innerHeight;
+  ret.view = v && v.addr === ret.addr && ret.target === "universe" && Date.now() - v.t < 30 * 60000 && v.vw && v.vh
+    && Math.abs(a / (v.vw / v.vh) - 1) <= 0.05 && v.fx > 0.04 && v.fx < 0.96 && v.fy > 0.04 && v.fy < 0.96 ? v : null;
+  return ret.view;
+};
 
 const NH_SKIP = ["wheel", "touchstart", "keydown", "pointerdown"];
 
@@ -310,6 +326,14 @@ function NodeHandoff() {
       const origin = e.detail.origin || "work";
       const hp = Object.assign({}, NH_DEFAULTS, (project.model && project.model.handoffPose) || {});
       sessionStorage.setItem("mo_node_return_origin", origin);
+      // A FIELD click keeps the field as it is now, for an exact return (moReturnView).
+      sessionStorage.removeItem("mo_node_view");
+      const view = origin === "universe" && originRect && window.__mo_universe && window.__mo_universe.viewState ? window.__mo_universe.viewState() : null;
+      if (view) {
+        const cx = originRect.cx != null ? originRect.cx : originRect.x + originRect.w / 2, cy = originRect.cy != null ? originRect.cy : originRect.y + originRect.h / 2;
+        Object.assign(view, { addr: project.addr, t: Date.now(), vw: window.innerWidth, vh: window.innerHeight, fx: cx / window.innerWidth, fy: cy / window.innerHeight });
+        try { sessionStorage.setItem("mo_node_view", JSON.stringify(view)); } catch (_) {}
+      }
       const wfEl = document.querySelector(".wf");
       if (wfEl) wfEl.classList.remove("wf--dissolve");
       setHud({ addr: project.addr, name: project.name.toUpperCase() });

@@ -308,6 +308,10 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     const RET_DEST = RET ? window.moReturnDest(RET) : "none";
     const RET_RM = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
     if (RET && RET_DEST !== "none" && !RET_RM) liftedAddr = RET.addr;
+    /* A FIELD return with a fresh snapshot of the field as it was clicked
+       (moReturnView, project-handoff.jsx) restores it below, before the
+       first frame, so the card is where the visitor clicked it. */
+    const RET_VIEW = RET_DEST === "field" && window.moReturnView ? window.moReturnView(RET) : null;
     let snapArranged = RET_DEST === "reel";
     let wasFlying = false;
 
@@ -1024,6 +1028,29 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
     // default transition warm-up target. Start it immediately; the remainder
     // flow through the bounded two-slot idle pump above.
     if (modelJobs.length) startModelJob((RET && modelJobByAddr.get(RET.addr)) || modelJobs[0]);
+
+    /* The exact field-view restore: STATE, not a second formula (driftHome is
+       still the only definition of a free-drift position, and composed the
+       field above). Positions are camera-relative and the camera sits at the
+       origin at mount, so nothing else needs to move. */
+    if (RET_VIEW) {
+      const V = RET_VIEW, c = V.cam;
+      cam.yaw = c.yaw; cam.pitch = c.pitch; cam.vel = c.vel;
+      camTarget.yaw = c.ty; camTarget.pitch = c.tp;
+      pdriftGain = c.gain;
+      camera.fov = _lastFov = c.fov; camera.updateProjectionMatrix();
+      updateCameraTransform();
+      for (const m of tiles) {
+        const t = V.cards[m.userData.project.addr];
+        if (!t) continue;
+        m.position.fromArray(t.p); m.quaternion.fromArray(t.q); m.scale.setScalar(t.s);
+        m.userData.driftTarget = t.d ? new THREE.Vector3().fromArray(t.d) : null;
+      }
+      for (const wr of tileWires) {
+        const t = V.cards[wr.userData.addr];
+        if (t && t.y != null) { wr.rotation.y = t.y; wr.scale.setScalar(t.ws); }
+      }
+    }
     scheduleModelPump();
 
     /* ---------- Arranged-mode target positions ----------
@@ -1981,6 +2008,27 @@ function Universe({ projects = PROJECTS, onActive, mode = "drift", focusAddr = n
         T.stable = T.stillN >= 2;
         cardTargetLast = T;
         return T;
+      },
+      /* The field as it is now, for an exact return (mo_node_view, written
+         by the forward at a FIELD click, restored at mount by RET_VIEW):
+         the camera's angles, drift and lens, and every card's camera-relative
+         position, rotation, scale and model yaw, keyed by addr. Only the
+         free-drifting title view: an arranged beat is recomputed anyway, and
+         further down the page the board owns the field. */
+      viewState() {
+        if (exploreOn || modeRef.current !== "drift" || window.scrollY > window.innerHeight * 0.6) return null;
+        const rel = (v) => [v.x - cam.pos.x, v.y - cam.pos.y, v.z - cam.pos.z];
+        const cards = {};
+        for (const m of tiles) {
+          const d = m.userData.driftTarget;
+          cards[m.userData.project.addr] = { p: rel(m.position), q: m.quaternion.toArray(), s: m.scale.x, d: d ? rel(d) : null };
+        }
+        for (const wr of tileWires) {
+          const t = cards[wr.userData.addr];
+          if (t) { t.y = wr.rotation.y; t.ws = wr.scale.x; }
+        }
+        return { mode: "drift", scrollY: window.scrollY, cards,
+          cam: { pos: [0, 0, 0], q: camera.quaternion.toArray(), fov: camera.fov, yaw: cam.yaw, pitch: cam.pitch, ty: camTarget.yaw, tp: camTarget.pitch, vel: cam.vel, gain: pdriftGain } };
       },
       setExplore(on) {
         const next = !!on;
