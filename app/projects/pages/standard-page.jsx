@@ -39,12 +39,10 @@
        drifting in from the left.
      · bridgeSeam: the page HTML paints the flight's captured last frame
        (#mo-seam) over the boot gap and this drops it once the model draws.
-       Six routes carry that script and set the flag. Silent Depth sets it
-       with no script, since it cannot be arrived at by flight; there it
-       only clears a stale capture. Kerfur, Iskra, Ci-Clop, Split HID
-       Display and ZMK-PointAccel have no seam-bridge script yet, so the
-       flight's last frame is not painted over their boot gap. The arrival
-       itself is correct either way.
+       Every route that can be arrived at by flight carries that script and
+       sets the flag; without it the boot gap was a dark empty page. Silent
+       Depth sets it with no script, since it cannot be arrived at by
+       flight; there it only clears a stale capture.
      · leave → the model flies back to the landing field.
      · footer prev/next follows the canonical data.file route.
 

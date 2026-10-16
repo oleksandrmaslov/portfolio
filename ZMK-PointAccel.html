@@ -25,6 +25,31 @@
 <body>
   <div id="root"></div>
 
+  <!-- SEAM BRIDGE — arriving from the landing node flight: paint the captured
+       final frame instantly so the model never blinks out during boot. -->
+  <script>
+    (function () {
+      try {
+        if (sessionStorage.getItem("mo_node_arrive") !== "1") return;
+        if (sessionStorage.getItem("mo_node_addr") !== "0x08") return;
+        var img = sessionStorage.getItem("mo_node_seam");
+        if (!img) return;
+        var d = document.createElement("div");
+        d.id = "mo-seam";
+        d.style.cssText = "position:fixed;inset:0;z-index:60;background:transparent center center / cover no-repeat;pointer-events:none;";
+        d.style.backgroundImage = "url(" + img + ")";
+        document.body.appendChild(d);
+        // The label is text, and text is a contentful paint: it waits for the
+        // frame to decode, so the browser keeps holding the landing's last
+        // frame (the same picture) instead of releasing on the bare void.
+        var tag = Object.assign(document.createElement("div"), { className: "mo-seam__tag", textContent: "ZMK POINTACCEL" });
+        var im = new Image(); im.src = img;
+        var label = function () { d.appendChild(tag); };
+        (im.decode ? im.decode() : Promise.resolve()).then(label, label);
+      } catch (e) {}
+    })();
+  </script>
+
   <!-- Three.js (ESM) on window.THREE. A module script is deferred, so it runs
        before the deferred page runtime below. -->
   <script type="importmap">
@@ -61,6 +86,7 @@
   <script type="text/plain" data-page-runtime-source="zmk-pointaccel-config">
     window.PAGE_CONFIG = {
       addr: "0x08",
+      bridgeSeam: true,   // drop the #mo-seam frame painted above once the model draws
       docTitle: "ZMK PointAccel — Maslov Oleksandr",
       hero: {
         /* The same mark the universe card carries. The handoff flies
