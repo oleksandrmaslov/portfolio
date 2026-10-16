@@ -56,6 +56,7 @@ function AccelDemoLayer({ active, onClose, tweaks }) {
   const [dtOpen, setDtOpen] = useAH(false);
   const [lastAction, setLastAction] = useAH(null);
   const [soundOn, setSoundOn] = useAH(true);
+  const [soundStatus, setSoundStatus] = useAH("Sound is off");
 
   useEAH(() => {
     const D = window.AccelDemo;
@@ -67,6 +68,7 @@ function AccelDemoLayer({ active, onClose, tweaks }) {
       ["preset", setPreset],
       ["action", setLastAction],
       ["sound", setSoundOn],
+      ["soundStatus", setSoundStatus],
     ].map(([ev, cb]) => [ev, D.on(ev, cb)]);
     return () => offs.forEach(([ev, cb]) => D.off(ev, cb));
   }, []);
@@ -116,9 +118,10 @@ function AccelDemoLayer({ active, onClose, tweaks }) {
 
       <div className="hvd__topRight">
         <button className={"hvd-btn hvd-btn--snd " + (soundOn ? "is-on" : "")}
+                aria-pressed={soundOn} title={soundStatus}
                 onClick={() => setSoundOn(D.toggleSound())}>
           <span className="hvd-eq" aria-hidden="true"><i /><i /><i /></span>
-          <span>{soundOn ? "FIELD · ON" : "MUTED"}</span>
+          <span>{soundStatus.startsWith("Loading") ? "LOADING…" : soundOn ? "MUSIC · ON" : "SOUND · OFF"}</span>
         </button>
         <button className="hvd__close" onClick={onClose}>
           <span>STOP</span>

@@ -5,6 +5,7 @@
   const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
   class GenerativeField {
     constructor(options={}){
+      this.extraSamples=options.extraSamples;
       this.direction=options.direction||'signal';this.nodes=options.nodes;
       this.score=new MOStudyScore.Score(this.direction,{nodes:this.nodes,seed:options.seed});
       this.context=null;this.master=null;this.mixer=null;this.analyser=null;this.bank=null;
@@ -21,7 +22,7 @@
     onNote(fn){this.noteListeners.add(fn);return()=>this.noteListeners.delete(fn);}
     emit(){const s=this.snapshot();for(const fn of this.listeners)fn(s);}
     snapshot(){return {...this.score.snapshot(),running:this.running,intent:this.intent,loading:this.loading,volume:this.volume,status:this.stateText,
-      voices:this.voices.size,maxVoices:24,highWater:this.highWater,dropped:this.dropped,decodedBytes:this.bank?this.bank.buffer.length*this.bank.buffer.numberOfChannels*4:0,
+      voices:this.voices.size,maxVoices:24,highWater:this.highWater,dropped:this.dropped,decodedBytes:this.bank?this.bank.buffer.length*this.bank.buffer.numberOfChannels*4+(this.bank.extraBytes||0):0,
       allocatedVoices:this.allocatedVoices,contextState:this.context?.state||'uncreated',level:this.level,...this.stats,maxScheduleMs:this.maxScheduleMs};}
     build(){
       if(this.context)return;
@@ -51,9 +52,17 @@
         if(epoch!==this.epoch)return false;
         const buffer=await this.context.decodeAudioData(bytes);
         if(epoch!==this.epoch)return false;
+        const entries=[...data.entries];let extraBytes=0;
+        if(this.extraSamples){
+          const r=await fetch(this.extraSamples.file,{signal});if(!r.ok)throw new Error('Interaction samples failed');
+          const bytes=await r.arrayBuffer();if(epoch!==this.epoch)return false;
+          const extraBuffer=await this.context.decodeAudioData(bytes);if(epoch!==this.epoch)return false;
+          extraBytes=extraBuffer.length*extraBuffer.numberOfChannels*4;
+          entries.push(...this.extraSamples.entries.map(entry=>({...entry,buffer:extraBuffer})));
+        }
         const byKind=new Map();
-        for(const entry of data.entries){if(!byKind.has(entry.kind))byKind.set(entry.kind,[]);byKind.get(entry.kind).push(entry);}
-        this.bank={direction,buffer,entries:data.entries,byKind,noteCache:new Map()};this.masterScale=data.masterGain;this.loading=false;return true;
+        for(const entry of entries){if(!byKind.has(entry.kind))byKind.set(entry.kind,[]);byKind.get(entry.kind).push(entry);}
+        this.bank={direction,buffer,extraBytes,entries,byKind,noteCache:new Map()};this.masterScale=data.masterGain;this.loading=false;return true;
       }catch(error){
         if(epoch===this.epoch){this.loading=false;this.intent=false;this.stateText=error.name==='AbortError'?'Sound is off':'Could not load instruments. Press start to retry.';this.context?.suspend().catch(()=>{});this.emit();}
         return false;
@@ -133,14 +142,14 @@
       if(!sample){sample=candidates.reduce((a,b)=>Math.abs(a.note-event.note)<=Math.abs(b.note-event.note)?a:b);this.bank.noteCache.set(key,sample);}
       const rate=event.kind==='wood'?1:2**((event.note-sample.note)/12);
       const available=sample.duration/rate;
-      const duration=Math.min(available-.008,event.duration+.28);if(duration<=.015)return;
-      const source=this.context.createBufferSource();source.buffer=this.bank.buffer;source.playbackRate.value=rate;
+      const duration=Math.min(available-.008,event.duration+(event.tail??.28));if(duration<=.015)return;
+      const source=this.context.createBufferSource();source.buffer=sample.buffer||this.bank.buffer;source.playbackRate.value=rate;
       // Reuse the envelope and panner, while creating the required one-shot source.
       const voice=this.freeVoices.pop()||this.makeVoice();
       const {gain,pan}=voice;voice.source=source;pan.pan.setValueAtTime(event.pan,at);
       gain.gain.cancelScheduledValues(this.context.currentTime);
       const peak=Math.min(.42,event.gain);
-      gain.gain.setValueAtTime(0,at);gain.gain.linearRampToValueAtTime(peak,at+.005);
+      gain.gain.setValueAtTime(0,at);gain.gain.linearRampToValueAtTime(peak,at+(event.attack??.005));
       const release=Math.min(.42,duration*.3);gain.gain.setValueAtTime(peak,at+duration-release);gain.gain.linearRampToValueAtTime(0,at+duration);
       source.connect(gain);pan.connect(this.mixer);
       this.voices.add(voice);this.highWater=Math.max(this.highWater,this.voices.size);
