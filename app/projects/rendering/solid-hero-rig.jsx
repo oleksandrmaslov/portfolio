@@ -9,25 +9,16 @@
    needs different handling, give it an OPTION here; do not fork the
    rig again.
    Same renderer/scene/camera + the canonical arrival pose so the
-   landing→page seam stays one continuous shot — but:
+   landing→page seam stays one continuous shot. The handoff flight runs
+   this same function, so the two change together.
 
-     · loads the production Wafer model (models/wafer_demo.glb), which
-       ships its own PBR materials (anodized case/plate, nylon
-       caps, green PCB, grey LCD, dark switches);
-     · NO matcap — materials are kept (window.tuneRealMaterials)
-       and only nudged to read on the void; material-less models
-       (flashlight) get window.applySolidMaterials instead;
-     · lighting is pushed a little harder so the near-black
-       anodized metal is defined by the key + signal rim.
-
-   Material route, in priority order:
-     assignMaterial → a GLB that ships none of its own (the flashlight)
-     keepMaterials  → a procedural hero that authored its own (Kerfur)
-     default        → real GLB materials, tuned to read on the void
+   Material route, two-way (window.MOStudio, app/projects/rendering/studio.js):
+     default        → the studio finish, chosen by model URL (LOOKS)
+     keepMaterials  → a procedural hero or the node proxy (Kerfur): its
+                      own materials, plus the Neutral hook and the
+                      PROCEDURAL dress
    ============================================================ */
 (function () {
-  const SIGNAL = 0x00f0c8;
-
    /* ---- CANONICAL ARRIVAL POSE — the cross-page contract ----
      Shared by the landing Wafer flight and project page so the seam
      lines up. Tuned for the production Z-up model. */
@@ -64,6 +55,8 @@
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(w, h);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
+    /* Reaches only the proxy's lines and motes: model materials carry
+       Neutral themselves and never meet the renderer's curve. */
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.18;
     mount.appendChild(renderer.domElement);
@@ -75,38 +68,16 @@
     camera.position.set(0, 0, RIG.camZ);
     camera.lookAt(0, 0, 0);
 
-    /* environment for PBR reflections — the anodized metal lives off this */
-    let pmrem = null, envTarget = null, roomEnvironment = null;
-    if (THREE.RoomEnvironment) {
-      try {
-        pmrem = new THREE.PMREMGenerator(renderer);
-        roomEnvironment = new THREE.RoomEnvironment();
-        envTarget = pmrem.fromScene(roomEnvironment, 0.08);
-        scene.environment = envTarget.texture;
-      } catch (_) {}
-      finally {
-        if (roomEnvironment) {
-          if (roomEnvironment.dispose) roomEnvironment.dispose();
-          else roomEnvironment.traverse((object) => {
-            if (object.geometry && object.geometry.dispose) object.geometry.dispose();
-            const mats = object.material ? (Array.isArray(object.material) ? object.material : [object.material]) : [];
-            mats.forEach((material) => material && material.dispose && material.dispose());
-          });
-        }
-        if (pmrem) pmrem.dispose();
-        pmrem = null;
-      }
-    }
+    /* the studio room every model material reflects */
+    let envTarget = null;
+    try {
+      envTarget = window.MOStudio.studioEnvironment(THREE, renderer, window.MOStudio.ROOM, 256);
+      scene.environment = envTarget.texture;
+    } catch (e) { console.warn("[wafer-rig] studio environment failed", e); }
 
-    /* Lighting is tuned so the dark production materials read. */
-    scene.add(new THREE.AmbientLight(0xffffff, 0.85));
-    const key = new THREE.DirectionalLight(0xffffff, 2.3);
-    key.position.set(2.6, 3.6, 2.6); scene.add(key);
-    const rim = new THREE.PointLight(SIGNAL, 3.0, 18); rim.position.set(-2.8, 1.6, -2.4); scene.add(rim);
-    const fill = new THREE.PointLight(0x6f8fc4, 1.0, 18); fill.position.set(3.2, -2.4, 1.6); scene.add(fill);
-    const top = new THREE.DirectionalLight(0xbfd3ff, 0.9); top.position.set(-0.4, 4.0, -1.2); scene.add(top);
+    const dress = window.MOStudio.lights(THREE, scene);
 
-    /* hierarchy: pivot (offset+scale) → spin (orbit) → holder (base pose) → GLB */
+    /* hierarchy: pivot (offset+scale+card match) → spin (orbit) → holder (base pose) → GLB */
     const pivot  = new THREE.Group();
     const spin   = new THREE.Group();
     const holder = new THREE.Group();
@@ -115,6 +86,7 @@
     pivot.add(spin);
     scene.add(pivot);
 
+    let look = null;
     let modelReady = false;
     let modelUpdate = null;
     let modelRoot = null;
@@ -150,35 +122,30 @@
 
     function ingest(root, config, generation) {
       if (!root || generation !== modelGeneration) return false;
-      window.fitModelToSize(root, THREE, config.modelFit || RIG.modelFit);
-      // NO matcap. Three material paths, in priority order:
-      //   assignMaterial  → material-less GLB gets one solid house material
-      //   keepMaterials   → procedural hero authored its own; leave it alone
-      //   default         → real GLB materials, nudged to read on the void
-      // keepMaterials exists because tuneRealMaterials clones every material
-      // and raises envMapIntensity. A procedural body was lit without an
-      // environment, so that both washes it out and hands the builder's own
-      // per-frame code a material object the scene no longer draws.
-      const nextOwnedMaterials = new Set();
-      if (config.assignMaterial && window.applySolidMaterials) {
-        const material = window.applySolidMaterials(root, THREE, config.assignMaterial);
-        if (material) nextOwnedMaterials.add(material);
-      } else if (config.keepMaterials !== true && window.tuneRealMaterials) {
-        window.tuneRealMaterials(root, THREE, { envMapIntensity: 1.9 });
-        root.traverse((object) => {
-          if (!object.isMesh || !object.material) return;
-          const materials = Array.isArray(object.material) ? object.material : [object.material];
-          for (const material of materials) if (material) nextOwnedMaterials.add(material);
-        });
-      }
-      if (config.ownsGeometry && config.keepMaterials) {
+      // The finish runs before the fit, while the root is still un-parented.
+      // keepMaterials exists because a procedural body authored its own
+      // materials and its builder's per-frame code holds those objects: it
+      // gets the Neutral hook in place, never a replacement.
+      let nextOwnedMaterials = new Set();
+      if (config.keepMaterials) {
+        const S = window.MOStudio, u = S.exposure(S.PROCEDURAL.ev);
         root.traverse((object) => {
           if (!object.isMesh && !object.isLine && !object.isPoints) return;
-          if (!object.material) return;
-          const materials = Array.isArray(object.material) ? object.material : [object.material];
-          for (const material of materials) if (material) nextOwnedMaterials.add(material);
+          const materials = [].concat(object.material || []);
+          for (const material of materials) {
+            if (!material) continue;
+            if (object.isMesh) S.tone(material, u);
+            if (config.ownsGeometry) nextOwnedMaterials.add(material);
+          }
         });
+        look = S.PROCEDURAL;
+      } else {
+        const done = window.MOStudio.finish(THREE, root, config.model, { tier: "rig" });
+        look = done.look;
+        nextOwnedMaterials = done.materials;
       }
+      dress.set(look);
+      window.fitModelToSize(root, THREE, config.modelFit || RIG.modelFit);
       modelRoot = root;
       modelOwnsGeometry = !!config.ownsGeometry;
       ownedMaterials = nextOwnedMaterials;
