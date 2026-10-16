@@ -112,6 +112,37 @@
      forward's size runs a little ahead of its position (toward the camera),
      capped so the size still only ever grows. */
   const PATH = { arc: 0.16, bank: 15 * DEG, bankV: 0.5, approach: 0.05 };
+  const BEAT_MS = 600;
+  /* The arrival beat: the one true thing a hero shows as it lands, as a
+     level k (1 = the look as MOStudio.finish made it, 0 = dark). Existing
+     values only (an emissive strength, an opacity, a colour), never a new
+     program: Ci-Clop's LEDs and halos, the Venovisor's lenses and glow, the
+     Wafer's two screens from blank glass. k null asks whether the look has a
+     beat at all; one without gets the key-light sweep instead. The targets
+     are found once per model and kept on it. */
+  function beatOf(root, lk, k) {
+    let b = root.userData.beat;
+    if (b === undefined) {
+      const set = [];
+      const lerp = (obj, key, to, from = 0) => set.push((v) => { obj[key] = from + (to - from) * v; });
+      root.traverse((o) => {
+        for (const m of [].concat(o.material || [])) {
+          if (!m) continue;
+          if ((lk.finish === "ciclop" || lk.finish === "venovisor") && /^led-(red|white)$/.test(m.name)) lerp(m, "emissiveIntensity", m.emissiveIntensity);
+          else if (/-halo$|^led-haze$/.test(o.name)) lerp(m.userData, "fade", 1);   // their onBeforeRender multiplies by it
+          else if (o.name === "led-glow") lerp(m, "opacity", m.opacity);
+          else if (lk.kind === "wafer" && /^wafer:screen_/.test(m.name)) {
+            const c = m.color, ei = m.emissiveIntensity;
+            set.push((v) => { c.setScalar(0.08 + 0.92 * v); m.emissiveIntensity = ei * v; });   // dark glass, then the panel's own pixels
+          }
+        }
+      });
+      b = root.userData.beat = set.length ? set : null;
+    }
+    if (!b || k == null) return !!b;
+    for (const fn of b) fn(k);
+    return true;
+  }
   const reducedMotion = () => !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
   const lerp = (a, b, t) => a + (b - a) * t;
   const damp = (cur, tgt, rate, dt) => lerp(cur, tgt, 1 - Math.pow(1 - rate, dt / 16));
@@ -343,6 +374,9 @@
     let flight = null;   // flyTo/dockTo + setFlight: { from, to, turnMin, m, amp, ... }
     let roll = 0;        // the bank (PATH.bank), set by setFlight only: 0 whenever no travel runs
     let settle = null;   // the arrival spring: { ms, aS, aY, run, skip, onBack }
+    let beatMs = -1;     // playBeat: ms into the signature beat, -1 when idle
+    let beatFrom = 1;    // the level the beat wakes from
+    let beatShown = -1, beatRoot = null;   // the level last handed to the studio, and for which model
     let wind = null;     // windUp: { ms, s0, p0 } while the page's leave lifts the hero
 
     /* The turn lands exactly on the rest yaw (moFlight.turn), and the two
@@ -383,9 +417,11 @@
       else pivot.quaternion.slerpQuaternions(Q_ID, matchQ, cur.match);
       if (roll) pivot.quaternion.premultiply(_qRoll.setFromAxisAngle(Z_AXIS, roll));   // the bank, about the view axis
       if (look) dress.set(look, cur.match, beatMs >= 0 && !hasBeat() ? beatMs / BEAT_MS : -1);
+      if (modelRoot && (cur.beat !== beatShown || modelRoot !== beatRoot) && hasBeat()) { beatOf(modelRoot, look, cur.beat); beatShown = cur.beat; beatRoot = modelRoot; }
       camera.position.z = cur.dist;
       if (camera.fov !== cur.fov) { camera.fov = cur.fov; camera.updateProjectionMatrix(); }
     }
+    const hasBeat = () => !!(modelRoot && look && beatOf(modelRoot, look, null));
     applyToScene();
 
     function update(dt) {
@@ -411,6 +447,12 @@
         else settle.ms += dt;
         if (settle.onBack && settle.ms >= F.SETTLE.BACK) { const cb = settle.onBack; settle.onBack = null; cb(); }
         if (settle.ms >= F.SETTLE.END) settle = null;
+      }
+      if (beatMs >= 0) {
+        beatMs += dt;
+        const k = Math.min(1, beatMs / BEAT_MS);
+        cur.beat = tgt.beat = lerp(beatFrom, 1, k * k * (3 - 2 * k));
+        if (k >= 1) beatMs = -1;
       }
       applyToScene();
     }
@@ -567,6 +609,14 @@
       release(onBack) {
         if (!settle || settle.ms >= F.SETTLE.BACK) { if (settle) settle.run = true; onBack(); return; }
         settle.run = true; settle.onBack = onBack;
+      },
+      /* The signature beat, one shot: the look's own (beatOf: LEDs,
+         glow, screens) from wherever it was, or a key-light sweep for a look
+         without one. Runs inside update(), so it sleeps with the loop. */
+      playBeat() {
+        if (reducedMotion()) { cur.beat = tgt.beat = 1; applyToScene(); return; }
+        beatFrom = cur.beat;
+        beatMs = 0;
       },
       resetOrbit() { tgt.yaw = RIG.arriveYaw; tgt.pitch = RIG.arrivePitch; },
       dispose() {
