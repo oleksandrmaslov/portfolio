@@ -15,9 +15,12 @@ function world(){
  Object.assign(document,{hidden:false,title:'',documentElement:{style:{setProperty(){}}},querySelector:()=>null,getElementById:()=>null,
   body:{classList:{contains:k=>classes.has(k),add:(...k)=>k.forEach(c=>classes.add(c)),remove:(...k)=>k.forEach(c=>classes.delete(c))}}});
  const rig={yaw:0,ready:true,update(){},render(){calls.push('render');},setSize(){},setIdle(on){calls.push('idle:'+on);},
-  toHandoff(){calls.push('handoff');},nudgeYaw(){},resetOrbit(){calls.push('rest');},setLayout(){calls.push('layout');},
+  resetOrbit(){calls.push('rest');},setLayout(){calls.push('layout');},
   beginHandoff(){},snapToLayout(){},setYawTarget(){},setYawRate(){},dispose(){}};
  window.makeWaferRig=()=>rig;
+ window.moHeroLayout=()=>({fracX:.34,scale:.88,offY:0});
+ // the page side of the reverse lives in solid-hero-rig.jsx; here it only has to be called
+ window.moPageReturn={boot:()=>()=>{},ring(){},leave(addr,r){calls.push('leave:'+addr+':'+(r===rig));}};
  const React={useState:x=>[x,()=>{}],useRef:x=>({current:x===null?{clientWidth:640,clientHeight:480}:x}),useEffect:fn=>effects.push(fn),createElement:()=>null,Fragment:'f'};
  const context={window,document,React,console,
   sessionStorage:{getItem:k=>store.has(k)?store.get(k):null,setItem:(k,v)=>store.set(k,String(v)),removeItem:k=>store.delete(k)},
@@ -35,17 +38,18 @@ function world(){
 function assertRestores(w,leave){
  w.tick();assert.ok(w.calls.includes('render'),'the stage renders at the top');
  w.scrollTo(5000);assert.equal(w.pending.size,0,'no callback while the stage is scrolled away');
- leave();assert.equal(w.window.__hv_exitSpin,true);assert.equal(w.classes.has('hv-exit'),true);assert.equal(w.pending.size,1,'leaving wakes the exit turn from any scroll depth');
+ leave();assert.equal(w.window.__hv_leaving,true);assert.equal(w.classes.has('hv-exit'),true);assert.equal(w.pending.size,1,'leaving wakes the stage from any scroll depth');
+ assert.ok(w.calls.some(c=>/^leave:0x0\d:true$/.test(c)),'the leave hands the live rig to moPageReturn');
  w.calls.length=0;w.tick();assert.ok(w.calls.includes('render'));
  w.calls.length=0;w.restore();
- assert.equal(w.window.__hv_exitSpin,false,'Back must not restore a spinning exit');
+ assert.equal(w.window.__hv_leaving,false,'Back must not restore a leaving page');
  assert.equal(w.classes.has('hv-exit'),false);
  assert.deepEqual(w.calls.filter(c=>c!=='render'),['rest','layout','idle:true'],'the hero returns to its rest layout');
  assert.equal(w.pending.size,0,'a restored page scrolled into the case file sleeps');
  w.scrollTo(0);assert.equal(w.pending.size,1,'and wakes at the stage');
 }
 
-test('shared project lifecycle: exit spin wakes, Back restores the rest pose and sleeps',()=>{
+test('shared project lifecycle: the leave wakes, Back restores the rest pose and sleeps',()=>{
  const w=world();
  vm.runInContext(compile(read('app/projects/pages/project-page-lifecycle.jsx'),'lifecycle.jsx'),w.context);
  const L=w.window.MOProjectPageLifecycle;
@@ -56,7 +60,7 @@ test('shared project lifecycle: exit spin wakes, Back restores the rest pose and
  cleanup();
 });
 
-test('Wafer page: no permanent loop, exit spin wakes, Back restores the rest pose and sleeps',()=>{
+test('Wafer page: no permanent loop, the leave wakes, Back restores the rest pose and sleeps',()=>{
  const w=world();const stub=()=>null;
  Object.assign(w.context,{Cursor:stub,KeyButton:stub,WaferDemoLayer:stub,
   ReactDOM:{createRoot:()=>({render(){}})}});

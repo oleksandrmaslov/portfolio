@@ -157,6 +157,84 @@
     if (reducedMotion()) Object.assign(state, { ms: SETTLE.END, beat: 1 });   // end states only
     return state;
   };
+
+  /* THE REVERSE, page side: one definition for every project page (Wafer's
+     bespoke page included). The landing docks the hero back onto its card,
+     so the page hands over where the reader sees the hero, as a screen pose
+     (rig.screenPose: cx, cy, span, quat, fov) rather than a yaw.
+       boot(addr, rig)   origin hygiene, and the pagehide record that browser
+                         Back starts from; returns the cleanup
+       ring()            the ring's PREV/NEXT keep the inherited origin
+       leave(addr, rig)  "<- UNIVERSE": the wind-up, then on one frame the
+                         record, the seam (WebP with alpha) and the navigation
+     Keys: mo_node_back (the record), mo_node_seam_back, mo_node_ring, and
+     the existing mo_node_return / _addr / _target / _origin / mo_node_view
+     (the field snapshot, which only a field origin may keep). */
+  const heroDrawn = (rig) => !!(rig && rig.ready) && !document.body.classList.contains("hv-demoing")
+    && !document.body.classList.contains("mo-menu-open")
+    && (window.scrollY < window.innerHeight * 0.74 || !!window.__hv_leaving);
+  const backRecord = (rig, addr) => {
+    const rec = rig.screenPose();
+    if (rec) { rec.addr = addr; rec.t = Date.now(); }
+    return rec;
+  };
+  let backRecorded = false;
+  /* The leave goes as soon as the wind-up has peaked: the navigation's load
+     overlaps it, the chrome's fade is cut to 200 ms to match (hv-leave,
+     case-study.css), and the landing's seam keeps the lift going under its
+     boot. It used to wait 460 ms, and 720 ms before that. */
+  const LEAVE_MS = WIND.ms;
+  window.moPageReturn = {
+    boot(addr, rig) {
+      const ss = sessionStorage;
+      const ring = ss.getItem("mo_node_ring") === "1";
+      ss.removeItem("mo_node_ring");
+      // A direct link, All Projects or the menu: no origin to go back to, so
+      // the dock lands on the greeting card (D3).
+      if (!ring && ss.getItem("mo_node_arrive") !== "1") { ss.removeItem("mo_node_return_origin"); ss.removeItem("mo_node_view"); }
+      const onHide = () => {
+        if (backRecorded || !heroDrawn(rig)) return;
+        try { const rec = backRecord(rig, addr); if (rec) ss.setItem("mo_node_back", JSON.stringify(rec)); } catch (_) {}
+      };
+      const onRestored = () => { backRecorded = false; };
+      window.addEventListener("pagehide", onHide);
+      window.addEventListener("mo:page-restored", onRestored);
+      return () => { window.removeEventListener("pagehide", onHide); window.removeEventListener("mo:page-restored", onRestored); };
+    },
+    ring() { try { sessionStorage.setItem("mo_node_ring", "1"); } catch (_) {} },
+    leave(addr, rig) {
+      const ss = sessionStorage;
+      if (rig) rig.windUp();
+      document.body.classList.add("hv-leave");
+      const target = ss.getItem("mo_node_return_origin") || "universe";
+      ss.removeItem("mo_node_return_origin");
+      ss.setItem("mo_node_return", "1");
+      ss.setItem("mo_node_return_addr", addr);
+      ss.setItem("mo_node_return_target", target);
+      // LEAVE_MS: the wind-up. Then ONE frame draws the hero, records it and
+      // captures it (same task as the draw: the page canvas keeps no drawing
+      // buffer), and navigates.
+      setTimeout(() => requestAnimationFrame(() => {
+        backRecorded = true;
+        ss.removeItem("mo_node_back");
+        ss.removeItem("mo_node_seam_back");
+        if (heroDrawn(rig)) {
+          try {
+            rig.update(0); rig.render();
+            const rec = backRecord(rig, addr), seam = rig.captureFrame();
+            if (rec) ss.setItem("mo_node_back", JSON.stringify(rec));
+            if (rec && seam) ss.setItem("mo_node_seam_back", seam);
+          } catch (_) {}
+        }
+        // A navigation that never commits must not strand the page faded
+        // out around a wound-up hero: the bfcache restore path resets that.
+        const stuck = setTimeout(() => { if (window.__mo_restorePage) window.__mo_restorePage(); }, 4000);
+        window.addEventListener("pagehide", () => clearTimeout(stuck), { once: true });
+        window.location.href = target === "work" ? "./#work" : "./";
+      }), LEAVE_MS);
+    },
+  };
+
   const lerp = (a, b, t) => a + (b - a) * t;
   const damp = (cur, tgt, rate, dt) => lerp(cur, tgt, 1 - Math.pow(1 - rate, dt / 16));
 
@@ -258,6 +336,7 @@
     let modelOwnsGeometry = false;
     let modelGeneration = 0;
     let ownedMaterials = new Set();
+    let fitNow = opts.modelFit || RIG.modelFit;   // the model's longest edge at scale 1 (fitModelToSize)
 
     function disposeOwnedMaterial(material, disposeTextures) {
       if (!material) return;
@@ -338,6 +417,7 @@
         onReady: next.onReady,
         ownsGeometry: typeof next.buildModel === "function",
       };
+      fitNow = config.modelFit;   // known before the model is: a dock sizes from it at once
 
       if (typeof config.buildModel === "function") {
         // Procedural hero (no GLB yet). A builder may return a bare Object3D,
@@ -419,6 +499,13 @@
       const halfH = RIG.camZ * Math.tan((fov * Math.PI / 180) / 2), halfW = halfH * (vw / vh);
       return { offX: (cx - vw / 2) / (vw / 2) * halfW, offY: -(cy - vh / 2) / (vh / 2) * halfH, scale, halfW };
     }
+    // a running spring's offset becomes state, so whatever starts next starts from what is drawn
+    function foldSettle() {
+      if (!settle) return;
+      const k = F.settle(settle.ms);
+      cur.scale *= 1 + settle.aS * k; cur.yaw += settle.aY * k;
+      settle = null;
+    }
 
     function applyToScene() {
       const k = settle ? F.settle(settle.ms) : 0;
@@ -455,6 +542,13 @@
       cur.match = damp(cur.match, tgt.match, EASE_RATE, dt);
       cur.fov   = damp(cur.fov,   tgt.fov,   EASE_RATE, dt);
       if (idleEnabled) idleSpin += dt * 0.00004;
+      if (wind) {
+        wind.ms += dt;
+        const k = Math.sin(Math.PI / 2 * Math.min(1, wind.ms / WIND.ms));
+        cur.scale = tgt.scale = wind.s0 * (1 + WIND.lift * k);
+        cur.pitch = tgt.pitch = wind.p0 + WIND.pitch * k;
+        if (wind.ms >= WIND.ms) wind = null;
+      }
       if (settle && settle.run) {
         if (settle.skip) settle.skip = false;   // the frame that landed is drawn at the landing itself
         else settle.ms += dt;
@@ -529,24 +623,38 @@
         Object.assign(tgt, HANDOFF, { yaw: RIG.arriveYaw });
         offFracX = 0; applyToScene();
       },
-      snapHandoff() {
-        Object.assign(cur, HANDOFF, { yaw: RIG.arriveYaw - 0.85 });
-        Object.assign(tgt, HANDOFF, { yaw: RIG.arriveYaw - 0.85 });
-        offFracX = 0; applyToScene();
-      },
-      toHandoff() {
-        offFracX = 0;
-        tgt.offX = 0; tgt.offY = 0;
-        tgt.scale = RIG.handoffScale; tgt.pitch = RIG.arrivePitch;
-        recomputeOffX();
-      },
-      nudgeYaw(d) { cur.yaw += d; tgt.yaw += d; },
       get yaw() { return cur.yaw; },
       setYawTarget(y) { tgt.yaw = y; },
       setIdle(on) { idleEnabled = on; },
       setLayout(fracX, scale = 1, offY = 0) {
         offFracX = fracX; tgt.scale = scale; tgt.offY = offY; tgt.match = 0; tgt.fov = RIG.fov; recomputeOffX();
       },
+      /* The page's leave, step 1 of the reverse: the hero holds where the
+         reader sees it (idle turn and any spring folded in) and lifts toward
+         the camera with a tilt toward the viewer, over WIND.ms. The landing
+         starts from exactly this pose (screenPose) and unwinds it in travel. */
+      windUp() {
+        foldSettle();
+        flight = null; beatMs = -1; idleEnabled = false; roll = 0;
+        cur.yaw += idleSpin; idleSpin = 0;
+        Object.assign(tgt, cur);
+        wind = reducedMotion() ? null : { ms: 0, s0: cur.scale, p0: cur.pitch };
+        applyToScene();
+      },
+      /* Where the hero is drawn, as the page hands it over: centre (viewport
+         px), longest model edge as a fraction of the viewport height, the
+         model's camera-relative pose and the lens. The rig camera has no
+         rotation, so the world quaternion is camera-relative. */
+      screenPose() {
+        if (!modelRoot) return null;
+        const r = renderer.domElement.getBoundingClientRect(), vw = window.innerWidth, vh = window.innerHeight;
+        scene.updateMatrixWorld();
+        const p = pivot.getWorldPosition(new THREE.Vector3()).project(camera);
+        const span = fitNow * pivot.scale.x / (2 * camera.position.z * Math.tan(camera.fov * Math.PI / 360)) * (r.height / vh);
+        return { cx: r.left + (p.x * 0.5 + 0.5) * r.width, cy: r.top + (-p.y * 0.5 + 0.5) * r.height, span, quat: modelRoot.getWorldQuaternion(new THREE.Quaternion()).toArray(), fov: camera.fov, vw, vh };
+      },
+      // the scale at which this rig draws its model's edge at `span` of the viewport height, through `fov`
+      scaleForSpan(span, fov = RIG.fov) { return span * 2 * RIG.camZ * Math.tan(fov * Math.PI / 360) / fitNow; },
       /* The handoff travel, ONE gesture. flyTo fixes both ends: from where
          the rig is now (the card) to a layout from moHeroLayout (the page's
          settled hero), with the showcase turn solved by moFlight.turn

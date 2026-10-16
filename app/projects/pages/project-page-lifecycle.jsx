@@ -10,31 +10,15 @@
 (function installProjectPageLifecycle(global) {
   "use strict";
 
+  /* "<- UNIVERSE": the chrome fades, the hero winds up and holds, and the
+     landing docks it onto its card (window.moPageReturn, solid-hero-rig.jsx). */
   function leaveToUniverse(config) {
     if (document.body.classList.contains("hv-exit")) return;
     global.__hv_leaving = true;
     document.documentElement.style.setProperty("--hv-stage-op", "1");
-    const rig = global.__pageRig;
-    if (rig) {
-      rig.setIdle(false);
-      rig.toHandoff();
-      global.__hv_exitSpin = true;
-    }
     document.body.classList.add("hv-exit");
     wakeHeroRig();
-
-    // The landing continues the live page yaw during the reverse flight.
-    try {
-      if (rig && rig.yaw != null) sessionStorage.setItem("mo_node_yaw", String(rig.yaw));
-    } catch (_) {}
-
-    const returnTo = sessionStorage.getItem("mo_node_return_origin") || "work";
-    sessionStorage.removeItem("mo_node_return_origin");
-    sessionStorage.setItem("mo_node_return", "1");
-    sessionStorage.setItem("mo_node_return_addr", config.addr);
-    sessionStorage.setItem("mo_node_return_target", returnTo);
-    const dest = returnTo === "universe" ? "./" : "./#work";
-    setTimeout(() => { global.location.href = dest; }, 720);
+    global.moPageReturn.leave(config.addr, global.__pageRig);
   }
 
   function wakeHeroRig() {
@@ -113,6 +97,7 @@
         return id;
       };
 
+      const unboot = global.moPageReturn.boot(config.addr, rig);   // reads mo_node_arrive: before it goes
       const arrived = sessionStorage.getItem("mo_node_arrive") === "1"
                    && sessionStorage.getItem("mo_node_addr") === config.addr;
       sessionStorage.removeItem("mo_node_arrive");
@@ -120,6 +105,7 @@
       let arriving = arrived;   // held on the flight's last frame until the hero draws it
       const settleToRest = (yawTarget) => {
         arriving = false;
+        if (global.__hv_leaving) return;   // the leave holds the hero; Back resets the flag first
         if (yawTarget != null && rig.setYawTarget) rig.setYawTarget(yawTarget);
         else rig.resetOrbit();
         applyHeroLayout(rig);
@@ -167,7 +153,7 @@
       const shouldRender = () => !document.hidden && !document.body.classList.contains("mo-menu-open")
         && !document.body.classList.contains("hv-demoing") && (   // the hero is at opacity 0 under PLAY DEMO
         global.scrollY < global.innerHeight * 0.74
-        || global.__hv_exitSpin
+        || global.__hv_leaving   // the leave raises the stage at any scroll depth
       );
       const stopLoop = () => {
         if (renderFrame) cancelAnimationFrame(renderFrame);
@@ -181,7 +167,6 @@
         }
         const dt = now - last;
         last = now;
-        if (global.__hv_exitSpin) rig.nudgeYaw(Math.min(50, dt) * 0.0019);
         rig.update(dt);
         rig.render();
         renderFrame = requestAnimationFrame(loop);
@@ -218,8 +203,8 @@
       };
       onScroll();
       global.addEventListener("scroll", onScroll, { passive: true });
-      // Back/forward cache restores the page exactly as it left: centred in
-      // the handoff pose, idle off. core.jsx has already cleared the exit spin.
+      // Back/forward cache restores the page exactly as it left: wound up for
+      // the leave, idle off. core.jsx has already cleared __hv_leaving.
       const onRestored = () => {
         if (!demoRef.current) settleToRest();
         onScroll();
@@ -244,6 +229,7 @@
         global.removeEventListener("mo:menu", syncLoop);
         global.removeEventListener("mo:project-rig-wake", syncLoop);
         global.removeEventListener("mo:page-restored", onRestored);
+        unboot();
         if (global.__pageRig === rig) global.__pageRig = null;
         rig.dispose();
       };

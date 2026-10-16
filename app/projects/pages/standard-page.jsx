@@ -151,7 +151,7 @@ function PCProjectLinks({ project }) {
   );
 }
 
-/* leave — fade the page, keep the model spinning, fly back to the field */
+/* leave — fade the page, wind the hero up, dock it back onto its card */
 function pcLeaveToUniverse() {
   PC_LIFECYCLE.leaveToUniverse(PC);
 }
@@ -164,6 +164,7 @@ function PCProjectFooterNav({ project }) {
   const next = window.PROJECT_DATA[project.next] || project;
   const goTo = (p) => {
     if (!p) return;
+    window.moPageReturn.ring();   // the ring keeps the origin it inherited
     document.body.classList.add("hv-exit");
     setTimeout(() => { window.location.href = p.file; }, 420);
   };

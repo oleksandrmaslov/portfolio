@@ -127,32 +127,15 @@ function ProjectLinks({ project }) {
   );
 }
 
+/* "<- UNIVERSE": the chrome fades, the hero winds up and holds, and the
+   landing docks it onto its card (window.moPageReturn, solid-hero-rig.jsx). */
 function leaveToUniverse() {
   if (document.body.classList.contains("hv-exit")) return;
   window.__hv_leaving = true;
   document.documentElement.style.setProperty("--hv-stage-op", "1");
-  // model stays on screen: ease back to CENTER + keep spinning (no shrink-away)
-  if (window.__waferRig) { window.__waferRig.setIdle(false); window.__waferRig.toHandoff(); window.__hv_exitSpin = true; }
   document.body.classList.add("hv-exit");            // page content fades; the model stage stays
   window.dispatchEvent(new CustomEvent("mo:project-rig-wake"));   // the loop may be asleep below the stage
-  // Hand the model's live yaw to the landing so the reverse flight CONTINUES
-  // this page's rotation instead of snapping. The landing does
-  // `if (isFinite(seamYaw)) rig.setYaw(seamYaw)` — with the key absent that
-  // parseFloat is NaN, snapHandoff()'s arriveYaw-0.85 stands, and the mark
-  // visibly jumps at the seam. Every route must write this, not just the
-  // handoff pages.
-  try {
-    if (window.__waferRig && window.__waferRig.yaw != null) sessionStorage.setItem("mo_node_yaw", String(window.__waferRig.yaw));
-  } catch (_) {}
-  // return to wherever the user opened the project FROM: universe title screen
-  // (clicked a floating node) or the work reel (clicked a work card).
-  const returnTo = sessionStorage.getItem("mo_node_return_origin") || "work";
-  sessionStorage.removeItem("mo_node_return_origin");
-  sessionStorage.setItem("mo_node_return", "1");
-  sessionStorage.setItem("mo_node_return_addr", "0x01");
-  sessionStorage.setItem("mo_node_return_target", returnTo);
-  const dest = returnTo === "universe" ? "./" : "./#work";
-  setTimeout(() => { window.location.href = dest; }, 720);
+  window.moPageReturn.leave("0x01", window.__waferRig);
 }
 
 function ProjectFooterNav({ project }) {
@@ -163,6 +146,7 @@ function ProjectFooterNav({ project }) {
   const next = window.PROJECT_DATA[project.next] || project;
   const goTo = (p) => {
     if (!p) return;
+    window.moPageReturn.ring();   // the ring keeps the origin it inherited
     document.body.classList.add("hv-exit");
     setTimeout(() => { window.location.href = p.file; }, 420);
   };
@@ -290,6 +274,7 @@ function WaferProjectApp() {
     window.__waferRig = rig;
     if (!rig) { setReady(true); return; }
 
+    const unboot = window.moPageReturn.boot("0x01", rig);   // reads mo_node_arrive: before it goes
     const arrived = sessionStorage.getItem("mo_node_arrive") === "1"
                  && sessionStorage.getItem("mo_node_addr") === "0x01";
     sessionStorage.removeItem("mo_node_arrive");
@@ -297,6 +282,7 @@ function WaferProjectApp() {
     let arriving = arrived;   // held on the flight's last frame until the hero draws it
     const settleToRest = (yawTarget) => {
       arriving = false;
+      if (window.__hv_leaving) return;        // the leave holds the hero; Back resets the flag first
       if (yawTarget != null) rig.setYawTarget(yawTarget);
       else rig.resetOrbit();                  // tgt.yaw → arriveYaw
       applyHeroLayout(rig);                    // slides to the width-aware rest
@@ -344,13 +330,12 @@ function WaferProjectApp() {
     const shouldRender = () => !document.hidden && !document.body.classList.contains("mo-menu-open")
       && !document.body.classList.contains("hv-demoing") && (   // the hero is at opacity 0 under PLAY DEMO
       window.scrollY < window.innerHeight * 0.74
-      || window.__hv_exitSpin
+      || window.__hv_leaving                // the leave raises the stage at any scroll depth
     );
     const loop = (now) => {
       raf = 0;
       if (!shouldRender()) { last = now; return; }
       const dt = now - last; last = now;
-      if (window.__hv_exitSpin) rig.nudgeYaw(Math.min(50, dt) * 0.0019);   // graceful exit turn
       rig.update(dt); rig.render();
       raf = requestAnimationFrame(loop);
     };
@@ -380,8 +365,8 @@ function WaferProjectApp() {
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
 
-    // Back/forward cache restores this page exactly as it left: centred in the
-    // handoff pose, idle off. core.jsx has already cleared the exit spin.
+    // Back/forward cache restores this page exactly as it left: wound up for
+    // the leave, idle off. core.jsx has already cleared __hv_leaving.
     const onRestored = () => {
       if (!demoRef.current) settleToRest();
       onScroll();
@@ -394,6 +379,7 @@ function WaferProjectApp() {
 
     return () => {
       cancelAnimationFrame(raf);
+      unboot();
       window.removeEventListener("resize", onResize);
       window.removeEventListener("scroll", onScroll);
       document.removeEventListener("visibilitychange", syncLoop);

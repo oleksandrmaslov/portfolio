@@ -30,6 +30,10 @@
 .hv-page--ready { }
 body.hv-exit .hv-page { transition: opacity 420ms var(--e-in-out), transform 420ms var(--e-in-out); opacity: 0; transform: translateY(-14px); }
 body.hv-exit .pp-shell { opacity: 0; transition: opacity 300ms var(--e-out); }
+/* "<- UNIVERSE" leaves as soon as the hero has wound up (moPageReturn), so
+   its chrome is gone before the navigation commits. */
+body.hv-exit.hv-leave .hv-page { transition-duration: 200ms; }
+body.hv-exit.hv-leave .pp-shell { transition-duration: 160ms; }
 
 /* ============================================================
    HERO — 100vh frame; the rig sits behind, title aligns to anchors
