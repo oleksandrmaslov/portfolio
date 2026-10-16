@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>materials — lab gallery</title>
+  <link rel="icon" href="data:," />
+  <!-- resolve like a root route: the registry, the sealed GLBs and the shared stylesheet all live at the root -->
+  <base href="../" />
+  <!-- Lab surface: excluded from the Pages deploy. A tool page, not a marketing page.
+       URL params (every combination is reachable):
+         model=<id>|all   wafer iskra ci-clop wafer-studio split-hid zmk-pointaccel soft-off sightseeing silent-depth brionel bulgaria venovisor
+         tier=rig|field|macro|both   led=off|subtle|on   grid   spin   yaw=<rad>   dpr=<n>   aa=0   perf   -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&family=Instrument+Serif:ital@1&display=swap" />
+  <link rel="stylesheet" href="app/shared/styles/tokens.css" />
+  <style>
+    * { box-sizing: border-box; }
+    html { background: var(--void); color: var(--bone); }
+    body { margin: 0; font: 400 var(--fs-meta)/var(--lh-mono) var(--ff-mono); letter-spacing: var(--tr-mono); }
+    button, select { font: inherit; color: inherit; letter-spacing: inherit; }
+
+    /* the bar: what the whole page is showing, and the only controls there are */
+    #bar { position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-5) var(--s-6);
+      padding: var(--s-4) var(--s-7); background: rgba(4, 6, 13, 0.94); border-bottom: 1px solid var(--hairline); }
+    #bar h1 { margin: 0; font: 500 var(--fs-meta)/1 var(--ff-mono); letter-spacing: var(--tr-caps); text-transform: uppercase; color: var(--ash); }
+    #bar h1 b { color: var(--signal); font-weight: 500; }
+    .grp { display: flex; align-items: center; gap: var(--s-3); }
+    .grp > label { color: var(--ghost); font-size: var(--fs-nano); letter-spacing: var(--tr-caps); text-transform: uppercase; margin-right: var(--s-3); }
+    .seg { display: inline-flex; border: 1px solid var(--hairline); }
+    .seg button { background: none; border: 0; padding: var(--s-3) var(--s-5); cursor: pointer; color: var(--ash);
+      font-size: var(--fs-micro); letter-spacing: var(--tr-caps); text-transform: uppercase; }
+    .seg button + button { border-left: 1px solid var(--hairline); }
+    .seg button[aria-pressed="true"] { background: var(--carbon-2); color: var(--bone); box-shadow: inset 0 -2px 0 var(--signal); }
+    .seg button:disabled { opacity: 0.35; cursor: default; }
+    .seg button:focus-visible, select:focus-visible, .act:focus-visible { outline: 2px solid var(--signal); outline-offset: 1px; }
+    select { background: var(--carbon); border: 1px solid var(--hairline); padding: var(--s-3) var(--s-4); font-size: var(--fs-micro); }
+    .act { background: none; border: 1px solid var(--hairline); padding: var(--s-3) var(--s-5); cursor: pointer; color: var(--ash);
+      font-size: var(--fs-micro); letter-spacing: var(--tr-caps); text-transform: uppercase; }
+    .act:hover { color: var(--bone); border-color: var(--shadow); }
+    #status { margin-left: auto; color: var(--ghost); font-size: var(--fs-micro); text-align: right; }
+    #status[data-busy="1"]::before { content: "● "; color: var(--signal); }
+
+    /* one model: its name column, then its panels */
+    main { padding: var(--s-6) var(--s-7) var(--s-9); }
+    .model { display: grid; grid-template-columns: 190px 1fr; gap: var(--s-6); padding: var(--s-6) 0; border-top: 1px solid var(--hairline); }
+    .model:first-child { border-top: 0; }
+    .meta h2 { margin: 0; font: 500 var(--fs-lead)/var(--lh-tight) var(--ff-display); letter-spacing: var(--tr-head); }
+    .meta .addr { color: var(--signal); font-size: var(--fs-nano); letter-spacing: var(--tr-caps); }
+    .meta p { margin: var(--s-4) 0 0; color: var(--ghost); font-size: var(--fs-micro); line-height: var(--lh-compact); }
+    .meta .acts { margin-top: var(--s-5); display: flex; gap: var(--s-3); flex-wrap: wrap; }
+    .panels { display: flex; flex-direction: column; gap: var(--s-5); min-width: 0; }
+    .row { display: flex; flex-wrap: wrap; gap: var(--s-5); align-items: flex-start; }
+    .row figure { flex: 1 1 260px; min-width: 0; }
+    .row figure canvas { width: 100%; height: auto; }
+    .perf-slot { grid-column: 1 / -1; overflow-x: auto; }
+    figure { margin: 0; }
+    figure canvas { display: block; background: var(--void); outline: 1px solid var(--hairline); outline-offset: -1px; }
+    figcaption { margin-top: var(--s-3); color: var(--ghost); font-size: var(--fs-nano); letter-spacing: var(--tr-caps); text-transform: uppercase; display: flex; gap: var(--s-4); }
+    figcaption b { color: var(--ash); font-weight: 500; }
+    figure[data-state="error"] figcaption { color: var(--pulse); }
+
+    /* the perf readout */
+    table.perf { border-collapse: collapse; margin-top: var(--s-5); font-size: var(--fs-micro); }
+    table.perf th, table.perf td { padding: var(--s-2) var(--s-5) var(--s-2) 0; text-align: right; white-space: nowrap; }
+    table.perf th { color: var(--ghost); font-weight: 400; font-size: var(--fs-nano); letter-spacing: var(--tr-caps); text-transform: uppercase; }
+    table.perf th:first-child, table.perf td:first-child { text-align: left; color: var(--ash); }
+    table.perf tr.new td { color: var(--bone); }
+    table.perf tr.delta td { color: var(--ghost); border-top: 1px solid var(--hairline); }
+    table.perf .up { color: var(--pulse); } table.perf .dn { color: var(--signal); }
+    .note { color: var(--ghost); font-size: var(--fs-nano); max-width: 74ch; margin-top: var(--s-3); line-height: var(--lh-compact); }
+
+    /* grid: every model at once, tiers stacked small */
+    body.grid main { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: var(--s-6); }
+    body.grid .model { display: block; border-top: 0; padding: 0; }
+    body.grid .meta { margin-bottom: var(--s-4); }
+    body.grid .meta p, body.grid .meta .acts, body.grid table.perf, body.grid .note { display: none; }
+    body.grid .row { flex-wrap: nowrap; }
+    body.grid .row figure { flex: 1 1 0; }
+    body.grid .perf-slot { display: none; }
+
+    @media (max-width: 760px) {
+      #bar { padding: var(--s-4) var(--s-5); } main { padding: var(--s-5); }
+      .model { grid-template-columns: 1fr; }
+      #status { margin-left: 0; text-align: left; }
+    }
+    .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  </style>
+</head>
+<body>
+  <header id="bar">
+    <h1>materials <b>/</b> lab</h1>
+    <div class="grp"><label id="l-tier">tier</label><div class="seg" role="group" aria-labelledby="l-tier" data-key="tier">
+      <button type="button" data-v="both">both</button><button type="button" data-v="rig">rig</button><button type="button" data-v="field">field</button></div></div>
+    <div class="grp"><label id="l-led">ci-clop leds</label><div class="seg" role="group" aria-labelledby="l-led" data-key="led">
+      <button type="button" data-v="off">off</button><button type="button" data-v="subtle">subtle</button><button type="button" data-v="on">on</button></div></div>
+    <div class="grp"><label for="model">model</label><select id="model"></select></div>
+    <div class="grp"><button type="button" class="act" id="spin" aria-pressed="false">turntable</button>
+      <button type="button" class="act" id="grid" aria-pressed="false">grid</button>
+      <button type="button" class="act" id="measure-all">measure all</button></div>
+    <div id="status" role="status" aria-live="polite">loading three…</div>
+  </header>
+  <main id="main"></main>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+  <!-- the site's registry, read as it ships: src, fits and poses -->
+  <script src="app/data/projects.js"></script>
+  <script type="module" src="lab/materials.js"></script>
+</body>
+</html>
