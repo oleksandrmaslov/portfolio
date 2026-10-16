@@ -69,10 +69,9 @@
       tags: ["Hardware", "Firmware", "Volunteer"],
       model: mdl({
         ready: true, src: "models/ci-clop-mark.glb",
-        rigFit: 2.6,   // matches this project's page hero
-        rigPose: { x: 0, y: 0, z: 1.5708 },
-        cardPose: { fit: 1.25, pose: { x: 0, y: 0, z: 1.5708 } },
-        assignMaterial: { color: 0x4b5a32, metalness: 0.28, roughness: 0.62 },
+        rigFit: 3.0,   // matches this project's page hero
+        rigPose: { x: 0.45, y: 0.75, z: 0 },
+        cardPose: { fit: 1.25 },   // the file is upright: no card turn
       }),
     },
     {

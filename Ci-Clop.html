@@ -65,20 +65,12 @@
       docTitle: "Ci-Clop — Maslov Oleksandr",
       hero: {
         model: "models/ci-clop-mark.glb",
-        /* This GLB ships no materials at all — 7 meshes, 0 materials — so it
-           takes the house solid instead of the real-material tuner. Without
-           it the shared rig draws flat white. The spec is the one the landing
-           flight already feeds 0x04 (assignMaterial for 0x04 in
-           app/data/projects.js) — keep the two equal or the seam changes
-           colour mid-flight. */
-        assignMaterial: { color: 0x4b5a32, metalness: 0.28, roughness: 0.62 },
-        /* The rig's 4.0 default is Wafer's — a full split keyboard — and it
-           made this light the largest object on the site. 2.6 puts it with the
-           other handhelds (Venovisor 2.6, Split HID 2.8). rigFit for 0x04 in
-           app/data/projects.js mirrors this; keep the two equal or the mark
-           changes size halfway through the flight. */
-        modelFit: 2.6,
-        pose: { x: 0.5, y: 0.35, z: -0.5 },   // lies at a ready angle, head toward camera
+        /* The rig's 4.0 default is Wafer's, a full split keyboard. 3.0 is the
+           framing the materials gallery approved for this revision. rigFit for
+           0x04 in app/data/projects.js mirrors it: keep the two equal or the
+           mark changes size halfway through the flight. */
+        modelFit: 3.0,
+        pose: { x: 0.45, y: 0.75, z: 0 },   // three-quarter: the LED face, the lid seam, the bed pad
       },
       demo: {
         layerName: "TorchDemoLayer",
