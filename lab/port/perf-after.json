@@ -1,0 +1,4626 @@
+{
+ "meta": {
+  "at": "2026-10-16T07:35:35.386Z",
+  "base": "http://127.0.0.1:8765/",
+  "frames": 60,
+  "warm": 10,
+  "forceDof": true,
+  "viewport": "1440x900@1",
+  "browser": "154.0.8037.92",
+  "gpu": "SwiftShader (render ms is JS-side CPU of renderer.render, not GPU time)",
+  "note": "route:Brionel Catalogue, route:Bulgaria 2026 and landing-title re-measured alone: the first pass lost React to a CDN failure on the two routes and caught one 574 ms long task in the landing sample | 2026-10-16 final pass: landing-title (PERF_WARM=120) and iskra-menu re-measured after the menu-contrast fix; see each state's note."
+ },
+ "states": [
+  {
+   "state": "landing-title",
+   "url": "http://127.0.0.1:8765/index.html",
+   "sampleMs": 72948,
+   "network": {
+    "cumulative": {
+     "byKind": {
+      "other": {
+       "n": 23,
+       "bytes": 224423,
+       "wire": 126428,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 23,
+       "uniqWire": 126428
+      },
+      "js": {
+       "n": 28,
+       "bytes": 1052281,
+       "wire": 563007,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 28,
+       "uniqWire": 563007
+      },
+      "glb": {
+       "n": 12,
+       "bytes": 1636876,
+       "wire": 1060159,
+       "cached": 1,
+       "failed": 0,
+       "uniqN": 11,
+       "uniqWire": 1060159
+      }
+     },
+     "total": {
+      "n": 63,
+      "bytes": 2913580,
+      "wire": 1749594,
+      "uniqN": 62,
+      "uniqWire": 1749594
+     },
+     "failedUrls": [],
+     "glbFiles": [
+      "wafer.glb",
+      "wafer.glb(prefetch)",
+      "iskra-mark.glb",
+      "ci-clop-mark.glb",
+      "venovisor-mark.glb",
+      "wafer-mark.glb",
+      "keyboard-display.opt.glb",
+      "zmk-mark.glb",
+      "soft-off-keycap.opt.glb",
+      "sightseeing-mark.glb",
+      "brionel-mark.glb",
+      "bulgaria-mark.glb"
+     ],
+     "ktx2Files": []
+    },
+    "delta": {
+     "byKind": {
+      "other": {
+       "n": 23,
+       "bytes": 224423,
+       "wire": 126428,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 23,
+       "uniqWire": 126428
+      },
+      "js": {
+       "n": 28,
+       "bytes": 1052281,
+       "wire": 563007,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 28,
+       "uniqWire": 563007
+      },
+      "glb": {
+       "n": 12,
+       "bytes": 1636876,
+       "wire": 1060159,
+       "cached": 1,
+       "failed": 0,
+       "uniqN": 11,
+       "uniqWire": 1060159
+      }
+     },
+     "total": {
+      "n": 63,
+      "bytes": 2913580,
+      "wire": 1749594,
+      "uniqN": 62,
+      "uniqWire": 1749594
+     },
+     "failedUrls": [],
+     "glbFiles": [
+      "wafer.glb",
+      "wafer.glb(prefetch)",
+      "iskra-mark.glb",
+      "ci-clop-mark.glb",
+      "venovisor-mark.glb",
+      "wafer-mark.glb",
+      "keyboard-display.opt.glb",
+      "zmk-mark.glb",
+      "soft-off-keycap.opt.glb",
+      "sightseeing-mark.glb",
+      "brionel-mark.glb",
+      "bulgaria-mark.glb"
+     ],
+     "ktx2Files": []
+    }
+   },
+   "heapMB": 9.5,
+   "heapPreGcMB": 9.9,
+   "domNodes": 1512,
+   "renderers": [
+    {
+     "id": 0,
+     "by": "Id < Xb < S < MessagePort.U",
+     "dom": ".universe__mount < .universe < .universeBg.universeBg--drift",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": false,
+     "toneMapping": 0,
+     "exposure": 1,
+     "createdAt": 1072,
+     "rendersTotal": 959,
+     "coldRenderMs": {
+      "total": 5143,
+      "max": 1262
+     },
+     "frames": 60,
+     "cpuMs": {
+      "mean": 1.122,
+      "median": 1,
+      "p95": 1.8,
+      "max": 3.1
+     },
+     "rendersPerFrame": 4.5,
+     "callsPerFrame": 36.2,
+     "callsMax": 49,
+     "trisPerFrame": 21732,
+     "perRenderCalls": [
+      22,
+      22,
+      1,
+      1,
+      1
+     ],
+     "slowFrames": [],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 25,
+      "geometries": 61,
+      "textures": 43
+     },
+     "programsByType": {
+      "3": 1,
+      "5": 1,
+      "7": 1,
+      "9": 1,
+      "11": 1,
+      "points": 1,
+      "basic": 5,
+      "depth": 1,
+      "physical": 12,
+      "sprite": 1
+     },
+     "drawn": {
+      "meshes": 93,
+      "points": 2,
+      "lines": 1,
+      "materials": 68,
+      "materialTypes": {
+       "MeshBasicMaterial": 23,
+       "ShaderMaterial": 5,
+       "PointsMaterial": 2,
+       "MeshPhysicalMaterial": 35,
+       "SpriteMaterial": 2,
+       "RawShaderMaterial": 1
+      },
+      "lights": {
+       "AmbientLight": 1,
+       "list": [
+        "AmbientLight:<Scene:"
+       ]
+      },
+      "textures": 30,
+      "texMB": 33.09,
+      "geoMB": 7.34,
+      "renderTargets": 6,
+      "rtMB": 33.94,
+      "topTex": [
+       "canvas  2048x512 5.33MB",
+       "canvas  540x720 1.98MB",
+       "canvas  540x720 1.98MB",
+       "canvas  540x720 1.98MB",
+       "canvas  540x720 1.98MB",
+       "canvas  540x720 1.98MB",
+       "canvas  540x720 1.98MB",
+       "canvas  540x720 1.98MB"
+      ]
+     },
+     "fbMB": 9.89
+    },
+    {
+     "id": 1,
+     "by": "window.makeWaferRig < window.makeNodeRig < prepareRig < prime < frame",
+     "dom": ".wf__mount < .wf < #rootdiv",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": true,
+     "toneMapping": 4,
+     "exposure": 1.18,
+     "createdAt": 2640,
+     "rendersTotal": 29,
+     "coldRenderMs": {
+      "total": 739,
+      "max": 596
+     },
+     "frames": 0,
+     "cpuMs": {
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+     },
+     "rendersPerFrame": 0,
+     "callsPerFrame": 0,
+     "callsMax": 0,
+     "trisPerFrame": 0,
+     "perRenderCalls": [],
+     "slowFrames": [],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 6,
+      "geometries": 12,
+      "textures": 11
+     },
+     "programsByType": {
+      "physical": 6
+     },
+     "drawn": {
+      "meshes": 42,
+      "points": 0,
+      "lines": 0,
+      "materials": 23,
+      "materialTypes": {
+       "MeshBasicMaterial": 9,
+       "ShaderMaterial": 2,
+       "MeshPhysicalMaterial": 12
+      },
+      "lights": {
+       "AmbientLight": 1,
+       "list": [
+        "AmbientLight:<Scene:",
+        "DirectionalLight:<Scene:",
+        "DirectionalLight:<Scene:"
+       ],
+       "DirectionalLight": 2
+      },
+      "textures": 12,
+      "texMB": 7.61,
+      "geoMB": 5.1,
+      "renderTargets": 1,
+      "rtMB": 6,
+      "topTex": [
+       "rt PMREM.cubeUv 768x1024 6.00MB",
+       "rt  ?x? 1.50MB",
+       "screen_L 68x160 0.06MB",
+       "screen_R 68x160 0.06MB",
+       "data  16x1 0.00MB",
+       "data  16x1 0.00MB",
+       "data  16x1 0.00MB",
+       "data  16x1 0.00MB"
+      ]
+     },
+     "fbMB": 49.44
+    }
+   ],
+   "contexts": {
+    "created": 2,
+    "live": 2,
+    "list": [
+     {
+      "type": "webgl2",
+      "at": 978,
+      "lost": false
+     },
+     {
+      "type": "webgl2",
+      "at": 2633,
+      "lost": false
+     }
+    ]
+   },
+   "longTasks": {
+    "load": {
+     "n": 8,
+     "totalMs": 7175,
+     "maxMs": 1441
+    },
+    "sampling": {
+     "n": 4,
+     "totalMs": 3520,
+     "maxMs": 1049
+    }
+   },
+   "events": {
+    "mo:universe-ready": 1422,
+    "mo:first-frame": 2627,
+    "mo:preloader-done": 5843
+   },
+   "frames": 183,
+   "pmrem": [],
+   "staleRaf": {
+    "n": 18,
+    "minMs": -1126
+   },
+   "dof": {
+    "bokeh": true,
+    "enabled": true,
+    "probeFps": 20,
+    "dofOn": false
+   },
+   "scrollY": 0,
+   "settle": {
+    "settleMs": 13834,
+    "timedOut": false
+   },
+   "warmFrames": 120,
+   "note": "Re-captured 2026-10-16 after the menu fix. The 07:35 sample (0 contexts, 11 failed JS) had lost the unpkg three/addon modules (22 JS requests, 11 failed, only 11 same-origin scripts arrived), so THREE never loaded and no renderer existed; three later runs had 0 failed requests. Measured with PERF_WARM=120: with the default 10 warm frames every run (tmp/perf-r1..r4.json) catches 4 consecutive 600-1300 ms Universe frames ~30 frames into the window with programsAddedWhileSampling 0 - SwiftShader JIT-compiling already-linked programs on their first draw; the before run caught one such frame (1181 ms). Steady state is this record."
+  },
+  {
+   "state": "landing-board",
+   "url": "http://127.0.0.1:8765/index.html",
+   "sampleMs": 33055,
+   "network": {
+    "cumulative": {
+     "byKind": {
+      "other": {
+       "n": 25,
+       "bytes": 355677,
+       "wire": 256718,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 25,
+       "uniqWire": 256718
+      },
+      "js": {
+       "n": 28,
+       "bytes": 1051322,
+       "wire": 562622,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 28,
+       "uniqWire": 562622
+      },
+      "glb": {
+       "n": 12,
+       "bytes": 1636876,
+       "wire": 1060159,
+       "cached": 1,
+       "failed": 0,
+       "uniqN": 11,
+       "uniqWire": 1060159
+      }
+     },
+     "total": {
+      "n": 65,
+      "bytes": 3043875,
+      "wire": 1879499,
+      "uniqN": 64,
+      "uniqWire": 1879499
+     },
+     "glbFiles": [
+      "wafer.glb",
+      "wafer.glb(prefetch)",
+      "iskra-mark.glb",
+      "ci-clop-mark.glb",
+      "venovisor-mark.glb",
+      "wafer-mark.glb",
+      "keyboard-display.opt.glb",
+      "zmk-mark.glb",
+      "soft-off-keycap.opt.glb",
+      "sightseeing-mark.glb",
+      "brionel-mark.glb",
+      "bulgaria-mark.glb"
+     ],
+     "ktx2Files": []
+    },
+    "delta": {
+     "byKind": {
+      "other": {
+       "n": 2,
+       "bytes": 131254,
+       "wire": 130292,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 2,
+       "uniqWire": 130292
+      }
+     },
+     "total": {
+      "n": 2,
+      "bytes": 131254,
+      "wire": 130292,
+      "uniqN": 2,
+      "uniqWire": 130292
+     },
+     "glbFiles": [],
+     "ktx2Files": []
+    }
+   },
+   "heapMB": 12.3,
+   "heapPreGcMB": 13.3,
+   "domNodes": 1095,
+   "renderers": [
+    {
+     "id": 0,
+     "by": "Id < Xb < S < MessagePort.U",
+     "dom": ".universe__mount < .universe < .universeBg.universeBg--drift",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": false,
+     "toneMapping": 0,
+     "exposure": 1,
+     "createdAt": 524,
+     "rendersTotal": 533,
+     "coldRenderMs": {
+      "total": 4665,
+      "max": 1212
+     },
+     "frames": 0,
+     "cpuMs": {
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+     },
+     "rendersPerFrame": 0,
+     "callsPerFrame": 0,
+     "callsMax": 0,
+     "trisPerFrame": 0,
+     "perRenderCalls": [],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 25,
+      "geometries": 62,
+      "textures": 43
+     },
+     "programsByType": {
+      "3": 1,
+      "5": 1,
+      "7": 1,
+      "9": 1,
+      "11": 1,
+      "basic": 5,
+      "points": 1,
+      "depth": 1,
+      "physical": 12,
+      "sprite": 1
+     },
+     "drawn": {
+      "meshes": 92,
+      "points": 2,
+      "lines": 1,
+      "materials": 68,
+      "materialTypes": {
+       "MeshBasicMaterial": 23,
+       "ShaderMaterial": 5,
+       "PointsMaterial": 2,
+       "MeshPhysicalMaterial": 35,
+       "SpriteMaterial": 2,
+       "RawShaderMaterial": 1
+      },
+      "lights": {
+       "AmbientLight": 1,
+       "list": [
+        "AmbientLight:<Scene:"
+       ]
+      },
+      "textures": 30,
+      "texMB": 33.09,
+      "geoMB": 7.32,
+      "renderTargets": 6,
+      "rtMB": 33.94,
+      "topTex": [
+       "canvas  2048x512 5.33MB",
+       "canvas  540x720 1.98MB",
+       "canvas  540x720 1.98MB",
+       "canvas  540x720 1.98MB",
+       "canvas  540x720 1.98MB",
+       "canvas  540x720 1.98MB",
+       "canvas  540x720 1.98MB",
+       "canvas  540x720 1.98MB"
+      ]
+     },
+     "fbMB": 9.89
+    },
+    {
+     "id": 1,
+     "by": "window.makeWaferRig < window.makeNodeRig < prepareRig < prime < frame",
+     "dom": ".wf__mount < .wf < #rootdiv",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": true,
+     "toneMapping": 4,
+     "exposure": 1.18,
+     "createdAt": 1563,
+     "rendersTotal": 29,
+     "coldRenderMs": {
+      "total": 994,
+      "max": 961
+     },
+     "frames": 0,
+     "cpuMs": {
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+     },
+     "rendersPerFrame": 0,
+     "callsPerFrame": 0,
+     "callsMax": 0,
+     "trisPerFrame": 0,
+     "perRenderCalls": [],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 6,
+      "geometries": 12,
+      "textures": 11
+     },
+     "programsByType": {
+      "physical": 6
+     },
+     "drawn": {
+      "meshes": 42,
+      "points": 0,
+      "lines": 0,
+      "materials": 23,
+      "materialTypes": {
+       "MeshBasicMaterial": 9,
+       "ShaderMaterial": 2,
+       "MeshPhysicalMaterial": 12
+      },
+      "lights": {
+       "AmbientLight": 1,
+       "list": [
+        "AmbientLight:<Scene:",
+        "DirectionalLight:<Scene:",
+        "DirectionalLight:<Scene:"
+       ],
+       "DirectionalLight": 2
+      },
+      "textures": 12,
+      "texMB": 7.61,
+      "geoMB": 5.1,
+      "renderTargets": 1,
+      "rtMB": 6,
+      "topTex": [
+       "rt PMREM.cubeUv 768x1024 6.00MB",
+       "rt  ?x? 1.50MB",
+       "screen_L 68x160 0.06MB",
+       "screen_R 68x160 0.06MB",
+       "data  16x1 0.00MB",
+       "data  16x1 0.00MB",
+       "data  16x1 0.00MB",
+       "data  16x1 0.00MB"
+      ]
+     },
+     "fbMB": 49.44
+    },
+    {
+     "id": 2,
+     "by": "Generator.next < asyncGeneratorStep < _next",
+     "dom": ".bf-mount < .bf-layer.bf-layer--takeover < #about.bf",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": false,
+     "toneMapping": 4,
+     "exposure": 1.05,
+     "createdAt": 46021,
+     "rendersTotal": 431,
+     "coldRenderMs": {
+      "total": 4217,
+      "max": 1469
+     },
+     "frames": 60,
+     "cpuMs": {
+      "mean": 1.627,
+      "median": 1.6,
+      "p95": 2.2,
+      "max": 2.5
+     },
+     "rendersPerFrame": 1,
+     "callsPerFrame": 151,
+     "callsMax": 151,
+     "trisPerFrame": 132668,
+     "perRenderCalls": [
+      151
+     ],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 12,
+      "geometries": 130,
+      "textures": 18
+     },
+     "programsByType": {
+      "physical": 11,
+      "points": 1
+     },
+     "drawn": {
+      "meshes": 259,
+      "points": 1,
+      "lines": 0,
+      "materials": 67,
+      "materialTypes": {
+       "MeshBasicMaterial": 9,
+       "ShaderMaterial": 2,
+       "MeshStandardMaterial": 42,
+       "PointsMaterial": 1,
+       "MeshPhysicalMaterial": 13
+      },
+      "lights": {
+       "DirectionalLight": 2,
+       "list": [
+        "DirectionalLight:<Scene:",
+        "DirectionalLight:<Scene:",
+        "PointLight:<Scene:",
+        "AmbientLight:<Scene:"
+       ],
+       "PointLight": 1,
+       "AmbientLight": 1
+      },
+      "textures": 18,
+      "texMB": 23.65,
+      "geoMB": 3.12,
+      "renderTargets": 2,
+      "rtMB": 10.5,
+      "topTex": [
+       "canvas  2048x683 7.11MB",
+       " 1024x1024 5.33MB",
+       " 1024x1024 5.33MB",
+       "canvas  1024x341 1.78MB",
+       "canvas  1024x341 1.78MB",
+       "rt PMREM.cubeUv 384x512 1.50MB",
+       "rt  ?x? 0.38MB",
+       "canvas  256x256 0.33MB"
+      ]
+     },
+     "fbMB": 9.89
+    },
+    {
+     "id": 3,
+     "by": "Object.mountStandalone < Generator.next < asyncGeneratorStep < _next",
+     "dom": ".fl-titleDim.fl-titleGone < .custom-cursor",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": false,
+     "toneMapping": 0,
+     "exposure": 1,
+     "createdAt": 52781,
+     "rendersTotal": 0,
+     "coldRenderMs": {
+      "total": 0,
+      "max": 0
+     },
+     "frames": 0,
+     "cpuMs": {
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+     },
+     "rendersPerFrame": 0,
+     "callsPerFrame": 0,
+     "callsMax": 0,
+     "trisPerFrame": 0,
+     "perRenderCalls": [],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 0,
+      "geometries": 0,
+      "textures": 2
+     },
+     "programsByType": {},
+     "drawn": {
+      "meshes": 0,
+      "points": 0,
+      "lines": 0,
+      "materials": 0,
+      "materialTypes": {},
+      "lights": {},
+      "textures": 0,
+      "texMB": 0,
+      "geoMB": 0,
+      "renderTargets": 2,
+      "rtMB": 0.31,
+      "topTex": []
+     },
+     "fbMB": 9.89
+    }
+   ],
+   "contexts": {
+    "created": 4,
+    "live": 4,
+    "list": [
+     {
+      "type": "webgl2",
+      "at": 509,
+      "lost": false
+     },
+     {
+      "type": "webgl2",
+      "at": 1558,
+      "lost": false
+     },
+     {
+      "type": "webgl2",
+      "at": 46012,
+      "lost": false
+     },
+     {
+      "type": "webgl2",
+      "at": 52775,
+      "lost": false
+     }
+    ]
+   },
+   "longTasks": {
+    "load": {
+     "n": 17,
+     "totalMs": 15733,
+     "maxMs": 1619
+    },
+    "sampling": {
+     "n": 0,
+     "totalMs": 0,
+     "maxMs": 0
+    }
+   },
+   "events": {
+    "mo:universe-ready": 830,
+    "mo:first-frame": 1552,
+    "mo:preloader-done": 5672,
+    "mo:board-ready": 52785
+   },
+   "frames": 73,
+   "pmrem": [
+    {
+     "ms": 1113,
+     "sigma": 0.04,
+     "by": "http://127.0.0.1:8765/app/landing/runtime.js?v=7b5e4974eb"
+    }
+   ],
+   "staleRaf": {
+    "n": 44,
+    "minMs": -1085
+   },
+   "dof": {
+    "bokeh": true,
+    "enabled": true,
+    "probeFps": null,
+    "dofOn": true
+   },
+   "scrollY": 14995,
+   "settle": {
+    "settleMs": 180115,
+    "timedOut": true
+   }
+  },
+  {
+   "state": "route:Wafer",
+   "url": "http://127.0.0.1:8765/Wafer.html",
+   "sampleMs": 28616,
+   "network": {
+    "cumulative": {
+     "byKind": {
+      "other": {
+       "n": 14,
+       "bytes": 151599,
+       "wire": 97820,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 14,
+       "uniqWire": 97820
+      },
+      "js": {
+       "n": 10,
+       "bytes": 626902,
+       "wire": 431669,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 10,
+       "uniqWire": 431669
+      },
+      "glb": {
+       "n": 1,
+       "bytes": 884081,
+       "wire": 640766,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 1,
+       "uniqWire": 640766
+      }
+     },
+     "total": {
+      "n": 25,
+      "bytes": 1662582,
+      "wire": 1170255,
+      "uniqN": 25,
+      "uniqWire": 1170255
+     },
+     "glbFiles": [
+      "wafer.glb"
+     ],
+     "ktx2Files": []
+    },
+    "delta": {
+     "byKind": {
+      "other": {
+       "n": 14,
+       "bytes": 151599,
+       "wire": 97820,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 14,
+       "uniqWire": 97820
+      },
+      "js": {
+       "n": 10,
+       "bytes": 626902,
+       "wire": 431669,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 10,
+       "uniqWire": 431669
+      },
+      "glb": {
+       "n": 1,
+       "bytes": 884081,
+       "wire": 640766,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 1,
+       "uniqWire": 640766
+      }
+     },
+     "total": {
+      "n": 25,
+      "bytes": 1662582,
+      "wire": 1170255,
+      "uniqN": 25,
+      "uniqWire": 1170255
+     },
+     "glbFiles": [
+      "wafer.glb"
+     ],
+     "ktx2Files": []
+    }
+   },
+   "heapMB": 6.6,
+   "heapPreGcMB": 6.8,
+   "domNodes": 1259,
+   "renderers": [
+    {
+     "id": 0,
+     "by": "Object.mountStandalone < Id < Xb < S",
+     "dom": "body < .custom-cursor",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": false,
+     "toneMapping": 0,
+     "exposure": 1,
+     "createdAt": 1428,
+     "rendersTotal": 0,
+     "coldRenderMs": {
+      "total": 0,
+      "max": 0
+     },
+     "frames": 0,
+     "cpuMs": {
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+     },
+     "rendersPerFrame": 0,
+     "callsPerFrame": 0,
+     "callsMax": 0,
+     "trisPerFrame": 0,
+     "perRenderCalls": [],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 0,
+      "geometries": 0,
+      "textures": 2
+     },
+     "programsByType": {},
+     "drawn": {
+      "meshes": 0,
+      "points": 0,
+      "lines": 0,
+      "materials": 0,
+      "materialTypes": {},
+      "lights": {},
+      "textures": 0,
+      "texMB": 0,
+      "geoMB": 0,
+      "renderTargets": 2,
+      "rtMB": 0.31,
+      "topTex": []
+     },
+     "fbMB": 9.89
+    },
+    {
+     "id": 1,
+     "by": "window.makeWaferRig < Id < Xb < S",
+     "dom": ".hv-stage__mount < .hv-stage < #rootdiv",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": true,
+     "toneMapping": 4,
+     "exposure": 1.18,
+     "createdAt": 1553,
+     "rendersTotal": 114,
+     "coldRenderMs": {
+      "total": 664,
+      "max": 632
+     },
+     "frames": 60,
+     "cpuMs": {
+      "mean": 0.477,
+      "median": 0.4,
+      "p95": 0.9,
+      "max": 1.2
+     },
+     "rendersPerFrame": 1,
+     "callsPerFrame": 12,
+     "callsMax": 12,
+     "trisPerFrame": 128742,
+     "perRenderCalls": [
+      12
+     ],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 6,
+      "geometries": 12,
+      "textures": 11
+     },
+     "programsByType": {
+      "physical": 6
+     },
+     "drawn": {
+      "meshes": 42,
+      "points": 0,
+      "lines": 0,
+      "materials": 23,
+      "materialTypes": {
+       "MeshBasicMaterial": 9,
+       "ShaderMaterial": 2,
+       "MeshPhysicalMaterial": 12
+      },
+      "lights": {
+       "AmbientLight": 1,
+       "list": [
+        "AmbientLight:<Scene:",
+        "DirectionalLight:<Scene:",
+        "DirectionalLight:<Scene:"
+       ],
+       "DirectionalLight": 2
+      },
+      "textures": 12,
+      "texMB": 7.61,
+      "geoMB": 5.1,
+      "renderTargets": 1,
+      "rtMB": 6,
+      "topTex": [
+       "rt PMREM.cubeUv 768x1024 6.00MB",
+       "rt  ?x? 1.50MB",
+       "screen_L 68x160 0.06MB",
+       "screen_R 68x160 0.06MB",
+       "data  16x1 0.00MB",
+       "data  16x1 0.00MB",
+       "data  16x1 0.00MB",
+       "data  16x1 0.00MB"
+      ]
+     },
+     "fbMB": 49.44
+    }
+   ],
+   "contexts": {
+    "created": 2,
+    "live": 2,
+    "list": [
+     {
+      "type": "webgl2",
+      "at": 710,
+      "lost": false
+     },
+     {
+      "type": "webgl2",
+      "at": 1549,
+      "lost": false
+     }
+    ]
+   },
+   "longTasks": {
+    "load": {
+     "n": 5,
+     "totalMs": 2178,
+     "maxMs": 1296
+    },
+    "sampling": {
+     "n": 0,
+     "totalMs": 0,
+     "maxMs": 0
+    }
+   },
+   "events": {},
+   "frames": 73,
+   "pmrem": [],
+   "staleRaf": {
+    "n": 11,
+    "minMs": -1298
+   },
+   "dof": {
+    "bokeh": false,
+    "enabled": null,
+    "probeFps": null,
+    "dofOn": null
+   },
+   "scrollY": 0,
+   "settle": {
+    "settleMs": 5535,
+    "timedOut": false
+   }
+  },
+  {
+   "state": "route:Kerfur",
+   "url": "http://127.0.0.1:8765/Kerfur.html",
+   "sampleMs": 9270,
+   "network": {
+    "cumulative": {
+     "byKind": {
+      "other": {
+       "n": 58,
+       "bytes": 217443,
+       "wire": 114642,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 58,
+       "uniqWire": 114642
+      },
+      "js": {
+       "n": 12,
+       "bytes": 650152,
+       "wire": 441106,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 12,
+       "uniqWire": 441106
+      }
+     },
+     "total": {
+      "n": 70,
+      "bytes": 867595,
+      "wire": 555748,
+      "uniqN": 70,
+      "uniqWire": 555748
+     },
+     "glbFiles": [],
+     "ktx2Files": []
+    },
+    "delta": {
+     "byKind": {
+      "other": {
+       "n": 58,
+       "bytes": 217443,
+       "wire": 114642,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 58,
+       "uniqWire": 114642
+      },
+      "js": {
+       "n": 12,
+       "bytes": 650152,
+       "wire": 441106,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 12,
+       "uniqWire": 441106
+      }
+     },
+     "total": {
+      "n": 70,
+      "bytes": 867595,
+      "wire": 555748,
+      "uniqN": 70,
+      "uniqWire": 555748
+     },
+     "glbFiles": [],
+     "ktx2Files": []
+    }
+   },
+   "heapMB": 5.2,
+   "heapPreGcMB": 5.9,
+   "domNodes": 697,
+   "renderers": [
+    {
+     "id": 0,
+     "by": "Object.mountStandalone < Id < Xb < S",
+     "dom": "body < .custom-cursor",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": false,
+     "toneMapping": 0,
+     "exposure": 1,
+     "createdAt": 1337,
+     "rendersTotal": 0,
+     "coldRenderMs": {
+      "total": 0,
+      "max": 0
+     },
+     "frames": 0,
+     "cpuMs": {
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+     },
+     "rendersPerFrame": 0,
+     "callsPerFrame": 0,
+     "callsMax": 0,
+     "trisPerFrame": 0,
+     "perRenderCalls": [],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 0,
+      "geometries": 0,
+      "textures": 2
+     },
+     "programsByType": {},
+     "drawn": {
+      "meshes": 0,
+      "points": 0,
+      "lines": 0,
+      "materials": 0,
+      "materialTypes": {},
+      "lights": {},
+      "textures": 0,
+      "texMB": 0,
+      "geoMB": 0,
+      "renderTargets": 2,
+      "rtMB": 0.31,
+      "topTex": []
+     },
+     "fbMB": 9.89
+    },
+    {
+     "id": 1,
+     "by": "window.makeWaferRig < Id < Xb < S",
+     "dom": ".hv-stage__mount < .hv-stage < #rootdiv",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": true,
+     "toneMapping": 4,
+     "exposure": 1.18,
+     "createdAt": 1492,
+     "rendersTotal": 132,
+     "coldRenderMs": {
+      "total": 149,
+      "max": 83
+     },
+     "frames": 60,
+     "cpuMs": {
+      "mean": 0.5,
+      "median": 0.5,
+      "p95": 0.7,
+      "max": 0.8
+     },
+     "rendersPerFrame": 1,
+     "callsPerFrame": 7,
+     "callsMax": 7,
+     "trisPerFrame": 2942,
+     "perRenderCalls": [
+      7
+     ],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 2,
+      "geometries": 6,
+      "textures": 2
+     },
+     "programsByType": {
+      "physical": 1,
+      "basic": 1
+     },
+     "drawn": {
+      "meshes": 37,
+      "points": 0,
+      "lines": 0,
+      "materials": 15,
+      "materialTypes": {
+       "MeshBasicMaterial": 10,
+       "ShaderMaterial": 2,
+       "MeshStandardMaterial": 3
+      },
+      "lights": {
+       "AmbientLight": 1,
+       "list": [
+        "AmbientLight:<Scene:",
+        "DirectionalLight:<Scene:",
+        "DirectionalLight:<Scene:",
+        "PointLight:<Group:"
+       ],
+       "DirectionalLight": 2,
+       "PointLight": 1
+      },
+      "textures": 3,
+      "texMB": 7.53,
+      "geoMB": 0.22,
+      "renderTargets": 1,
+      "rtMB": 6,
+      "topTex": [
+       "rt PMREM.cubeUv 768x1024 6.00MB",
+       "rt  ?x? 1.50MB",
+       "canvas  128x64 0.03MB"
+      ]
+     },
+     "fbMB": 49.44
+    }
+   ],
+   "contexts": {
+    "created": 2,
+    "live": 2,
+    "list": [
+     {
+      "type": "webgl2",
+      "at": 523,
+      "lost": false
+     },
+     {
+      "type": "webgl2",
+      "at": 1484,
+      "lost": false
+     }
+    ]
+   },
+   "longTasks": {
+    "load": {
+     "n": 2,
+     "totalMs": 1454,
+     "maxMs": 1325
+    },
+    "sampling": {
+     "n": 0,
+     "totalMs": 0,
+     "maxMs": 0
+    }
+   },
+   "events": {},
+   "frames": 74,
+   "pmrem": [],
+   "staleRaf": {
+    "n": 8,
+    "minMs": -1325
+   },
+   "dof": {
+    "bokeh": false,
+    "enabled": null,
+    "probeFps": null,
+    "dofOn": null
+   },
+   "scrollY": 0,
+   "settle": {
+    "settleMs": 5238,
+    "timedOut": false
+   }
+  },
+  {
+   "state": "route:Iskra",
+   "url": "http://127.0.0.1:8765/Iskra.html",
+   "sampleMs": 10071,
+   "network": {
+    "cumulative": {
+     "byKind": {
+      "other": {
+       "n": 14,
+       "bytes": 139868,
+       "wire": 1197211,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 14,
+       "uniqWire": 1197211
+      },
+      "js": {
+       "n": 8,
+       "bytes": 569541,
+       "wire": 413084,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 8,
+       "uniqWire": 413084
+      },
+      "glb": {
+       "n": 1,
+       "bytes": 36704,
+       "wire": 19490,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 1,
+       "uniqWire": 19490
+      }
+     },
+     "total": {
+      "n": 23,
+      "bytes": 746113,
+      "wire": 1629785,
+      "uniqN": 23,
+      "uniqWire": 1629785
+     },
+     "glbFiles": [
+      "iskra-mark.glb"
+     ],
+     "ktx2Files": []
+    },
+    "delta": {
+     "byKind": {
+      "other": {
+       "n": 14,
+       "bytes": 139868,
+       "wire": 1197211,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 14,
+       "uniqWire": 1197211
+      },
+      "js": {
+       "n": 8,
+       "bytes": 569541,
+       "wire": 413084,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 8,
+       "uniqWire": 413084
+      },
+      "glb": {
+       "n": 1,
+       "bytes": 36704,
+       "wire": 19490,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 1,
+       "uniqWire": 19490
+      }
+     },
+     "total": {
+      "n": 23,
+      "bytes": 746113,
+      "wire": 1629785,
+      "uniqN": 23,
+      "uniqWire": 1629785
+     },
+     "glbFiles": [
+      "iskra-mark.glb"
+     ],
+     "ktx2Files": []
+    }
+   },
+   "heapMB": 5,
+   "heapPreGcMB": 5.4,
+   "domNodes": 791,
+   "renderers": [
+    {
+     "id": 0,
+     "by": "Object.mountStandalone < Id < Xb < S",
+     "dom": "body < .custom-cursor",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": false,
+     "toneMapping": 0,
+     "exposure": 1,
+     "createdAt": 1136,
+     "rendersTotal": 0,
+     "coldRenderMs": {
+      "total": 0,
+      "max": 0
+     },
+     "frames": 0,
+     "cpuMs": {
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+     },
+     "rendersPerFrame": 0,
+     "callsPerFrame": 0,
+     "callsMax": 0,
+     "trisPerFrame": 0,
+     "perRenderCalls": [],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 0,
+      "geometries": 0,
+      "textures": 2
+     },
+     "programsByType": {},
+     "drawn": {
+      "meshes": 0,
+      "points": 0,
+      "lines": 0,
+      "materials": 0,
+      "materialTypes": {},
+      "lights": {},
+      "textures": 0,
+      "texMB": 0,
+      "geoMB": 0,
+      "renderTargets": 2,
+      "rtMB": 0.31,
+      "topTex": []
+     },
+     "fbMB": 9.89
+    },
+    {
+     "id": 1,
+     "by": "window.makeWaferRig < Id < Xb < S",
+     "dom": ".hv-stage__mount < .hv-stage < #rootdiv",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": true,
+     "toneMapping": 4,
+     "exposure": 1.18,
+     "createdAt": 1986,
+     "rendersTotal": 134,
+     "coldRenderMs": {
+      "total": 837,
+      "max": 365
+     },
+     "frames": 60,
+     "cpuMs": {
+      "mean": 0.225,
+      "median": 0.2,
+      "p95": 0.3,
+      "max": 0.4
+     },
+     "rendersPerFrame": 1,
+     "callsPerFrame": 2,
+     "callsMax": 2,
+     "trisPerFrame": 3472,
+     "perRenderCalls": [
+      2
+     ],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 1,
+      "geometries": 2,
+      "textures": 1
+     },
+     "programsByType": {
+      "physical": 1
+     },
+     "drawn": {
+      "meshes": 32,
+      "points": 0,
+      "lines": 0,
+      "materials": 13,
+      "materialTypes": {
+       "MeshBasicMaterial": 9,
+       "ShaderMaterial": 2,
+       "MeshPhysicalMaterial": 2
+      },
+      "lights": {
+       "AmbientLight": 1,
+       "list": [
+        "AmbientLight:<Scene:",
+        "DirectionalLight:<Scene:",
+        "DirectionalLight:<Scene:"
+       ],
+       "DirectionalLight": 2
+      },
+      "textures": 2,
+      "texMB": 7.5,
+      "geoMB": 0.11,
+      "renderTargets": 1,
+      "rtMB": 6,
+      "topTex": [
+       "rt PMREM.cubeUv 768x1024 6.00MB",
+       "rt  ?x? 1.50MB"
+      ]
+     },
+     "fbMB": 49.44
+    }
+   ],
+   "contexts": {
+    "created": 2,
+    "live": 2,
+    "list": [
+     {
+      "type": "webgl2",
+      "at": 377,
+      "lost": false
+     },
+     {
+      "type": "webgl2",
+      "at": 1978,
+      "lost": false
+     }
+    ]
+   },
+   "longTasks": {
+    "load": {
+     "n": 2,
+     "totalMs": 2789,
+     "maxMs": 2385
+    },
+    "sampling": {
+     "n": 0,
+     "totalMs": 0,
+     "maxMs": 0
+    }
+   },
+   "events": {},
+   "frames": 75,
+   "pmrem": [],
+   "staleRaf": {
+    "n": 2,
+    "minMs": -1081
+   },
+   "dof": {
+    "bokeh": false,
+    "enabled": null,
+    "probeFps": null,
+    "dofOn": null
+   },
+   "scrollY": 0,
+   "settle": {
+    "settleMs": 4027,
+    "timedOut": false
+   }
+  },
+  {
+   "state": "iskra-menu",
+   "url": "http://127.0.0.1:8765/Iskra.html",
+   "sampleMs": 14938,
+   "network": {
+    "cumulative": {
+     "byKind": {
+      "other": {
+       "n": 18,
+       "bytes": 176677,
+       "wire": 130306,
+       "cached": 0,
+       "failed": 1,
+       "uniqN": 17,
+       "uniqWire": 130306
+      },
+      "js": {
+       "n": 8,
+       "bytes": 569933,
+       "wire": 413242,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 8,
+       "uniqWire": 413242
+      },
+      "glb": {
+       "n": 4,
+       "bytes": 1080094,
+       "wire": 768714,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 4,
+       "uniqWire": 768714
+      }
+     },
+     "total": {
+      "n": 30,
+      "bytes": 1826704,
+      "wire": 1312262,
+      "uniqN": 29,
+      "uniqWire": 1312262
+     },
+     "failedUrls": [
+      "http://127.0.0.1:8765/public/media/iskra/volunteer-build.mp4 (net::ERR_ABORTED)"
+     ],
+     "glbFiles": [
+      "iskra-mark.glb",
+      "wafer.glb",
+      "ci-clop-mark.glb",
+      "wafer-mark.glb"
+     ],
+     "ktx2Files": []
+    },
+    "delta": {
+     "byKind": {
+      "glb": {
+       "n": 3,
+       "bytes": 1043390,
+       "wire": 749224,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 3,
+       "uniqWire": 749224
+      },
+      "other": {
+       "n": 4,
+       "bytes": 36809,
+       "wire": 35421,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 4,
+       "uniqWire": 35421
+      }
+     },
+     "total": {
+      "n": 7,
+      "bytes": 1080199,
+      "wire": 784645,
+      "uniqN": 7,
+      "uniqWire": 784645
+     },
+     "failedUrls": [],
+     "glbFiles": [
+      "wafer.glb",
+      "ci-clop-mark.glb",
+      "wafer-mark.glb"
+     ],
+     "ktx2Files": []
+    }
+   },
+   "heapMB": 8.3,
+   "heapPreGcMB": 9.1,
+   "domNodes": 808,
+   "renderers": [
+    {
+     "id": 0,
+     "by": "Object.mountStandalone < Id < Xb < S",
+     "dom": ".mo-menu-open.mo-menu-settled < .custom-cursor.mo-cursor-live",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": false,
+     "toneMapping": 0,
+     "exposure": 1,
+     "createdAt": 1260,
+     "rendersTotal": 0,
+     "coldRenderMs": {
+      "total": 0,
+      "max": 0
+     },
+     "frames": 0,
+     "cpuMs": {
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+     },
+     "rendersPerFrame": 0,
+     "callsPerFrame": 0,
+     "callsMax": 0,
+     "trisPerFrame": 0,
+     "perRenderCalls": [],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 0,
+      "geometries": 0,
+      "textures": 2
+     },
+     "programsByType": {},
+     "drawn": {
+      "meshes": 0,
+      "points": 0,
+      "lines": 0,
+      "materials": 0,
+      "materialTypes": {},
+      "lights": {},
+      "textures": 0,
+      "texMB": 0,
+      "geoMB": 0,
+      "renderTargets": 2,
+      "rtMB": 0.31,
+      "topTex": []
+     },
+     "fbMB": 9.89
+    },
+    {
+     "id": 1,
+     "by": "window.makeWaferRig < Id < Xb < S",
+     "dom": ".lp-menu__objects < #portfolio-menu.lp-menu < .mo-menu-open.mo-menu-settled",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": true,
+     "toneMapping": 4,
+     "exposure": 1.18,
+     "createdAt": 1537,
+     "rendersTotal": 157,
+     "coldRenderMs": {
+      "total": 2518,
+      "max": 1615
+     },
+     "frames": 60,
+     "cpuMs": {
+      "mean": 0.967,
+      "median": 0.9,
+      "p95": 1.4,
+      "max": 1.7
+     },
+     "rendersPerFrame": 1,
+     "callsPerFrame": 29,
+     "callsMax": 29,
+     "trisPerFrame": 150184,
+     "perRenderCalls": [
+      29
+     ],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 13,
+      "geometries": 28,
+      "textures": 14
+     },
+     "programsByType": {
+      "physical": 11,
+      "points": 1,
+      "sprite": 1
+     },
+     "drawn": {
+      "meshes": 86,
+      "points": 1,
+      "lines": 0,
+      "materials": 49,
+      "materialTypes": {
+       "MeshBasicMaterial": 18,
+       "ShaderMaterial": 4,
+       "MeshPhysicalMaterial": 21,
+       "PointsMaterial": 1,
+       "MeshStandardMaterial": 3,
+       "SpriteMaterial": 2
+      },
+      "lights": {
+       "AmbientLight": 2,
+       "list": [
+        "AmbientLight:<Scene:",
+        "DirectionalLight:<Scene:",
+        "DirectionalLight:<Scene:",
+        "AmbientLight:<Scene:",
+        "DirectionalLight:<Scene:",
+        "DirectionalLight:<Scene:"
+       ],
+       "DirectionalLight": 4
+      },
+      "textures": 16,
+      "texMB": 9.53,
+      "geoMB": 5.63,
+      "renderTargets": 2,
+      "rtMB": 7.5,
+      "topTex": [
+       "rt PMREM.cubeUv 768x1024 6.00MB",
+       "rt  ?x? 1.50MB",
+       "rt PMREM.cubeUv 384x512 1.50MB",
+       "rt  ?x? 0.38MB",
+       "screen_L 68x160 0.06MB",
+       "screen_R 68x160 0.06MB",
+       "canvas  64x64 0.02MB",
+       "canvas  64x64 0.02MB"
+      ]
+     },
+     "fbMB": 49.44
+    }
+   ],
+   "contexts": {
+    "created": 2,
+    "live": 2,
+    "list": [
+     {
+      "type": "webgl2",
+      "at": 502,
+      "lost": false
+     },
+     {
+      "type": "webgl2",
+      "at": 1531,
+      "lost": false
+     }
+    ]
+   },
+   "longTasks": {
+    "load": {
+     "n": 5,
+     "totalMs": 3983,
+     "maxMs": 1622
+    },
+    "sampling": {
+     "n": 0,
+     "totalMs": 0,
+     "maxMs": 0
+    }
+   },
+   "events": {},
+   "frames": 109,
+   "pmrem": [],
+   "staleRaf": {
+    "n": 120,
+    "minMs": -568
+   },
+   "dof": {
+    "bokeh": false,
+    "enabled": null,
+    "probeFps": null,
+    "dofOn": null
+   },
+   "scrollY": 0,
+   "settle": {
+    "settleMs": 4932,
+    "timedOut": false
+   },
+   "note": "re-captured after the menu fix (MOStudio.MENU: key + rim lights, lighter room; same 128 env size)"
+  },
+  {
+   "state": "route:Ci-Clop",
+   "url": "http://127.0.0.1:8765/Ci-Clop.html",
+   "sampleMs": 19747,
+   "network": {
+    "cumulative": {
+     "byKind": {
+      "other": {
+       "n": 16,
+       "bytes": 160574,
+       "wire": 100592,
+       "cached": 0,
+       "failed": 1,
+       "uniqN": 15,
+       "uniqWire": 100592
+      },
+      "js": {
+       "n": 11,
+       "bytes": 634557,
+       "wire": 434446,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 11,
+       "uniqWire": 434446
+      },
+      "glb": {
+       "n": 1,
+       "bytes": 115321,
+       "wire": 86200,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 1,
+       "uniqWire": 86200
+      }
+     },
+     "total": {
+      "n": 28,
+      "bytes": 910452,
+      "wire": 621238,
+      "uniqN": 27,
+      "uniqWire": 621238
+     },
+     "glbFiles": [
+      "ci-clop-mark.glb"
+     ],
+     "ktx2Files": []
+    },
+    "delta": {
+     "byKind": {
+      "other": {
+       "n": 16,
+       "bytes": 160574,
+       "wire": 100592,
+       "cached": 0,
+       "failed": 1,
+       "uniqN": 15,
+       "uniqWire": 100592
+      },
+      "js": {
+       "n": 11,
+       "bytes": 634557,
+       "wire": 434446,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 11,
+       "uniqWire": 434446
+      },
+      "glb": {
+       "n": 1,
+       "bytes": 115321,
+       "wire": 86200,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 1,
+       "uniqWire": 86200
+      }
+     },
+     "total": {
+      "n": 28,
+      "bytes": 910452,
+      "wire": 621238,
+      "uniqN": 27,
+      "uniqWire": 621238
+     },
+     "glbFiles": [
+      "ci-clop-mark.glb"
+     ],
+     "ktx2Files": []
+    }
+   },
+   "heapMB": 5.4,
+   "heapPreGcMB": 6.4,
+   "domNodes": 835,
+   "renderers": [
+    {
+     "id": 0,
+     "by": "Object.mountStandalone < Id < Xb < S",
+     "dom": "body < .custom-cursor",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": false,
+     "toneMapping": 0,
+     "exposure": 1,
+     "createdAt": 1373,
+     "rendersTotal": 0,
+     "coldRenderMs": {
+      "total": 0,
+      "max": 0
+     },
+     "frames": 0,
+     "cpuMs": {
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+     },
+     "rendersPerFrame": 0,
+     "callsPerFrame": 0,
+     "callsMax": 0,
+     "trisPerFrame": 0,
+     "perRenderCalls": [],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 0,
+      "geometries": 0,
+      "textures": 2
+     },
+     "programsByType": {},
+     "drawn": {
+      "meshes": 0,
+      "points": 0,
+      "lines": 0,
+      "materials": 0,
+      "materialTypes": {},
+      "lights": {},
+      "textures": 0,
+      "texMB": 0,
+      "geoMB": 0,
+      "renderTargets": 2,
+      "rtMB": 0.31,
+      "topTex": []
+     },
+     "fbMB": 9.89
+    },
+    {
+     "id": 1,
+     "by": "window.makeWaferRig < Id < Xb < S",
+     "dom": ".hv-stage__mount < .hv-stage < #rootdiv",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": true,
+     "toneMapping": 4,
+     "exposure": 1.18,
+     "createdAt": 1817,
+     "rendersTotal": 118,
+     "coldRenderMs": {
+      "total": 1485,
+      "max": 909
+     },
+     "frames": 60,
+     "cpuMs": {
+      "mean": 0.425,
+      "median": 0.4,
+      "p95": 0.7,
+      "max": 0.7
+     },
+     "rendersPerFrame": 1,
+     "callsPerFrame": 6,
+     "callsMax": 6,
+     "trisPerFrame": 12266,
+     "perRenderCalls": [
+      6
+     ],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 4,
+      "geometries": 5,
+      "textures": 3
+     },
+     "programsByType": {
+      "physical": 3,
+      "sprite": 1
+     },
+     "drawn": {
+      "meshes": 34,
+      "points": 0,
+      "lines": 0,
+      "materials": 17,
+      "materialTypes": {
+       "MeshBasicMaterial": 9,
+       "ShaderMaterial": 2,
+       "MeshPhysicalMaterial": 4,
+       "SpriteMaterial": 2
+      },
+      "lights": {
+       "AmbientLight": 1,
+       "list": [
+        "AmbientLight:<Scene:",
+        "DirectionalLight:<Scene:",
+        "DirectionalLight:<Scene:"
+       ],
+       "DirectionalLight": 2
+      },
+      "textures": 4,
+      "texMB": 7.54,
+      "geoMB": 0.28,
+      "renderTargets": 1,
+      "rtMB": 6,
+      "topTex": [
+       "rt PMREM.cubeUv 768x1024 6.00MB",
+       "rt  ?x? 1.50MB",
+       "canvas  64x64 0.02MB",
+       "canvas  64x64 0.02MB"
+      ]
+     },
+     "fbMB": 49.44
+    }
+   ],
+   "contexts": {
+    "created": 2,
+    "live": 2,
+    "list": [
+     {
+      "type": "webgl2",
+      "at": 630,
+      "lost": false
+     },
+     {
+      "type": "webgl2",
+      "at": 1709,
+      "lost": false
+     }
+    ]
+   },
+   "longTasks": {
+    "load": {
+     "n": 2,
+     "totalMs": 3469,
+     "maxMs": 2529
+    },
+    "sampling": {
+     "n": 0,
+     "totalMs": 0,
+     "maxMs": 0
+    }
+   },
+   "events": {},
+   "frames": 73,
+   "pmrem": [],
+   "staleRaf": {
+    "n": 3,
+    "minMs": -1315
+   },
+   "dof": {
+    "bokeh": false,
+    "enabled": null,
+    "probeFps": null,
+    "dofOn": null
+   },
+   "scrollY": 0,
+   "settle": {
+    "settleMs": 4027,
+    "timedOut": false
+   }
+  },
+  {
+   "state": "route:Venovisor",
+   "url": "http://127.0.0.1:8765/Venovisor.html",
+   "sampleMs": 13708,
+   "network": {
+    "cumulative": {
+     "byKind": {
+      "other": {
+       "n": 14,
+       "bytes": 127443,
+       "wire": 81880,
+       "cached": 0,
+       "failed": 1,
+       "uniqN": 13,
+       "uniqWire": 81880
+      },
+      "js": {
+       "n": 9,
+       "bytes": 569632,
+       "wire": 413337,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 9,
+       "uniqWire": 413337
+      },
+      "glb": {
+       "n": 1,
+       "bytes": 139241,
+       "wire": 103991,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 1,
+       "uniqWire": 103991
+      }
+     },
+     "total": {
+      "n": 24,
+      "bytes": 836316,
+      "wire": 599208,
+      "uniqN": 23,
+      "uniqWire": 599208
+     },
+     "glbFiles": [
+      "venovisor-mark.glb"
+     ],
+     "ktx2Files": []
+    },
+    "delta": {
+     "byKind": {
+      "other": {
+       "n": 14,
+       "bytes": 127443,
+       "wire": 81880,
+       "cached": 0,
+       "failed": 1,
+       "uniqN": 13,
+       "uniqWire": 81880
+      },
+      "js": {
+       "n": 9,
+       "bytes": 569632,
+       "wire": 413337,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 9,
+       "uniqWire": 413337
+      },
+      "glb": {
+       "n": 1,
+       "bytes": 139241,
+       "wire": 103991,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 1,
+       "uniqWire": 103991
+      }
+     },
+     "total": {
+      "n": 24,
+      "bytes": 836316,
+      "wire": 599208,
+      "uniqN": 23,
+      "uniqWire": 599208
+     },
+     "glbFiles": [
+      "venovisor-mark.glb"
+     ],
+     "ktx2Files": []
+    }
+   },
+   "heapMB": 5.2,
+   "heapPreGcMB": 5.7,
+   "domNodes": 778,
+   "renderers": [
+    {
+     "id": 0,
+     "by": "Object.mountStandalone < Id < Xb < S",
+     "dom": "body < .custom-cursor",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": false,
+     "toneMapping": 0,
+     "exposure": 1,
+     "createdAt": 1064,
+     "rendersTotal": 0,
+     "coldRenderMs": {
+      "total": 0,
+      "max": 0
+     },
+     "frames": 0,
+     "cpuMs": {
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+     },
+     "rendersPerFrame": 0,
+     "callsPerFrame": 0,
+     "callsMax": 0,
+     "trisPerFrame": 0,
+     "perRenderCalls": [],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 0,
+      "geometries": 0,
+      "textures": 2
+     },
+     "programsByType": {},
+     "drawn": {
+      "meshes": 0,
+      "points": 0,
+      "lines": 0,
+      "materials": 0,
+      "materialTypes": {},
+      "lights": {},
+      "textures": 0,
+      "texMB": 0,
+      "geoMB": 0,
+      "renderTargets": 2,
+      "rtMB": 0.31,
+      "topTex": []
+     },
+     "fbMB": 9.89
+    },
+    {
+     "id": 1,
+     "by": "window.makeWaferRig < Id < Xb < S",
+     "dom": ".hv-stage__mount < .hv-stage < #rootdiv",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": true,
+     "toneMapping": 4,
+     "exposure": 1.18,
+     "createdAt": 1747,
+     "rendersTotal": 126,
+     "coldRenderMs": {
+      "total": 1726,
+      "max": 949
+     },
+     "frames": 60,
+     "cpuMs": {
+      "mean": 0.488,
+      "median": 0.4,
+      "p95": 0.7,
+      "max": 3.9
+     },
+     "rendersPerFrame": 1,
+     "callsPerFrame": 5,
+     "callsMax": 5,
+     "trisPerFrame": 12249,
+     "perRenderCalls": [
+      5
+     ],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 4,
+      "geometries": 5,
+      "textures": 3
+     },
+     "programsByType": {
+      "physical": 2,
+      "basic": 1,
+      "sprite": 1
+     },
+     "drawn": {
+      "meshes": 34,
+      "points": 0,
+      "lines": 0,
+      "materials": 16,
+      "materialTypes": {
+       "MeshBasicMaterial": 10,
+       "ShaderMaterial": 2,
+       "MeshPhysicalMaterial": 3,
+       "SpriteMaterial": 1
+      },
+      "lights": {
+       "AmbientLight": 1,
+       "list": [
+        "AmbientLight:<Scene:",
+        "DirectionalLight:<Scene:",
+        "DirectionalLight:<Scene:"
+       ],
+       "DirectionalLight": 2
+      },
+      "textures": 4,
+      "texMB": 7.92,
+      "geoMB": 0.26,
+      "renderTargets": 1,
+      "rtMB": 6,
+      "topTex": [
+       "rt PMREM.cubeUv 768x1024 6.00MB",
+       "rt  ?x? 1.50MB",
+       "canvas  256x256 0.33MB",
+       "canvas  128x128 0.08MB"
+      ]
+     },
+     "fbMB": 49.44
+    }
+   ],
+   "contexts": {
+    "created": 2,
+    "live": 2,
+    "list": [
+     {
+      "type": "webgl2",
+      "at": 563,
+      "lost": false
+     },
+     {
+      "type": "webgl2",
+      "at": 1743,
+      "lost": false
+     }
+    ]
+   },
+   "longTasks": {
+    "load": {
+     "n": 2,
+     "totalMs": 3292,
+     "maxMs": 2343
+    },
+    "sampling": {
+     "n": 0,
+     "totalMs": 0,
+     "maxMs": 0
+    }
+   },
+   "events": {},
+   "frames": 74,
+   "pmrem": [],
+   "staleRaf": {
+    "n": 6,
+    "minMs": -1098
+   },
+   "dof": {
+    "bokeh": false,
+    "enabled": null,
+    "probeFps": null,
+    "dofOn": null
+   },
+   "scrollY": 0,
+   "settle": {
+    "settleMs": 4027,
+    "timedOut": false
+   }
+  },
+  {
+   "state": "route:Wafer Studio",
+   "url": "http://127.0.0.1:8765/Wafer%20Studio.html",
+   "sampleMs": 9271,
+   "network": {
+    "cumulative": {
+     "byKind": {
+      "other": {
+       "n": 13,
+       "bytes": 140885,
+       "wire": 95300,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 13,
+       "uniqWire": 95300
+      },
+      "js": {
+       "n": 9,
+       "bytes": 569517,
+       "wire": 413217,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 9,
+       "uniqWire": 413217
+      },
+      "glb": {
+       "n": 1,
+       "bytes": 43988,
+       "wire": 22258,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 1,
+       "uniqWire": 22258
+      }
+     },
+     "total": {
+      "n": 23,
+      "bytes": 754390,
+      "wire": 530775,
+      "uniqN": 23,
+      "uniqWire": 530775
+     },
+     "glbFiles": [
+      "wafer-mark.glb"
+     ],
+     "ktx2Files": []
+    },
+    "delta": {
+     "byKind": {
+      "other": {
+       "n": 13,
+       "bytes": 140885,
+       "wire": 95300,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 13,
+       "uniqWire": 95300
+      },
+      "js": {
+       "n": 9,
+       "bytes": 569517,
+       "wire": 413217,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 9,
+       "uniqWire": 413217
+      },
+      "glb": {
+       "n": 1,
+       "bytes": 43988,
+       "wire": 22258,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 1,
+       "uniqWire": 22258
+      }
+     },
+     "total": {
+      "n": 23,
+      "bytes": 754390,
+      "wire": 530775,
+      "uniqN": 23,
+      "uniqWire": 530775
+     },
+     "glbFiles": [
+      "wafer-mark.glb"
+     ],
+     "ktx2Files": []
+    }
+   },
+   "heapMB": 5,
+   "heapPreGcMB": 5.3,
+   "domNodes": 637,
+   "renderers": [
+    {
+     "id": 0,
+     "by": "Object.mountStandalone < Id < Xb < S",
+     "dom": "body < .custom-cursor",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": false,
+     "toneMapping": 0,
+     "exposure": 1,
+     "createdAt": 1070,
+     "rendersTotal": 0,
+     "coldRenderMs": {
+      "total": 0,
+      "max": 0
+     },
+     "frames": 0,
+     "cpuMs": {
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+     },
+     "rendersPerFrame": 0,
+     "callsPerFrame": 0,
+     "callsMax": 0,
+     "trisPerFrame": 0,
+     "perRenderCalls": [],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 0,
+      "geometries": 0,
+      "textures": 2
+     },
+     "programsByType": {},
+     "drawn": {
+      "meshes": 0,
+      "points": 0,
+      "lines": 0,
+      "materials": 0,
+      "materialTypes": {},
+      "lights": {},
+      "textures": 0,
+      "texMB": 0,
+      "geoMB": 0,
+      "renderTargets": 2,
+      "rtMB": 0.31,
+      "topTex": []
+     },
+     "fbMB": 9.89
+    },
+    {
+     "id": 1,
+     "by": "window.makeWaferRig < Id < Xb < S",
+     "dom": ".hv-stage__mount < .hv-stage < #rootdiv",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": true,
+     "toneMapping": 4,
+     "exposure": 1.18,
+     "createdAt": 1551,
+     "rendersTotal": 132,
+     "coldRenderMs": {
+      "total": 152,
+      "max": 103
+     },
+     "frames": 60,
+     "cpuMs": {
+      "mean": 0.195,
+      "median": 0.2,
+      "p95": 0.3,
+      "max": 0.3
+     },
+     "rendersPerFrame": 1,
+     "callsPerFrame": 1,
+     "callsMax": 1,
+     "trisPerFrame": 5536,
+     "perRenderCalls": [
+      1
+     ],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 1,
+      "geometries": 1,
+      "textures": 1
+     },
+     "programsByType": {
+      "physical": 1
+     },
+     "drawn": {
+      "meshes": 31,
+      "points": 0,
+      "lines": 0,
+      "materials": 12,
+      "materialTypes": {
+       "MeshBasicMaterial": 9,
+       "ShaderMaterial": 2,
+       "MeshPhysicalMaterial": 1
+      },
+      "lights": {
+       "AmbientLight": 1,
+       "list": [
+        "AmbientLight:<Scene:",
+        "DirectionalLight:<Scene:",
+        "DirectionalLight:<Scene:"
+       ],
+       "DirectionalLight": 2
+      },
+      "textures": 2,
+      "texMB": 7.5,
+      "geoMB": 0.14,
+      "renderTargets": 1,
+      "rtMB": 6,
+      "topTex": [
+       "rt PMREM.cubeUv 768x1024 6.00MB",
+       "rt  ?x? 1.50MB"
+      ]
+     },
+     "fbMB": 49.44
+    }
+   ],
+   "contexts": {
+    "created": 2,
+    "live": 2,
+    "list": [
+     {
+      "type": "webgl2",
+      "at": 410,
+      "lost": false
+     },
+     {
+      "type": "webgl2",
+      "at": 1546,
+      "lost": false
+     }
+    ]
+   },
+   "longTasks": {
+    "load": {
+     "n": 3,
+     "totalMs": 1510,
+     "maxMs": 1312
+    },
+    "sampling": {
+     "n": 0,
+     "totalMs": 0,
+     "maxMs": 0
+    }
+   },
+   "events": {},
+   "frames": 75,
+   "pmrem": [],
+   "staleRaf": {
+    "n": 9,
+    "minMs": -1321
+   },
+   "dof": {
+    "bokeh": false,
+    "enabled": null,
+    "probeFps": null,
+    "dofOn": null
+   },
+   "scrollY": 0,
+   "settle": {
+    "settleMs": 5176,
+    "timedOut": false
+   }
+  },
+  {
+   "state": "route:Split HID Display",
+   "url": "http://127.0.0.1:8765/Split%20HID%20Display.html",
+   "sampleMs": 11286,
+   "network": {
+    "cumulative": {
+     "byKind": {
+      "other": {
+       "n": 13,
+       "bytes": 139968,
+       "wire": 94918,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 13,
+       "uniqWire": 94918
+      },
+      "js": {
+       "n": 9,
+       "bytes": 569675,
+       "wire": 413563,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 9,
+       "uniqWire": 413563
+      },
+      "glb": {
+       "n": 1,
+       "bytes": 87652,
+       "wire": 32553,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 1,
+       "uniqWire": 32553
+      }
+     },
+     "total": {
+      "n": 23,
+      "bytes": 797295,
+      "wire": 541034,
+      "uniqN": 23,
+      "uniqWire": 541034
+     },
+     "glbFiles": [
+      "keyboard-display.opt.glb"
+     ],
+     "ktx2Files": []
+    },
+    "delta": {
+     "byKind": {
+      "other": {
+       "n": 13,
+       "bytes": 139968,
+       "wire": 94918,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 13,
+       "uniqWire": 94918
+      },
+      "js": {
+       "n": 9,
+       "bytes": 569675,
+       "wire": 413563,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 9,
+       "uniqWire": 413563
+      },
+      "glb": {
+       "n": 1,
+       "bytes": 87652,
+       "wire": 32553,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 1,
+       "uniqWire": 32553
+      }
+     },
+     "total": {
+      "n": 23,
+      "bytes": 797295,
+      "wire": 541034,
+      "uniqN": 23,
+      "uniqWire": 541034
+     },
+     "glbFiles": [
+      "keyboard-display.opt.glb"
+     ],
+     "ktx2Files": []
+    }
+   },
+   "heapMB": 5,
+   "heapPreGcMB": 6.6,
+   "domNodes": 612,
+   "renderers": [
+    {
+     "id": 0,
+     "by": "Object.mountStandalone < Id < Xb < S",
+     "dom": "body < .custom-cursor",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": false,
+     "toneMapping": 0,
+     "exposure": 1,
+     "createdAt": 1354,
+     "rendersTotal": 0,
+     "coldRenderMs": {
+      "total": 0,
+      "max": 0
+     },
+     "frames": 0,
+     "cpuMs": {
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+     },
+     "rendersPerFrame": 0,
+     "callsPerFrame": 0,
+     "callsMax": 0,
+     "trisPerFrame": 0,
+     "perRenderCalls": [],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 0,
+      "geometries": 0,
+      "textures": 2
+     },
+     "programsByType": {},
+     "drawn": {
+      "meshes": 0,
+      "points": 0,
+      "lines": 0,
+      "materials": 0,
+      "materialTypes": {},
+      "lights": {},
+      "textures": 0,
+      "texMB": 0,
+      "geoMB": 0,
+      "renderTargets": 2,
+      "rtMB": 0.31,
+      "topTex": []
+     },
+     "fbMB": 9.89
+    },
+    {
+     "id": 1,
+     "by": "window.makeWaferRig < Id < Xb < S",
+     "dom": ".hv-stage__mount < .hv-stage < #rootdiv",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": true,
+     "toneMapping": 4,
+     "exposure": 1.18,
+     "createdAt": 1483,
+     "rendersTotal": 125,
+     "coldRenderMs": {
+      "total": 205,
+      "max": 159
+     },
+     "frames": 60,
+     "cpuMs": {
+      "mean": 0.262,
+      "median": 0.2,
+      "p95": 0.4,
+      "max": 0.5
+     },
+     "rendersPerFrame": 1,
+     "callsPerFrame": 3,
+     "callsMax": 3,
+     "trisPerFrame": 19092,
+     "perRenderCalls": [
+      3
+     ],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 2,
+      "geometries": 2,
+      "textures": 1
+     },
+     "programsByType": {
+      "physical": 2
+     },
+     "drawn": {
+      "meshes": 33,
+      "points": 0,
+      "lines": 0,
+      "materials": 13,
+      "materialTypes": {
+       "MeshBasicMaterial": 9,
+       "ShaderMaterial": 2,
+       "MeshPhysicalMaterial": 2
+      },
+      "lights": {
+       "AmbientLight": 1,
+       "list": [
+        "AmbientLight:<Scene:",
+        "DirectionalLight:<Scene:",
+        "DirectionalLight:<Scene:"
+       ],
+       "DirectionalLight": 2
+      },
+      "textures": 2,
+      "texMB": 7.5,
+      "geoMB": 0.27,
+      "renderTargets": 1,
+      "rtMB": 6,
+      "topTex": [
+       "rt PMREM.cubeUv 768x1024 6.00MB",
+       "rt  ?x? 1.50MB"
+      ]
+     },
+     "fbMB": 49.44
+    }
+   ],
+   "contexts": {
+    "created": 2,
+    "live": 2,
+    "list": [
+     {
+      "type": "webgl2",
+      "at": 609,
+      "lost": false
+     },
+     {
+      "type": "webgl2",
+      "at": 1478,
+      "lost": false
+     }
+    ]
+   },
+   "longTasks": {
+    "load": {
+     "n": 3,
+     "totalMs": 1523,
+     "maxMs": 1294
+    },
+    "sampling": {
+     "n": 0,
+     "totalMs": 0,
+     "maxMs": 0
+    }
+   },
+   "events": {},
+   "frames": 73,
+   "pmrem": [],
+   "staleRaf": {
+    "n": 7,
+    "minMs": -1296
+   },
+   "dof": {
+    "bokeh": false,
+    "enabled": null,
+    "probeFps": null,
+    "dofOn": null
+   },
+   "scrollY": 0,
+   "settle": {
+    "settleMs": 5144,
+    "timedOut": false
+   }
+  },
+  {
+   "state": "route:ZMK-PointAccel",
+   "url": "http://127.0.0.1:8765/ZMK-PointAccel.html",
+   "sampleMs": 14118,
+   "network": {
+    "cumulative": {
+     "byKind": {
+      "other": {
+       "n": 15,
+       "bytes": 160526,
+       "wire": 100542,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 15,
+       "uniqWire": 100542
+      },
+      "js": {
+       "n": 10,
+       "bytes": 622839,
+       "wire": 429569,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 10,
+       "uniqWire": 429569
+      },
+      "glb": {
+       "n": 1,
+       "bytes": 92652,
+       "wire": 56291,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 1,
+       "uniqWire": 56291
+      }
+     },
+     "total": {
+      "n": 26,
+      "bytes": 876017,
+      "wire": 586402,
+      "uniqN": 26,
+      "uniqWire": 586402
+     },
+     "glbFiles": [
+      "zmk-mark.glb"
+     ],
+     "ktx2Files": []
+    },
+    "delta": {
+     "byKind": {
+      "other": {
+       "n": 15,
+       "bytes": 160526,
+       "wire": 100542,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 15,
+       "uniqWire": 100542
+      },
+      "js": {
+       "n": 10,
+       "bytes": 622839,
+       "wire": 429569,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 10,
+       "uniqWire": 429569
+      },
+      "glb": {
+       "n": 1,
+       "bytes": 92652,
+       "wire": 56291,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 1,
+       "uniqWire": 56291
+      }
+     },
+     "total": {
+      "n": 26,
+      "bytes": 876017,
+      "wire": 586402,
+      "uniqN": 26,
+      "uniqWire": 586402
+     },
+     "glbFiles": [
+      "zmk-mark.glb"
+     ],
+     "ktx2Files": []
+    }
+   },
+   "heapMB": 5.5,
+   "heapPreGcMB": 9.2,
+   "domNodes": 640,
+   "renderers": [
+    {
+     "id": 0,
+     "by": "Object.mountStandalone < Id < Xb < S",
+     "dom": "body < .custom-cursor",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": false,
+     "toneMapping": 0,
+     "exposure": 1,
+     "createdAt": 336,
+     "rendersTotal": 0,
+     "coldRenderMs": {
+      "total": 0,
+      "max": 0
+     },
+     "frames": 0,
+     "cpuMs": {
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+     },
+     "rendersPerFrame": 0,
+     "callsPerFrame": 0,
+     "callsMax": 0,
+     "trisPerFrame": 0,
+     "perRenderCalls": [],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 0,
+      "geometries": 0,
+      "textures": 2
+     },
+     "programsByType": {},
+     "drawn": {
+      "meshes": 0,
+      "points": 0,
+      "lines": 0,
+      "materials": 0,
+      "materialTypes": {},
+      "lights": {},
+      "textures": 0,
+      "texMB": 0,
+      "geoMB": 0,
+      "renderTargets": 2,
+      "rtMB": 0.31,
+      "topTex": []
+     },
+     "fbMB": 9.89
+    },
+    {
+     "id": 1,
+     "by": "window.makeWaferRig < Id < Xb < S",
+     "dom": ".hv-stage__mount < .hv-stage < #rootdiv",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": true,
+     "toneMapping": 4,
+     "exposure": 1.18,
+     "createdAt": 366,
+     "rendersTotal": 123,
+     "coldRenderMs": {
+      "total": 865,
+      "max": 780
+     },
+     "frames": 60,
+     "cpuMs": {
+      "mean": 0.338,
+      "median": 0.3,
+      "p95": 0.6,
+      "max": 0.6
+     },
+     "rendersPerFrame": 1,
+     "callsPerFrame": 2,
+     "callsMax": 2,
+     "trisPerFrame": 10556,
+     "perRenderCalls": [
+      2
+     ],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 2,
+      "geometries": 2,
+      "textures": 2
+     },
+     "programsByType": {
+      "physical": 2
+     },
+     "drawn": {
+      "meshes": 32,
+      "points": 0,
+      "lines": 0,
+      "materials": 13,
+      "materialTypes": {
+       "MeshBasicMaterial": 9,
+       "ShaderMaterial": 2,
+       "MeshPhysicalMaterial": 2
+      },
+      "lights": {
+       "AmbientLight": 1,
+       "list": [
+        "AmbientLight:<Scene:",
+        "DirectionalLight:<Scene:",
+        "DirectionalLight:<Scene:"
+       ],
+       "DirectionalLight": 2
+      },
+      "textures": 3,
+      "texMB": 7.83,
+      "geoMB": 0.22,
+      "renderTargets": 1,
+      "rtMB": 6,
+      "topTex": [
+       "rt PMREM.cubeUv 768x1024 6.00MB",
+       "rt  ?x? 1.50MB",
+       " 256x256 0.33MB"
+      ]
+     },
+     "fbMB": 49.44
+    }
+   ],
+   "contexts": {
+    "created": 2,
+    "live": 2,
+    "list": [
+     {
+      "type": "webgl2",
+      "at": 330,
+      "lost": false
+     },
+     {
+      "type": "webgl2",
+      "at": 363,
+      "lost": false
+     }
+    ]
+   },
+   "longTasks": {
+    "load": {
+     "n": 2,
+     "totalMs": 914,
+     "maxMs": 783
+    },
+    "sampling": {
+     "n": 0,
+     "totalMs": 0,
+     "maxMs": 0
+    }
+   },
+   "events": {},
+   "frames": 73,
+   "pmrem": [],
+   "staleRaf": {
+    "n": 3,
+    "minMs": -13
+   },
+   "dof": {
+    "bokeh": false,
+    "enabled": null,
+    "probeFps": null,
+    "dofOn": null
+   },
+   "scrollY": 0,
+   "settle": {
+    "settleMs": 4348,
+    "timedOut": false
+   }
+  },
+  {
+   "state": "route:ZMK Soft Off Plus",
+   "url": "http://127.0.0.1:8765/ZMK%20Soft%20Off%20Plus.html",
+   "sampleMs": 17418,
+   "network": {
+    "cumulative": {
+     "byKind": {
+      "other": {
+       "n": 13,
+       "bytes": 140817,
+       "wire": 95280,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 13,
+       "uniqWire": 95280
+      },
+      "js": {
+       "n": 9,
+       "bytes": 569665,
+       "wire": 413378,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 9,
+       "uniqWire": 413378
+      },
+      "glb": {
+       "n": 1,
+       "bytes": 27400,
+       "wire": 12377,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 1,
+       "uniqWire": 12377
+      }
+     },
+     "total": {
+      "n": 23,
+      "bytes": 737882,
+      "wire": 521035,
+      "uniqN": 23,
+      "uniqWire": 521035
+     },
+     "glbFiles": [
+      "soft-off-keycap.opt.glb"
+     ],
+     "ktx2Files": []
+    },
+    "delta": {
+     "byKind": {
+      "other": {
+       "n": 13,
+       "bytes": 140817,
+       "wire": 95280,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 13,
+       "uniqWire": 95280
+      },
+      "js": {
+       "n": 9,
+       "bytes": 569665,
+       "wire": 413378,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 9,
+       "uniqWire": 413378
+      },
+      "glb": {
+       "n": 1,
+       "bytes": 27400,
+       "wire": 12377,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 1,
+       "uniqWire": 12377
+      }
+     },
+     "total": {
+      "n": 23,
+      "bytes": 737882,
+      "wire": 521035,
+      "uniqN": 23,
+      "uniqWire": 521035
+     },
+     "glbFiles": [
+      "soft-off-keycap.opt.glb"
+     ],
+     "ktx2Files": []
+    }
+   },
+   "heapMB": 5,
+   "heapPreGcMB": 5.1,
+   "domNodes": 571,
+   "renderers": [
+    {
+     "id": 0,
+     "by": "Object.mountStandalone < Id < Xb < S",
+     "dom": "body < .custom-cursor",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": false,
+     "toneMapping": 0,
+     "exposure": 1,
+     "createdAt": 1716,
+     "rendersTotal": 0,
+     "coldRenderMs": {
+      "total": 0,
+      "max": 0
+     },
+     "frames": 0,
+     "cpuMs": {
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+     },
+     "rendersPerFrame": 0,
+     "callsPerFrame": 0,
+     "callsMax": 0,
+     "trisPerFrame": 0,
+     "perRenderCalls": [],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 0,
+      "geometries": 0,
+      "textures": 2
+     },
+     "programsByType": {},
+     "drawn": {
+      "meshes": 0,
+      "points": 0,
+      "lines": 0,
+      "materials": 0,
+      "materialTypes": {},
+      "lights": {},
+      "textures": 0,
+      "texMB": 0,
+      "geoMB": 0,
+      "renderTargets": 2,
+      "rtMB": 0.31,
+      "topTex": []
+     },
+     "fbMB": 9.89
+    },
+    {
+     "id": 1,
+     "by": "window.makeWaferRig < Id < Xb < S",
+     "dom": ".hv-stage__mount < .hv-stage < #rootdiv",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": true,
+     "toneMapping": 4,
+     "exposure": 1.18,
+     "createdAt": 1756,
+     "rendersTotal": 119,
+     "coldRenderMs": {
+      "total": 400,
+      "max": 344
+     },
+     "frames": 60,
+     "cpuMs": {
+      "mean": 0.485,
+      "median": 0.5,
+      "p95": 0.7,
+      "max": 0.9
+     },
+     "rendersPerFrame": 1,
+     "callsPerFrame": 4,
+     "callsMax": 4,
+     "trisPerFrame": 3744,
+     "perRenderCalls": [
+      4
+     ],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 2,
+      "geometries": 3,
+      "textures": 2
+     },
+     "programsByType": {
+      "physical": 2
+     },
+     "drawn": {
+      "meshes": 34,
+      "points": 0,
+      "lines": 0,
+      "materials": 13,
+      "materialTypes": {
+       "MeshBasicMaterial": 9,
+       "ShaderMaterial": 2,
+       "MeshPhysicalMaterial": 2
+      },
+      "lights": {
+       "AmbientLight": 1,
+       "list": [
+        "AmbientLight:<Scene:",
+        "DirectionalLight:<Scene:",
+        "DirectionalLight:<Scene:"
+       ],
+       "DirectionalLight": 2
+      },
+      "textures": 2,
+      "texMB": 7.5,
+      "geoMB": 0.08,
+      "renderTargets": 1,
+      "rtMB": 6,
+      "topTex": [
+       "rt PMREM.cubeUv 768x1024 6.00MB",
+       "rt  ?x? 1.50MB"
+      ]
+     },
+     "fbMB": 49.44
+    }
+   ],
+   "contexts": {
+    "created": 2,
+    "live": 2,
+    "list": [
+     {
+      "type": "webgl2",
+      "at": 1013,
+      "lost": false
+     },
+     {
+      "type": "webgl2",
+      "at": 1744,
+      "lost": false
+     }
+    ]
+   },
+   "longTasks": {
+    "load": {
+     "n": 3,
+     "totalMs": 1843,
+     "maxMs": 1397
+    },
+    "sampling": {
+     "n": 0,
+     "totalMs": 0,
+     "maxMs": 0
+    }
+   },
+   "events": {},
+   "frames": 74,
+   "pmrem": [],
+   "staleRaf": {
+    "n": 7,
+    "minMs": -1393
+   },
+   "dof": {
+    "bokeh": false,
+    "enabled": null,
+    "probeFps": null,
+    "dofOn": null
+   },
+   "scrollY": 0,
+   "settle": {
+    "settleMs": 5547,
+    "timedOut": false
+   }
+  },
+  {
+   "state": "route:Sightseeing",
+   "url": "http://127.0.0.1:8765/Sightseeing.html",
+   "sampleMs": 19442,
+   "network": {
+    "cumulative": {
+     "byKind": {
+      "other": {
+       "n": 13,
+       "bytes": 140784,
+       "wire": 95252,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 13,
+       "uniqWire": 95252
+      },
+      "js": {
+       "n": 9,
+       "bytes": 569654,
+       "wire": 413352,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 9,
+       "uniqWire": 413352
+      },
+      "glb": {
+       "n": 1,
+       "bytes": 22052,
+       "wire": 8874,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 1,
+       "uniqWire": 8874
+      }
+     },
+     "total": {
+      "n": 23,
+      "bytes": 732490,
+      "wire": 517478,
+      "uniqN": 23,
+      "uniqWire": 517478
+     },
+     "glbFiles": [
+      "sightseeing-mark.glb"
+     ],
+     "ktx2Files": []
+    },
+    "delta": {
+     "byKind": {
+      "other": {
+       "n": 13,
+       "bytes": 140784,
+       "wire": 95252,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 13,
+       "uniqWire": 95252
+      },
+      "js": {
+       "n": 9,
+       "bytes": 569654,
+       "wire": 413352,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 9,
+       "uniqWire": 413352
+      },
+      "glb": {
+       "n": 1,
+       "bytes": 22052,
+       "wire": 8874,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 1,
+       "uniqWire": 8874
+      }
+     },
+     "total": {
+      "n": 23,
+      "bytes": 732490,
+      "wire": 517478,
+      "uniqN": 23,
+      "uniqWire": 517478
+     },
+     "glbFiles": [
+      "sightseeing-mark.glb"
+     ],
+     "ktx2Files": []
+    }
+   },
+   "heapMB": 5.1,
+   "heapPreGcMB": 7.6,
+   "domNodes": 570,
+   "renderers": [
+    {
+     "id": 0,
+     "by": "Object.mountStandalone < Id < Xb < S",
+     "dom": "body < .custom-cursor",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": false,
+     "toneMapping": 0,
+     "exposure": 1,
+     "createdAt": 1711,
+     "rendersTotal": 0,
+     "coldRenderMs": {
+      "total": 0,
+      "max": 0
+     },
+     "frames": 0,
+     "cpuMs": {
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+     },
+     "rendersPerFrame": 0,
+     "callsPerFrame": 0,
+     "callsMax": 0,
+     "trisPerFrame": 0,
+     "perRenderCalls": [],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 0,
+      "geometries": 0,
+      "textures": 2
+     },
+     "programsByType": {},
+     "drawn": {
+      "meshes": 0,
+      "points": 0,
+      "lines": 0,
+      "materials": 0,
+      "materialTypes": {},
+      "lights": {},
+      "textures": 0,
+      "texMB": 0,
+      "geoMB": 0,
+      "renderTargets": 2,
+      "rtMB": 0.31,
+      "topTex": []
+     },
+     "fbMB": 9.89
+    },
+    {
+     "id": 1,
+     "by": "window.makeWaferRig < Id < Xb < S",
+     "dom": ".hv-stage__mount < .hv-stage < #rootdiv",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": true,
+     "toneMapping": 4,
+     "exposure": 1.18,
+     "createdAt": 1746,
+     "rendersTotal": 116,
+     "coldRenderMs": {
+      "total": 356,
+      "max": 303
+     },
+     "frames": 60,
+     "cpuMs": {
+      "mean": 0.482,
+      "median": 0.5,
+      "p95": 0.7,
+      "max": 0.8
+     },
+     "rendersPerFrame": 1,
+     "callsPerFrame": 3,
+     "callsMax": 3,
+     "trisPerFrame": 2876,
+     "perRenderCalls": [
+      3
+     ],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 2,
+      "geometries": 3,
+      "textures": 1
+     },
+     "programsByType": {
+      "physical": 2
+     },
+     "drawn": {
+      "meshes": 33,
+      "points": 0,
+      "lines": 0,
+      "materials": 14,
+      "materialTypes": {
+       "MeshBasicMaterial": 9,
+       "ShaderMaterial": 2,
+       "MeshPhysicalMaterial": 3
+      },
+      "lights": {
+       "AmbientLight": 1,
+       "list": [
+        "AmbientLight:<Scene:",
+        "DirectionalLight:<Scene:",
+        "DirectionalLight:<Scene:"
+       ],
+       "DirectionalLight": 2
+      },
+      "textures": 2,
+      "texMB": 7.5,
+      "geoMB": 0.15,
+      "renderTargets": 1,
+      "rtMB": 6,
+      "topTex": [
+       "rt PMREM.cubeUv 768x1024 6.00MB",
+       "rt  ?x? 1.50MB"
+      ]
+     },
+     "fbMB": 49.44
+    }
+   ],
+   "contexts": {
+    "created": 2,
+    "live": 2,
+    "list": [
+     {
+      "type": "webgl2",
+      "at": 997,
+      "lost": false
+     },
+     {
+      "type": "webgl2",
+      "at": 1738,
+      "lost": false
+     }
+    ]
+   },
+   "longTasks": {
+    "load": {
+     "n": 3,
+     "totalMs": 1782,
+     "maxMs": 1387
+    },
+    "sampling": {
+     "n": 0,
+     "totalMs": 0,
+     "maxMs": 0
+    }
+   },
+   "events": {},
+   "frames": 73,
+   "pmrem": [],
+   "staleRaf": {
+    "n": 7,
+    "minMs": -1390
+   },
+   "dof": {
+    "bokeh": false,
+    "enabled": null,
+    "probeFps": null,
+    "dofOn": null
+   },
+   "scrollY": 0,
+   "settle": {
+    "settleMs": 5525,
+    "timedOut": false
+   }
+  },
+  {
+   "state": "route:Silent Depth",
+   "url": "http://127.0.0.1:8765/Silent%20Depth.html",
+   "sampleMs": 17003,
+   "network": {
+    "cumulative": {
+     "byKind": {
+      "other": {
+       "n": 13,
+       "bytes": 140380,
+       "wire": 95104,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 13,
+       "uniqWire": 95104
+      },
+      "js": {
+       "n": 9,
+       "bytes": 569667,
+       "wire": 413365,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 9,
+       "uniqWire": 413365
+      },
+      "glb": {
+       "n": 1,
+       "bytes": 151673,
+       "wire": 82645,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 1,
+       "uniqWire": 82645
+      }
+     },
+     "total": {
+      "n": 23,
+      "bytes": 861720,
+      "wire": 591114,
+      "uniqN": 23,
+      "uniqWire": 591114
+     },
+     "glbFiles": [
+      "silent-depth-mark.glb"
+     ],
+     "ktx2Files": []
+    },
+    "delta": {
+     "byKind": {
+      "other": {
+       "n": 13,
+       "bytes": 140380,
+       "wire": 95104,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 13,
+       "uniqWire": 95104
+      },
+      "js": {
+       "n": 9,
+       "bytes": 569667,
+       "wire": 413365,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 9,
+       "uniqWire": 413365
+      },
+      "glb": {
+       "n": 1,
+       "bytes": 151673,
+       "wire": 82645,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 1,
+       "uniqWire": 82645
+      }
+     },
+     "total": {
+      "n": 23,
+      "bytes": 861720,
+      "wire": 591114,
+      "uniqN": 23,
+      "uniqWire": 591114
+     },
+     "glbFiles": [
+      "silent-depth-mark.glb"
+     ],
+     "ktx2Files": []
+    }
+   },
+   "heapMB": 4.9,
+   "heapPreGcMB": 5.4,
+   "domNodes": 567,
+   "renderers": [
+    {
+     "id": 0,
+     "by": "Object.mountStandalone < Id < Xb < S",
+     "dom": "body < .custom-cursor",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": false,
+     "toneMapping": 0,
+     "exposure": 1,
+     "createdAt": 1868,
+     "rendersTotal": 0,
+     "coldRenderMs": {
+      "total": 0,
+      "max": 0
+     },
+     "frames": 0,
+     "cpuMs": {
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+     },
+     "rendersPerFrame": 0,
+     "callsPerFrame": 0,
+     "callsMax": 0,
+     "trisPerFrame": 0,
+     "perRenderCalls": [],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 0,
+      "geometries": 0,
+      "textures": 2
+     },
+     "programsByType": {},
+     "drawn": {
+      "meshes": 0,
+      "points": 0,
+      "lines": 0,
+      "materials": 0,
+      "materialTypes": {},
+      "lights": {},
+      "textures": 0,
+      "texMB": 0,
+      "geoMB": 0,
+      "renderTargets": 2,
+      "rtMB": 0.31,
+      "topTex": []
+     },
+     "fbMB": 9.89
+    },
+    {
+     "id": 1,
+     "by": "window.makeWaferRig < Id < Xb < S",
+     "dom": ".hv-stage__mount < .hv-stage < #rootdiv",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": true,
+     "toneMapping": 4,
+     "exposure": 1.18,
+     "createdAt": 1913,
+     "rendersTotal": 118,
+     "coldRenderMs": {
+      "total": 268,
+      "max": 212
+     },
+     "frames": 60,
+     "cpuMs": {
+      "mean": 0.352,
+      "median": 0.3,
+      "p95": 0.5,
+      "max": 0.8
+     },
+     "rendersPerFrame": 1,
+     "callsPerFrame": 1,
+     "callsMax": 1,
+     "trisPerFrame": 20620,
+     "perRenderCalls": [
+      1
+     ],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 1,
+      "geometries": 1,
+      "textures": 1
+     },
+     "programsByType": {
+      "physical": 1
+     },
+     "drawn": {
+      "meshes": 31,
+      "points": 0,
+      "lines": 0,
+      "materials": 12,
+      "materialTypes": {
+       "MeshBasicMaterial": 9,
+       "ShaderMaterial": 2,
+       "MeshPhysicalMaterial": 1
+      },
+      "lights": {
+       "AmbientLight": 1,
+       "list": [
+        "AmbientLight:<Scene:",
+        "DirectionalLight:<Scene:",
+        "DirectionalLight:<Scene:"
+       ],
+       "DirectionalLight": 2
+      },
+      "textures": 2,
+      "texMB": 7.5,
+      "geoMB": 0.48,
+      "renderTargets": 1,
+      "rtMB": 6,
+      "topTex": [
+       "rt PMREM.cubeUv 768x1024 6.00MB",
+       "rt  ?x? 1.50MB"
+      ]
+     },
+     "fbMB": 49.44
+    }
+   ],
+   "contexts": {
+    "created": 2,
+    "live": 2,
+    "list": [
+     {
+      "type": "webgl2",
+      "at": 1294,
+      "lost": false
+     },
+     {
+      "type": "webgl2",
+      "at": 1900,
+      "lost": false
+     }
+    ]
+   },
+   "longTasks": {
+    "load": {
+     "n": 4,
+     "totalMs": 1797,
+     "maxMs": 1417
+    },
+    "sampling": {
+     "n": 0,
+     "totalMs": 0,
+     "maxMs": 0
+    }
+   },
+   "events": {},
+   "frames": 74,
+   "pmrem": [],
+   "staleRaf": {
+    "n": 7,
+    "minMs": -1418
+   },
+   "dof": {
+    "bokeh": false,
+    "enabled": null,
+    "probeFps": null,
+    "dofOn": null
+   },
+   "scrollY": 0,
+   "settle": {
+    "settleMs": 5613,
+    "timedOut": false
+   }
+  },
+  {
+   "state": "route:Brionel Catalogue",
+   "url": "http://127.0.0.1:8765/Brionel%20Catalogue.html",
+   "sampleMs": 17031,
+   "network": {
+    "cumulative": {
+     "byKind": {
+      "other": {
+       "n": 13,
+       "bytes": 140841,
+       "wire": 95276,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 13,
+       "uniqWire": 95276
+      },
+      "js": {
+       "n": 9,
+       "bytes": 569709,
+       "wire": 413400,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 9,
+       "uniqWire": 413400
+      },
+      "glb": {
+       "n": 1,
+       "bytes": 170713,
+       "wire": 69628,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 1,
+       "uniqWire": 69628
+      }
+     },
+     "total": {
+      "n": 23,
+      "bytes": 881263,
+      "wire": 578304,
+      "uniqN": 23,
+      "uniqWire": 578304
+     },
+     "glbFiles": [
+      "brionel-mark.glb"
+     ],
+     "ktx2Files": []
+    },
+    "delta": {
+     "byKind": {
+      "other": {
+       "n": 13,
+       "bytes": 140841,
+       "wire": 95276,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 13,
+       "uniqWire": 95276
+      },
+      "js": {
+       "n": 9,
+       "bytes": 569709,
+       "wire": 413400,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 9,
+       "uniqWire": 413400
+      },
+      "glb": {
+       "n": 1,
+       "bytes": 170713,
+       "wire": 69628,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 1,
+       "uniqWire": 69628
+      }
+     },
+     "total": {
+      "n": 23,
+      "bytes": 881263,
+      "wire": 578304,
+      "uniqN": 23,
+      "uniqWire": 578304
+     },
+     "glbFiles": [
+      "brionel-mark.glb"
+     ],
+     "ktx2Files": []
+    }
+   },
+   "heapMB": 4.9,
+   "heapPreGcMB": 5,
+   "domNodes": 570,
+   "renderers": [
+    {
+     "id": 0,
+     "by": "Object.mountStandalone < Id < Xb < S",
+     "dom": "body < .custom-cursor",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": false,
+     "toneMapping": 0,
+     "exposure": 1,
+     "createdAt": 6524,
+     "rendersTotal": 0,
+     "coldRenderMs": {
+      "total": 0,
+      "max": 0
+     },
+     "frames": 0,
+     "cpuMs": {
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+     },
+     "rendersPerFrame": 0,
+     "callsPerFrame": 0,
+     "callsMax": 0,
+     "trisPerFrame": 0,
+     "perRenderCalls": [],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 0,
+      "geometries": 0,
+      "textures": 2
+     },
+     "programsByType": {},
+     "drawn": {
+      "meshes": 0,
+      "points": 0,
+      "lines": 0,
+      "materials": 0,
+      "materialTypes": {},
+      "lights": {},
+      "textures": 0,
+      "texMB": 0,
+      "geoMB": 0,
+      "renderTargets": 2,
+      "rtMB": 0.31,
+      "topTex": []
+     },
+     "fbMB": 9.89
+    },
+    {
+     "id": 1,
+     "by": "window.makeWaferRig < Id < Xb < S",
+     "dom": ".hv-stage__mount < .hv-stage < #rootdiv",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": true,
+     "toneMapping": 4,
+     "exposure": 1.18,
+     "createdAt": 7805,
+     "rendersTotal": 116,
+     "coldRenderMs": {
+      "total": 2254,
+      "max": 740
+     },
+     "frames": 60,
+     "cpuMs": {
+      "mean": 0.37,
+      "median": 0.4,
+      "p95": 0.5,
+      "max": 0.6
+     },
+     "rendersPerFrame": 1,
+     "callsPerFrame": 1,
+     "callsMax": 1,
+     "trisPerFrame": 17966,
+     "perRenderCalls": [
+      1
+     ],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 1,
+      "geometries": 1,
+      "textures": 1
+     },
+     "programsByType": {
+      "physical": 1
+     },
+     "drawn": {
+      "meshes": 31,
+      "points": 0,
+      "lines": 0,
+      "materials": 12,
+      "materialTypes": {
+       "MeshBasicMaterial": 9,
+       "ShaderMaterial": 2,
+       "MeshPhysicalMaterial": 1
+      },
+      "lights": {
+       "AmbientLight": 1,
+       "list": [
+        "AmbientLight:<Scene:",
+        "DirectionalLight:<Scene:",
+        "DirectionalLight:<Scene:"
+       ],
+       "DirectionalLight": 2
+      },
+      "textures": 2,
+      "texMB": 7.5,
+      "geoMB": 0.51,
+      "renderTargets": 1,
+      "rtMB": 6,
+      "topTex": [
+       "rt PMREM.cubeUv 768x1024 6.00MB",
+       "rt  ?x? 1.50MB"
+      ]
+     },
+     "fbMB": 49.44
+    }
+   ],
+   "contexts": {
+    "created": 2,
+    "live": 2,
+    "list": [
+     {
+      "type": "webgl2",
+      "at": 5417,
+      "lost": false
+     },
+     {
+      "type": "webgl2",
+      "at": 7618,
+      "lost": false
+     }
+    ]
+   },
+   "longTasks": {
+    "load": {
+     "n": 5,
+     "totalMs": 6779,
+     "maxMs": 5761
+    },
+    "sampling": {
+     "n": 0,
+     "totalMs": 0,
+     "maxMs": 0
+    }
+   },
+   "events": {},
+   "frames": 74,
+   "pmrem": [],
+   "staleRaf": {
+    "n": 4,
+    "minMs": -34
+   },
+   "dof": {
+    "bokeh": false,
+    "enabled": null,
+    "probeFps": null,
+    "dofOn": null
+   },
+   "scrollY": 0,
+   "settle": {
+    "settleMs": 4072,
+    "timedOut": false
+   }
+  },
+  {
+   "state": "route:Bulgaria 2026",
+   "url": "http://127.0.0.1:8765/Bulgaria%202026.html",
+   "sampleMs": 19053,
+   "network": {
+    "cumulative": {
+     "byKind": {
+      "other": {
+       "n": 13,
+       "bytes": 140991,
+       "wire": 95358,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 13,
+       "uniqWire": 95358
+      },
+      "js": {
+       "n": 9,
+       "bytes": 569702,
+       "wire": 413400,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 9,
+       "uniqWire": 413400
+      },
+      "glb": {
+       "n": 1,
+       "bytes": 17072,
+       "wire": 7731,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 1,
+       "uniqWire": 7731
+      }
+     },
+     "total": {
+      "n": 23,
+      "bytes": 727765,
+      "wire": 516489,
+      "uniqN": 23,
+      "uniqWire": 516489
+     },
+     "glbFiles": [
+      "bulgaria-mark.glb"
+     ],
+     "ktx2Files": []
+    },
+    "delta": {
+     "byKind": {
+      "other": {
+       "n": 13,
+       "bytes": 140991,
+       "wire": 95358,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 13,
+       "uniqWire": 95358
+      },
+      "js": {
+       "n": 9,
+       "bytes": 569702,
+       "wire": 413400,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 9,
+       "uniqWire": 413400
+      },
+      "glb": {
+       "n": 1,
+       "bytes": 17072,
+       "wire": 7731,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 1,
+       "uniqWire": 7731
+      }
+     },
+     "total": {
+      "n": 23,
+      "bytes": 727765,
+      "wire": 516489,
+      "uniqN": 23,
+      "uniqWire": 516489
+     },
+     "glbFiles": [
+      "bulgaria-mark.glb"
+     ],
+     "ktx2Files": []
+    }
+   },
+   "heapMB": 5.3,
+   "heapPreGcMB": 5.6,
+   "domNodes": 793,
+   "renderers": [
+    {
+     "id": 0,
+     "by": "Object.mountStandalone < Id < Xb < S",
+     "dom": "body < .custom-cursor",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": false,
+     "toneMapping": 0,
+     "exposure": 1,
+     "createdAt": 6060,
+     "rendersTotal": 0,
+     "coldRenderMs": {
+      "total": 0,
+      "max": 0
+     },
+     "frames": 0,
+     "cpuMs": {
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+     },
+     "rendersPerFrame": 0,
+     "callsPerFrame": 0,
+     "callsMax": 0,
+     "trisPerFrame": 0,
+     "perRenderCalls": [],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 0,
+      "geometries": 0,
+      "textures": 2
+     },
+     "programsByType": {},
+     "drawn": {
+      "meshes": 0,
+      "points": 0,
+      "lines": 0,
+      "materials": 0,
+      "materialTypes": {},
+      "lights": {},
+      "textures": 0,
+      "texMB": 0,
+      "geoMB": 0,
+      "renderTargets": 2,
+      "rtMB": 0.31,
+      "topTex": []
+     },
+     "fbMB": 9.89
+    },
+    {
+     "id": 1,
+     "by": "window.makeWaferRig < Id < Xb < S",
+     "dom": ".hv-stage__mount < .hv-stage < #rootdiv",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": true,
+     "toneMapping": 4,
+     "exposure": 1.18,
+     "createdAt": 7673,
+     "rendersTotal": 115,
+     "coldRenderMs": {
+      "total": 2335,
+      "max": 769
+     },
+     "frames": 60,
+     "cpuMs": {
+      "mean": 0.565,
+      "median": 0.5,
+      "p95": 0.8,
+      "max": 1.1
+     },
+     "rendersPerFrame": 1,
+     "callsPerFrame": 5,
+     "callsMax": 5,
+     "trisPerFrame": 2388,
+     "perRenderCalls": [
+      5
+     ],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 2,
+      "geometries": 3,
+      "textures": 1
+     },
+     "programsByType": {
+      "physical": 2
+     },
+     "drawn": {
+      "meshes": 35,
+      "points": 0,
+      "lines": 0,
+      "materials": 14,
+      "materialTypes": {
+       "MeshBasicMaterial": 9,
+       "ShaderMaterial": 2,
+       "MeshPhysicalMaterial": 3
+      },
+      "lights": {
+       "AmbientLight": 1,
+       "list": [
+        "AmbientLight:<Scene:",
+        "DirectionalLight:<Scene:",
+        "DirectionalLight:<Scene:"
+       ],
+       "DirectionalLight": 2
+      },
+      "textures": 2,
+      "texMB": 7.5,
+      "geoMB": 0.04,
+      "renderTargets": 1,
+      "rtMB": 6,
+      "topTex": [
+       "rt PMREM.cubeUv 768x1024 6.00MB",
+       "rt  ?x? 1.50MB"
+      ]
+     },
+     "fbMB": 49.44
+    }
+   ],
+   "contexts": {
+    "created": 2,
+    "live": 2,
+    "list": [
+     {
+      "type": "webgl2",
+      "at": 5321,
+      "lost": false
+     },
+     {
+      "type": "webgl2",
+      "at": 6779,
+      "lost": false
+     }
+    ]
+   },
+   "longTasks": {
+    "load": {
+     "n": 5,
+     "totalMs": 6883,
+     "maxMs": 5540
+    },
+    "sampling": {
+     "n": 0,
+     "totalMs": 0,
+     "maxMs": 0
+    }
+   },
+   "events": {},
+   "frames": 74,
+   "pmrem": [],
+   "staleRaf": {
+    "n": 3,
+    "minMs": -67
+   },
+   "dof": {
+    "bokeh": false,
+    "enabled": null,
+    "probeFps": null,
+    "dofOn": null
+   },
+   "scrollY": 0,
+   "settle": {
+    "settleMs": 4444,
+    "timedOut": false
+   }
+  }
+ ]
+}

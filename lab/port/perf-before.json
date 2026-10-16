@@ -1,0 +1,5548 @@
+{
+ "meta": {
+  "at": "2026-10-16T07:28:03.859Z",
+  "base": "http://127.0.0.1:8766/",
+  "frames": 60,
+  "warm": 10,
+  "forceDof": true,
+  "viewport": "1440x900@1",
+  "browser": "154.0.8037.92",
+  "gpu": "SwiftShader (render ms is JS-side CPU of renderer.render, not GPU time)"
+ },
+ "states": [
+  {
+   "state": "landing-title",
+   "url": "http://127.0.0.1:8766/index.html",
+   "sampleMs": 30540,
+   "network": {
+    "cumulative": {
+     "byKind": {
+      "other": {
+       "n": 23,
+       "bytes": 224759,
+       "wire": 126508,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 23,
+       "uniqWire": 126508
+      },
+      "js": {
+       "n": 31,
+       "bytes": 1027930,
+       "wire": 566442,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 31,
+       "uniqWire": 566442
+      },
+      "glb": {
+       "n": 11,
+       "bytes": 1454275,
+       "wire": 935639,
+       "cached": 1,
+       "failed": 0,
+       "uniqN": 10,
+       "uniqWire": 935639
+      },
+      "ktx2": {
+       "n": 4,
+       "bytes": 271560,
+       "wire": 271560,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 4,
+       "uniqWire": 271560
+      }
+     },
+     "total": {
+      "n": 69,
+      "bytes": 2978524,
+      "wire": 1900149,
+      "uniqN": 68,
+      "uniqWire": 1900149
+     },
+     "glbFiles": [
+      "wafer_demo.glb",
+      "wafer_demo.glb(prefetch)",
+      "iskra-mark.glb",
+      "ci-clop-mark.glb",
+      "wafer-mark.glb",
+      "keyboard-display.opt.glb",
+      "zmk-mark.glb",
+      "soft-off-keycap.opt.glb",
+      "sightseeing-mark.glb",
+      "brionel-mark.glb",
+      "bulgaria-mark.glb"
+     ],
+     "ktx2Files": [
+      "KTX2Loader.js",
+      "ktx-parse.module.js",
+      "basis_transcoder.js",
+      "basis_transcoder.wasm"
+     ]
+    },
+    "delta": {
+     "byKind": {
+      "other": {
+       "n": 23,
+       "bytes": 224759,
+       "wire": 126508,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 23,
+       "uniqWire": 126508
+      },
+      "js": {
+       "n": 31,
+       "bytes": 1027930,
+       "wire": 566442,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 31,
+       "uniqWire": 566442
+      },
+      "glb": {
+       "n": 11,
+       "bytes": 1454275,
+       "wire": 935639,
+       "cached": 1,
+       "failed": 0,
+       "uniqN": 10,
+       "uniqWire": 935639
+      },
+      "ktx2": {
+       "n": 4,
+       "bytes": 271560,
+       "wire": 271560,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 4,
+       "uniqWire": 271560
+      }
+     },
+     "total": {
+      "n": 69,
+      "bytes": 2978524,
+      "wire": 1900149,
+      "uniqN": 68,
+      "uniqWire": 1900149
+     },
+     "glbFiles": [
+      "wafer_demo.glb",
+      "wafer_demo.glb(prefetch)",
+      "iskra-mark.glb",
+      "ci-clop-mark.glb",
+      "wafer-mark.glb",
+      "keyboard-display.opt.glb",
+      "zmk-mark.glb",
+      "soft-off-keycap.opt.glb",
+      "sightseeing-mark.glb",
+      "brionel-mark.glb",
+      "bulgaria-mark.glb"
+     ],
+     "ktx2Files": [
+      "KTX2Loader.js",
+      "ktx-parse.module.js",
+      "basis_transcoder.js",
+      "basis_transcoder.wasm"
+     ]
+    }
+   },
+   "heapMB": 8.4,
+   "heapPreGcMB": 8.9,
+   "domNodes": 1477,
+   "renderers": [
+    {
+     "id": 0,
+     "by": "Id < Xb < S < MessagePort.U",
+     "dom": ".universe__mount < .universe < .universeBg.universeBg--drift",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": false,
+     "toneMapping": 0,
+     "exposure": 1,
+     "createdAt": 1022,
+     "rendersTotal": 477,
+     "coldRenderMs": {
+      "total": 5026,
+      "max": 1613
+     },
+     "frames": 60,
+     "cpuMs": {
+      "mean": 37.495,
+      "median": 1.7,
+      "p95": 5.1,
+      "max": 1181.1
+     },
+     "rendersPerFrame": 4.55,
+     "callsPerFrame": 70.3,
+     "callsMax": 154,
+     "trisPerFrame": 158697,
+     "perRenderCalls": [
+      30,
+      23,
+      1,
+      28,
+      1,
+      1
+     ],
+     "programsAddedWhileSampling": 2,
+     "info": {
+      "programs": 29,
+      "geometries": 66,
+      "textures": 34
+     },
+     "programsByType": {
+      "2": 1,
+      "4": 1,
+      "6": 1,
+      "8": 1,
+      "10": 1,
+      "basic": 7,
+      "points": 1,
+      "depth": 3,
+      "physical": 13
+     },
+     "drawn": {
+      "meshes": 114,
+      "points": 2,
+      "lines": 1,
+      "materials": 41,
+      "materialTypes": {
+       "PointsMaterial": 2,
+       "MeshBasicMaterial": 13,
+       "MeshStandardMaterial": 5,
+       "MeshPhysicalMaterial": 17,
+       "ShaderMaterial": 3,
+       "RawShaderMaterial": 1
+      },
+      "lights": {
+       "AmbientLight": 1,
+       "list": [
+        "AmbientLight:<Scene:",
+        "DirectionalLight:<Scene:",
+        "PointLight:<Scene:",
+        "DirectionalLight:Directional_Light<Object3D:Scene_1"
+       ],
+       "DirectionalLight": 2,
+       "PointLight": 1
+      },
+      "textures": 19,
+      "texMB": 41.4,
+      "geoMB": 3.55,
+      "renderTargets": 6,
+      "rtMB": 41.44,
+      "topTex": [
+       "ktx2 pcb_L_tex 2048x2048 5.33MB",
+       "ktx2 pcb_R_tex 2048x2048 5.33MB",
+       "canvas  2048x512 5.33MB",
+       "canvas  540x720 1.98MB",
+       "canvas  540x720 1.98MB",
+       "canvas  540x720 1.98MB",
+       "canvas  540x720 1.98MB",
+       "canvas  540x720 1.98MB"
+      ]
+     },
+     "fbMB": 9.89
+    },
+    {
+     "id": 1,
+     "by": "getKTX2Loader < Promise",
+     "dom": "",
+     "attached": false,
+     "lost": true,
+     "canvas": [
+      300,
+      150
+     ],
+     "dpr": 1,
+     "aa": null,
+     "toneMapping": 0,
+     "exposure": 1,
+     "createdAt": 2122,
+     "rendersTotal": 0,
+     "coldRenderMs": {
+      "total": 0,
+      "max": 0
+     },
+     "frames": 0,
+     "cpuMs": {
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+     },
+     "rendersPerFrame": 0,
+     "callsPerFrame": 0,
+     "callsMax": 0,
+     "trisPerFrame": 0,
+     "perRenderCalls": [],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 0,
+      "geometries": 0,
+      "textures": 0
+     },
+     "programsByType": {},
+     "drawn": {
+      "meshes": 0,
+      "points": 0,
+      "lines": 0,
+      "materials": 0,
+      "materialTypes": {},
+      "lights": {},
+      "textures": 0,
+      "texMB": 0,
+      "geoMB": 0,
+      "renderTargets": 0,
+      "rtMB": 0,
+      "topTex": []
+     },
+     "fbMB": 0.34
+    },
+    {
+     "id": 2,
+     "by": "window.makeWaferRig < window.makeNodeRig < prepareRig < prime < frame",
+     "dom": ".wf__mount < .wf < #rootdiv",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": true,
+     "toneMapping": 4,
+     "exposure": 1.18,
+     "createdAt": 3305,
+     "rendersTotal": 36,
+     "coldRenderMs": {
+      "total": 1244,
+      "max": 1063
+     },
+     "frames": 0,
+     "cpuMs": {
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+     },
+     "rendersPerFrame": 0,
+     "callsPerFrame": 0,
+     "callsMax": 0,
+     "trisPerFrame": 0,
+     "perRenderCalls": [],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 4,
+      "geometries": 5,
+      "textures": 5
+     },
+     "programsByType": {
+      "physical": 4
+     },
+     "drawn": {
+      "meshes": 5,
+      "points": 0,
+      "lines": 0,
+      "materials": 5,
+      "materialTypes": {
+       "MeshStandardMaterial": 4,
+       "MeshPhysicalMaterial": 1
+      },
+      "lights": {
+       "AmbientLight": 1,
+       "list": [
+        "AmbientLight:<Scene:",
+        "DirectionalLight:<Scene:",
+        "PointLight:<Scene:",
+        "PointLight:<Scene:",
+        "DirectionalLight:<Scene:"
+       ],
+       "DirectionalLight": 2,
+       "PointLight": 2
+      },
+      "textures": 4,
+      "texMB": 10.67,
+      "geoMB": 1.74,
+      "renderTargets": 1,
+      "rtMB": 9,
+      "topTex": [
+       "ktx2 pcb_L_tex 2048x2048 5.33MB",
+       "ktx2 pcb_R_tex 2048x2048 5.33MB",
+       "ktx2 PaletteBaseColor 128x4 0.00MB",
+       "ktx2 PaletteMetallicRoughness 128x4 0.00MB"
+      ]
+     },
+     "fbMB": 49.44
+    }
+   ],
+   "contexts": {
+    "created": 3,
+    "live": 2,
+    "list": [
+     {
+      "type": "webgl2",
+      "at": 939,
+      "lost": false
+     },
+     {
+      "type": "webgl2",
+      "at": 2118,
+      "lost": true
+     },
+     {
+      "type": "webgl2",
+      "at": 3221,
+      "lost": false
+     }
+    ]
+   },
+   "longTasks": {
+    "load": {
+     "n": 8,
+     "totalMs": 8178,
+     "maxMs": 2693
+    },
+    "sampling": {
+     "n": 2,
+     "totalMs": 2161,
+     "maxMs": 1194
+    }
+   },
+   "events": {
+    "mo:universe-ready": 2105,
+    "mo:first-frame": 3215,
+    "mo:preloader-done": 8527
+   },
+   "frames": 74,
+   "pmrem": [
+    {
+     "ms": 159,
+     "sigma": 0.06,
+     "by": "http://127.0.0.1:8766/app/landing/runtime.js?v=9530e837e0"
+    },
+    {
+     "ms": 184,
+     "sigma": 0.08,
+     "by": "window.makeWaferRig (http://127.0.0.1:8766/app/landing/ru"
+    }
+   ],
+   "staleRaf": {
+    "n": 19,
+    "minMs": -1722
+   },
+   "dof": {
+    "bokeh": true,
+    "enabled": true,
+    "probeFps": null,
+    "dofOn": true
+   },
+   "scrollY": 0,
+   "settle": {
+    "settleMs": 15334,
+    "timedOut": false
+   }
+  },
+  {
+   "state": "landing-board",
+   "url": "http://127.0.0.1:8766/index.html",
+   "sampleMs": 53717,
+   "network": {
+    "cumulative": {
+     "byKind": {
+      "other": {
+       "n": 23,
+       "bytes": 224759,
+       "wire": 126508,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 23,
+       "uniqWire": 126508
+      },
+      "js": {
+       "n": 31,
+       "bytes": 1027930,
+       "wire": 566442,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 31,
+       "uniqWire": 566442
+      },
+      "glb": {
+       "n": 64,
+       "bytes": 2602966,
+       "wire": 1803171,
+       "cached": 1,
+       "failed": 0,
+       "uniqN": 63,
+       "uniqWire": 1803171
+      },
+      "ktx2": {
+       "n": 4,
+       "bytes": 271560,
+       "wire": 271560,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 4,
+       "uniqWire": 271560
+      }
+     },
+     "total": {
+      "n": 122,
+      "bytes": 4127215,
+      "wire": 2767681,
+      "uniqN": 121,
+      "uniqWire": 2767681
+     },
+     "glbFiles": [
+      "wafer_demo.glb",
+      "wafer_demo.glb(prefetch)",
+      "iskra-mark.glb",
+      "ci-clop-mark.glb",
+      "wafer-mark.glb",
+      "keyboard-display.opt.glb",
+      "… 58 more"
+     ],
+     "ktx2Files": [
+      "KTX2Loader.js",
+      "ktx-parse.module.js",
+      "basis_transcoder.js",
+      "basis_transcoder.wasm"
+     ]
+    },
+    "delta": {
+     "byKind": {
+      "glb": {
+       "n": 53,
+       "bytes": 1148691,
+       "wire": 867532,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 53,
+       "uniqWire": 867532
+      }
+     },
+     "total": {
+      "n": 53,
+      "bytes": 1148691,
+      "wire": 867532,
+      "uniqN": 53,
+      "uniqWire": 867532
+     },
+     "glbFiles": [
+      "case_L.glb",
+      "case_R.glb",
+      "plate_L.glb",
+      "plate_R.glb",
+      "pcb_L.glb",
+      "pcb_R.glb",
+      "… 47 more"
+     ],
+     "ktx2Files": []
+    }
+   },
+   "heapMB": 12.2,
+   "heapPreGcMB": 13.1,
+   "domNodes": 1091,
+   "renderers": [
+    {
+     "id": 0,
+     "by": "Id < Xb < S < MessagePort.U",
+     "dom": ".universe__mount < .universe < .universeBg.universeBg--drift",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": false,
+     "toneMapping": 0,
+     "exposure": 1,
+     "createdAt": 1022,
+     "rendersTotal": 540,
+     "coldRenderMs": {
+      "total": 5043,
+      "max": 1613
+     },
+     "frames": 0,
+     "cpuMs": {
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+     },
+     "rendersPerFrame": 0,
+     "callsPerFrame": 0,
+     "callsMax": 0,
+     "trisPerFrame": 0,
+     "perRenderCalls": [],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 29,
+      "geometries": 67,
+      "textures": 34
+     },
+     "programsByType": {
+      "2": 1,
+      "4": 1,
+      "6": 1,
+      "8": 1,
+      "10": 1,
+      "basic": 7,
+      "points": 1,
+      "depth": 3,
+      "physical": 13
+     },
+     "drawn": {
+      "meshes": 115,
+      "points": 2,
+      "lines": 1,
+      "materials": 41,
+      "materialTypes": {
+       "PointsMaterial": 2,
+       "MeshBasicMaterial": 13,
+       "MeshStandardMaterial": 5,
+       "MeshPhysicalMaterial": 17,
+       "ShaderMaterial": 3,
+       "RawShaderMaterial": 1
+      },
+      "lights": {
+       "AmbientLight": 1,
+       "list": [
+        "AmbientLight:<Scene:",
+        "DirectionalLight:<Scene:",
+        "PointLight:<Scene:",
+        "DirectionalLight:Directional_Light<Object3D:Scene_1"
+       ],
+       "DirectionalLight": 2,
+       "PointLight": 1
+      },
+      "textures": 19,
+      "texMB": 41.4,
+      "geoMB": 3.58,
+      "renderTargets": 6,
+      "rtMB": 41.44,
+      "topTex": [
+       "ktx2 pcb_L_tex 2048x2048 5.33MB",
+       "ktx2 pcb_R_tex 2048x2048 5.33MB",
+       "canvas  2048x512 5.33MB",
+       "canvas  540x720 1.98MB",
+       "canvas  540x720 1.98MB",
+       "canvas  540x720 1.98MB",
+       "canvas  540x720 1.98MB",
+       "canvas  540x720 1.98MB"
+      ]
+     },
+     "fbMB": 9.89
+    },
+    {
+     "id": 1,
+     "by": "getKTX2Loader < Promise",
+     "dom": "",
+     "attached": false,
+     "lost": true,
+     "canvas": [
+      300,
+      150
+     ],
+     "dpr": 1,
+     "aa": null,
+     "toneMapping": 0,
+     "exposure": 1,
+     "createdAt": 2122,
+     "rendersTotal": 0,
+     "coldRenderMs": {
+      "total": 0,
+      "max": 0
+     },
+     "frames": 0,
+     "cpuMs": {
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+     },
+     "rendersPerFrame": 0,
+     "callsPerFrame": 0,
+     "callsMax": 0,
+     "trisPerFrame": 0,
+     "perRenderCalls": [],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 0,
+      "geometries": 0,
+      "textures": 0
+     },
+     "programsByType": {},
+     "drawn": {
+      "meshes": 0,
+      "points": 0,
+      "lines": 0,
+      "materials": 0,
+      "materialTypes": {},
+      "lights": {},
+      "textures": 0,
+      "texMB": 0,
+      "geoMB": 0,
+      "renderTargets": 0,
+      "rtMB": 0,
+      "topTex": []
+     },
+     "fbMB": 0.34
+    },
+    {
+     "id": 2,
+     "by": "window.makeWaferRig < window.makeNodeRig < prepareRig < prime < frame",
+     "dom": ".wf__mount < .wf < #rootdiv",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": true,
+     "toneMapping": 4,
+     "exposure": 1.18,
+     "createdAt": 3305,
+     "rendersTotal": 36,
+     "coldRenderMs": {
+      "total": 1244,
+      "max": 1063
+     },
+     "frames": 0,
+     "cpuMs": {
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+     },
+     "rendersPerFrame": 0,
+     "callsPerFrame": 0,
+     "callsMax": 0,
+     "trisPerFrame": 0,
+     "perRenderCalls": [],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 4,
+      "geometries": 5,
+      "textures": 5
+     },
+     "programsByType": {
+      "physical": 4
+     },
+     "drawn": {
+      "meshes": 5,
+      "points": 0,
+      "lines": 0,
+      "materials": 5,
+      "materialTypes": {
+       "MeshStandardMaterial": 4,
+       "MeshPhysicalMaterial": 1
+      },
+      "lights": {
+       "AmbientLight": 1,
+       "list": [
+        "AmbientLight:<Scene:",
+        "DirectionalLight:<Scene:",
+        "PointLight:<Scene:",
+        "PointLight:<Scene:",
+        "DirectionalLight:<Scene:"
+       ],
+       "DirectionalLight": 2,
+       "PointLight": 2
+      },
+      "textures": 4,
+      "texMB": 10.67,
+      "geoMB": 1.74,
+      "renderTargets": 1,
+      "rtMB": 9,
+      "topTex": [
+       "ktx2 pcb_L_tex 2048x2048 5.33MB",
+       "ktx2 pcb_R_tex 2048x2048 5.33MB",
+       "ktx2 PaletteBaseColor 128x4 0.00MB",
+       "ktx2 PaletteMetallicRoughness 128x4 0.00MB"
+      ]
+     },
+     "fbMB": 49.44
+    },
+    {
+     "id": 3,
+     "by": "Generator.next < asyncGeneratorStep < _next",
+     "dom": ".bf-mount < .bf-layer.bf-layer--takeover < #about.bf",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": false,
+     "toneMapping": 4,
+     "exposure": 1.05,
+     "createdAt": 48520,
+     "rendersTotal": 118,
+     "coldRenderMs": {
+      "total": 2565,
+      "max": 1393
+     },
+     "frames": 60,
+     "cpuMs": {
+      "mean": 8.372,
+      "median": 7.7,
+      "p95": 11.9,
+      "max": 33.3
+     },
+     "rendersPerFrame": 1,
+     "callsPerFrame": 209,
+     "callsMax": 209,
+     "trisPerFrame": 261510,
+     "perRenderCalls": [
+      209
+     ],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 13,
+      "geometries": 163,
+      "textures": 11
+     },
+     "programsByType": {
+      "physical": 12,
+      "points": 1
+     },
+     "drawn": {
+      "meshes": 229,
+      "points": 1,
+      "lines": 0,
+      "materials": 103,
+      "materialTypes": {
+       "MeshStandardMaterial": 86,
+       "PointsMaterial": 1,
+       "MeshPhysicalMaterial": 16
+      },
+      "lights": {
+       "DirectionalLight": 2,
+       "list": [
+        "DirectionalLight:<Scene:",
+        "DirectionalLight:<Scene:",
+        "PointLight:<Scene:",
+        "AmbientLight:<Scene:"
+       ],
+       "PointLight": 1,
+       "AmbientLight": 1
+      },
+      "textures": 10,
+      "texMB": 21.67,
+      "geoMB": 2.25,
+      "renderTargets": 1,
+      "rtMB": 9,
+      "topTex": [
+       "canvas  2048x683 7.11MB",
+       "ktx2 pcb_L_tex 2048x2048 5.33MB",
+       "ktx2 pcb_R_tex 2048x2048 5.33MB",
+       "canvas  1024x341 1.78MB",
+       "canvas  1024x341 1.78MB",
+       "canvas  256x256 0.33MB",
+       "ktx2 PaletteBaseColor 64x4 0.00MB",
+       "ktx2 PaletteBaseColor 64x4 0.00MB"
+      ]
+     },
+     "fbMB": 9.89
+    },
+    {
+     "id": 4,
+     "by": "Object.mountStandalone < Generator.next < asyncGeneratorStep < _next",
+     "dom": ".fl-titleDim.fl-titleGone < .custom-cursor",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": false,
+     "toneMapping": 0,
+     "exposure": 1,
+     "createdAt": 55382,
+     "rendersTotal": 0,
+     "coldRenderMs": {
+      "total": 0,
+      "max": 0
+     },
+     "frames": 0,
+     "cpuMs": {
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+     },
+     "rendersPerFrame": 0,
+     "callsPerFrame": 0,
+     "callsMax": 0,
+     "trisPerFrame": 0,
+     "perRenderCalls": [],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 0,
+      "geometries": 0,
+      "textures": 2
+     },
+     "programsByType": {},
+     "drawn": {
+      "meshes": 0,
+      "points": 0,
+      "lines": 0,
+      "materials": 0,
+      "materialTypes": {},
+      "lights": {},
+      "textures": 0,
+      "texMB": 0,
+      "geoMB": 0,
+      "renderTargets": 2,
+      "rtMB": 0.31,
+      "topTex": []
+     },
+     "fbMB": 9.89
+    }
+   ],
+   "contexts": {
+    "created": 5,
+    "live": 4,
+    "list": [
+     {
+      "type": "webgl2",
+      "at": 939,
+      "lost": false
+     },
+     {
+      "type": "webgl2",
+      "at": 2118,
+      "lost": true
+     },
+     {
+      "type": "webgl2",
+      "at": 3221,
+      "lost": false
+     },
+     {
+      "type": "webgl2",
+      "at": 48401,
+      "lost": false
+     },
+     {
+      "type": "webgl2",
+      "at": 55374,
+      "lost": false
+     }
+    ]
+   },
+   "longTasks": {
+    "load": {
+     "n": 15,
+     "totalMs": 15437,
+     "maxMs": 2693
+    },
+    "sampling": {
+     "n": 0,
+     "totalMs": 0,
+     "maxMs": 0
+    }
+   },
+   "events": {
+    "mo:universe-ready": 2105,
+    "mo:first-frame": 3215,
+    "mo:preloader-done": 8527,
+    "mo:board-ready": 55388
+   },
+   "frames": 73,
+   "pmrem": [
+    {
+     "ms": 159,
+     "sigma": 0.06,
+     "by": "http://127.0.0.1:8766/app/landing/runtime.js?v=9530e837e0"
+    },
+    {
+     "ms": 184,
+     "sigma": 0.08,
+     "by": "window.makeWaferRig (http://127.0.0.1:8766/app/landing/ru"
+    },
+    {
+     "ms": 1206,
+     "sigma": 0.04,
+     "by": "http://127.0.0.1:8766/app/landing/runtime.js?v=9530e837e0"
+    }
+   ],
+   "staleRaf": {
+    "n": 35,
+    "minMs": -1722
+   },
+   "dof": {
+    "bokeh": true,
+    "enabled": true,
+    "probeFps": null,
+    "dofOn": true
+   },
+   "scrollY": 14995,
+   "settle": {
+    "settleMs": 13956,
+    "timedOut": false
+   }
+  },
+  {
+   "state": "route:Wafer",
+   "url": "http://127.0.0.1:8766/Wafer.html",
+   "sampleMs": 45963,
+   "network": {
+    "cumulative": {
+     "byKind": {
+      "other": {
+       "n": 14,
+       "bytes": 151781,
+       "wire": 97860,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 14,
+       "uniqWire": 97860
+      },
+      "js": {
+       "n": 13,
+       "bytes": 624738,
+       "wire": 444204,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 13,
+       "uniqWire": 444204
+      },
+      "ktx2": {
+       "n": 4,
+       "bytes": 271548,
+       "wire": 271548,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 4,
+       "uniqWire": 271548
+      },
+      "glb": {
+       "n": 1,
+       "bytes": 821597,
+       "wire": 630153,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 1,
+       "uniqWire": 630153
+      }
+     },
+     "total": {
+      "n": 32,
+      "bytes": 1869664,
+      "wire": 1443765,
+      "uniqN": 32,
+      "uniqWire": 1443765
+     },
+     "glbFiles": [
+      "wafer_demo.glb"
+     ],
+     "ktx2Files": [
+      "KTX2Loader.js",
+      "ktx-parse.module.js",
+      "basis_transcoder.js",
+      "basis_transcoder.wasm"
+     ]
+    },
+    "delta": {
+     "byKind": {
+      "other": {
+       "n": 14,
+       "bytes": 151781,
+       "wire": 97860,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 14,
+       "uniqWire": 97860
+      },
+      "js": {
+       "n": 13,
+       "bytes": 624738,
+       "wire": 444204,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 13,
+       "uniqWire": 444204
+      },
+      "ktx2": {
+       "n": 4,
+       "bytes": 271548,
+       "wire": 271548,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 4,
+       "uniqWire": 271548
+      },
+      "glb": {
+       "n": 1,
+       "bytes": 821597,
+       "wire": 630153,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 1,
+       "uniqWire": 630153
+      }
+     },
+     "total": {
+      "n": 32,
+      "bytes": 1869664,
+      "wire": 1443765,
+      "uniqN": 32,
+      "uniqWire": 1443765
+     },
+     "glbFiles": [
+      "wafer_demo.glb"
+     ],
+     "ktx2Files": [
+      "KTX2Loader.js",
+      "ktx-parse.module.js",
+      "basis_transcoder.js",
+      "basis_transcoder.wasm"
+     ]
+    }
+   },
+   "heapMB": 5.8,
+   "heapPreGcMB": 6.4,
+   "domNodes": 1260,
+   "renderers": [
+    {
+     "id": 0,
+     "by": "getKTX2Loader < Promise",
+     "dom": "",
+     "attached": false,
+     "lost": true,
+     "canvas": [
+      300,
+      150
+     ],
+     "dpr": 1,
+     "aa": null,
+     "toneMapping": 0,
+     "exposure": 1,
+     "createdAt": 274,
+     "rendersTotal": 0,
+     "coldRenderMs": {
+      "total": 0,
+      "max": 0
+     },
+     "frames": 0,
+     "cpuMs": {
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+     },
+     "rendersPerFrame": 0,
+     "callsPerFrame": 0,
+     "callsMax": 0,
+     "trisPerFrame": 0,
+     "perRenderCalls": [],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 0,
+      "geometries": 0,
+      "textures": 0
+     },
+     "programsByType": {},
+     "drawn": {
+      "meshes": 0,
+      "points": 0,
+      "lines": 0,
+      "materials": 0,
+      "materialTypes": {},
+      "lights": {},
+      "textures": 0,
+      "texMB": 0,
+      "geoMB": 0,
+      "renderTargets": 0,
+      "rtMB": 0,
+      "topTex": []
+     },
+     "fbMB": 0.34
+    },
+    {
+     "id": 1,
+     "by": "Object.mountStandalone < Id < Xb < S",
+     "dom": "body < .custom-cursor",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": false,
+     "toneMapping": 0,
+     "exposure": 1,
+     "createdAt": 1631,
+     "rendersTotal": 0,
+     "coldRenderMs": {
+      "total": 0,
+      "max": 0
+     },
+     "frames": 0,
+     "cpuMs": {
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+     },
+     "rendersPerFrame": 0,
+     "callsPerFrame": 0,
+     "callsMax": 0,
+     "trisPerFrame": 0,
+     "perRenderCalls": [],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 0,
+      "geometries": 0,
+      "textures": 2
+     },
+     "programsByType": {},
+     "drawn": {
+      "meshes": 0,
+      "points": 0,
+      "lines": 0,
+      "materials": 0,
+      "materialTypes": {},
+      "lights": {},
+      "textures": 0,
+      "texMB": 0,
+      "geoMB": 0,
+      "renderTargets": 2,
+      "rtMB": 0.31,
+      "topTex": []
+     },
+     "fbMB": 9.89
+    },
+    {
+     "id": 2,
+     "by": "window.makeWaferRig < Id < Xb < S",
+     "dom": ".hv-stage__mount < .hv-stage < #rootdiv",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": true,
+     "toneMapping": 4,
+     "exposure": 1.18,
+     "createdAt": 1673,
+     "rendersTotal": 119,
+     "coldRenderMs": {
+      "total": 1459,
+      "max": 1382
+     },
+     "frames": 60,
+     "cpuMs": {
+      "mean": 0.417,
+      "median": 0.4,
+      "p95": 0.6,
+      "max": 0.8
+     },
+     "rendersPerFrame": 1,
+     "callsPerFrame": 5,
+     "callsMax": 5,
+     "trisPerFrame": 115938,
+     "perRenderCalls": [
+      5
+     ],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 4,
+      "geometries": 5,
+      "textures": 5
+     },
+     "programsByType": {
+      "physical": 4
+     },
+     "drawn": {
+      "meshes": 5,
+      "points": 0,
+      "lines": 0,
+      "materials": 5,
+      "materialTypes": {
+       "MeshStandardMaterial": 4,
+       "MeshPhysicalMaterial": 1
+      },
+      "lights": {
+       "AmbientLight": 1,
+       "list": [
+        "AmbientLight:<Scene:",
+        "DirectionalLight:<Scene:",
+        "PointLight:<Scene:",
+        "PointLight:<Scene:",
+        "DirectionalLight:<Scene:"
+       ],
+       "DirectionalLight": 2,
+       "PointLight": 2
+      },
+      "textures": 4,
+      "texMB": 10.67,
+      "geoMB": 1.74,
+      "renderTargets": 1,
+      "rtMB": 9,
+      "topTex": [
+       "ktx2 pcb_L_tex 2048x2048 5.33MB",
+       "ktx2 pcb_R_tex 2048x2048 5.33MB",
+       "ktx2 PaletteBaseColor 128x4 0.00MB",
+       "ktx2 PaletteMetallicRoughness 128x4 0.00MB"
+      ]
+     },
+     "fbMB": 49.44
+    }
+   ],
+   "contexts": {
+    "created": 3,
+    "live": 2,
+    "list": [
+     {
+      "type": "webgl2",
+      "at": 260,
+      "lost": true
+     },
+     {
+      "type": "webgl2",
+      "at": 760,
+      "lost": false
+     },
+     {
+      "type": "webgl2",
+      "at": 1664,
+      "lost": false
+     }
+    ]
+   },
+   "longTasks": {
+    "load": {
+     "n": 5,
+     "totalMs": 3022,
+     "maxMs": 1383
+    },
+    "sampling": {
+     "n": 0,
+     "totalMs": 0,
+     "maxMs": 0
+    }
+   },
+   "events": {},
+   "frames": 73,
+   "pmrem": [
+    {
+     "ms": 84,
+     "sigma": 0.08,
+     "by": "window.makeWaferRig (http://127.0.0.1:8766/app/page-runti"
+    }
+   ],
+   "staleRaf": {
+    "n": 10,
+    "minMs": -1383
+   },
+   "dof": {
+    "bokeh": false,
+    "enabled": null,
+    "probeFps": null,
+    "dofOn": null
+   },
+   "scrollY": 0,
+   "settle": {
+    "settleMs": 7595,
+    "timedOut": false
+   }
+  },
+  {
+   "state": "route:Kerfur",
+   "url": "http://127.0.0.1:8766/Kerfur.html",
+   "sampleMs": 9674,
+   "network": {
+    "cumulative": {
+     "byKind": {
+      "other": {
+       "n": 58,
+       "bytes": 217443,
+       "wire": 114643,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 58,
+       "uniqWire": 114643
+      },
+      "js": {
+       "n": 12,
+       "bytes": 627689,
+       "wire": 433317,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 12,
+       "uniqWire": 433317
+      }
+     },
+     "total": {
+      "n": 70,
+      "bytes": 845132,
+      "wire": 547960,
+      "uniqN": 70,
+      "uniqWire": 547960
+     },
+     "glbFiles": [],
+     "ktx2Files": []
+    },
+    "delta": {
+     "byKind": {
+      "other": {
+       "n": 58,
+       "bytes": 217443,
+       "wire": 114643,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 58,
+       "uniqWire": 114643
+      },
+      "js": {
+       "n": 12,
+       "bytes": 627689,
+       "wire": 433317,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 12,
+       "uniqWire": 433317
+      }
+     },
+     "total": {
+      "n": 70,
+      "bytes": 845132,
+      "wire": 547960,
+      "uniqN": 70,
+      "uniqWire": 547960
+     },
+     "glbFiles": [],
+     "ktx2Files": []
+    }
+   },
+   "heapMB": 5.2,
+   "heapPreGcMB": 5.6,
+   "domNodes": 697,
+   "renderers": [
+    {
+     "id": 0,
+     "by": "Object.mountStandalone < Id < Xb < S",
+     "dom": "body < .custom-cursor",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": false,
+     "toneMapping": 0,
+     "exposure": 1,
+     "createdAt": 246,
+     "rendersTotal": 0,
+     "coldRenderMs": {
+      "total": 0,
+      "max": 0
+     },
+     "frames": 0,
+     "cpuMs": {
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+     },
+     "rendersPerFrame": 0,
+     "callsPerFrame": 0,
+     "callsMax": 0,
+     "trisPerFrame": 0,
+     "perRenderCalls": [],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 0,
+      "geometries": 0,
+      "textures": 2
+     },
+     "programsByType": {},
+     "drawn": {
+      "meshes": 0,
+      "points": 0,
+      "lines": 0,
+      "materials": 0,
+      "materialTypes": {},
+      "lights": {},
+      "textures": 0,
+      "texMB": 0,
+      "geoMB": 0,
+      "renderTargets": 2,
+      "rtMB": 0.31,
+      "topTex": []
+     },
+     "fbMB": 9.89
+    },
+    {
+     "id": 1,
+     "by": "window.makeWaferRig < Id < Xb < S",
+     "dom": ".hv-stage__mount < .hv-stage < #rootdiv",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": true,
+     "toneMapping": 4,
+     "exposure": 1.18,
+     "createdAt": 304,
+     "rendersTotal": 135,
+     "coldRenderMs": {
+      "total": 176,
+      "max": 92
+     },
+     "frames": 60,
+     "cpuMs": {
+      "mean": 0.528,
+      "median": 0.5,
+      "p95": 0.7,
+      "max": 2.4
+     },
+     "rendersPerFrame": 1,
+     "callsPerFrame": 7,
+     "callsMax": 7,
+     "trisPerFrame": 2942,
+     "perRenderCalls": [
+      7
+     ],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 2,
+      "geometries": 6,
+      "textures": 2
+     },
+     "programsByType": {
+      "physical": 1,
+      "basic": 1
+     },
+     "drawn": {
+      "meshes": 7,
+      "points": 0,
+      "lines": 0,
+      "materials": 4,
+      "materialTypes": {
+       "MeshStandardMaterial": 3,
+       "MeshBasicMaterial": 1
+      },
+      "lights": {
+       "AmbientLight": 1,
+       "list": [
+        "AmbientLight:<Scene:",
+        "DirectionalLight:<Scene:",
+        "PointLight:<Scene:",
+        "PointLight:<Scene:",
+        "DirectionalLight:<Scene:",
+        "PointLight:<Group:"
+       ],
+       "DirectionalLight": 2,
+       "PointLight": 3
+      },
+      "textures": 1,
+      "texMB": 0.03,
+      "geoMB": 0.21,
+      "renderTargets": 1,
+      "rtMB": 9,
+      "topTex": [
+       "canvas  128x64 0.03MB"
+      ]
+     },
+     "fbMB": 49.44
+    }
+   ],
+   "contexts": {
+    "created": 2,
+    "live": 2,
+    "list": [
+     {
+      "type": "webgl2",
+      "at": 227,
+      "lost": false
+     },
+     {
+      "type": "webgl2",
+      "at": 299,
+      "lost": false
+     }
+    ]
+   },
+   "longTasks": {
+    "load": {
+     "n": 2,
+     "totalMs": 1055,
+     "maxMs": 876
+    },
+    "sampling": {
+     "n": 0,
+     "totalMs": 0,
+     "maxMs": 0
+    }
+   },
+   "events": {},
+   "frames": 73,
+   "pmrem": [
+    {
+     "ms": 71,
+     "sigma": 0.08,
+     "by": "window.makeWaferRig (http://127.0.0.1:8766/app/page-runti"
+    }
+   ],
+   "staleRaf": {
+    "n": 2,
+    "minMs": -10
+   },
+   "dof": {
+    "bokeh": false,
+    "enabled": null,
+    "probeFps": null,
+    "dofOn": null
+   },
+   "scrollY": 0,
+   "settle": {
+    "settleMs": 4756,
+    "timedOut": false
+   }
+  },
+  {
+   "state": "route:Iskra",
+   "url": "http://127.0.0.1:8766/Iskra.html",
+   "sampleMs": 10481,
+   "network": {
+    "cumulative": {
+     "byKind": {
+      "other": {
+       "n": 14,
+       "bytes": 139969,
+       "wire": 1197238,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 14,
+       "uniqWire": 1197238
+      },
+      "js": {
+       "n": 9,
+       "bytes": 548619,
+       "wire": 406802,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 9,
+       "uniqWire": 406802
+      },
+      "glb": {
+       "n": 1,
+       "bytes": 36704,
+       "wire": 19490,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 1,
+       "uniqWire": 19490
+      }
+     },
+     "total": {
+      "n": 24,
+      "bytes": 725292,
+      "wire": 1623530,
+      "uniqN": 24,
+      "uniqWire": 1623530
+     },
+     "glbFiles": [
+      "iskra-mark.glb"
+     ],
+     "ktx2Files": []
+    },
+    "delta": {
+     "byKind": {
+      "other": {
+       "n": 14,
+       "bytes": 139969,
+       "wire": 1197238,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 14,
+       "uniqWire": 1197238
+      },
+      "js": {
+       "n": 9,
+       "bytes": 548619,
+       "wire": 406802,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 9,
+       "uniqWire": 406802
+      },
+      "glb": {
+       "n": 1,
+       "bytes": 36704,
+       "wire": 19490,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 1,
+       "uniqWire": 19490
+      }
+     },
+     "total": {
+      "n": 24,
+      "bytes": 725292,
+      "wire": 1623530,
+      "uniqN": 24,
+      "uniqWire": 1623530
+     },
+     "glbFiles": [
+      "iskra-mark.glb"
+     ],
+     "ktx2Files": []
+    }
+   },
+   "heapMB": 4.8,
+   "heapPreGcMB": 6.2,
+   "domNodes": 791,
+   "renderers": [
+    {
+     "id": 0,
+     "by": "Object.mountStandalone < Id < Xb < S",
+     "dom": "body < .custom-cursor",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": false,
+     "toneMapping": 0,
+     "exposure": 1,
+     "createdAt": 1176,
+     "rendersTotal": 0,
+     "coldRenderMs": {
+      "total": 0,
+      "max": 0
+     },
+     "frames": 0,
+     "cpuMs": {
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+     },
+     "rendersPerFrame": 0,
+     "callsPerFrame": 0,
+     "callsMax": 0,
+     "trisPerFrame": 0,
+     "perRenderCalls": [],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 0,
+      "geometries": 0,
+      "textures": 2
+     },
+     "programsByType": {},
+     "drawn": {
+      "meshes": 0,
+      "points": 0,
+      "lines": 0,
+      "materials": 0,
+      "materialTypes": {},
+      "lights": {},
+      "textures": 0,
+      "texMB": 0,
+      "geoMB": 0,
+      "renderTargets": 2,
+      "rtMB": 0.31,
+      "topTex": []
+     },
+     "fbMB": 9.89
+    },
+    {
+     "id": 1,
+     "by": "window.makeWaferRig < Id < Xb < S",
+     "dom": ".hv-stage__mount < .hv-stage < #rootdiv",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": true,
+     "toneMapping": 4,
+     "exposure": 1.18,
+     "createdAt": 1730,
+     "rendersTotal": 136,
+     "coldRenderMs": {
+      "total": 1454,
+      "max": 659
+     },
+     "frames": 60,
+     "cpuMs": {
+      "mean": 0.245,
+      "median": 0.2,
+      "p95": 0.4,
+      "max": 0.4
+     },
+     "rendersPerFrame": 1,
+     "callsPerFrame": 2,
+     "callsMax": 2,
+     "trisPerFrame": 3472,
+     "perRenderCalls": [
+      2
+     ],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 1,
+      "geometries": 2,
+      "textures": 1
+     },
+     "programsByType": {
+      "physical": 1
+     },
+     "drawn": {
+      "meshes": 2,
+      "points": 0,
+      "lines": 0,
+      "materials": 2,
+      "materialTypes": {
+       "MeshPhysicalMaterial": 2
+      },
+      "lights": {
+       "AmbientLight": 1,
+       "list": [
+        "AmbientLight:<Scene:",
+        "DirectionalLight:<Scene:",
+        "PointLight:<Scene:",
+        "PointLight:<Scene:",
+        "DirectionalLight:<Scene:"
+       ],
+       "DirectionalLight": 2,
+       "PointLight": 2
+      },
+      "textures": 0,
+      "texMB": 0,
+      "geoMB": 0.1,
+      "renderTargets": 1,
+      "rtMB": 9,
+      "topTex": []
+     },
+     "fbMB": 49.44
+    }
+   ],
+   "contexts": {
+    "created": 2,
+    "live": 2,
+    "list": [
+     {
+      "type": "webgl2",
+      "at": 621,
+      "lost": false
+     },
+     {
+      "type": "webgl2",
+      "at": 1720,
+      "lost": false
+     }
+    ]
+   },
+   "longTasks": {
+    "load": {
+     "n": 2,
+     "totalMs": 3262,
+     "maxMs": 2848
+    },
+    "sampling": {
+     "n": 0,
+     "totalMs": 0,
+     "maxMs": 0
+    }
+   },
+   "events": {},
+   "frames": 74,
+   "pmrem": [
+    {
+     "ms": 1195,
+     "sigma": 0.08,
+     "by": "window.makeWaferRig (http://127.0.0.1:8766/app/page-runti"
+    }
+   ],
+   "staleRaf": {
+    "n": 5,
+    "minMs": -1644
+   },
+   "dof": {
+    "bokeh": false,
+    "enabled": null,
+    "probeFps": null,
+    "dofOn": null
+   },
+   "scrollY": 0,
+   "settle": {
+    "settleMs": 4029,
+    "timedOut": false
+   }
+  },
+  {
+   "state": "iskra-menu",
+   "url": "http://127.0.0.1:8766/Iskra.html",
+   "sampleMs": 15390,
+   "network": {
+    "cumulative": {
+     "byKind": {
+      "other": {
+       "n": 18,
+       "bytes": 176778,
+       "wire": 130333,
+       "cached": 0,
+       "failed": 1,
+       "uniqN": 17,
+       "uniqWire": 130333
+      },
+      "js": {
+       "n": 11,
+       "bytes": 567187,
+       "wire": 425370,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 11,
+       "uniqWire": 425370
+      },
+      "glb": {
+       "n": 4,
+       "bytes": 1036734,
+       "wire": 748185,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 4,
+       "uniqWire": 748185
+      },
+      "ktx2": {
+       "n": 4,
+       "bytes": 271566,
+       "wire": 271566,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 4,
+       "uniqWire": 271566
+      }
+     },
+     "total": {
+      "n": 37,
+      "bytes": 2052265,
+      "wire": 1575454,
+      "uniqN": 36,
+      "uniqWire": 1575454
+     },
+     "glbFiles": [
+      "iskra-mark.glb",
+      "wafer_demo.glb",
+      "ci-clop-mark.glb",
+      "wafer-mark.glb"
+     ],
+     "ktx2Files": [
+      "KTX2Loader.js",
+      "ktx-parse.module.js",
+      "basis_transcoder.js",
+      "basis_transcoder.wasm"
+     ]
+    },
+    "delta": {
+     "byKind": {
+      "ktx2": {
+       "n": 4,
+       "bytes": 271566,
+       "wire": 271566,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 4,
+       "uniqWire": 271566
+      },
+      "js": {
+       "n": 2,
+       "bytes": 18568,
+       "wire": 18568,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 2,
+       "uniqWire": 18568
+      },
+      "glb": {
+       "n": 3,
+       "bytes": 1000030,
+       "wire": 728695,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 3,
+       "uniqWire": 728695
+      },
+      "other": {
+       "n": 4,
+       "bytes": 36809,
+       "wire": 35421,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 4,
+       "uniqWire": 35421
+      }
+     },
+     "total": {
+      "n": 13,
+      "bytes": 1326973,
+      "wire": 1054250,
+      "uniqN": 13,
+      "uniqWire": 1054250
+     },
+     "glbFiles": [
+      "wafer_demo.glb",
+      "ci-clop-mark.glb",
+      "wafer-mark.glb"
+     ],
+     "ktx2Files": [
+      "KTX2Loader.js",
+      "ktx-parse.module.js",
+      "basis_transcoder.js",
+      "basis_transcoder.wasm"
+     ]
+    }
+   },
+   "heapMB": 7.5,
+   "heapPreGcMB": 8.2,
+   "domNodes": 807,
+   "renderers": [
+    {
+     "id": 0,
+     "by": "Object.mountStandalone < Id < Xb < S",
+     "dom": ".mo-menu-open.mo-menu-settled < .custom-cursor.mo-cursor-live",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": false,
+     "toneMapping": 0,
+     "exposure": 1,
+     "createdAt": 1176,
+     "rendersTotal": 0,
+     "coldRenderMs": {
+      "total": 0,
+      "max": 0
+     },
+     "frames": 0,
+     "cpuMs": {
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+     },
+     "rendersPerFrame": 0,
+     "callsPerFrame": 0,
+     "callsMax": 0,
+     "trisPerFrame": 0,
+     "perRenderCalls": [],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 0,
+      "geometries": 0,
+      "textures": 2
+     },
+     "programsByType": {},
+     "drawn": {
+      "meshes": 0,
+      "points": 0,
+      "lines": 0,
+      "materials": 0,
+      "materialTypes": {},
+      "lights": {},
+      "textures": 0,
+      "texMB": 0,
+      "geoMB": 0,
+      "renderTargets": 2,
+      "rtMB": 0.31,
+      "topTex": []
+     },
+     "fbMB": 9.89
+    },
+    {
+     "id": 1,
+     "by": "window.makeWaferRig < Id < Xb < S",
+     "dom": ".lp-menu__objects < #portfolio-menu.lp-menu < .mo-menu-open.mo-menu-settled",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": true,
+     "toneMapping": 4,
+     "exposure": 1.25,
+     "createdAt": 1730,
+     "rendersTotal": 216,
+     "coldRenderMs": {
+      "total": 2550,
+      "max": 944
+     },
+     "frames": 60,
+     "cpuMs": {
+      "mean": 0.65,
+      "median": 0.6,
+      "p95": 1,
+      "max": 1.1
+     },
+     "rendersPerFrame": 1,
+     "callsPerFrame": 23,
+     "callsMax": 23,
+     "trisPerFrame": 154945,
+     "perRenderCalls": [
+      23
+     ],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 11,
+      "geometries": 22,
+      "textures": 5
+     },
+     "programsByType": {
+      "physical": 10,
+      "points": 1
+     },
+     "drawn": {
+      "meshes": 24,
+      "points": 1,
+      "lines": 0,
+      "materials": 15,
+      "materialTypes": {
+       "MeshPhysicalMaterial": 6,
+       "MeshStandardMaterial": 8,
+       "PointsMaterial": 1
+      },
+      "lights": {
+       "AmbientLight": 1,
+       "list": [
+        "AmbientLight:<Scene:",
+        "DirectionalLight:<Scene:",
+        "PointLight:<Scene:",
+        "PointLight:<Scene:",
+        "DirectionalLight:<Scene:",
+        "HemisphereLight:<Scene:",
+        "DirectionalLight:<Scene:",
+        "DirectionalLight:<Scene:",
+        "DirectionalLight:Directional_Light<Object3D:Scene_1"
+       ],
+       "DirectionalLight": 5,
+       "PointLight": 2,
+       "HemisphereLight": 1
+      },
+      "textures": 4,
+      "texMB": 10.67,
+      "geoMB": 2.38,
+      "renderTargets": 1,
+      "rtMB": 9,
+      "topTex": [
+       "ktx2 pcb_L_tex 2048x2048 5.33MB",
+       "ktx2 pcb_R_tex 2048x2048 5.33MB",
+       "ktx2 PaletteBaseColor 128x4 0.00MB",
+       "ktx2 PaletteMetallicRoughness 128x4 0.00MB"
+      ]
+     },
+     "fbMB": 49.44
+    },
+    {
+     "id": 2,
+     "by": "getKTX2Loader < Promise",
+     "dom": "",
+     "attached": false,
+     "lost": true,
+     "canvas": [
+      300,
+      150
+     ],
+     "dpr": 1,
+     "aa": null,
+     "toneMapping": 0,
+     "exposure": 1,
+     "createdAt": 19682,
+     "rendersTotal": 0,
+     "coldRenderMs": {
+      "total": 0,
+      "max": 0
+     },
+     "frames": 0,
+     "cpuMs": {
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+     },
+     "rendersPerFrame": 0,
+     "callsPerFrame": 0,
+     "callsMax": 0,
+     "trisPerFrame": 0,
+     "perRenderCalls": [],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 0,
+      "geometries": 0,
+      "textures": 0
+     },
+     "programsByType": {},
+     "drawn": {
+      "meshes": 0,
+      "points": 0,
+      "lines": 0,
+      "materials": 0,
+      "materialTypes": {},
+      "lights": {},
+      "textures": 0,
+      "texMB": 0,
+      "geoMB": 0,
+      "renderTargets": 0,
+      "rtMB": 0,
+      "topTex": []
+     },
+     "fbMB": 0.34
+    }
+   ],
+   "contexts": {
+    "created": 3,
+    "live": 2,
+    "list": [
+     {
+      "type": "webgl2",
+      "at": 621,
+      "lost": false
+     },
+     {
+      "type": "webgl2",
+      "at": 1720,
+      "lost": false
+     },
+     {
+      "type": "webgl2",
+      "at": 19675,
+      "lost": true
+     }
+    ]
+   },
+   "longTasks": {
+    "load": {
+     "n": 5,
+     "totalMs": 4668,
+     "maxMs": 2848
+    },
+    "sampling": {
+     "n": 0,
+     "totalMs": 0,
+     "maxMs": 0
+    }
+   },
+   "events": {},
+   "frames": 120,
+   "pmrem": [
+    {
+     "ms": 1195,
+     "sigma": 0.08,
+     "by": "window.makeWaferRig (http://127.0.0.1:8766/app/page-runti"
+    }
+   ],
+   "staleRaf": {
+    "n": 141,
+    "minMs": -1644
+   },
+   "dof": {
+    "bokeh": false,
+    "enabled": null,
+    "probeFps": null,
+    "dofOn": null
+   },
+   "scrollY": 0,
+   "settle": {
+    "settleMs": 4772,
+    "timedOut": false
+   }
+  },
+  {
+   "state": "route:Ci-Clop",
+   "url": "http://127.0.0.1:8766/Ci-Clop.html",
+   "sampleMs": 24219,
+   "network": {
+    "cumulative": {
+     "byKind": {
+      "other": {
+       "n": 16,
+       "bytes": 161128,
+       "wire": 100812,
+       "cached": 0,
+       "failed": 1,
+       "uniqN": 15,
+       "uniqWire": 100812
+      },
+      "js": {
+       "n": 11,
+       "bytes": 612129,
+       "wire": 426604,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 11,
+       "uniqWire": 426604
+      },
+      "glb": {
+       "n": 1,
+       "bytes": 134445,
+       "wire": 76284,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 1,
+       "uniqWire": 76284
+      }
+     },
+     "total": {
+      "n": 28,
+      "bytes": 907702,
+      "wire": 603700,
+      "uniqN": 27,
+      "uniqWire": 603700
+     },
+     "glbFiles": [
+      "ci-clop-mark.glb"
+     ],
+     "ktx2Files": []
+    },
+    "delta": {
+     "byKind": {
+      "other": {
+       "n": 16,
+       "bytes": 161128,
+       "wire": 100812,
+       "cached": 0,
+       "failed": 1,
+       "uniqN": 15,
+       "uniqWire": 100812
+      },
+      "js": {
+       "n": 11,
+       "bytes": 612129,
+       "wire": 426604,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 11,
+       "uniqWire": 426604
+      },
+      "glb": {
+       "n": 1,
+       "bytes": 134445,
+       "wire": 76284,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 1,
+       "uniqWire": 76284
+      }
+     },
+     "total": {
+      "n": 28,
+      "bytes": 907702,
+      "wire": 603700,
+      "uniqN": 27,
+      "uniqWire": 603700
+     },
+     "glbFiles": [
+      "ci-clop-mark.glb"
+     ],
+     "ktx2Files": []
+    }
+   },
+   "heapMB": 5.1,
+   "heapPreGcMB": 5.3,
+   "domNodes": 833,
+   "renderers": [
+    {
+     "id": 0,
+     "by": "Object.mountStandalone < Id < Xb < S",
+     "dom": "body < .custom-cursor",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": false,
+     "toneMapping": 0,
+     "exposure": 1,
+     "createdAt": 1574,
+     "rendersTotal": 0,
+     "coldRenderMs": {
+      "total": 0,
+      "max": 0
+     },
+     "frames": 0,
+     "cpuMs": {
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+     },
+     "rendersPerFrame": 0,
+     "callsPerFrame": 0,
+     "callsMax": 0,
+     "trisPerFrame": 0,
+     "perRenderCalls": [],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 0,
+      "geometries": 0,
+      "textures": 2
+     },
+     "programsByType": {},
+     "drawn": {
+      "meshes": 0,
+      "points": 0,
+      "lines": 0,
+      "materials": 0,
+      "materialTypes": {},
+      "lights": {},
+      "textures": 0,
+      "texMB": 0,
+      "geoMB": 0,
+      "renderTargets": 2,
+      "rtMB": 0.31,
+      "topTex": []
+     },
+     "fbMB": 9.89
+    },
+    {
+     "id": 1,
+     "by": "window.makeWaferRig < Id < Xb < S",
+     "dom": ".hv-stage__mount < .hv-stage < #rootdiv",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": true,
+     "toneMapping": 4,
+     "exposure": 1.18,
+     "createdAt": 2020,
+     "rendersTotal": 126,
+     "coldRenderMs": {
+      "total": 1106,
+      "max": 529
+     },
+     "frames": 60,
+     "cpuMs": {
+      "mean": 0.428,
+      "median": 0.4,
+      "p95": 0.7,
+      "max": 0.8
+     },
+     "rendersPerFrame": 1,
+     "callsPerFrame": 7,
+     "callsMax": 7,
+     "trisPerFrame": 29831,
+     "perRenderCalls": [
+      7
+     ],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 1,
+      "geometries": 6,
+      "textures": 1
+     },
+     "programsByType": {
+      "physical": 1
+     },
+     "drawn": {
+      "meshes": 7,
+      "points": 0,
+      "lines": 0,
+      "materials": 1,
+      "materialTypes": {
+       "MeshStandardMaterial": 1
+      },
+      "lights": {
+       "AmbientLight": 1,
+       "list": [
+        "AmbientLight:<Scene:",
+        "DirectionalLight:<Scene:",
+        "PointLight:<Scene:",
+        "PointLight:<Scene:",
+        "DirectionalLight:<Scene:",
+        "DirectionalLight:Directional_Light<Object3D:Scene_1"
+       ],
+       "DirectionalLight": 3,
+       "PointLight": 2
+      },
+      "textures": 0,
+      "texMB": 0,
+      "geoMB": 0.38,
+      "renderTargets": 1,
+      "rtMB": 9,
+      "topTex": []
+     },
+     "fbMB": 49.44
+    }
+   ],
+   "contexts": {
+    "created": 2,
+    "live": 2,
+    "list": [
+     {
+      "type": "webgl2",
+      "at": 573,
+      "lost": false
+     },
+     {
+      "type": "webgl2",
+      "at": 1905,
+      "lost": false
+     }
+    ]
+   },
+   "longTasks": {
+    "load": {
+     "n": 2,
+     "totalMs": 3119,
+     "maxMs": 2814
+    },
+    "sampling": {
+     "n": 0,
+     "totalMs": 0,
+     "maxMs": 0
+    }
+   },
+   "events": {},
+   "frames": 73,
+   "pmrem": [
+    {
+     "ms": 930,
+     "sigma": 0.08,
+     "by": "window.makeWaferRig (http://127.0.0.1:8766/app/page-runti"
+    }
+   ],
+   "staleRaf": {
+    "n": 3,
+    "minMs": -1395
+   },
+   "dof": {
+    "bokeh": false,
+    "enabled": null,
+    "probeFps": null,
+    "dofOn": null
+   },
+   "scrollY": 0,
+   "settle": {
+    "settleMs": 4033,
+    "timedOut": false
+   }
+  },
+  {
+   "state": "route:Venovisor",
+   "url": "http://127.0.0.1:8766/Venovisor.html",
+   "sampleMs": 10492,
+   "network": {
+    "cumulative": {
+     "byKind": {
+      "other": {
+       "n": 14,
+       "bytes": 141306,
+       "wire": 95463,
+       "cached": 0,
+       "failed": 1,
+       "uniqN": 13,
+       "uniqWire": 95463
+      },
+      "js": {
+       "n": 12,
+       "bytes": 575143,
+       "wire": 428479,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 12,
+       "uniqWire": 428479
+      },
+      "ktx2": {
+       "n": 2,
+       "bytes": 12220,
+       "wire": 12220,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 2,
+       "uniqWire": 12220
+      }
+     },
+     "total": {
+      "n": 28,
+      "bytes": 728669,
+      "wire": 536162,
+      "uniqN": 27,
+      "uniqWire": 536162
+     },
+     "glbFiles": [],
+     "ktx2Files": [
+      "KTX2Loader.js",
+      "ktx-parse.module.js"
+     ]
+    },
+    "delta": {
+     "byKind": {
+      "other": {
+       "n": 14,
+       "bytes": 141306,
+       "wire": 95463,
+       "cached": 0,
+       "failed": 1,
+       "uniqN": 13,
+       "uniqWire": 95463
+      },
+      "js": {
+       "n": 12,
+       "bytes": 575143,
+       "wire": 428479,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 12,
+       "uniqWire": 428479
+      },
+      "ktx2": {
+       "n": 2,
+       "bytes": 12220,
+       "wire": 12220,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 2,
+       "uniqWire": 12220
+      }
+     },
+     "total": {
+      "n": 28,
+      "bytes": 728669,
+      "wire": 536162,
+      "uniqN": 27,
+      "uniqWire": 536162
+     },
+     "glbFiles": [],
+     "ktx2Files": [
+      "KTX2Loader.js",
+      "ktx-parse.module.js"
+     ]
+    }
+   },
+   "heapMB": 5.2,
+   "heapPreGcMB": 7.8,
+   "domNodes": 777,
+   "renderers": [
+    {
+     "id": 0,
+     "by": "Object.mountStandalone < Id < Xb < S",
+     "dom": "body < .custom-cursor",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": false,
+     "toneMapping": 0,
+     "exposure": 1,
+     "createdAt": 1625,
+     "rendersTotal": 0,
+     "coldRenderMs": {
+      "total": 0,
+      "max": 0
+     },
+     "frames": 0,
+     "cpuMs": {
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+     },
+     "rendersPerFrame": 0,
+     "callsPerFrame": 0,
+     "callsMax": 0,
+     "trisPerFrame": 0,
+     "perRenderCalls": [],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 0,
+      "geometries": 0,
+      "textures": 2
+     },
+     "programsByType": {},
+     "drawn": {
+      "meshes": 0,
+      "points": 0,
+      "lines": 0,
+      "materials": 0,
+      "materialTypes": {},
+      "lights": {},
+      "textures": 0,
+      "texMB": 0,
+      "geoMB": 0,
+      "renderTargets": 2,
+      "rtMB": 0.31,
+      "topTex": []
+     },
+     "fbMB": 9.89
+    },
+    {
+     "id": 1,
+     "by": "window.makeWaferRig < Id < Xb < S",
+     "dom": ".hv-stage__mount < .hv-stage < #rootdiv",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": true,
+     "toneMapping": 4,
+     "exposure": 1.18,
+     "createdAt": 2630,
+     "rendersTotal": 137,
+     "coldRenderMs": {
+      "total": 3138,
+      "max": 2117
+     },
+     "frames": 60,
+     "cpuMs": {
+      "mean": 0.588,
+      "median": 0.6,
+      "p95": 0.9,
+      "max": 1.1
+     },
+     "rendersPerFrame": 1,
+     "callsPerFrame": 7,
+     "callsMax": 7,
+     "trisPerFrame": 12,
+     "perRenderCalls": [
+      7
+     ],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 5,
+      "geometries": 6,
+      "textures": 2
+     },
+     "programsByType": {
+      "basic": 3,
+      "physical": 1,
+      "points": 1
+     },
+     "drawn": {
+      "meshes": 2,
+      "points": 1,
+      "lines": 3,
+      "materials": 6,
+      "materialTypes": {
+       "LineBasicMaterial": 3,
+       "MeshStandardMaterial": 1,
+       "PointsMaterial": 1,
+       "MeshBasicMaterial": 1
+      },
+      "lights": {
+       "AmbientLight": 1,
+       "list": [
+        "AmbientLight:<Scene:",
+        "DirectionalLight:<Scene:",
+        "PointLight:<Scene:",
+        "PointLight:<Scene:",
+        "DirectionalLight:<Scene:"
+       ],
+       "DirectionalLight": 2,
+       "PointLight": 2
+      },
+      "textures": 1,
+      "texMB": 0.13,
+      "geoMB": 0,
+      "renderTargets": 1,
+      "rtMB": 9,
+      "topTex": [
+       "canvas  256x96 0.13MB"
+      ]
+     },
+     "fbMB": 49.44
+    }
+   ],
+   "contexts": {
+    "created": 2,
+    "live": 2,
+    "list": [
+     {
+      "type": "webgl2",
+      "at": 627,
+      "lost": false
+     },
+     {
+      "type": "webgl2",
+      "at": 2174,
+      "lost": false
+     }
+    ]
+   },
+   "longTasks": {
+    "load": {
+     "n": 2,
+     "totalMs": 5790,
+     "maxMs": 3623
+    },
+    "sampling": {
+     "n": 0,
+     "totalMs": 0,
+     "maxMs": 0
+    }
+   },
+   "events": {},
+   "frames": 74,
+   "pmrem": [
+    {
+     "ms": 1164,
+     "sigma": 0.08,
+     "by": "window.makeWaferRig (http://127.0.0.1:8766/app/page-runti"
+    }
+   ],
+   "staleRaf": {
+    "n": 7,
+    "minMs": -2081
+   },
+   "dof": {
+    "bokeh": false,
+    "enabled": null,
+    "probeFps": null,
+    "dofOn": null
+   },
+   "scrollY": 0,
+   "settle": {
+    "settleMs": 4032,
+    "timedOut": false
+   }
+  },
+  {
+   "state": "route:Wafer Studio",
+   "url": "http://127.0.0.1:8766/Wafer%20Studio.html",
+   "sampleMs": 12916,
+   "network": {
+    "cumulative": {
+     "byKind": {
+      "other": {
+       "n": 13,
+       "bytes": 141067,
+       "wire": 95340,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 13,
+       "uniqWire": 95340
+      },
+      "js": {
+       "n": 12,
+       "bytes": 567360,
+       "wire": 425920,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 12,
+       "uniqWire": 425920
+      },
+      "ktx2": {
+       "n": 2,
+       "bytes": 12220,
+       "wire": 12220,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 2,
+       "uniqWire": 12220
+      },
+      "glb": {
+       "n": 1,
+       "bytes": 43988,
+       "wire": 22258,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 1,
+       "uniqWire": 22258
+      }
+     },
+     "total": {
+      "n": 28,
+      "bytes": 764635,
+      "wire": 555738,
+      "uniqN": 28,
+      "uniqWire": 555738
+     },
+     "glbFiles": [
+      "wafer-mark.glb"
+     ],
+     "ktx2Files": [
+      "KTX2Loader.js",
+      "ktx-parse.module.js"
+     ]
+    },
+    "delta": {
+     "byKind": {
+      "other": {
+       "n": 13,
+       "bytes": 141067,
+       "wire": 95340,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 13,
+       "uniqWire": 95340
+      },
+      "js": {
+       "n": 12,
+       "bytes": 567360,
+       "wire": 425920,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 12,
+       "uniqWire": 425920
+      },
+      "ktx2": {
+       "n": 2,
+       "bytes": 12220,
+       "wire": 12220,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 2,
+       "uniqWire": 12220
+      },
+      "glb": {
+       "n": 1,
+       "bytes": 43988,
+       "wire": 22258,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 1,
+       "uniqWire": 22258
+      }
+     },
+     "total": {
+      "n": 28,
+      "bytes": 764635,
+      "wire": 555738,
+      "uniqN": 28,
+      "uniqWire": 555738
+     },
+     "glbFiles": [
+      "wafer-mark.glb"
+     ],
+     "ktx2Files": [
+      "KTX2Loader.js",
+      "ktx-parse.module.js"
+     ]
+    }
+   },
+   "heapMB": 5,
+   "heapPreGcMB": 7.4,
+   "domNodes": 638,
+   "renderers": [
+    {
+     "id": 0,
+     "by": "getKTX2Loader < Promise",
+     "dom": "",
+     "attached": false,
+     "lost": true,
+     "canvas": [
+      300,
+      150
+     ],
+     "dpr": 1,
+     "aa": null,
+     "toneMapping": 0,
+     "exposure": 1,
+     "createdAt": 251,
+     "rendersTotal": 0,
+     "coldRenderMs": {
+      "total": 0,
+      "max": 0
+     },
+     "frames": 0,
+     "cpuMs": {
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+     },
+     "rendersPerFrame": 0,
+     "callsPerFrame": 0,
+     "callsMax": 0,
+     "trisPerFrame": 0,
+     "perRenderCalls": [],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 0,
+      "geometries": 0,
+      "textures": 0
+     },
+     "programsByType": {},
+     "drawn": {
+      "meshes": 0,
+      "points": 0,
+      "lines": 0,
+      "materials": 0,
+      "materialTypes": {},
+      "lights": {},
+      "textures": 0,
+      "texMB": 0,
+      "geoMB": 0,
+      "renderTargets": 0,
+      "rtMB": 0,
+      "topTex": []
+     },
+     "fbMB": 0.34
+    },
+    {
+     "id": 1,
+     "by": "Object.mountStandalone < Id < Xb < S",
+     "dom": "body < .custom-cursor",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": false,
+     "toneMapping": 0,
+     "exposure": 1,
+     "createdAt": 1457,
+     "rendersTotal": 0,
+     "coldRenderMs": {
+      "total": 0,
+      "max": 0
+     },
+     "frames": 0,
+     "cpuMs": {
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+     },
+     "rendersPerFrame": 0,
+     "callsPerFrame": 0,
+     "callsMax": 0,
+     "trisPerFrame": 0,
+     "perRenderCalls": [],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 0,
+      "geometries": 0,
+      "textures": 2
+     },
+     "programsByType": {},
+     "drawn": {
+      "meshes": 0,
+      "points": 0,
+      "lines": 0,
+      "materials": 0,
+      "materialTypes": {},
+      "lights": {},
+      "textures": 0,
+      "texMB": 0,
+      "geoMB": 0,
+      "renderTargets": 2,
+      "rtMB": 0.31,
+      "topTex": []
+     },
+     "fbMB": 9.89
+    },
+    {
+     "id": 2,
+     "by": "window.makeWaferRig < Id < Xb < S",
+     "dom": ".hv-stage__mount < .hv-stage < #rootdiv",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": true,
+     "toneMapping": 4,
+     "exposure": 1.18,
+     "createdAt": 1631,
+     "rendersTotal": 126,
+     "coldRenderMs": {
+      "total": 109,
+      "max": 61
+     },
+     "frames": 60,
+     "cpuMs": {
+      "mean": 0.28,
+      "median": 0.3,
+      "p95": 0.4,
+      "max": 0.4
+     },
+     "rendersPerFrame": 1,
+     "callsPerFrame": 1,
+     "callsMax": 1,
+     "trisPerFrame": 5536,
+     "perRenderCalls": [
+      1
+     ],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 1,
+      "geometries": 1,
+      "textures": 1
+     },
+     "programsByType": {
+      "physical": 1
+     },
+     "drawn": {
+      "meshes": 1,
+      "points": 0,
+      "lines": 0,
+      "materials": 1,
+      "materialTypes": {
+       "MeshPhysicalMaterial": 1
+      },
+      "lights": {
+       "AmbientLight": 1,
+       "list": [
+        "AmbientLight:<Scene:",
+        "DirectionalLight:<Scene:",
+        "PointLight:<Scene:",
+        "PointLight:<Scene:",
+        "DirectionalLight:<Scene:"
+       ],
+       "DirectionalLight": 2,
+       "PointLight": 2
+      },
+      "textures": 0,
+      "texMB": 0,
+      "geoMB": 0.13,
+      "renderTargets": 1,
+      "rtMB": 9,
+      "topTex": []
+     },
+     "fbMB": 49.44
+    }
+   ],
+   "contexts": {
+    "created": 3,
+    "live": 2,
+    "list": [
+     {
+      "type": "webgl2",
+      "at": 236,
+      "lost": true
+     },
+     {
+      "type": "webgl2",
+      "at": 715,
+      "lost": false
+     },
+     {
+      "type": "webgl2",
+      "at": 1623,
+      "lost": false
+     }
+    ]
+   },
+   "longTasks": {
+    "load": {
+     "n": 2,
+     "totalMs": 1441,
+     "maxMs": 1369
+    },
+    "sampling": {
+     "n": 0,
+     "totalMs": 0,
+     "maxMs": 0
+    }
+   },
+   "events": {},
+   "frames": 73,
+   "pmrem": [
+    {
+     "ms": 87,
+     "sigma": 0.08,
+     "by": "window.makeWaferRig (http://127.0.0.1:8766/app/page-runti"
+    }
+   ],
+   "staleRaf": {
+    "n": 6,
+    "minMs": -1371
+   },
+   "dof": {
+    "bokeh": false,
+    "enabled": null,
+    "probeFps": null,
+    "dofOn": null
+   },
+   "scrollY": 0,
+   "settle": {
+    "settleMs": 5605,
+    "timedOut": false
+   }
+  },
+  {
+   "state": "route:Split HID Display",
+   "url": "http://127.0.0.1:8766/Split%20HID%20Display.html",
+   "sampleMs": 17368,
+   "network": {
+    "cumulative": {
+     "byKind": {
+      "other": {
+       "n": 13,
+       "bytes": 140069,
+       "wire": 94943,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 13,
+       "uniqWire": 94943
+      },
+      "js": {
+       "n": 10,
+       "bytes": 548834,
+       "wire": 407349,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 10,
+       "uniqWire": 407349
+      },
+      "glb": {
+       "n": 1,
+       "bytes": 87652,
+       "wire": 32553,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 1,
+       "uniqWire": 32553
+      }
+     },
+     "total": {
+      "n": 24,
+      "bytes": 776555,
+      "wire": 534845,
+      "uniqN": 24,
+      "uniqWire": 534845
+     },
+     "glbFiles": [
+      "keyboard-display.opt.glb"
+     ],
+     "ktx2Files": []
+    },
+    "delta": {
+     "byKind": {
+      "other": {
+       "n": 13,
+       "bytes": 140069,
+       "wire": 94943,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 13,
+       "uniqWire": 94943
+      },
+      "js": {
+       "n": 10,
+       "bytes": 548834,
+       "wire": 407349,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 10,
+       "uniqWire": 407349
+      },
+      "glb": {
+       "n": 1,
+       "bytes": 87652,
+       "wire": 32553,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 1,
+       "uniqWire": 32553
+      }
+     },
+     "total": {
+      "n": 24,
+      "bytes": 776555,
+      "wire": 534845,
+      "uniqN": 24,
+      "uniqWire": 534845
+     },
+     "glbFiles": [
+      "keyboard-display.opt.glb"
+     ],
+     "ktx2Files": []
+    }
+   },
+   "heapMB": 4.8,
+   "heapPreGcMB": 5.4,
+   "domNodes": 612,
+   "renderers": [
+    {
+     "id": 0,
+     "by": "Object.mountStandalone < Id < Xb < S",
+     "dom": "body < .custom-cursor",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": false,
+     "toneMapping": 0,
+     "exposure": 1,
+     "createdAt": 1499,
+     "rendersTotal": 0,
+     "coldRenderMs": {
+      "total": 0,
+      "max": 0
+     },
+     "frames": 0,
+     "cpuMs": {
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+     },
+     "rendersPerFrame": 0,
+     "callsPerFrame": 0,
+     "callsMax": 0,
+     "trisPerFrame": 0,
+     "perRenderCalls": [],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 0,
+      "geometries": 0,
+      "textures": 2
+     },
+     "programsByType": {},
+     "drawn": {
+      "meshes": 0,
+      "points": 0,
+      "lines": 0,
+      "materials": 0,
+      "materialTypes": {},
+      "lights": {},
+      "textures": 0,
+      "texMB": 0,
+      "geoMB": 0,
+      "renderTargets": 2,
+      "rtMB": 0.31,
+      "topTex": []
+     },
+     "fbMB": 9.89
+    },
+    {
+     "id": 1,
+     "by": "window.makeWaferRig < Id < Xb < S",
+     "dom": ".hv-stage__mount < .hv-stage < #rootdiv",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": true,
+     "toneMapping": 4,
+     "exposure": 1.18,
+     "createdAt": 1539,
+     "rendersTotal": 124,
+     "coldRenderMs": {
+      "total": 259,
+      "max": 163
+     },
+     "frames": 60,
+     "cpuMs": {
+      "mean": 0.363,
+      "median": 0.4,
+      "p95": 0.5,
+      "max": 0.7
+     },
+     "rendersPerFrame": 1,
+     "callsPerFrame": 3,
+     "callsMax": 3,
+     "trisPerFrame": 19092,
+     "perRenderCalls": [
+      3
+     ],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 1,
+      "geometries": 2,
+      "textures": 1
+     },
+     "programsByType": {
+      "physical": 1
+     },
+     "drawn": {
+      "meshes": 3,
+      "points": 0,
+      "lines": 0,
+      "materials": 2,
+      "materialTypes": {
+       "MeshPhysicalMaterial": 2
+      },
+      "lights": {
+       "AmbientLight": 1,
+       "list": [
+        "AmbientLight:<Scene:",
+        "DirectionalLight:<Scene:",
+        "PointLight:<Scene:",
+        "PointLight:<Scene:",
+        "DirectionalLight:<Scene:"
+       ],
+       "DirectionalLight": 2,
+       "PointLight": 2
+      },
+      "textures": 0,
+      "texMB": 0,
+      "geoMB": 0.26,
+      "renderTargets": 1,
+      "rtMB": 9,
+      "topTex": []
+     },
+     "fbMB": 49.44
+    }
+   ],
+   "contexts": {
+    "created": 2,
+    "live": 2,
+    "list": [
+     {
+      "type": "webgl2",
+      "at": 676,
+      "lost": false
+     },
+     {
+      "type": "webgl2",
+      "at": 1529,
+      "lost": false
+     }
+    ]
+   },
+   "longTasks": {
+    "load": {
+     "n": 3,
+     "totalMs": 1597,
+     "maxMs": 1345
+    },
+    "sampling": {
+     "n": 0,
+     "totalMs": 0,
+     "maxMs": 0
+    }
+   },
+   "events": {},
+   "frames": 73,
+   "pmrem": [
+    {
+     "ms": 96,
+     "sigma": 0.08,
+     "by": "window.makeWaferRig (http://127.0.0.1:8766/app/page-runti"
+    }
+   ],
+   "staleRaf": {
+    "n": 9,
+    "minMs": -1353
+   },
+   "dof": {
+    "bokeh": false,
+    "enabled": null,
+    "probeFps": null,
+    "dofOn": null
+   },
+   "scrollY": 0,
+   "settle": {
+    "settleMs": 6136,
+    "timedOut": false
+   }
+  },
+  {
+   "state": "route:ZMK-PointAccel",
+   "url": "http://127.0.0.1:8766/ZMK-PointAccel.html",
+   "sampleMs": 17357,
+   "network": {
+    "cumulative": {
+     "byKind": {
+      "other": {
+       "n": 15,
+       "bytes": 160627,
+       "wire": 100567,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 15,
+       "uniqWire": 100567
+      },
+      "js": {
+       "n": 11,
+       "bytes": 601952,
+       "wire": 423333,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 11,
+       "uniqWire": 423333
+      },
+      "glb": {
+       "n": 1,
+       "bytes": 92652,
+       "wire": 56291,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 1,
+       "uniqWire": 56291
+      }
+     },
+     "total": {
+      "n": 27,
+      "bytes": 855231,
+      "wire": 580191,
+      "uniqN": 27,
+      "uniqWire": 580191
+     },
+     "glbFiles": [
+      "zmk-mark.glb"
+     ],
+     "ktx2Files": []
+    },
+    "delta": {
+     "byKind": {
+      "other": {
+       "n": 15,
+       "bytes": 160627,
+       "wire": 100567,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 15,
+       "uniqWire": 100567
+      },
+      "js": {
+       "n": 11,
+       "bytes": 601952,
+       "wire": 423333,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 11,
+       "uniqWire": 423333
+      },
+      "glb": {
+       "n": 1,
+       "bytes": 92652,
+       "wire": 56291,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 1,
+       "uniqWire": 56291
+      }
+     },
+     "total": {
+      "n": 27,
+      "bytes": 855231,
+      "wire": 580191,
+      "uniqN": 27,
+      "uniqWire": 580191
+     },
+     "glbFiles": [
+      "zmk-mark.glb"
+     ],
+     "ktx2Files": []
+    }
+   },
+   "heapMB": 5.5,
+   "heapPreGcMB": 5.7,
+   "domNodes": 640,
+   "renderers": [
+    {
+     "id": 0,
+     "by": "Object.mountStandalone < Id < Xb < S",
+     "dom": "body < .custom-cursor",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": false,
+     "toneMapping": 0,
+     "exposure": 1,
+     "createdAt": 1316,
+     "rendersTotal": 0,
+     "coldRenderMs": {
+      "total": 0,
+      "max": 0
+     },
+     "frames": 0,
+     "cpuMs": {
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+     },
+     "rendersPerFrame": 0,
+     "callsPerFrame": 0,
+     "callsMax": 0,
+     "trisPerFrame": 0,
+     "perRenderCalls": [],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 0,
+      "geometries": 0,
+      "textures": 2
+     },
+     "programsByType": {},
+     "drawn": {
+      "meshes": 0,
+      "points": 0,
+      "lines": 0,
+      "materials": 0,
+      "materialTypes": {},
+      "lights": {},
+      "textures": 0,
+      "texMB": 0,
+      "geoMB": 0,
+      "renderTargets": 2,
+      "rtMB": 0.31,
+      "topTex": []
+     },
+     "fbMB": 9.89
+    },
+    {
+     "id": 1,
+     "by": "window.makeWaferRig < Id < Xb < S",
+     "dom": ".hv-stage__mount < .hv-stage < #rootdiv",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": true,
+     "toneMapping": 4,
+     "exposure": 1.18,
+     "createdAt": 1598,
+     "rendersTotal": 126,
+     "coldRenderMs": {
+      "total": 410,
+      "max": 320
+     },
+     "frames": 60,
+     "cpuMs": {
+      "mean": 0.76,
+      "median": 0.8,
+      "p95": 1.1,
+      "max": 1.1
+     },
+     "rendersPerFrame": 1,
+     "callsPerFrame": 49,
+     "callsMax": 49,
+     "trisPerFrame": 10556,
+     "perRenderCalls": [
+      49
+     ],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 2,
+      "geometries": 12,
+      "textures": 2
+     },
+     "programsByType": {
+      "physical": 2
+     },
+     "drawn": {
+      "meshes": 49,
+      "points": 0,
+      "lines": 0,
+      "materials": 2,
+      "materialTypes": {
+       "MeshPhysicalMaterial": 2
+      },
+      "lights": {
+       "AmbientLight": 1,
+       "list": [
+        "AmbientLight:<Scene:",
+        "DirectionalLight:<Scene:",
+        "PointLight:<Scene:",
+        "PointLight:<Scene:",
+        "DirectionalLight:<Scene:"
+       ],
+       "DirectionalLight": 2,
+       "PointLight": 2
+      },
+      "textures": 1,
+      "texMB": 0.33,
+      "geoMB": 0.01,
+      "renderTargets": 1,
+      "rtMB": 9,
+      "topTex": [
+       " 256x256 0.33MB"
+      ]
+     },
+     "fbMB": 49.44
+    }
+   ],
+   "contexts": {
+    "created": 2,
+    "live": 2,
+    "list": [
+     {
+      "type": "webgl2",
+      "at": 665,
+      "lost": false
+     },
+     {
+      "type": "webgl2",
+      "at": 1589,
+      "lost": false
+     }
+    ]
+   },
+   "longTasks": {
+    "load": {
+     "n": 2,
+     "totalMs": 1705,
+     "maxMs": 1384
+    },
+    "sampling": {
+     "n": 0,
+     "totalMs": 0,
+     "maxMs": 0
+    }
+   },
+   "events": {},
+   "frames": 74,
+   "pmrem": [
+    {
+     "ms": 83,
+     "sigma": 0.08,
+     "by": "window.makeWaferRig (http://127.0.0.1:8766/app/page-runti"
+    }
+   ],
+   "staleRaf": {
+    "n": 9,
+    "minMs": -1376
+   },
+   "dof": {
+    "bokeh": false,
+    "enabled": null,
+    "probeFps": null,
+    "dofOn": null
+   },
+   "scrollY": 0,
+   "settle": {
+    "settleMs": 6047,
+    "timedOut": false
+   }
+  },
+  {
+   "state": "route:ZMK Soft Off Plus",
+   "url": "http://127.0.0.1:8766/ZMK%20Soft%20Off%20Plus.html",
+   "sampleMs": 14941,
+   "network": {
+    "cumulative": {
+     "byKind": {
+      "other": {
+       "n": 13,
+       "bytes": 140999,
+       "wire": 95321,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 13,
+       "uniqWire": 95321
+      },
+      "js": {
+       "n": 12,
+       "bytes": 567381,
+       "wire": 425950,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 12,
+       "uniqWire": 425950
+      },
+      "ktx2": {
+       "n": 2,
+       "bytes": 12220,
+       "wire": 12220,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 2,
+       "uniqWire": 12220
+      },
+      "glb": {
+       "n": 1,
+       "bytes": 27400,
+       "wire": 12377,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 1,
+       "uniqWire": 12377
+      }
+     },
+     "total": {
+      "n": 28,
+      "bytes": 748000,
+      "wire": 545868,
+      "uniqN": 28,
+      "uniqWire": 545868
+     },
+     "glbFiles": [
+      "soft-off-keycap.opt.glb"
+     ],
+     "ktx2Files": [
+      "KTX2Loader.js",
+      "ktx-parse.module.js"
+     ]
+    },
+    "delta": {
+     "byKind": {
+      "other": {
+       "n": 13,
+       "bytes": 140999,
+       "wire": 95321,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 13,
+       "uniqWire": 95321
+      },
+      "js": {
+       "n": 12,
+       "bytes": 567381,
+       "wire": 425950,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 12,
+       "uniqWire": 425950
+      },
+      "ktx2": {
+       "n": 2,
+       "bytes": 12220,
+       "wire": 12220,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 2,
+       "uniqWire": 12220
+      },
+      "glb": {
+       "n": 1,
+       "bytes": 27400,
+       "wire": 12377,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 1,
+       "uniqWire": 12377
+      }
+     },
+     "total": {
+      "n": 28,
+      "bytes": 748000,
+      "wire": 545868,
+      "uniqN": 28,
+      "uniqWire": 545868
+     },
+     "glbFiles": [
+      "soft-off-keycap.opt.glb"
+     ],
+     "ktx2Files": [
+      "KTX2Loader.js",
+      "ktx-parse.module.js"
+     ]
+    }
+   },
+   "heapMB": 4.9,
+   "heapPreGcMB": 8,
+   "domNodes": 571,
+   "renderers": [
+    {
+     "id": 0,
+     "by": "getKTX2Loader < Promise",
+     "dom": "",
+     "attached": false,
+     "lost": true,
+     "canvas": [
+      300,
+      150
+     ],
+     "dpr": 1,
+     "aa": null,
+     "toneMapping": 0,
+     "exposure": 1,
+     "createdAt": 249,
+     "rendersTotal": 0,
+     "coldRenderMs": {
+      "total": 0,
+      "max": 0
+     },
+     "frames": 0,
+     "cpuMs": {
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+     },
+     "rendersPerFrame": 0,
+     "callsPerFrame": 0,
+     "callsMax": 0,
+     "trisPerFrame": 0,
+     "perRenderCalls": [],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 0,
+      "geometries": 0,
+      "textures": 0
+     },
+     "programsByType": {},
+     "drawn": {
+      "meshes": 0,
+      "points": 0,
+      "lines": 0,
+      "materials": 0,
+      "materialTypes": {},
+      "lights": {},
+      "textures": 0,
+      "texMB": 0,
+      "geoMB": 0,
+      "renderTargets": 0,
+      "rtMB": 0,
+      "topTex": []
+     },
+     "fbMB": 0.34
+    },
+    {
+     "id": 1,
+     "by": "Object.mountStandalone < Id < Xb < S",
+     "dom": "body < .custom-cursor",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": false,
+     "toneMapping": 0,
+     "exposure": 1,
+     "createdAt": 1363,
+     "rendersTotal": 0,
+     "coldRenderMs": {
+      "total": 0,
+      "max": 0
+     },
+     "frames": 0,
+     "cpuMs": {
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+     },
+     "rendersPerFrame": 0,
+     "callsPerFrame": 0,
+     "callsMax": 0,
+     "trisPerFrame": 0,
+     "perRenderCalls": [],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 0,
+      "geometries": 0,
+      "textures": 2
+     },
+     "programsByType": {},
+     "drawn": {
+      "meshes": 0,
+      "points": 0,
+      "lines": 0,
+      "materials": 0,
+      "materialTypes": {},
+      "lights": {},
+      "textures": 0,
+      "texMB": 0,
+      "geoMB": 0,
+      "renderTargets": 2,
+      "rtMB": 0.31,
+      "topTex": []
+     },
+     "fbMB": 9.89
+    },
+    {
+     "id": 2,
+     "by": "window.makeWaferRig < Id < Xb < S",
+     "dom": ".hv-stage__mount < .hv-stage < #rootdiv",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": true,
+     "toneMapping": 4,
+     "exposure": 1.18,
+     "createdAt": 1645,
+     "rendersTotal": 125,
+     "coldRenderMs": {
+      "total": 102,
+      "max": 54
+     },
+     "frames": 60,
+     "cpuMs": {
+      "mean": 0.367,
+      "median": 0.4,
+      "p95": 0.6,
+      "max": 0.6
+     },
+     "rendersPerFrame": 1,
+     "callsPerFrame": 4,
+     "callsMax": 4,
+     "trisPerFrame": 3744,
+     "perRenderCalls": [
+      4
+     ],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 1,
+      "geometries": 3,
+      "textures": 1
+     },
+     "programsByType": {
+      "physical": 1
+     },
+     "drawn": {
+      "meshes": 4,
+      "points": 0,
+      "lines": 0,
+      "materials": 2,
+      "materialTypes": {
+       "MeshPhysicalMaterial": 2
+      },
+      "lights": {
+       "AmbientLight": 1,
+       "list": [
+        "AmbientLight:<Scene:",
+        "DirectionalLight:<Scene:",
+        "PointLight:<Scene:",
+        "PointLight:<Scene:",
+        "DirectionalLight:<Scene:"
+       ],
+       "DirectionalLight": 2,
+       "PointLight": 2
+      },
+      "textures": 0,
+      "texMB": 0,
+      "geoMB": 0.07,
+      "renderTargets": 1,
+      "rtMB": 9,
+      "topTex": []
+     },
+     "fbMB": 49.44
+    }
+   ],
+   "contexts": {
+    "created": 3,
+    "live": 2,
+    "list": [
+     {
+      "type": "webgl2",
+      "at": 238,
+      "lost": true
+     },
+     {
+      "type": "webgl2",
+      "at": 710,
+      "lost": false
+     },
+     {
+      "type": "webgl2",
+      "at": 1639,
+      "lost": false
+     }
+    ]
+   },
+   "longTasks": {
+    "load": {
+     "n": 1,
+     "totalMs": 1384,
+     "maxMs": 1384
+    },
+    "sampling": {
+     "n": 0,
+     "totalMs": 0,
+     "maxMs": 0
+    }
+   },
+   "events": {},
+   "frames": 74,
+   "pmrem": [
+    {
+     "ms": 80,
+     "sigma": 0.08,
+     "by": "window.makeWaferRig (http://127.0.0.1:8766/app/page-runti"
+    }
+   ],
+   "staleRaf": {
+    "n": 8,
+    "minMs": -1387
+   },
+   "dof": {
+    "bokeh": false,
+    "enabled": null,
+    "probeFps": null,
+    "dofOn": null
+   },
+   "scrollY": 0,
+   "settle": {
+    "settleMs": 5660,
+    "timedOut": false
+   }
+  },
+  {
+   "state": "route:Sightseeing",
+   "url": "http://127.0.0.1:8766/Sightseeing.html",
+   "sampleMs": 15741,
+   "network": {
+    "cumulative": {
+     "byKind": {
+      "other": {
+       "n": 13,
+       "bytes": 140966,
+       "wire": 95293,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 13,
+       "uniqWire": 95293
+      },
+      "js": {
+       "n": 12,
+       "bytes": 567356,
+       "wire": 425911,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 12,
+       "uniqWire": 425911
+      },
+      "ktx2": {
+       "n": 2,
+       "bytes": 12220,
+       "wire": 12220,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 2,
+       "uniqWire": 12220
+      },
+      "glb": {
+       "n": 1,
+       "bytes": 22052,
+       "wire": 8874,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 1,
+       "uniqWire": 8874
+      }
+     },
+     "total": {
+      "n": 28,
+      "bytes": 742594,
+      "wire": 542298,
+      "uniqN": 28,
+      "uniqWire": 542298
+     },
+     "glbFiles": [
+      "sightseeing-mark.glb"
+     ],
+     "ktx2Files": [
+      "KTX2Loader.js",
+      "ktx-parse.module.js"
+     ]
+    },
+    "delta": {
+     "byKind": {
+      "other": {
+       "n": 13,
+       "bytes": 140966,
+       "wire": 95293,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 13,
+       "uniqWire": 95293
+      },
+      "js": {
+       "n": 12,
+       "bytes": 567356,
+       "wire": 425911,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 12,
+       "uniqWire": 425911
+      },
+      "ktx2": {
+       "n": 2,
+       "bytes": 12220,
+       "wire": 12220,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 2,
+       "uniqWire": 12220
+      },
+      "glb": {
+       "n": 1,
+       "bytes": 22052,
+       "wire": 8874,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 1,
+       "uniqWire": 8874
+      }
+     },
+     "total": {
+      "n": 28,
+      "bytes": 742594,
+      "wire": 542298,
+      "uniqN": 28,
+      "uniqWire": 542298
+     },
+     "glbFiles": [
+      "sightseeing-mark.glb"
+     ],
+     "ktx2Files": [
+      "KTX2Loader.js",
+      "ktx-parse.module.js"
+     ]
+    }
+   },
+   "heapMB": 5.2,
+   "heapPreGcMB": 5.5,
+   "domNodes": 571,
+   "renderers": [
+    {
+     "id": 0,
+     "by": "getKTX2Loader < Promise",
+     "dom": "",
+     "attached": false,
+     "lost": true,
+     "canvas": [
+      300,
+      150
+     ],
+     "dpr": 1,
+     "aa": null,
+     "toneMapping": 0,
+     "exposure": 1,
+     "createdAt": 279,
+     "rendersTotal": 0,
+     "coldRenderMs": {
+      "total": 0,
+      "max": 0
+     },
+     "frames": 0,
+     "cpuMs": {
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+     },
+     "rendersPerFrame": 0,
+     "callsPerFrame": 0,
+     "callsMax": 0,
+     "trisPerFrame": 0,
+     "perRenderCalls": [],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 0,
+      "geometries": 0,
+      "textures": 0
+     },
+     "programsByType": {},
+     "drawn": {
+      "meshes": 0,
+      "points": 0,
+      "lines": 0,
+      "materials": 0,
+      "materialTypes": {},
+      "lights": {},
+      "textures": 0,
+      "texMB": 0,
+      "geoMB": 0,
+      "renderTargets": 0,
+      "rtMB": 0,
+      "topTex": []
+     },
+     "fbMB": 0.34
+    },
+    {
+     "id": 1,
+     "by": "Object.mountStandalone < Id < Xb < S",
+     "dom": "body < .custom-cursor",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": false,
+     "toneMapping": 0,
+     "exposure": 1,
+     "createdAt": 1415,
+     "rendersTotal": 0,
+     "coldRenderMs": {
+      "total": 0,
+      "max": 0
+     },
+     "frames": 0,
+     "cpuMs": {
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+     },
+     "rendersPerFrame": 0,
+     "callsPerFrame": 0,
+     "callsMax": 0,
+     "trisPerFrame": 0,
+     "perRenderCalls": [],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 0,
+      "geometries": 0,
+      "textures": 2
+     },
+     "programsByType": {},
+     "drawn": {
+      "meshes": 0,
+      "points": 0,
+      "lines": 0,
+      "materials": 0,
+      "materialTypes": {},
+      "lights": {},
+      "textures": 0,
+      "texMB": 0,
+      "geoMB": 0,
+      "renderTargets": 2,
+      "rtMB": 0.31,
+      "topTex": []
+     },
+     "fbMB": 9.89
+    },
+    {
+     "id": 2,
+     "by": "window.makeWaferRig < Id < Xb < S",
+     "dom": ".hv-stage__mount < .hv-stage < #rootdiv",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": true,
+     "toneMapping": 4,
+     "exposure": 1.18,
+     "createdAt": 1695,
+     "rendersTotal": 123,
+     "coldRenderMs": {
+      "total": 111,
+      "max": 54
+     },
+     "frames": 60,
+     "cpuMs": {
+      "mean": 0.503,
+      "median": 0.5,
+      "p95": 0.8,
+      "max": 1.3
+     },
+     "rendersPerFrame": 1,
+     "callsPerFrame": 13,
+     "callsMax": 13,
+     "trisPerFrame": 2876,
+     "perRenderCalls": [
+      13
+     ],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 1,
+      "geometries": 7,
+      "textures": 1
+     },
+     "programsByType": {
+      "physical": 1
+     },
+     "drawn": {
+      "meshes": 13,
+      "points": 0,
+      "lines": 0,
+      "materials": 3,
+      "materialTypes": {
+       "MeshPhysicalMaterial": 3
+      },
+      "lights": {
+       "AmbientLight": 1,
+       "list": [
+        "AmbientLight:<Scene:",
+        "DirectionalLight:<Scene:",
+        "PointLight:<Scene:",
+        "PointLight:<Scene:",
+        "DirectionalLight:<Scene:"
+       ],
+       "DirectionalLight": 2,
+       "PointLight": 2
+      },
+      "textures": 0,
+      "texMB": 0,
+      "geoMB": 0.04,
+      "renderTargets": 1,
+      "rtMB": 9,
+      "topTex": []
+     },
+     "fbMB": 49.44
+    }
+   ],
+   "contexts": {
+    "created": 3,
+    "live": 2,
+    "list": [
+     {
+      "type": "webgl2",
+      "at": 266,
+      "lost": true
+     },
+     {
+      "type": "webgl2",
+      "at": 742,
+      "lost": false
+     },
+     {
+      "type": "webgl2",
+      "at": 1689,
+      "lost": false
+     }
+    ]
+   },
+   "longTasks": {
+    "load": {
+     "n": 2,
+     "totalMs": 1455,
+     "maxMs": 1396
+    },
+    "sampling": {
+     "n": 0,
+     "totalMs": 0,
+     "maxMs": 0
+    }
+   },
+   "events": {},
+   "frames": 73,
+   "pmrem": [
+    {
+     "ms": 78,
+     "sigma": 0.08,
+     "by": "window.makeWaferRig (http://127.0.0.1:8766/app/page-runti"
+    }
+   ],
+   "staleRaf": {
+    "n": 8,
+    "minMs": -1399
+   },
+   "dof": {
+    "bokeh": false,
+    "enabled": null,
+    "probeFps": null,
+    "dofOn": null
+   },
+   "scrollY": 0,
+   "settle": {
+    "settleMs": 5650,
+    "timedOut": false
+   }
+  },
+  {
+   "state": "route:Silent Depth",
+   "url": "http://127.0.0.1:8766/Silent%20Depth.html",
+   "sampleMs": 13724,
+   "network": {
+    "cumulative": {
+     "byKind": {
+      "other": {
+       "n": 13,
+       "bytes": 140562,
+       "wire": 95145,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 13,
+       "uniqWire": 95145
+      },
+      "js": {
+       "n": 12,
+       "bytes": 567369,
+       "wire": 425925,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 12,
+       "uniqWire": 425925
+      },
+      "ktx2": {
+       "n": 2,
+       "bytes": 12220,
+       "wire": 12220,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 2,
+       "uniqWire": 12220
+      },
+      "glb": {
+       "n": 1,
+       "bytes": 151673,
+       "wire": 82645,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 1,
+       "uniqWire": 82645
+      }
+     },
+     "total": {
+      "n": 28,
+      "bytes": 871824,
+      "wire": 615935,
+      "uniqN": 28,
+      "uniqWire": 615935
+     },
+     "glbFiles": [
+      "silent-depth-mark.glb"
+     ],
+     "ktx2Files": [
+      "KTX2Loader.js",
+      "ktx-parse.module.js"
+     ]
+    },
+    "delta": {
+     "byKind": {
+      "other": {
+       "n": 13,
+       "bytes": 140562,
+       "wire": 95145,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 13,
+       "uniqWire": 95145
+      },
+      "js": {
+       "n": 12,
+       "bytes": 567369,
+       "wire": 425925,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 12,
+       "uniqWire": 425925
+      },
+      "ktx2": {
+       "n": 2,
+       "bytes": 12220,
+       "wire": 12220,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 2,
+       "uniqWire": 12220
+      },
+      "glb": {
+       "n": 1,
+       "bytes": 151673,
+       "wire": 82645,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 1,
+       "uniqWire": 82645
+      }
+     },
+     "total": {
+      "n": 28,
+      "bytes": 871824,
+      "wire": 615935,
+      "uniqN": 28,
+      "uniqWire": 615935
+     },
+     "glbFiles": [
+      "silent-depth-mark.glb"
+     ],
+     "ktx2Files": [
+      "KTX2Loader.js",
+      "ktx-parse.module.js"
+     ]
+    }
+   },
+   "heapMB": 4.9,
+   "heapPreGcMB": 6,
+   "domNodes": 568,
+   "renderers": [
+    {
+     "id": 0,
+     "by": "getKTX2Loader < Promise",
+     "dom": "",
+     "attached": false,
+     "lost": true,
+     "canvas": [
+      300,
+      150
+     ],
+     "dpr": 1,
+     "aa": null,
+     "toneMapping": 0,
+     "exposure": 1,
+     "createdAt": 211,
+     "rendersTotal": 0,
+     "coldRenderMs": {
+      "total": 0,
+      "max": 0
+     },
+     "frames": 0,
+     "cpuMs": {
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+     },
+     "rendersPerFrame": 0,
+     "callsPerFrame": 0,
+     "callsMax": 0,
+     "trisPerFrame": 0,
+     "perRenderCalls": [],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 0,
+      "geometries": 0,
+      "textures": 0
+     },
+     "programsByType": {},
+     "drawn": {
+      "meshes": 0,
+      "points": 0,
+      "lines": 0,
+      "materials": 0,
+      "materialTypes": {},
+      "lights": {},
+      "textures": 0,
+      "texMB": 0,
+      "geoMB": 0,
+      "renderTargets": 0,
+      "rtMB": 0,
+      "topTex": []
+     },
+     "fbMB": 0.34
+    },
+    {
+     "id": 1,
+     "by": "Object.mountStandalone < Id < Xb < S",
+     "dom": "body < .custom-cursor",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": false,
+     "toneMapping": 0,
+     "exposure": 1,
+     "createdAt": 1340,
+     "rendersTotal": 0,
+     "coldRenderMs": {
+      "total": 0,
+      "max": 0
+     },
+     "frames": 0,
+     "cpuMs": {
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+     },
+     "rendersPerFrame": 0,
+     "callsPerFrame": 0,
+     "callsMax": 0,
+     "trisPerFrame": 0,
+     "perRenderCalls": [],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 0,
+      "geometries": 0,
+      "textures": 2
+     },
+     "programsByType": {},
+     "drawn": {
+      "meshes": 0,
+      "points": 0,
+      "lines": 0,
+      "materials": 0,
+      "materialTypes": {},
+      "lights": {},
+      "textures": 0,
+      "texMB": 0,
+      "geoMB": 0,
+      "renderTargets": 2,
+      "rtMB": 0.31,
+      "topTex": []
+     },
+     "fbMB": 9.89
+    },
+    {
+     "id": 2,
+     "by": "window.makeWaferRig < Id < Xb < S",
+     "dom": ".hv-stage__mount < .hv-stage < #rootdiv",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": true,
+     "toneMapping": 4,
+     "exposure": 1.18,
+     "createdAt": 1625,
+     "rendersTotal": 124,
+     "coldRenderMs": {
+      "total": 106,
+      "max": 57
+     },
+     "frames": 60,
+     "cpuMs": {
+      "mean": 0.247,
+      "median": 0.2,
+      "p95": 0.4,
+      "max": 0.5
+     },
+     "rendersPerFrame": 1,
+     "callsPerFrame": 1,
+     "callsMax": 1,
+     "trisPerFrame": 20620,
+     "perRenderCalls": [
+      1
+     ],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 1,
+      "geometries": 1,
+      "textures": 1
+     },
+     "programsByType": {
+      "physical": 1
+     },
+     "drawn": {
+      "meshes": 1,
+      "points": 0,
+      "lines": 0,
+      "materials": 1,
+      "materialTypes": {
+       "MeshPhysicalMaterial": 1
+      },
+      "lights": {
+       "AmbientLight": 1,
+       "list": [
+        "AmbientLight:<Scene:",
+        "DirectionalLight:<Scene:",
+        "PointLight:<Scene:",
+        "PointLight:<Scene:",
+        "DirectionalLight:<Scene:"
+       ],
+       "DirectionalLight": 2,
+       "PointLight": 2
+      },
+      "textures": 0,
+      "texMB": 0,
+      "geoMB": 0.47,
+      "renderTargets": 1,
+      "rtMB": 9,
+      "topTex": []
+     },
+     "fbMB": 49.44
+    }
+   ],
+   "contexts": {
+    "created": 3,
+    "live": 2,
+    "list": [
+     {
+      "type": "webgl2",
+      "at": 198,
+      "lost": true
+     },
+     {
+      "type": "webgl2",
+      "at": 594,
+      "lost": false
+     },
+     {
+      "type": "webgl2",
+      "at": 1619,
+      "lost": false
+     }
+    ]
+   },
+   "longTasks": {
+    "load": {
+     "n": 3,
+     "totalMs": 1493,
+     "maxMs": 1380
+    },
+    "sampling": {
+     "n": 0,
+     "totalMs": 0,
+     "maxMs": 0
+    }
+   },
+   "events": {},
+   "frames": 73,
+   "pmrem": [
+    {
+     "ms": 84,
+     "sigma": 0.08,
+     "by": "window.makeWaferRig (http://127.0.0.1:8766/app/page-runti"
+    }
+   ],
+   "staleRaf": {
+    "n": 8,
+    "minMs": -1377
+   },
+   "dof": {
+    "bokeh": false,
+    "enabled": null,
+    "probeFps": null,
+    "dofOn": null
+   },
+   "scrollY": 0,
+   "settle": {
+    "settleMs": 5628,
+    "timedOut": false
+   }
+  },
+  {
+   "state": "route:Brionel Catalogue",
+   "url": "http://127.0.0.1:8766/Brionel%20Catalogue.html",
+   "sampleMs": 13301,
+   "network": {
+    "cumulative": {
+     "byKind": {
+      "other": {
+       "n": 13,
+       "bytes": 141023,
+       "wire": 95318,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 13,
+       "uniqWire": 95318
+      },
+      "js": {
+       "n": 12,
+       "bytes": 567382,
+       "wire": 425930,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 12,
+       "uniqWire": 425930
+      },
+      "ktx2": {
+       "n": 2,
+       "bytes": 12220,
+       "wire": 12220,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 2,
+       "uniqWire": 12220
+      },
+      "glb": {
+       "n": 1,
+       "bytes": 170713,
+       "wire": 69628,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 1,
+       "uniqWire": 69628
+      }
+     },
+     "total": {
+      "n": 28,
+      "bytes": 891338,
+      "wire": 603096,
+      "uniqN": 28,
+      "uniqWire": 603096
+     },
+     "glbFiles": [
+      "brionel-mark.glb"
+     ],
+     "ktx2Files": [
+      "KTX2Loader.js",
+      "ktx-parse.module.js"
+     ]
+    },
+    "delta": {
+     "byKind": {
+      "other": {
+       "n": 13,
+       "bytes": 141023,
+       "wire": 95318,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 13,
+       "uniqWire": 95318
+      },
+      "js": {
+       "n": 12,
+       "bytes": 567382,
+       "wire": 425930,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 12,
+       "uniqWire": 425930
+      },
+      "ktx2": {
+       "n": 2,
+       "bytes": 12220,
+       "wire": 12220,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 2,
+       "uniqWire": 12220
+      },
+      "glb": {
+       "n": 1,
+       "bytes": 170713,
+       "wire": 69628,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 1,
+       "uniqWire": 69628
+      }
+     },
+     "total": {
+      "n": 28,
+      "bytes": 891338,
+      "wire": 603096,
+      "uniqN": 28,
+      "uniqWire": 603096
+     },
+     "glbFiles": [
+      "brionel-mark.glb"
+     ],
+     "ktx2Files": [
+      "KTX2Loader.js",
+      "ktx-parse.module.js"
+     ]
+    }
+   },
+   "heapMB": 4.8,
+   "heapPreGcMB": 7.5,
+   "domNodes": 571,
+   "renderers": [
+    {
+     "id": 0,
+     "by": "getKTX2Loader < Promise",
+     "dom": "",
+     "attached": false,
+     "lost": true,
+     "canvas": [
+      300,
+      150
+     ],
+     "dpr": 1,
+     "aa": null,
+     "toneMapping": 0,
+     "exposure": 1,
+     "createdAt": 264,
+     "rendersTotal": 0,
+     "coldRenderMs": {
+      "total": 0,
+      "max": 0
+     },
+     "frames": 0,
+     "cpuMs": {
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+     },
+     "rendersPerFrame": 0,
+     "callsPerFrame": 0,
+     "callsMax": 0,
+     "trisPerFrame": 0,
+     "perRenderCalls": [],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 0,
+      "geometries": 0,
+      "textures": 0
+     },
+     "programsByType": {},
+     "drawn": {
+      "meshes": 0,
+      "points": 0,
+      "lines": 0,
+      "materials": 0,
+      "materialTypes": {},
+      "lights": {},
+      "textures": 0,
+      "texMB": 0,
+      "geoMB": 0,
+      "renderTargets": 0,
+      "rtMB": 0,
+      "topTex": []
+     },
+     "fbMB": 0.34
+    },
+    {
+     "id": 1,
+     "by": "Object.mountStandalone < Id < Xb < S",
+     "dom": "body < .custom-cursor",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": false,
+     "toneMapping": 0,
+     "exposure": 1,
+     "createdAt": 1636,
+     "rendersTotal": 0,
+     "coldRenderMs": {
+      "total": 0,
+      "max": 0
+     },
+     "frames": 0,
+     "cpuMs": {
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+     },
+     "rendersPerFrame": 0,
+     "callsPerFrame": 0,
+     "callsMax": 0,
+     "trisPerFrame": 0,
+     "perRenderCalls": [],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 0,
+      "geometries": 0,
+      "textures": 2
+     },
+     "programsByType": {},
+     "drawn": {
+      "meshes": 0,
+      "points": 0,
+      "lines": 0,
+      "materials": 0,
+      "materialTypes": {},
+      "lights": {},
+      "textures": 0,
+      "texMB": 0,
+      "geoMB": 0,
+      "renderTargets": 2,
+      "rtMB": 0.31,
+      "topTex": []
+     },
+     "fbMB": 9.89
+    },
+    {
+     "id": 2,
+     "by": "window.makeWaferRig < Id < Xb < S",
+     "dom": ".hv-stage__mount < .hv-stage < #rootdiv",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": true,
+     "toneMapping": 4,
+     "exposure": 1.18,
+     "createdAt": 1671,
+     "rendersTotal": 124,
+     "coldRenderMs": {
+      "total": 111,
+      "max": 58
+     },
+     "frames": 60,
+     "cpuMs": {
+      "mean": 0.265,
+      "median": 0.3,
+      "p95": 0.4,
+      "max": 0.5
+     },
+     "rendersPerFrame": 1,
+     "callsPerFrame": 1,
+     "callsMax": 1,
+     "trisPerFrame": 17966,
+     "perRenderCalls": [
+      1
+     ],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 1,
+      "geometries": 1,
+      "textures": 1
+     },
+     "programsByType": {
+      "physical": 1
+     },
+     "drawn": {
+      "meshes": 1,
+      "points": 0,
+      "lines": 0,
+      "materials": 1,
+      "materialTypes": {
+       "MeshPhysicalMaterial": 1
+      },
+      "lights": {
+       "AmbientLight": 1,
+       "list": [
+        "AmbientLight:<Scene:",
+        "DirectionalLight:<Scene:",
+        "PointLight:<Scene:",
+        "PointLight:<Scene:",
+        "DirectionalLight:<Scene:"
+       ],
+       "DirectionalLight": 2,
+       "PointLight": 2
+      },
+      "textures": 0,
+      "texMB": 0,
+      "geoMB": 0.5,
+      "renderTargets": 1,
+      "rtMB": 9,
+      "topTex": []
+     },
+     "fbMB": 49.44
+    }
+   ],
+   "contexts": {
+    "created": 3,
+    "live": 2,
+    "list": [
+     {
+      "type": "webgl2",
+      "at": 245,
+      "lost": true
+     },
+     {
+      "type": "webgl2",
+      "at": 660,
+      "lost": false
+     },
+     {
+      "type": "webgl2",
+      "at": 1665,
+      "lost": false
+     }
+    ]
+   },
+   "longTasks": {
+    "load": {
+     "n": 3,
+     "totalMs": 1494,
+     "maxMs": 1378
+    },
+    "sampling": {
+     "n": 0,
+     "totalMs": 0,
+     "maxMs": 0
+    }
+   },
+   "events": {},
+   "frames": 73,
+   "pmrem": [
+    {
+     "ms": 91,
+     "sigma": 0.08,
+     "by": "window.makeWaferRig (http://127.0.0.1:8766/app/page-runti"
+    }
+   ],
+   "staleRaf": {
+    "n": 5,
+    "minMs": -1390
+   },
+   "dof": {
+    "bokeh": false,
+    "enabled": null,
+    "probeFps": null,
+    "dofOn": null
+   },
+   "scrollY": 0,
+   "settle": {
+    "settleMs": 5640,
+    "timedOut": false
+   }
+  },
+  {
+   "state": "route:Bulgaria 2026",
+   "url": "http://127.0.0.1:8766/Bulgaria%202026.html",
+   "sampleMs": 15334,
+   "network": {
+    "cumulative": {
+     "byKind": {
+      "other": {
+       "n": 13,
+       "bytes": 141173,
+       "wire": 95400,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 13,
+       "uniqWire": 95400
+      },
+      "js": {
+       "n": 12,
+       "bytes": 567375,
+       "wire": 425930,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 12,
+       "uniqWire": 425930
+      },
+      "ktx2": {
+       "n": 2,
+       "bytes": 12220,
+       "wire": 12220,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 2,
+       "uniqWire": 12220
+      },
+      "glb": {
+       "n": 1,
+       "bytes": 17072,
+       "wire": 7731,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 1,
+       "uniqWire": 7731
+      }
+     },
+     "total": {
+      "n": 28,
+      "bytes": 737840,
+      "wire": 541281,
+      "uniqN": 28,
+      "uniqWire": 541281
+     },
+     "glbFiles": [
+      "bulgaria-mark.glb"
+     ],
+     "ktx2Files": [
+      "KTX2Loader.js",
+      "ktx-parse.module.js"
+     ]
+    },
+    "delta": {
+     "byKind": {
+      "other": {
+       "n": 13,
+       "bytes": 141173,
+       "wire": 95400,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 13,
+       "uniqWire": 95400
+      },
+      "js": {
+       "n": 12,
+       "bytes": 567375,
+       "wire": 425930,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 12,
+       "uniqWire": 425930
+      },
+      "ktx2": {
+       "n": 2,
+       "bytes": 12220,
+       "wire": 12220,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 2,
+       "uniqWire": 12220
+      },
+      "glb": {
+       "n": 1,
+       "bytes": 17072,
+       "wire": 7731,
+       "cached": 0,
+       "failed": 0,
+       "uniqN": 1,
+       "uniqWire": 7731
+      }
+     },
+     "total": {
+      "n": 28,
+      "bytes": 737840,
+      "wire": 541281,
+      "uniqN": 28,
+      "uniqWire": 541281
+     },
+     "glbFiles": [
+      "bulgaria-mark.glb"
+     ],
+     "ktx2Files": [
+      "KTX2Loader.js",
+      "ktx-parse.module.js"
+     ]
+    }
+   },
+   "heapMB": 5.2,
+   "heapPreGcMB": 8.5,
+   "domNodes": 794,
+   "renderers": [
+    {
+     "id": 0,
+     "by": "getKTX2Loader < Promise",
+     "dom": "",
+     "attached": false,
+     "lost": true,
+     "canvas": [
+      300,
+      150
+     ],
+     "dpr": 1,
+     "aa": null,
+     "toneMapping": 0,
+     "exposure": 1,
+     "createdAt": 227,
+     "rendersTotal": 0,
+     "coldRenderMs": {
+      "total": 0,
+      "max": 0
+     },
+     "frames": 0,
+     "cpuMs": {
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+     },
+     "rendersPerFrame": 0,
+     "callsPerFrame": 0,
+     "callsMax": 0,
+     "trisPerFrame": 0,
+     "perRenderCalls": [],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 0,
+      "geometries": 0,
+      "textures": 0
+     },
+     "programsByType": {},
+     "drawn": {
+      "meshes": 0,
+      "points": 0,
+      "lines": 0,
+      "materials": 0,
+      "materialTypes": {},
+      "lights": {},
+      "textures": 0,
+      "texMB": 0,
+      "geoMB": 0,
+      "renderTargets": 0,
+      "rtMB": 0,
+      "topTex": []
+     },
+     "fbMB": 0.34
+    },
+    {
+     "id": 1,
+     "by": "Object.mountStandalone < Id < Xb < S",
+     "dom": "body < .custom-cursor",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": false,
+     "toneMapping": 0,
+     "exposure": 1,
+     "createdAt": 1378,
+     "rendersTotal": 0,
+     "coldRenderMs": {
+      "total": 0,
+      "max": 0
+     },
+     "frames": 0,
+     "cpuMs": {
+      "mean": 0,
+      "median": 0,
+      "p95": 0,
+      "max": 0
+     },
+     "rendersPerFrame": 0,
+     "callsPerFrame": 0,
+     "callsMax": 0,
+     "trisPerFrame": 0,
+     "perRenderCalls": [],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 0,
+      "geometries": 0,
+      "textures": 2
+     },
+     "programsByType": {},
+     "drawn": {
+      "meshes": 0,
+      "points": 0,
+      "lines": 0,
+      "materials": 0,
+      "materialTypes": {},
+      "lights": {},
+      "textures": 0,
+      "texMB": 0,
+      "geoMB": 0,
+      "renderTargets": 2,
+      "rtMB": 0.31,
+      "topTex": []
+     },
+     "fbMB": 9.89
+    },
+    {
+     "id": 2,
+     "by": "window.makeWaferRig < Id < Xb < S",
+     "dom": ".hv-stage__mount < .hv-stage < #rootdiv",
+     "attached": true,
+     "lost": false,
+     "canvas": [
+      1440,
+      900
+     ],
+     "dpr": 1,
+     "aa": true,
+     "toneMapping": 4,
+     "exposure": 1.18,
+     "createdAt": 1533,
+     "rendersTotal": 127,
+     "coldRenderMs": {
+      "total": 216,
+      "max": 124
+     },
+     "frames": 60,
+     "cpuMs": {
+      "mean": 0.417,
+      "median": 0.4,
+      "p95": 0.6,
+      "max": 0.7
+     },
+     "rendersPerFrame": 1,
+     "callsPerFrame": 5,
+     "callsMax": 5,
+     "trisPerFrame": 2388,
+     "perRenderCalls": [
+      5
+     ],
+     "programsAddedWhileSampling": 0,
+     "info": {
+      "programs": 1,
+      "geometries": 3,
+      "textures": 1
+     },
+     "programsByType": {
+      "physical": 1
+     },
+     "drawn": {
+      "meshes": 5,
+      "points": 0,
+      "lines": 0,
+      "materials": 3,
+      "materialTypes": {
+       "MeshPhysicalMaterial": 3
+      },
+      "lights": {
+       "AmbientLight": 1,
+       "list": [
+        "AmbientLight:<Scene:",
+        "DirectionalLight:<Scene:",
+        "PointLight:<Scene:",
+        "PointLight:<Scene:",
+        "DirectionalLight:<Scene:"
+       ],
+       "DirectionalLight": 2,
+       "PointLight": 2
+      },
+      "textures": 0,
+      "texMB": 0,
+      "geoMB": 0.03,
+      "renderTargets": 1,
+      "rtMB": 9,
+      "topTex": []
+     },
+     "fbMB": 49.44
+    }
+   ],
+   "contexts": {
+    "created": 3,
+    "live": 2,
+    "list": [
+     {
+      "type": "webgl2",
+      "at": 215,
+      "lost": true
+     },
+     {
+      "type": "webgl2",
+      "at": 674,
+      "lost": false
+     },
+     {
+      "type": "webgl2",
+      "at": 1526,
+      "lost": false
+     }
+    ]
+   },
+   "longTasks": {
+    "load": {
+     "n": 3,
+     "totalMs": 1566,
+     "maxMs": 1293
+    },
+    "sampling": {
+     "n": 0,
+     "totalMs": 0,
+     "maxMs": 0
+    }
+   },
+   "events": {},
+   "frames": 73,
+   "pmrem": [
+    {
+     "ms": 88,
+     "sigma": 0.08,
+     "by": "window.makeWaferRig (http://127.0.0.1:8766/app/page-runti"
+    }
+   ],
+   "staleRaf": {
+    "n": 10,
+    "minMs": -1304
+   },
+   "dof": {
+    "bokeh": false,
+    "enabled": null,
+    "probeFps": null,
+    "dofOn": null
+   },
+   "scrollY": 0,
+   "settle": {
+    "settleMs": 5922,
+    "timedOut": false
+   }
+  }
+ ]
+}
