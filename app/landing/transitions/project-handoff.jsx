@@ -702,6 +702,38 @@ function NodeHandoff() {
     });
   }, []);
 
+  /* Back with bfcache: the landing comes back exactly as the forward left
+     it, the rig on the hero, the card lifted, the scroll on the origin. core
+     offers the restore (mo:bf-reverse); claiming it plays the dock from that
+     frozen state with no seam hold. Anything off and the offer is declined:
+     the restore cuts to the field as before. The claim reads no page record:
+     the leaving page writes it in ANOTHER process, and it reaches this
+     sessionStorage ~50 ms after pageshow (measured), too late for a
+     synchronous claim. It needs none: a Back that lands on a landing still
+     frozen in "forward" can only come from the page that flight opened, and
+     the flight starts from the frozen rig, not from a record. */
+  useNHE(() => {
+    const onOffer = (e) => {
+      const rig = rigRef.current;
+      const addr = rig && rig.getProjectAddr ? rig.getProjectAddr() : "";
+      if (NH_REDUCED || modeRef.current !== "forward" || !rig || !rig.ready || !addr) return;
+      const gl = rig.el.getContext("webgl2") || rig.el.getContext("webgl");
+      if (!gl || gl.isContextLost()) return;
+      const project = window.MO_PROJECT_BY_ADDR && window.MO_PROJECT_BY_ADDR[addr];
+      if (!project || project.universe === false) return;
+      e.preventDefault();
+      cancelAnimationFrame(rafRef.current);
+      returningRef.current = true;
+      modeRef.current = "return";
+      nhClearStale();
+      setHud({ addr: project.addr, name: project.name.toUpperCase() });
+      setMode("return");
+      dockHome(rig, project, "here", false);
+    };
+    window.addEventListener("mo:bf-reverse", onOffer);
+    return () => window.removeEventListener("mo:bf-reverse", onOffer);
+  }, []);
+
   useNHE(() => () => {
     cancelAnimationFrame(rafRef.current);
     stopPrep();

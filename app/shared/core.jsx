@@ -24,11 +24,18 @@ const { useState, useEffect, useRef } = React;
     }
     window.dispatchEvent(new CustomEvent("mo:page-restored"));
   };
+  /* The landing can CLAIM a restore: Back from a project page plays the
+     dock from the frozen forward-end state (project-handoff.jsx). Claimed,
+     the flight keeps wf-flying, its overlay and the hidden Universe; only the
+     one-way page flags clear. The stuck-navigation path never offers. */
   window.addEventListener("pageshow", (event) => {
     if (!event.persisted) return;
     const offer = new CustomEvent("mo:bf-reverse", { cancelable: true });
     window.dispatchEvent(offer);
     if (!offer.defaultPrevented) { window.__mo_restorePage(); return; }
+    window.__hv_leaving = false;
+    window.__mo_universe_pause = false;
+    document.body.classList.remove("hv-exit", "hv-leave", "landing-exit");
   });
 })();
 
