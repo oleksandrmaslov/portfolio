@@ -452,12 +452,19 @@ here, and they are the things to check first when something behaves oddly:
 - **A ring verified in one direction.** `0x01.prev` was left pointing at
   `0x0C` when `0x0D` was inserted, so Bulgaria was reachable by NEXT only —
   and the forward-only walk used to verify it passed. Walk both ways.
+- **A clone that lost its hook.** r160 `Material.copy()` does not copy
+  `onBeforeCompile` or `customProgramCacheKey`, so a cloned studio material
+  renders without Neutral, grain or layer lines. Make a per-object copy with
+  `MOStudio.copy()`, or build a fresh one from the `presets()` factory; calling
+  `tone()` on a clone restores Neutral but not the grain. The PLAY DEMO's
+  per-key caps are the case that bit.
 
 Also fixed and worth not re-introducing: `applySolidMaterials` used to dispose
 the material it replaced, but `loadProjectModel` hands out `root.clone(true)`
 and `Object3D.clone()` **shares** materials with the cached root — so that
 freed GPU state every later consumer of the same URL still pointed at.
-`tuneRealMaterials` in the same file shows the correct pattern.
+`presets().apply` in `app/projects/rendering/studio.js` shows the correct
+pattern: it builds new materials and never disposes a sealed one.
 
 ## Shared registries are cache-busted
 
@@ -635,8 +642,8 @@ is the class of thing to re-check whenever the field is rescaled. Already
 moved: `GRADE.focus` (cards would sit off the focus plane), `TOPO_CUT` (the
 constellation's max link length — at a flat 13 it fell below the new
 nearest-neighbour distance, so the graph dropped most of its edges and faded
-the rest to nothing; it is derived from `TILE_BOX` now), and the teal rim
-`PointLight` range. Scene fog stays at 22→38 on purpose: it is shared with the
+the rest to nothing; it is derived from `TILE_BOX` now). The field has no analytic key or rim any more:
+the studio room and one ambient light the models. Scene fog stays at 22→38 on purpose: it is shared with the
 ambient debris and the star parallax, which still live in the small `BOX`, so
 it is not the cards' constant to retune — drifting cards now reach it, which
 reads as depth.
@@ -657,21 +664,17 @@ stated reason. It was retired on 2026-08-25 and its two unique capabilities were
 folded into the survivor. **If a model needs different handling, give it an
 option here — do not fork the rig again.**
 
-The material route is three-way and each page must pick the right one:
+The material route is two-way:
 
-- `assignMaterial: { … }` — a GLB that ships **no materials of its own**.
-  `models/ci-clop-mark.glb` is the only one: 7 meshes, 0 materials.
-  Without it the rig draws Three's default flat white. Keep the spec equal to
-  `assignMaterial` for the same node in `app/data/projects.js`, or the mark
-  changes colour halfway through the flight.
-- `keepMaterials: true` — a **procedural** hero that authored its own materials,
-  i.e. anything using `buildModel`. Kerfur is the one. The default path clones
-  every material and forces `envMapIntensity` to 1.9, which both washes out a
-  body that was lit without an environment and hands the builder's own
-  per-frame code a material object the scene no longer draws.
-- default — a real GLB, tuned by `tuneRealMaterials` to read on the void. This
-  lifts any base colour below 0.04 linear luma; `keyboard-display.opt.glb`'s
-  near-black `module-body` is deliberately lifted by it.
+- default: a real GLB. `MOStudio.finish()` swaps its materials for studio
+  presets by material name (`BY_NAME`), adds the hardware finish its URL names
+  in `LOOKS`, and puts PBR Neutral inside every material. Nothing is cloned and
+  nothing sealed is disposed.
+- `keepMaterials: true`: a procedural hero (Kerfur) or the node proxy. Its
+  materials are kept; the rig only adds the Neutral hook and the `PROCEDURAL`
+  dress.
+
+`assignMaterial` is gone: no shipped GLB lacks materials.
 
 `buildModel` may return a bare `Object3D` **or** a `{ group, update }`
 descriptor. The descriptor's `update(now, dt)` is driven by the rig's own loop,
@@ -686,8 +689,8 @@ drifted once (the seven handoff routes shipped a `heroLayout` override that the
 copy never read), so they were merged on 2026-10-04 and the seven former
 handoff pages now set `bridgeSeam: true` in their `PAGE_CONFIG`. The template
 must forward the whole hero option set from `PAGE_CONFIG.hero`: a key it does
-not forward is a key that silently does nothing — that is how `assignMaterial`
-and `keepMaterials` can look set and not be. Wafer keeps its own bespoke page,
+not forward is a key that silently does nothing — that is how `keepMaterials`
+can look set and not be. Wafer keeps its own bespoke page,
 `wafer-page.jsx`.
 
 The rig's public surface is what the pages and the landing actually call. The
@@ -697,6 +700,51 @@ their per-frame work; do not re-add an API without a caller.
 Demo pages pass their demo settings as a plain `PAGE_CONFIG.demo.tweaks`
 object. The in-page Tweaks panel that used to wrap them only opened on a
 postMessage from an editor frame that nothing sends, and was removed.
+
+## The studio: one look for every model
+
+`app/projects/rendering/studio.js` is the only home of the model look: the
+room, the PBR Neutral curve, the preset and name tables, the hardware finishes,
+the Wafer assembly and the per-model `LOOKS`. It is a plain ES module that
+`build.cjs` compiles into every bundle (its `esm` kind) as `window.MOStudio`;
+the lab gallery imports the file itself, so there is no second copy to drift.
+
+- **Tone lives in the material.** `tone()` puts Neutral inside each model
+  material, because the Universe draws into render targets, where three turns
+  tone mapping off, and r160's `OutputPass` has no custom curve. Never patch
+  `ShaderChunk` and never set a renderer's tone mapping for a model.
+- **`LOOKS` is keyed by URL**, the one thing every consumer already holds. A
+  look is exposure, room strength and finish. Framing (fit, pose) is not a
+  look: it stays in the registries.
+- **Tiers.** The rig is `ROOM` at 256 plus `lights()`; the field is
+  `FIELD_ROOM` at 128 plus `FIELD_AMBIENT`; the explosions are `parts`. The
+  menu finishes as `field` but is dressed by `MENU`: an orthographic front
+  camera on near-black, with no card behind, sees only the dark wall in a flat
+  face, so the field dress turned the Wafer grey-on-black and the chrome W
+  brown. `MENU` adds a key, a teal rim, lighter walls and floor (its own 128
+  room, on the landing too, built on first open) and a stop on the Wafer.
+  Retune it with `lab/port/menu-contrast.cjs`, which mattes each menu object
+  and reports its luma against the surface.
+- **Ownership.** A finish's light (`glow|halo|haze`) never sizes or frames a
+  model: `modelBox()` skips it. Finish textures and merged geometry are shared
+  by the module across every clone on the page and are never disposed by a
+  consumer. A consumer disposes only `finish().materials`.
+- **Static tiers merge by material** (Wafer 62 → 12, ZMK 49 → 2,
+  Sightseeing 13 → 3). The explosions never merge: they move the parts.
+- **The explosions measure in model space on stale matrices.** PLAY DEMO
+  takes every part's box after `recenter` and `aligner` are posed but before
+  their world matrices are refreshed, so a box is in model space only while
+  nothing updates them. `attach()` updates its ancestors: one call on an
+  identity wrapper put every later part's box into the aligned, scaled frame
+  and blew the explode vectors and legends up (2026-10-16). Move a part into an
+  identity wrapper with `add()`.
+- **Precompile against the target you draw to.** A program's colour space and
+  tone mapping depend on the render target, so the Universe's
+  `renderer.compile()` runs with the composer's read buffer bound; compiled
+  against the canvas it built a second program per material that the field
+  never drew.
+- **The site loads no KTX2.** Any future KTX2 asset must bring `KTX2Loader`
+  back deliberately, with its transcoder counted in the budget.
 
 ## Models and live demos
 
