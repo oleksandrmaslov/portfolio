@@ -55,17 +55,11 @@
 
   let dependencies;
   function loadDependencies() {
-    if (!dependencies && window.THREE?.GLTFLoader && window.THREE.MeshoptDecoder) {
-      dependencies = (window.THREE.KTX2Loader ? Promise.resolve() : import("three/addons/loaders/KTX2Loader.js")
-        .then(({ KTX2Loader }) => { window.THREE.KTX2Loader = KTX2Loader; }))
-        .then(() => window.THREE).catch(error => { dependencies = null; throw error; });
-    }
+    if (!dependencies && window.THREE?.GLTFLoader && window.THREE.MeshoptDecoder) dependencies = Promise.resolve(window.THREE);
     if (!dependencies) dependencies = Promise.all([
       import("three"), import("three/addons/loaders/GLTFLoader.js"),
       import("three/addons/libs/meshopt_decoder.module.js"),
-      import("three/addons/environments/RoomEnvironment.js"),
-      import("three/addons/loaders/KTX2Loader.js"),
-    ]).then(([THREE, loader, meshopt, room, ktx]) => Object.assign({}, THREE, loader, meshopt, room, ktx))
+    ]).then(([THREE, loader, meshopt]) => Object.assign({}, THREE, loader, meshopt))
       .catch(error => { dependencies = null; throw error; });
     return dependencies;
   }

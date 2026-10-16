@@ -43,9 +43,7 @@
     import * as THREE from "three";
     import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
     import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
-    import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
-    import { KTX2Loader } from "three/addons/loaders/KTX2Loader.js";
-    window.THREE = Object.assign({}, THREE, { GLTFLoader, MeshoptDecoder, RoomEnvironment, KTX2Loader });
+    window.THREE = Object.assign({}, THREE, { GLTFLoader, MeshoptDecoder });
   </script>
 
   <script src="app/data/projects.js?v=80fff50bac00"></script>

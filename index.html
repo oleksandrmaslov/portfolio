@@ -247,9 +247,8 @@
     import { BokehPass } from "three/addons/postprocessing/BokehPass.js";
     import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
     import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
-    import { KTX2Loader } from "three/addons/loaders/KTX2Loader.js";
     window.THREE = Object.assign({}, THREE, {
-      GLTFLoader, MeshoptDecoder, KTX2Loader,
+      GLTFLoader, MeshoptDecoder,
       RoomEnvironment, EffectComposer, RenderPass, BokehPass, ShaderPass, OutputPass,
     });
     window.dispatchEvent(new Event("mo:three-ready"));

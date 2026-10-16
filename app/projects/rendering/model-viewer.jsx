@@ -6,6 +6,13 @@
      window.loadProjectModel(url, THREE)
      window.preloadModels(urls, THREE)
      window.fitModelToSize(root, THREE, targetSize)
+
+   The site loads no KTX2: every shipped GLB is meshopt geometry with
+   plain or no textures, so there is no transcoder and no throwaway
+   context to detect one. A future KTX2 asset brings the KTX2 loader back
+   deliberately, with its transcoder in the budget. Fitting is the
+   studio's (app/projects/rendering/studio.js): its box never
+   counts a finish's glow.
    ============================================================ */
 
 (function () {
@@ -18,7 +25,6 @@
      gets a fresh THREE.Group clone — so we never re-download or
      re-parse the same .glb. */
   const _gltfCache = new Map();   // url -> Promise<THREE.Group>
-  const _withoutKTX2 = new WeakSet();
   const _constrainedDevice = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)
     || (navigator.deviceMemory && navigator.deviceMemory <= 4)
     || (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4);
@@ -47,61 +53,23 @@
     });
   }
 
-  /* KTX2 / Basis transcoder — production Wafer exports carry compressed
-     textures (gltfpack -tc). GLTFLoader needs a KTX2Loader wired before it
-     will parse them, and the KTX2Loader needs detectSupport(renderer) once so
-     it knows which GPU formats to transcode to. Build a single shared instance
-     lazily (throwaway renderer just for capability detection). */
-  let _ktx2 = null;
-  function getKTX2Loader(THREE) {
-    if (_ktx2) return _ktx2;
-    // A text/project route may load the texture decoder only on menu intent.
-    // Its earlier absence must not become a permanent negative cache.
-    if (!THREE.KTX2Loader) return null;
-    const k = new THREE.KTX2Loader()
-      .setTranscoderPath("https://unpkg.com/three@0.160.0/examples/jsm/libs/basis/")
-      .setWorkerLimit(_constrainedDevice ? 1 : 2);
-    let r = null;
-    try {
-      r = new THREE.WebGLRenderer({ antialias: false, depth: false, stencil: false });
-      k.detectSupport(r);
-    } catch (e) { console.warn("[model-viewer] KTX2 detectSupport failed", e); }
-    finally {
-      if (r) {
-        r.dispose();
-        if (r.forceContextLoss) r.forceContextLoss();
-      }
-    }
-    _ktx2 = k;
-    return k;
-  }
-
   /* Resolve the one cached source scene for a URL. Consumers normally need a
      clone because they change transforms/materials; speculative warm-up does
      not. Keeping those two jobs separate avoids cloning every model once just
      to immediately throw that clone away in preloadModels(). */
   function ensureProjectModel(url, THREE) {
     if (!url) return Promise.reject(new Error("no model url"));
-    if (_gltfCache.has(url)) {
-      const cached = _gltfCache.get(url);
-      // A prewarm already in flight may lack the newly installed decoder.
-      // Keep successful work; retry only that failed capability-limited load.
-      return THREE.KTX2Loader && _withoutKTX2.has(cached)
-        ? cached.catch(() => ensureProjectModel(url, THREE)) : cached;
-    }
+    if (_gltfCache.has(url)) return _gltfCache.get(url);
     const LoaderCtor = THREE.GLTFLoader || (window.THREE && window.THREE.GLTFLoader);
     if (!LoaderCtor) {
       return Promise.reject(new Error("GLTFLoader not loaded — add it after three.min.js"));
     }
     const p = scheduleModelJob(() => new Promise((resolve, reject) => {
       const loader = new LoaderCtor();
-      // Meshopt-compressed GLBs (e.g. wafer.glb, optimized from 16 MB → 2 MB)
-      // need the decoder wired in before .load(); uncompressed GLBs ignore it.
+      // Meshopt-compressed GLBs (gltfpack -c) need the decoder wired in
+      // before .load(); uncompressed GLBs ignore it.
       const Meshopt = THREE.MeshoptDecoder || window.MeshoptDecoder;
       if (Meshopt && loader.setMeshoptDecoder) loader.setMeshoptDecoder(Meshopt);
-      // KTX2/Basis textures in the Wafer exports need the transcoding loader.
-      const ktx2 = getKTX2Loader(THREE);
-      if (ktx2 && loader.setKTX2Loader) loader.setKTX2Loader(ktx2);
       loader.load(
         url,
         (gltf) => resolve(gltf.scene),
@@ -110,7 +78,6 @@
       );
     }));
     _gltfCache.set(url, p);
-    if (!THREE.KTX2Loader) _withoutKTX2.add(p);
     p.catch(() => {
       if (_gltfCache.get(url) === p) _gltfCache.delete(url);
     });
