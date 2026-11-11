@@ -32,9 +32,7 @@ while reading. No recording of a complete mix plays behind the page.
 - Mute fades before suspending. Hidden documents and page exits stop immediately;
   returning does not autoplay. Epoch guards prevent cancelled downloads or
   decodes from restarting sound. A context interruption requires another start.
-- The legacy carrier and score scripts remain archived source files, but are
-  not loaded by `index.html`. The compatibility `MOSound.ctx` is null so the old
-  scroll-wind layer cannot attach to this score.
+- The legacy carrier, score and scroll-wind implementation have been removed. The compatibility `MOSound.ctx` remains null.
 
 ## Verification
 
@@ -47,3 +45,18 @@ The musical behavior tests remain in
 The source study and atlas build instructions are in the private study's README.
 Rebuilding the bank would change the approved sound; it is not required to build
 the landing runtime.
+
+## Demo themes
+
+Wafer, Kerfur, Ci-Clop and PointAccel load this same player and unchanged bank.
+`demo/music-score.js` supplies Soft circuit (72 BPM open chords and sparse marimba), Small
+companion (66 BPM marimba), Night filament (72 BPM silk and low pulses), and
+Vector drift (92 BPM plucks). Each has its own harmony, motif and rhythm.
+`demo/sample-sound.js` shares the bounded voice pool with immediate interaction
+cues; scheduled phrases use the audio clock and are cancelled on mute/exit.
+Wafer also loads the 128 KB `public/audio/wafer-keys.wav` atlas: dry renders of
+its original synthesized press and release, made by `tools/audio/render-wafer-keys.js`
+in an OfflineAudioContext. These are synthesized contacts, not recordings.
+They share the player and voice limit; no legacy synth runs on the page.
+No new runtime dependencies are required. Silent project pages stay
+silent; their media controls are unchanged.

@@ -144,7 +144,7 @@ const pageDefinitions = [
   handoffDefinition("Bulgaria 2026.html", "bulgaria-2026"),
   standardDefinition("Ci-Clop.html", "ci-clop", {
     compiledConfig: true,
-    demoScripts: ["demo/field-core.js", "demo/torch-sound.js", "demo/torch-model.js", "demo/torch-demo.js"],
+    demoScripts: ["demo/music-score.js", "demo/sample-sound.js", "demo/torch-sound.js", "demo/torch-model.js", "demo/torch-demo.js"],
     hud: "demo/torch-hud.jsx",
   }),
   {
@@ -164,7 +164,7 @@ const pageDefinitions = [
   standardDefinition("Kerfur.html", "kerfur", {
     compiledConfig: true,
     demoScripts: [
-      "demo/field-core.js",
+      "demo/music-score.js", "demo/sample-sound.js",
       "demo/kerfur-sound.js",
       "demo/kerfur-face.js",
       "demo/kerfur-emotion.js",
@@ -183,6 +183,8 @@ const pageDefinitions = [
     phases: [phase("wafer-page", [
       jsx(CORE),
       jsx(KEY_BUTTON),
+      classic("demo/music-score.js"),
+      classic("demo/sample-sound.js"),
       classic("demo/wafer-sound.js"),
       classic("demo/wafer-board.js"),
       classic("demo/wafer-demo.js"),
@@ -201,7 +203,7 @@ const pageDefinitions = [
   handoffDefinition("ZMK Soft Off Plus.html", "zmk-soft-off-plus"),
   standardDefinition("ZMK-PointAccel.html", "zmk-pointaccel", {
     compiledConfig: true,
-    demoScripts: ["demo/field-core.js", "demo/accel-sound.js", "demo/accel-demo.js"],
+    demoScripts: ["demo/music-score.js", "demo/sample-sound.js", "demo/accel-sound.js", "demo/accel-demo.js"],
     hud: "demo/accel-hud.jsx",
   }),
 ];
@@ -373,7 +375,7 @@ function stampDataAssets(html) {
   // pairs a fresh runtime with a cached stylesheet from before an edit.
   html = html.replace(/href="((?:app|demo)\/[^"?]+\.css)(?:\?v=[a-f0-9]{12})?"/g,
     (_match, file) => `href="${file}?v=${assetHash(file)}"`);
-  for (const relativePath of ["app/data/projects.js", "app/projects/data.jsx"]) {
+  for (const relativePath of ["app/data/projects.js", "app/projects/data.jsx", "app/landing/audio/sample-engine.js", "app/landing/audio/generative-score.js", "app/landing/controllers/scroll-flight.js"]) {
     const stamped = `src="${relativePath}?v=${assetHash(relativePath)}"`;
     const parts = html.split(`src="${relativePath}`);
     if (parts.length < 2) continue;

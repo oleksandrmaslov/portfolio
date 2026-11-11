@@ -1,0 +1,7 @@
+Wafer keyboard contacts
+
+Dry offline renders of the original portfolio Wafer thock and keyRelease synthesis
+from commit c5824e6 (demo/wafer-sound.js). Not recorded keyboard audio.
+Generated with tools/audio/render-wafer-keys.js using Chromium OfflineAudioContext.
+32 kHz, stereo PCM16; normal press, thumb press, normal release, thumb release.
+The original shared reverb and continuous sound engine are not included.

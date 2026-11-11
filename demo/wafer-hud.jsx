@@ -24,6 +24,7 @@ function WaferDemoLayer({ active, onClose, tweaks }) {
   const [lastKey, setLastKey] = useHD(null);
   const [count, setCount] = useHD(0);
   const [soundOn, setSoundOn] = useHD(true);
+  const [soundStatus, setSoundStatus] = useHD("Sound is off");
 
   /* subscribe once */
   useEHD(() => {
@@ -38,6 +39,7 @@ function WaferDemoLayer({ active, onClose, tweaks }) {
       ["typed", setTyped],
       ["key", (k) => { setLastKey(k); setCount((c) => c + 1); }],
       ["sound", setSoundOn],
+      ["soundStatus", setSoundStatus],
     ].map(([ev, cb]) => [ev, D.on(ev, cb)]);
     return () => offs.forEach(([ev, cb]) => D.off(ev, cb));
   }, []);
@@ -100,9 +102,10 @@ function WaferDemoLayer({ active, onClose, tweaks }) {
       {/* top-right: sound + stop */}
       <div className="hvd__topRight">
         <button className={"hvd-btn hvd-btn--snd " + (soundOn ? "is-on" : "")}
+                aria-pressed={soundOn} title={soundStatus}
                 onClick={() => setSoundOn(D.toggleSound())}>
           <span className="hvd-eq" aria-hidden="true"><i /><i /><i /></span>
-          <span>{soundOn ? "FIELD · ON" : "MUTED"}</span>
+          <span>{soundStatus.startsWith("Loading") ? "LOADING…" : soundOn ? "MUSIC · ON" : "SOUND · OFF"}</span>
         </button>
         <button className="hvd__close" onClick={onClose}>
           <span>STOP</span>

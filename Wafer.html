@@ -72,8 +72,11 @@
   <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" integrity="sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1" crossorigin="anonymous"></script>
 
   <!-- Page runtime: shared core, KeyButton, PLAY DEMO (production GLB board,
-       field sound, controller, HUD), project data, hero rig, ASCII figures,
+       sampled music, controller, HUD), project data, hero rig, ASCII figures,
        pointer effects, the Wafer page and scrollbar -->
-  <script defer src="app/page-runtimes/wafer-page.js?v=996ea49639ff"></script>
+  <!-- Shared sampled player; its URL anchors the instrument bank. -->
+  <script defer src="app/landing/audio/generative-score.js?v=648041285c18"></script>
+  <script defer src="app/landing/audio/sample-engine.js?v=9a236b68a51e"></script>
+  <script defer src="app/page-runtimes/wafer-page.js?v=3855c0f0bfbc"></script>
 </body>
 </html>

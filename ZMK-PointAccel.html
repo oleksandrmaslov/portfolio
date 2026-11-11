@@ -52,7 +52,10 @@
   <!-- Page runtime: shared core, PLAY DEMO (field core, accel sound, controller,
        HUD), project data, hero rig, ASCII figures, the page config below,
        pointer effects, KeyButton, project page and scrollbar -->
-  <script defer src="app/page-runtimes/zmk-pointaccel-page.js?v=42a1c190f2b7"></script>
+  <!-- Shared sampled player; its URL anchors the instrument bank. -->
+  <script defer src="app/landing/audio/generative-score.js?v=648041285c18"></script>
+  <script defer src="app/landing/audio/sample-engine.js?v=9a236b68a51e"></script>
+  <script defer src="app/page-runtimes/zmk-pointaccel-page.js?v=722d7f6f4f82"></script>
 
   <!-- Page config — everything project-specific lives here. Inert in the
        page: build.cjs compiles it into the page runtime above. -->

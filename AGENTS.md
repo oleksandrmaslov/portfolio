@@ -94,14 +94,7 @@ This is the supported way to retire a node from the headline field without
 deleting a public URL — do not "finish the job" by removing the record, the
 route or the model.
 
-Retiring a node also vacates its audio rung. `app/landing/audio/carrier-field.js`
-holds one just-intonation sideband per node **in the field**, and `0x0B` handed
-its `3/1` to `0x0D` (Bulgaria 2026) so the lattice stays exactly twelve tones.
-Keep that map one-to-one with the field: `reward()`'s `seq` is the only place
-that indexes `RATIOS` without a guard, so a stale address there becomes a `NaN`
-frequency rather than a silent voice. The demo sound palettes take their
-`makeFieldCore({ ratio })` from the same map (Ci-Clop `3/2`, ZMK-PointAccel
-`4/3`, Kerfur `5/4`), so keep them consonant with it. The five routes added on
+The five routes added on
 2026-08-22 (Venovisor, ZMK Soft Off Plus, Sightseeing, Silent Depth, Brionel
 Catalogue) are scaffolds: their chrome is real, their case-study copy is
 marked `[ ... ]` pending. Fill the placeholders in `app/projects/data.jsx`;
@@ -138,19 +131,17 @@ or change its outward links without an explicit migration and redirect plan.
   against a firmware checkout. It is kept on purpose; do not delete it as
   unreachable.
 
-### The two soundtracks
+### Sampled soundtracks
 
-The landing plays **Clear signal** (`app/landing/audio/generative-score.js`,
-`sample-engine.js`, `sound-controller.js`; see `app/landing/audio/README.md`)
-since 2026-09-28. The **carrier field** it replaced — `carrier-field.js` and
-`score.js`, the old music — is kept as archived source on purpose: no page
-loads it, but it is the reference the demo palettes were derived from
-(`demo/field-core.js`, `demo/*-sound.js`, Wafer's own copy in
-`demo/wafer-sound.js`), and those demos still play it on the project pages.
-The scroll-flight wind layer and the `window.CarrierField` checks in
-`scroll-flight.js` and `universe.jsx` are its landing hooks; they are inert
-while Clear signal runs (`MOSound.ctx` is `null`) and stay with it. Do not
-delete any of this as dead code.
+The landing plays **Clear signal** unchanged. All four sounding demos use its
+`app/landing/audio/sample-engine.js` and licensed sample bank, with separate
+compositions in `demo/music-score.js`. `demo/sample-sound.js` owns demo audio
+lifecycle and the project palettes map every interaction to sampled cues.
+The carrier engine, old score, demo oscillator core and inactive landing hooks
+were removed in the audio refresh. Do not restore a second audio engine.
+The sampler must load as its own script: `document.currentScript.src` anchors
+its instrument manifest URL. Music starts on demo entry, respects the saved mute
+preference and stops when hidden; returning requires an explicit sound toggle.
 
 The landing's universe, work reel, All Projects index, and handoff records come
 from `app/data/projects.js`. The project route ring and canonical case-study

@@ -31,7 +31,7 @@
   const damp = (cur, tgt, rate, dt) => lerp(cur, tgt, 1 - Math.pow(1 - rate, dt / 16));
 
   window.__demoTweaks = window.__demoTweaks || {
-    clickPitch: 1, soundLevel: 0.8, hud: "full", drainSpeed: 1,
+    soundLevel: 0.8, hud: "full", drainSpeed: 1,
   };
 
   const CAM_HOME = { yaw: -0.92, pitch: 0.3, dist: 5.4 };
@@ -510,11 +510,15 @@
 
       const reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-      if (!sound) sound = window.makeTorchDemoSound();
+      if (!sound) sound = window.makeTorchDemoSound((state) => {
+        st.soundOn = state.intent;
+        emit("sound", st.soundOn);
+        emit("soundStatus", state.status);
+      });
       const saved = localStorage.getItem("mo_demo_sound");
       st.soundOn = saved == null ? true : saved === "1";
       sound.setMuted(!st.soundOn);
-      sound.setLevel((window.__demoTweaks || {}).soundLevel || 0.8);
+      sound.setLevel((window.__demoTweaks || {}).soundLevel ?? 0.8);
       sound.start();
 
       Object.assign(cam, { yaw: -2.1, pitch: 0.9, dist: 10.0, y: 0 });
